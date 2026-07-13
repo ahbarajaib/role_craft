@@ -21,5 +21,9 @@ jobs:
           script: |
             cd /opt/role_craft
             git pull origin main
+            cp nginx/rolecraft /etc/nginx/sites-available/rolecraft
+            ln -sf /etc/nginx/sites-available/rolecraft /etc/nginx/sites-enabled/rolecraft
+            certbot --nginx -d api.rolecraft.tech --non-interactive --agree-tos -m admin@rolecraft.tech --redirect
+            nginx -t && systemctl reload nginx
             docker compose down
             docker compose up -d --build
