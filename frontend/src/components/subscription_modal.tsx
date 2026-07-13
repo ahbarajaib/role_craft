@@ -9,7 +9,8 @@ interface SubscriptionModalProps {
   onClose: () => void;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = rawApiUrl.replace(/\/api\/v1\/?$/, "");
 
 export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
   const { user, token, refreshMe } = useAuth();

@@ -53,7 +53,8 @@ export interface ResumeAnalysisResult {
   top_improvements: ImprovementItem[];
 }
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+export const API_BASE_URL = rawApiUrl.replace(/\/api\/v1\/?$/, "");
 
 function getHeaders(contentType: string | null = "application/json"): HeadersInit {
   const headers: Record<string, string> = {};
