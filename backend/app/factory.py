@@ -42,9 +42,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         environment=settings.ENVIRONMENT,
     )
 
-    # Future startup hooks go here, for example:
-    # app.state.db_pool = await create_db_pool(settings.DATABASE_URL)
-    # app.state.http_client = httpx.AsyncClient()
+    from app.core.database import init_db
+    init_db()
 
     yield
 

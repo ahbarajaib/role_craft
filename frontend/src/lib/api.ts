@@ -55,12 +55,27 @@ export interface ResumeAnalysisResult {
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+function getHeaders(contentType: string | null = "application/json"): HeadersInit {
+  const headers: Record<string, string> = {};
+  if (contentType) {
+    headers["Content-Type"] = contentType;
+  }
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("rc_token");
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+  return headers;
+}
+
 export async function uploadResume(file: File): Promise<DocumentUploadResponse> {
   const formData = new FormData();
   formData.append("file", file);
 
   const response = await fetch(`${API_BASE_URL}/api/v1/documents/upload`, {
     method: "POST",
+    headers: getHeaders(null),
     body: formData,
   });
 
@@ -78,9 +93,7 @@ export async function analyzeResume(
 ): Promise<ResumeAnalysisResult> {
   const response = await fetch(`${API_BASE_URL}/api/v1/resume/analyze`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getHeaders(),
     body: JSON.stringify({
       document_id: documentId,
       job_description_text: jobDescriptionText,
@@ -121,9 +134,7 @@ export async function rewriteSection(
 ): Promise<RewriteSectionResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/resume/rewrite`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getHeaders(),
     body: JSON.stringify(request),
   });
 
@@ -156,9 +167,7 @@ export async function applyRewrites(
 ): Promise<ApplyRewriteResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/resume/apply`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getHeaders(),
     body: JSON.stringify(request),
   });
 

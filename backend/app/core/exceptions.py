@@ -57,6 +57,27 @@ class UnprocessableError(AppError):
     default_detail = "The request could not be processed."
 
 
+class UnauthorizedError(AppError):
+    """Raised when authentication fails or credentials are invalid."""
+
+    status_code = status.HTTP_401_UNAUTHORIZED
+    default_detail = "Authentication credentials were not provided or are invalid."
+
+
+class InsufficientCreditsError(AppError):
+    """Raised when a user has depleted their AI analysis credit balance."""
+
+    status_code = status.HTTP_402_PAYMENT_REQUIRED
+    default_detail = "You have depleted your available credits. Please log in or upgrade."
+
+
+class RateLimitError(AppError):
+    """Raised when a guest user exceeds their daily analysis allocation."""
+
+    status_code = status.HTTP_429_TOO_MANY_REQUESTS
+    default_detail = "Daily free analysis limit reached. Please log in to continue."
+
+
 # ── Exception handlers ────────────────────────────────────────────────────────
 
 

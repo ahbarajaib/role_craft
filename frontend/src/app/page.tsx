@@ -32,6 +32,8 @@ import {
   PenTool
 } from "lucide-react";
 import { uploadResume, analyzeResume, applyRewrites, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
+import { useAuth } from "@/components/auth_provider";
+import AuthModal from "@/components/auth_modal";
 
 interface DiffToken {
   value: string;
@@ -382,6 +384,7 @@ function LoadingState() {
 }
 
 export default function Home() {
+  const { user, token, logout, setShowAuthModal, refreshMe } = useAuth();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [file, setFile] = useState<File | null>(null);
 
@@ -501,6 +504,10 @@ export default function Home() {
 
   const triggerInlineRewrite = async (sectionName: string, recommendations: string[]) => {
     if (!documentId) return;
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
     setInlineLoadingSections((prev) => ({ ...prev, [sectionName]: true }));
     try {
       const { rewriteSection } = require("@/lib/api");
@@ -532,6 +539,10 @@ export default function Home() {
 
   const handleImproveAllClick = async (sectionsToImprove: any[]) => {
     if (!documentId || sectionsToImprove.length === 0) return;
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
     setIsImprovingAll(true);
     try {
       await Promise.all(
@@ -547,6 +558,10 @@ export default function Home() {
 
   const handleImproveClick = (sectionName: string, recommendations: string[]) => {
     if (!documentId) return;
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
     setActiveRewriteSection(sectionName);
     setRewriteData(null);
     setDraftRewrittenText("");
@@ -610,6 +625,10 @@ export default function Home() {
 
   const handleApplyRewrites = () => {
     if (!documentId) return;
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
     const rewrites = Object.entries(rewrittenSections).map(([sectionName, rewrittenText]) => {
       const section = (analysisResult?.sections || []).find(
         (s) => s.section_name.toLowerCase() === sectionName.toLowerCase()
@@ -664,6 +683,9 @@ export default function Home() {
       setDownloadId(null);
       setDownloadUrl(null);
       setIsPatchingApplied(false);
+
+      // Refresh credits balance in header
+      refreshMe().catch(() => {});
       
       // Initialize all sections with recommendations to improve as expanded by default
       const initialExpanded: Record<string, boolean> = {};
@@ -678,6 +700,14 @@ export default function Home() {
     },
     onError: (err: any) => {
       setError(err?.message || "Analysis failed. Please check your backend connection and OpenAI API Key.");
+      if (
+        err?.message?.toLowerCase().includes("limit") ||
+        err?.message?.toLowerCase().includes("credits") ||
+        err?.message?.toLowerCase().includes("log in") ||
+        err?.message?.toLowerCase().includes("sign up")
+      ) {
+        setShowAuthModal(true);
+      }
     }
   });
 
@@ -780,7 +810,32 @@ export default function Home() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+          {user ? (
+            <div className="flex items-center gap-3 bg-white/80 dark:bg-slate-900/80 pl-3 pr-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-xs select-none">
+              <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[120px]" title={user.email}>
+                {user.email}
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold">
+                {user.credits} CR
+              </span>
+              <button
+                onClick={logout}
+                className="ml-1 p-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded transition-colors cursor-pointer"
+                title="Sign Out"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all cursor-pointer"
+            >
+              Sign In
+            </button>
+          )}
+
+          <div className="hidden sm:flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
             <Activity className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
             <span>Local Engine Active</span>
           </div>
@@ -1766,6 +1821,9 @@ export default function Home() {
           </button>
         </div>
       )}
+
+      {/* Popover Authentication Modal */}
+      <AuthModal />
     </div>
   );
 }

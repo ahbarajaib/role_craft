@@ -73,6 +73,12 @@ class Settings(BaseSettings):
     # Timeout in seconds for AI queries
     OPENAI_TIMEOUT_SECONDS: float = 30.0
 
+    # ── Authentication ────────────────────────────────────────────────────────
+    JWT_SECRET: str = "supersecretrolecraftkey"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRY_MINUTES: int = 1440
+    GOOGLE_CLIENT_ID: str = ""
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

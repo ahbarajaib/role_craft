@@ -1,0 +1,32 @@
+# Use official slim Python runtime
+FROM python:3.12-slim
+
+# Install uv package manager
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Set working directory inside container
+WORKDIR /app
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install project dependencies using uv
+RUN uv sync --frozen --no-cache
+
+# Copy application source code
+COPY app/ app/
+COPY main.py main.py
+
+# Create directories for sqlite data and file uploads
+RUN mkdir -p /app/data /app/uploads
+
+# Set runtime environment paths and configurations
+ENV PATH="/app/.venv/bin:$PATH"
+ENV UPLOAD_DIR="/app/uploads"
+ENV DATABASE_FILE="/app/data/rolecraft.db"
+
+# Expose FastAPI server port
+EXPOSE 8000
+
+# Execute server on startup
+CMD ["python", "main.py"]
