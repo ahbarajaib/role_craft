@@ -1002,7 +1002,7 @@ export default function Home() {
           <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/20 space-y-4">
             <h3 className="text-xs font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-200/50 dark:border-slate-900">
               <Info className="h-4.5 w-4.5 text-indigo-500 dark:text-indigo-400" />
-              Developer Drinciples
+              Developer Principles
             </h3>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
