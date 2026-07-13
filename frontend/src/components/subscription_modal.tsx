@@ -9,7 +9,7 @@ interface SubscriptionModalProps {
   onClose: () => void;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
   const { user, token, refreshMe } = useAuth();
@@ -46,7 +46,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
       }
 
       // 1. Create subscription session on the backend
-      const response = await fetch(`${API_BASE_URL}/payment/subscribe`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/payment/subscribe`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -65,7 +65,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
       // 2. Handle Sandbox simulation mode if keys are empty
       if (session.is_sandbox) {
         // Trigger simulated success call
-        const successRes = await fetch(`${API_BASE_URL}/payment/simulate-success`, {
+        const successRes = await fetch(`${API_BASE_URL}/api/v1/payment/simulate-success`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
