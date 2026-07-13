@@ -8,6 +8,8 @@ export interface User {
   email: string;
   provider: string;
   credits: number;
+  plan_type: string;
+  subscription_status: string;
   created_at: string;
 }
 

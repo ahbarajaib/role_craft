@@ -34,6 +34,7 @@ import {
 import { uploadResume, analyzeResume, applyRewrites, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
+import SubscriptionModal from "@/components/subscription_modal";
 
 interface DiffToken {
   value: string;
@@ -408,6 +409,7 @@ export default function Home() {
 
   const [rewrittenSections, setRewrittenSections] = useState<Record<string, string>>({});
   const [previousRewrittenSections, setPreviousRewrittenSections] = useState<Record<string, string>>({});
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [isRewriteModalOpen, setIsRewriteModalOpen] = useState(false);
   const [activeRewriteSection, setActiveRewriteSection] = useState<string | null>(null);
   const [rewriteData, setRewriteData] = useState<any | null>(null);
@@ -508,6 +510,10 @@ export default function Home() {
       setShowAuthModal(true);
       return;
     }
+    if (user && user.plan_type === "free") {
+      setIsSubscriptionModalOpen(true);
+      return;
+    }
     setInlineLoadingSections((prev) => ({ ...prev, [sectionName]: true }));
     try {
       const { rewriteSection } = require("@/lib/api");
@@ -543,6 +549,10 @@ export default function Home() {
       setShowAuthModal(true);
       return;
     }
+    if (user && user.plan_type === "free") {
+      setIsSubscriptionModalOpen(true);
+      return;
+    }
     setIsImprovingAll(true);
     try {
       await Promise.all(
@@ -560,6 +570,10 @@ export default function Home() {
     if (!documentId) return;
     if (!token) {
       setShowAuthModal(true);
+      return;
+    }
+    if (user && user.plan_type === "free") {
+      setIsSubscriptionModalOpen(true);
       return;
     }
     setActiveRewriteSection(sectionName);
@@ -627,6 +641,10 @@ export default function Home() {
     if (!documentId) return;
     if (!token) {
       setShowAuthModal(true);
+      return;
+    }
+    if (user && user.plan_type === "free") {
+      setIsSubscriptionModalOpen(true);
       return;
     }
     const rewrites = Object.entries(rewrittenSections).map(([sectionName, rewrittenText]) => {
@@ -815,9 +833,21 @@ export default function Home() {
               <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[120px]" title={user.email}>
                 {user.email}
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold">
-                {user.credits} CR
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center gap-1">
+                {user.plan_type === "elite" ? "∞" : user.credits} <span className="text-[9px] font-normal text-slate-400 dark:text-slate-500">CR</span>
               </span>
+              {user.plan_type !== "free" ? (
+                <span className="px-2 py-0.5 rounded bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-black uppercase text-[9px] tracking-wider">
+                  {user.plan_type}
+                </span>
+              ) : (
+                <button
+                  onClick={() => setIsSubscriptionModalOpen(true)}
+                  className="px-2 py-0.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[9px] uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Upgrade
+                </button>
+              )}
               <button
                 onClick={logout}
                 className="ml-1 p-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded transition-colors cursor-pointer"
@@ -1823,6 +1853,9 @@ export default function Home() {
 
       {/* Popover Authentication Modal */}
       <AuthModal />
+
+      {/* Popover Billing & Subscription Modal */}
+      <SubscriptionModal isOpen={isSubscriptionModalOpen} onClose={() => setIsSubscriptionModalOpen(false)} />
     </div>
   );
 }

@@ -30,8 +30,7 @@ from app.schemas.patch import ApplyRewriteRequest, ApplyRewriteResponse
 from app.services.resume_analysis_workflow import ResumeAnalysisWorkflow
 from app.services.rewrite_service import RewriteService
 from app.services.patch_service import PatchService
-from app.dependencies.limits import verify_analysis_permission
-from app.dependencies.auth import get_current_user
+from app.dependencies.limits import verify_analysis_permission, verify_premium_permission
 
 router = APIRouter(prefix="/resume", tags=["resume"])
 
@@ -66,7 +65,7 @@ def analyze_resume(
     response_model=RewriteSectionResponse,
     summary="Rewrite one section of the resume using AI",
     description="Rewrite a specific section of the resume using AI while preserving truthfulness.",
-    dependencies=[Depends(get_current_user)],
+    dependencies=[Depends(verify_premium_permission)],
 )
 def rewrite_section(
     body: RewriteSectionRequest,
@@ -87,7 +86,7 @@ def rewrite_section(
     response_model=ApplyRewriteResponse,
     summary="Apply user-accepted rewrites to the original resume DOCX",
     description="Patches the original uploaded document with chosen rewrites and returns a download link.",
-    dependencies=[Depends(get_current_user)],
+    dependencies=[Depends(verify_premium_permission)],
 )
 def apply_rewrites(
     body: ApplyRewriteRequest,

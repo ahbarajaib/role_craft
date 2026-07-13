@@ -18,6 +18,8 @@ class UserResponse(BaseModel):
     email: str
     provider: str
     credits: int
+    plan_type: str
+    subscription_status: str
     created_at: datetime
 
     class Config:

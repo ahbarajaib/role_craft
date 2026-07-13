@@ -79,6 +79,13 @@ class Settings(BaseSettings):
     JWT_EXPIRY_MINUTES: int = 1440
     GOOGLE_CLIENT_ID: str = ""
 
+    # ── Razorpay Billing ──────────────────────────────────────────────────────
+    RAZORPAY_KEY_ID: str = ""
+    RAZORPAY_KEY_SECRET: str = ""
+    RAZORPAY_PLAN_PRO_ID: str = ""
+    RAZORPAY_PLAN_ELITE_ID: str = ""
+    RAZORPAY_WEBHOOK_SECRET: str = ""
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
