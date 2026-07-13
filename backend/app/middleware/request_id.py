@@ -41,6 +41,8 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         request_id = request.headers.get(REQUEST_ID_HEADER) or str(uuid.uuid4())
         request.state.request_id = request_id
 
-        response = await call_next(request)
-        response.headers[REQUEST_ID_HEADER] = request_id
-        return response
+        from loguru import logger
+        with logger.contextualize(request_id=request_id):
+            response = await call_next(request)
+            response.headers[REQUEST_ID_HEADER] = request_id
+            return response

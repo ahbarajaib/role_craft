@@ -1,12 +1,22 @@
 # Resume AI
 
-## Goal
+# Goal
 
-Build a production-grade AI-powered resume optimization platform.
+Build a production-grade AI-powered Resume Optimization platform.
 
-The application should allow a user to upload a DOCX resume, provide a job description, intelligently customize the resume using large language models, preserve the original formatting, and generate an updated resume ready for submission.
+The application should allow a user to:
 
-The project must prioritize production-quality backend engineering over rapid prototyping.
+- Upload a DOCX resume
+- Paste or upload a job description
+- Analyze the resume against the job description
+- Identify high-impact improvements
+- Generate AI suggestions for only the relevant sections
+- Allow the user to accept or reject each suggestion
+- Produce an updated DOCX while preserving formatting.
+
+The application should never invent experience, companies, dates, projects, certifications, or technical skills.
+
+The user must always remain in control of every modification.
 
 ---
 
@@ -54,14 +64,20 @@ Do not over-engineer early milestones.
 
 ---
 
-## Success Criteria
+# Success Criteria
 
-The application should eventually:
+The application should:
 
-- Preserve resume formatting.
-- Never invent experience.
-- Improve ATS relevance.
-- Explain every AI modification.
-- Produce production-quality code.
-- Be suitable for deployment on a VPS.
-- Scale into a SaaS platform.
+- Preserve document formatting.
+- Understand resume structure.
+- Understand job descriptions.
+- Identify gaps between resumes and jobs.
+- Explain every recommendation.
+- Generate targeted AI improvements.
+- Allow selective approval of changes.
+- Patch only approved sections back into the DOCX.
+- Be deployable on a VPS.
+- Analyze resumes against job descriptions.
+- Explain why recommendations are made.
+- Prioritize recommendations by expected impact.
+- Never rewrite content without explicit user approval.

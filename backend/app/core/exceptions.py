@@ -70,9 +70,9 @@ def _error_response(status_code: int, detail: str) -> JSONResponse:
 
 async def _app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     if exc.status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR:
-        logger.error("Unhandled application error", exc_info=exc, path=request.url.path)
+        logger.error(f"Unhandled application error: {exc.detail} | path={request.url.path}", exc_info=exc)
     else:
-        logger.warning("Application error", detail=exc.detail, path=request.url.path)
+        logger.warning(f"Application error: {exc.detail} | path={request.url.path}")
     return _error_response(exc.status_code, exc.detail)
 
 

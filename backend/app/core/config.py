@@ -52,6 +52,27 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
+    # ── File uploads ─────────────────────────────────────────────────────────
+    # Directory where uploaded files are stored temporarily.
+    # Relative paths are resolved from the working directory (backend/).
+    UPLOAD_DIR: str = "uploads"
+    # 5 MB expressed in bytes.
+    MAX_UPLOAD_SIZE_BYTES: int = 5 * 1024 * 1024
+    # Lifetime in hours before uploaded/generated files are auto-cleaned
+    GENERATED_CLEANUP_HOURS: int = 24
+    # Supported file extensions
+    ALLOWED_EXTENSIONS: list[str] = [".docx"]
+    # Supported MIME types
+    ALLOWED_MIME_TYPES: list[str] = ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+
+    # ── OpenAI ────────────────────────────────────────────────────────────────
+    # Set OPENAI_API_KEY in .env – never commit the real key.
+    OPENAI_API_KEY: str = ""
+    # gpt-4o-mini is the cheapest model that supports structured outputs.
+    OPENAI_MODEL: str = "gpt-4o-mini"
+    # Timeout in seconds for AI queries
+    OPENAI_TIMEOUT_SECONDS: float = 30.0
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

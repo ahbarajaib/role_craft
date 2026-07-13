@@ -12,28 +12,26 @@ from loguru import logger
 from app.core.config import Settings
 
 
-def setup_logging(settings: Settings) -> None:
-    """Configure Loguru for the application.
-
-    Removes the default Loguru sink and replaces it with one that matches
-    the log level and format appropriate for the current environment.
-
-    In production a JSON-style format would be preferred; for now a rich
-    human-readable format is used so development output is easy to follow.
-    """
-    logger.remove()
-
-    log_format = (
+def format_record(record) -> str:
+    """Format log record, adding request ID prefix if present."""
+    req_id = record["extra"].get("request_id")
+    record["extra"]["req_id_str"] = f" | <cyan>{req_id}</cyan>" if req_id else ""
+    return (
         "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
-        "<level>{level: <8}</level> | "
+        "<level>{level: <8}</level>{extra[req_id_str]} | "
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
-        "{message}"
+        "{message}\n"
     )
+
+
+def setup_logging(settings: Settings) -> None:
+    """Configure Loguru for the application."""
+    logger.remove()
 
     logger.add(
         sys.stderr,
         level=settings.LOG_LEVEL,
-        format=log_format,
+        format=format_record,
         colorize=True,
         backtrace=settings.DEBUG,
         diagnose=settings.DEBUG,

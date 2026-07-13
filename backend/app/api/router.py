@@ -13,15 +13,20 @@ Convention
 
 from fastapi import APIRouter
 
-from app.api.v1 import health
+from app.api.v1 import analysis, comparison, documents, health, job_descriptions, resume, review
 
 api_router = APIRouter()
 
 # health.py declares the /health path internally so no extra prefix is needed.
 api_router.include_router(health.router)
+api_router.include_router(documents.router)
+api_router.include_router(job_descriptions.router)
+api_router.include_router(analysis.router)
+api_router.include_router(comparison.router)
+api_router.include_router(review.router)
+api_router.include_router(resume.router)
 
 # Future routers follow this pattern:
-# from app.api.v1 import resumes, auth
-# api_router.include_router(resumes.router, prefix="/resumes", tags=["resumes"])
-# api_router.include_router(auth.router,    prefix="/auth",    tags=["auth"])
+# from app.api.v1 import auth
+# api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 

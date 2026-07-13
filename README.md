@@ -1,4 +1,6 @@
-# Resume AI
+# RoleCraft
+
+### Craft every resume for the role you’re applying to.
 
 AI-powered resume optimisation platform. Upload a DOCX resume, provide a job description, and receive a tailored resume that preserves your original formatting.
 
@@ -6,9 +8,8 @@ AI-powered resume optimisation platform. Upload a DOCX resume, provide a job des
 
 ## Project Status
 
-> **Milestone 1 – Project Skeleton**
-> FastAPI application structure is in place.
-> Resume logic, AI, database, authentication, and background workers are not yet implemented.
+> **Milestone 14 – Production Hardening (Complete)**
+> The application has been hardened with schema-level validators, async file cleanup background tasks, structured Loguru request-id tracing correlation, OpenAI call request timeouts, parse error recovery, and frontend user retry capabilities. Refer to the production [Deployment Guide](docs/DEPLOYMENT.md) for Docker builds, compose structures, and reverse-proxy configurations.
 
 ---
 
@@ -27,20 +28,62 @@ resume_ai/
 │   ├── pyproject.toml  Dependency manifest (managed by uv)
 │   ├── .env.example    Environment variable reference
 │   │
+│   ├── uploads/            Temporary storage for uploaded files
 │   └── app/
 │       ├── factory.py          Application factory (create_app)
 │       ├── core/
 │       │   ├── config.py       Pydantic-Settings configuration
 │       │   ├── logging.py      Loguru setup
 │       │   └── exceptions.py   Custom exceptions + handlers
+│       ├── analyzers/
+│       │   └── section_detector.py         Rule-based section grouper
+│       ├── comparators/
+│       │   └── resume_comparator.py        Deterministic resume vs JD comparator
+│       ├── ai/
+│       │   ├── provider.py                 OpenAI Responses API wrapper
+│       │   ├── prompts.py                  Prompt builder for analyze endpoint
+│       │   └── review_prompts.py           Prompt builder for review-section endpoint
 │       ├── api/
-│       │   ├── router.py       Top-level API router
+│       │   ├── router.py                   Top-level API router
 │       │   └── v1/
-│       │       └── health.py   GET /api/v1/health
+│       │       ├── health.py                   GET /api/v1/health
+│       │       ├── documents.py                POST /upload, GET /{id}/parse, GET /{id}/sections
+│       │       ├── job_descriptions.py         POST /job-descriptions/parse
+│       │       ├── analysis.py                 POST /analyze
+│       │       ├── comparison.py               POST /compare
+│       │       ├── review.py                   POST /review-section
+│       │       └── resume.py                   POST /resume/analyze
 │       ├── middleware/
-│       │   └── request_id.py   X-Request-ID middleware
-│       └── dependencies/
-│           └── common.py       Shared dependency factories
+│       │   └── request_id.py           X-Request-ID middleware
+│       ├── dependencies/
+│       │   ├── common.py               Shared dependency factories
+│       │   ├── document.py             DocumentService factory
+│       │   ├── parser.py               ParserService factory
+│       │   ├── section.py              SectionService factory
+│       │   ├── analysis.py             AnalysisService factory
+│       │   ├── review.py               ReviewService factory
+│       │   └── resume_analysis.py      ResumeAnalysisWorkflow factory
+│       ├── parsers/
+│       │   ├── docx_parser.py          Pure DOCX reader (python-docx)
+│       │   └── job_description_parser.py  Rule-based JD text parser
+│       ├── schemas/
+│       │   ├── document.py                 Upload response model
+│       │   ├── parser.py                   Parse response models
+│       │   ├── section.py                  Section detection response models
+│       │   ├── job_description.py          JobDescription model
+│       │   ├── analysis.py                 AnalysisRequest + ResumeAnalysisResponse + Priority
+│       │   ├── comparison.py               CompareRequest + ComparisonResult
+│       │   ├── review.py                   ReviewRequest + SectionReview
+│       │   └── resume_analysis.py          ResumeAnalysisRequest + ResumeAnalysisResult
+│       └── services/
+│           ├── document_service.py         Upload validation + persistence
+│           ├── parser_service.py           Parse orchestration
+│           ├── section_service.py          Section detection orchestration
+│           ├── job_description_service.py  JD parse orchestration
+│           ├── analysis_service.py         Resume vs JD gap analysis (AI)
+│           ├── comparison_service.py       Resume vs JD comparison (deterministic)
+│           ├── review_service.py           Single-section AI review
+│           └── resume_analysis_workflow.py Orchestrates the full analysis pipeline
 │
 └── README.md           This file
 ```
@@ -102,10 +145,18 @@ The API will be available at **http://localhost:8000**.
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/v1/health` | Liveness probe |
+| `POST` | `/api/v1/documents/upload` | Upload a DOCX resume |
+| `GET` | `/api/v1/documents/{document_id}/parse` | Parse an uploaded DOCX |
+| `GET` | `/api/v1/documents/{document_id}/sections` | Detect resume sections |
+| `POST` | `/api/v1/job-descriptions/parse` | Parse a job description |
+| `POST` | `/api/v1/analyze` | Analyse resume against a job description (AI) |
+| `POST` | `/api/v1/compare` | Compare resume against a job description (deterministic) |
+| `POST` | `/api/v1/review-section` | AI review of a single resume section |
+| `POST` | `/api/v1/resume/analyze` | Full resume analysis workflow (primary endpoint) |
 | `GET` | `/docs` | Swagger UI (development only) |
 | `GET` | `/redoc` | ReDoc (development only) |
 
-### Health check example
+### Health check
 
 ```bash
 curl http://localhost:8000/api/v1/health
@@ -117,6 +168,36 @@ curl http://localhost:8000/api/v1/health
   "environment": "development",
   "version": "0.1.0"
 }
+```
+
+### Upload a DOCX resume
+
+```bash
+curl -X POST http://localhost:8000/api/v1/documents/upload \
+  -F "file=@/path/to/your/resume.docx"
+```
+
+```json
+{
+  "document_id": "f4bbba63-5194-47f9-8be6-729e6ed8737c",
+  "filename": "resume.docx",
+  "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "size": 48291,
+  "uploaded_at": "2026-07-09T12:47:29.638656Z",
+  "status": "uploaded"
+}
+```
+
+**Validation errors return 400:**
+
+```bash
+# Wrong extension
+curl -X POST http://localhost:8000/api/v1/documents/upload \
+  -F "file=@resume.pdf"
+# → 400: "Invalid file type. Only .docx files are accepted."
+
+# File over 5 MB
+# → 400: "File too large. Maximum allowed size is 5 MB."
 ```
 
 ---
