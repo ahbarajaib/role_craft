@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /opt/rolecraft
+            cd /opt/role_craft
             git pull origin main
             docker compose down
             docker compose up -d --build

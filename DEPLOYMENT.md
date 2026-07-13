@@ -31,8 +31,8 @@ sudo apt install nginx certbot python3-certbot-nginx -y
    ```bash
    cd /opt
    git clone https://github.com/your-username/rolecraft.git
-   # If you already created /opt/rolecraft, you can clone directly into it:
-   # git clone https://github.com/your-username/rolecraft.git /opt/rolecraft
+    # If you already created /opt/role_craft, you can clone directly into it:
+    # git clone https://github.com/your-username/rolecraft.git /opt/role_craft
    ```
 
 2. **Configure Environment Variables**:

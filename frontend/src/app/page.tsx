@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { 
-  UploadCloud, 
-  CheckCircle, 
-  AlertCircle, 
-  FileText, 
-  Sparkles, 
-  TrendingUp, 
-  X, 
-  Info, 
-  Lock, 
-  ShieldAlert, 
+import {
+  UploadCloud,
+  CheckCircle,
+  AlertCircle,
+  FileText,
+  Sparkles,
+  TrendingUp,
+  X,
+  Info,
+  Lock,
+  ShieldAlert,
   HelpCircle,
   Activity,
   Layers,
@@ -85,7 +85,7 @@ function diffWords(oldStr: string, newStr: string): DiffToken[] {
 }
 
 function renderSectionCard(
-  section: ReviewedSection, 
+  section: ReviewedSection,
   idx: number,
   isExpanded: boolean,
   onToggle: () => void,
@@ -117,12 +117,12 @@ function renderSectionCard(
   };
 
   return (
-    <div 
+    <div
       key={`${section.section_name}-${idx}`}
       className={`glass-panel rounded-xl border transition-all duration-300 ${statusStyles[section.review_status]}`}
     >
       {/* Clickable Header for Collapsing */}
-      <div 
+      <div
         onClick={onToggle}
         className="flex flex-wrap items-center justify-between gap-4 p-5 cursor-pointer select-none"
       >
@@ -131,10 +131,10 @@ function renderSectionCard(
             {section.section_name}
           </span>
           <span className={`text-xs px-2.5 py-0.5 rounded-full border font-medium ${badgeStyles[section.review_status]}`}>
-            {section.review_status === "improve" 
-              ? "🟡 Improve" 
-              : section.review_status === "keep" 
-                ? "🟢 Keep" 
+            {section.review_status === "improve"
+              ? "🟡 Improve"
+              : section.review_status === "keep"
+                ? "🟢 Keep"
                 : "⚪ Reduce Emphasis"}
           </span>
           {section.review_status === "improve" && (
@@ -172,7 +172,7 @@ function renderSectionCard(
                 </span>
                 <div className="flex items-center gap-2">
                   {previousRewrittenText && (
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onUndoLastRewrite(section.section_name);
@@ -183,7 +183,7 @@ function renderSectionCard(
                       Undo
                     </button>
                   )}
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       onRevert(section.section_name);
@@ -193,7 +193,7 @@ function renderSectionCard(
                     <X className="h-2.5 w-2.5" />
                     Revert
                   </button>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       onImproveClick(section.section_name, section.recommendations);
@@ -265,7 +265,7 @@ function renderSectionCard(
 
           {/* CTA Action */}
           {section.review_status === "improve" && !rewrittenText && (
-            <button 
+            <button
               disabled={!!inlineLoadingSections[section.section_name]}
               onClick={(e) => {
                 e.stopPropagation();
@@ -368,7 +368,7 @@ function LoadingState() {
             <span className="text-indigo-500 dark:text-indigo-400 font-bold">{progress}%</span>
           </div>
           <div className="h-2 w-full bg-slate-100 dark:bg-slate-950 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             />
@@ -455,7 +455,7 @@ export default function Home() {
 
   const initialScore = analysisResult?.overall_summary.overall_coverage_percentage || 0;
   const initialMissingCount = (analysisResult?.top_improvements || []).length;
-  
+
   const currentScore = initialMissingCount > 0
     ? Math.round(initialScore + (100 - initialScore) * (resolvedCount / initialMissingCount))
     : initialScore;
@@ -685,8 +685,8 @@ export default function Home() {
       setIsPatchingApplied(false);
 
       // Refresh credits balance in header
-      refreshMe().catch(() => {});
-      
+      refreshMe().catch(() => { });
+
       // Initialize all sections with recommendations to improve as expanded by default
       const initialExpanded: Record<string, boolean> = {};
       (data.sections || []).forEach((sec: any) => {
@@ -797,10 +797,10 @@ export default function Home() {
       {/* Header */}
       <header className="relative max-w-[1440px] mx-auto flex items-center justify-between mb-12 animate-fade-in-up">
         <div className="flex items-center gap-3">
-          <img 
-            src={theme === "dark" ? "/logo.png" : "/logo-light.png"} 
-            alt="Role Craft Logo" 
-            className="h-14 w-14 object-contain rounded-xl shadow-lg shadow-indigo-600/10 dark:shadow-indigo-600/20 transition-all duration-300" 
+          <img
+            src={theme === "dark" ? "/logo.png" : "/logo-light.png"}
+            alt="Role Craft Logo"
+            className="h-14 w-14 object-contain rounded-xl shadow-lg shadow-indigo-600/10 dark:shadow-indigo-600/20 transition-all duration-300"
           />
           <div>
             <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
@@ -979,11 +979,10 @@ export default function Home() {
             <button
               type="submit"
               disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing}
-              className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${
-                documentId && jobDescription.trim().length >= 50 && !isAnalyzing
+              className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${documentId && jobDescription.trim().length >= 50 && !isAnalyzing
                   ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 cursor-pointer"
                   : "bg-slate-200 dark:bg-slate-900 text-slate-400 dark:text-slate-500 border border-slate-350 dark:border-slate-800 cursor-not-allowed"
-              }`}
+                }`}
             >
               {isAnalyzing ? (
                 <>
@@ -1003,7 +1002,7 @@ export default function Home() {
           <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/20 space-y-4">
             <h3 className="text-xs font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-200/50 dark:border-slate-900">
               <Info className="h-4.5 w-4.5 text-indigo-500 dark:text-indigo-400" />
-              Developer Principles
+              Developer Drinciples
             </h3>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
@@ -1067,60 +1066,60 @@ export default function Home() {
             </div>
           ) : (
             <div className="space-y-6">
-                  {/* Summary Dashboard Card */}
-                  <div className="glass-panel rounded-2xl p-6 border-indigo-500/35 dark:border-indigo-500/20 bg-gradient-to-r from-white/95 to-indigo-500/5 dark:from-slate-900/50 dark:to-indigo-950/10">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 dark:border-indigo-500/30">
-                            Summary
-                          </span>
-                          <span className="text-xs text-slate-500 dark:text-slate-400">Position Detected</span>
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
-                          {analysisResult.overall_summary.job_title || "Target Role"}
-                        </h3>
-                      </div>
+              {/* Summary Dashboard Card */}
+              <div className="glass-panel rounded-2xl p-6 border-indigo-500/35 dark:border-indigo-500/20 bg-gradient-to-r from-white/95 to-indigo-500/5 dark:from-slate-900/50 dark:to-indigo-950/10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 dark:border-indigo-500/30">
+                        Summary
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Position Detected</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
+                      {analysisResult.overall_summary.job_title || "Target Role"}
+                    </h3>
+                  </div>
 
-                      {/* Overall Score Circle */}
-                      <div className="flex items-center gap-4 bg-white/80 dark:bg-slate-950/50 p-4.5 rounded-xl border border-slate-200 dark:border-slate-800/80 shadow-md">
-                        <div className="relative flex items-center justify-center">
-                          {/* SVG Gauge */}
-                          <svg className="w-20 h-20 transform -rotate-90">
-                            <circle
-                              cx="40"
-                              cy="40"
-                              r="34"
-                              stroke="currentColor"
-                              strokeWidth="6"
-                              fill="transparent"
-                              className="text-slate-200 dark:text-slate-850"
-                            />
-                            <circle
-                              cx="40"
-                              cy="40"
-                              r="34"
-                              stroke="currentColor"
-                              strokeWidth="6"
-                              fill="transparent"
-                              strokeDasharray={2 * Math.PI * 34}
-                              strokeDashoffset={2 * Math.PI * 34 * (1 - currentScore / 100)}
-                              className="text-indigo-500 transition-all duration-1000"
-                            />
-                          </svg>
-                          <span className="absolute text-base font-black text-slate-850 dark:text-white">
-                            {currentScore}%
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Overall Fit</p>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">
-                            {sectionsStillNeedingImprovement} of {totalNeeded} sections need improvement
-                          </p>
-                        </div>
-                      </div>
+                  {/* Overall Score Circle */}
+                  <div className="flex items-center gap-4 bg-white/80 dark:bg-slate-950/50 p-4.5 rounded-xl border border-slate-200 dark:border-slate-800/80 shadow-md">
+                    <div className="relative flex items-center justify-center">
+                      {/* SVG Gauge */}
+                      <svg className="w-20 h-20 transform -rotate-90">
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r="34"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="transparent"
+                          className="text-slate-200 dark:text-slate-850"
+                        />
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r="34"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="transparent"
+                          strokeDasharray={2 * Math.PI * 34}
+                          strokeDashoffset={2 * Math.PI * 34 * (1 - currentScore / 100)}
+                          className="text-indigo-500 transition-all duration-1000"
+                        />
+                      </svg>
+                      <span className="absolute text-base font-black text-slate-850 dark:text-white">
+                        {currentScore}%
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Overall Fit</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        {sectionsStillNeedingImprovement} of {totalNeeded} sections need improvement
+                      </p>
                     </div>
                   </div>
+                </div>
+              </div>
 
               {/* Section Analysis Breakdown (Actionable cards shown at the top for maximum speed) */}
               <div className="space-y-6">
@@ -1167,11 +1166,11 @@ export default function Home() {
                             </button>
                           </div>
                           <div className="space-y-4">
-                            {sectionsToImprove.map((section, idx) => 
+                            {sectionsToImprove.map((section, idx) =>
                               renderSectionCard(
-                                section, 
-                                idx, 
-                                !!expandedSections[section.section_name], 
+                                section,
+                                idx,
+                                !!expandedSections[section.section_name],
                                 () => toggleSection(section.section_name),
                                 rewrittenSections[section.section_name.toLowerCase()],
                                 previousRewrittenSections[section.section_name.toLowerCase()],
@@ -1193,11 +1192,11 @@ export default function Home() {
                             <span>🟢 Keep As-Is ({sectionsToKeep.length})</span>
                           </h3>
                           <div className="space-y-4">
-                            {sectionsToKeep.map((section, idx) => 
+                            {sectionsToKeep.map((section, idx) =>
                               renderSectionCard(
-                                section, 
-                                idx, 
-                                !!expandedSections[section.section_name], 
+                                section,
+                                idx,
+                                !!expandedSections[section.section_name],
                                 () => toggleSection(section.section_name),
                                 rewrittenSections[section.section_name.toLowerCase()],
                                 previousRewrittenSections[section.section_name.toLowerCase()],
@@ -1219,11 +1218,11 @@ export default function Home() {
                             <span>⚪ Reduce Emphasis ({sectionsToReduce.length})</span>
                           </h3>
                           <div className="space-y-4">
-                            {sectionsToReduce.map((section, idx) => 
+                            {sectionsToReduce.map((section, idx) =>
                               renderSectionCard(
-                                section, 
-                                idx, 
-                                !!expandedSections[section.section_name], 
+                                section,
+                                idx,
+                                !!expandedSections[section.section_name],
                                 () => toggleSection(section.section_name),
                                 rewrittenSections[section.section_name.toLowerCase()],
                                 previousRewrittenSections[section.section_name.toLowerCase()],
@@ -1308,12 +1307,12 @@ export default function Home() {
                             ][imp.priority - 1] || "bg-slate-500/10 text-slate-400 border-slate-500/30";
 
                             return (
-                              <div 
-                                key={i} 
+                              <div
+                                key={i}
                                 className="glass-panel rounded-xl border border-slate-900/60 hover:border-slate-800 transition-all duration-300 bg-slate-950/20"
                               >
                                 {/* Clickable Header for Collapsing */}
-                                <div 
+                                <div
                                   onClick={() => toggleImprovement(imp.name)}
                                   className="flex flex-wrap items-center justify-between gap-4 p-4 cursor-pointer select-none"
                                 >
@@ -1376,8 +1375,8 @@ export default function Home() {
                                             <span className="text-indigo-400 font-bold">{Math.round(imp.confidence * 100)}%</span>
                                           </div>
                                           <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
-                                            <div 
-                                              className="h-full bg-indigo-500 rounded-full transition-all duration-500" 
+                                            <div
+                                              className="h-full bg-indigo-500 rounded-full transition-all duration-500"
                                               style={{ width: `${imp.confidence * 100}%` }}
                                             />
                                           </div>
@@ -1404,7 +1403,7 @@ export default function Home() {
       {isRewriteModalOpen && activeRewriteSection && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            
+
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-800 p-5 bg-slate-950/50">
               <div>
@@ -1416,7 +1415,7 @@ export default function Home() {
                   Review changes, hiring manager reasoning, and customize section text.
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => {
                   setIsRewriteModalOpen(false);
                   rewriteMutation.reset();
@@ -1672,7 +1671,7 @@ export default function Home() {
         <>
           <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-4 shadow-2xl animate-fade-in-up transition-all duration-300">
             <div className="max-w-3xl mx-auto">
-              
+
               {/* Expandable Drawer for Accepted Improvements */}
               {isCartOpen && !isPatchingApplied && (
                 <div className="border-b border-slate-800/80 pb-4 mb-4 space-y-3 animate-fade-in-up">
@@ -1813,8 +1812,8 @@ export default function Home() {
             <p className="font-bold text-white text-xs">Success</p>
             <p className="text-emerald-400/90 text-[10px] mt-0.5">{successNotification}</p>
           </div>
-          <button 
-            onClick={() => setSuccessNotification(null)} 
+          <button
+            onClick={() => setSuccessNotification(null)}
             className="text-emerald-400/60 hover:text-white transition-colors ml-2 shrink-0"
           >
             <X className="h-4 w-4" />
