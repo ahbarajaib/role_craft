@@ -108,7 +108,7 @@ sudo apt install nginx certbot python3-certbot-nginx -y
 5. In your Vercel project settings, navigate to **Domains** and add your custom domain `rolecraft.tech`.
 
 ---
-
+## Just a comment
 ## 5. Setting up CI/CD to VPS (GitHub Actions)
 
 We have configured a GitHub Actions pipeline in `.github/workflows/deploy.yml` that automates VPS updates on pushes.
@@ -126,3 +126,4 @@ We have configured a GitHub Actions pipeline in `.github/workflows/deploy.yml` t
    * `SSH_PRIVATE_KEY`: Paste the full contents of the private key `id_rsa_deploy`.
    * `SSH_HOST`: The IP address of your VPS.
    * `SSH_USER`: The SSH username (e.g., `root` or `ubuntu`).
+
