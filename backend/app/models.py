@@ -14,7 +14,7 @@ class User(Base):
     password_hash: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     provider: Mapped[str] = mapped_column(String, default="credentials", nullable=False)  # "credentials" or "google"
     google_id: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
-    credits: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    credits: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
     plan_type: Mapped[str] = mapped_column(String, default="free", nullable=False)  # "free" or "pro"
     subscription_status: Mapped[str] = mapped_column(String, default="inactive", nullable=False)  # "active" or "inactive"
     razorpay_subscription_id: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)

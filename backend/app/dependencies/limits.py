@@ -11,7 +11,7 @@ def verify_analysis_permission(
 ) -> None:
     """Verify that the user has remaining credits or an active Pro/Elite subscription."""
     if not optional_user:
-        raise UnauthorizedError("Authentication is required to analyze resumes. Sign up to get 3 free credits!")
+        raise UnauthorizedError("Authentication is required to analyze resumes. Sign up to get 10 free credits!")
 
     if optional_user.plan_type == "elite" and optional_user.subscription_status == "active":
         # Elite plan has unlimited usage
@@ -28,7 +28,10 @@ def verify_analysis_permission(
 def verify_premium_permission(
     user: User = Depends(get_current_user)
 ) -> User:
-    """Ensure the user has an active premium subscription to access AI rewrites or patching."""
-    if user.plan_type not in ["pro", "elite"] or user.subscription_status != "active":
-        raise InsufficientCreditsError("AI rewrites and document downloads are premium features. Please upgrade your plan.")
+    """Ensure the user has an active premium subscription or remaining credits to access AI rewrites or patching."""
+    if user.plan_type in ["pro", "elite"] and user.subscription_status == "active":
+        return user
+
+    if user.credits <= 0:
+        raise InsufficientCreditsError("You have depleted your available credits. Please upgrade your plan to continue.")
     return user

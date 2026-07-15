@@ -510,7 +510,7 @@ export default function Home() {
       setShowAuthModal(true);
       return;
     }
-    if (user && user.plan_type === "free") {
+    if (user && user.plan_type === "free" && user.credits <= 0) {
       setIsSubscriptionModalOpen(true);
       return;
     }
@@ -549,7 +549,7 @@ export default function Home() {
       setShowAuthModal(true);
       return;
     }
-    if (user && user.plan_type === "free") {
+    if (user && user.plan_type === "free" && user.credits <= 0) {
       setIsSubscriptionModalOpen(true);
       return;
     }
@@ -572,7 +572,7 @@ export default function Home() {
       setShowAuthModal(true);
       return;
     }
-    if (user && user.plan_type === "free") {
+    if (user && user.plan_type === "free" && user.credits <= 0) {
       setIsSubscriptionModalOpen(true);
       return;
     }
@@ -643,7 +643,7 @@ export default function Home() {
       setShowAuthModal(true);
       return;
     }
-    if (user && user.plan_type === "free") {
+    if (user && user.plan_type === "free" && user.credits <= 0) {
       setIsSubscriptionModalOpen(true);
       return;
     }
