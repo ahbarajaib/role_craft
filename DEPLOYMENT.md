@@ -109,6 +109,7 @@ sudo apt install nginx certbot python3-certbot-nginx -y
 
 ---
 ## Just a comment
+
 ## 5. Setting up CI/CD to VPS (GitHub Actions)
 
 We have configured a GitHub Actions pipeline in `.github/workflows/deploy.yml` that automates VPS updates on pushes.
