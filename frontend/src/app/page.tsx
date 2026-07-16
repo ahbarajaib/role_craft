@@ -384,10 +384,64 @@ function LoadingState() {
   );
 }
 
+/**
+ * Builds a smart resume filename from available context:
+ * [Company] - [Candidate Name] - [Role].docx
+ * Only includes parts that are available; falls back to "resume_updated.docx".
+ */
+function buildResumeFilename(
+  jobDescription: string,
+  resumeFilename: string | undefined,
+  jobTitle: string | undefined
+): string {
+  // --- Extract company name from job description ---
+  // Looks for patterns like "at [Company]", "Company: [Name]", "About [Company]", "[Company] is hiring"
+  const companyPatterns = [
+    /(?:^|\n)\s*Company\s*[:\-]\s*([^\n,]+)/i,
+    /(?:^|\n)\s*Organization\s*[:\-]\s*([^\n,]+)/i,
+    /(?:^|[.\n])\s*About\s+([A-Z][A-Za-z0-9&\s]{1,40})(?:\s*[,\n]|\sis\b)/,
+    /\bjoining\s+([A-Z][A-Za-z0-9&\s]{1,40})(?:\s*[,\n]|\sis\b)/i,
+    /\bworking\s+(?:at|with|for)\s+([A-Z][A-Za-z0-9&\s]{1,40})(?:\s*[,\n]|\.)/i,
+    /\bat\s+([A-Z][A-Za-z0-9&\s]{1,40})(?:\s*[,\n]|\.)/,
+    /\bjoin\s+([A-Z][A-Za-z0-9&\s]{1,40})(?:\s*[,\n]|\.)/,
+  ];
+
+  let companyName: string | null = null;
+  for (const pattern of companyPatterns) {
+    const match = jobDescription.match(pattern);
+    if (match && match[1]) {
+      companyName = match[1].trim().replace(/[^a-zA-Z0-9& ]/g, "").trim();
+      if (companyName.length > 2) break;
+      companyName = null;
+    }
+  }
+
+  // --- Extract candidate name from resume filename ---
+  // Strips the extension and tries to detect "Name - ..." or "Name_..." patterns
+  let candidateName: string | null = null;
+  if (resumeFilename) {
+    const base = resumeFilename.replace(/\.docx$/i, "").replace(/\.doc$/i, "");
+    // Try "Name - Role" or "Name_Role" or just "Name"
+    const nameMatch = base.match(/^([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)+)/);
+    if (nameMatch) {
+      candidateName = nameMatch[1].trim();
+    }
+  }
+
+  // --- Use detected role from analysis or job description ---
+  const role = jobTitle?.trim() || null;
+
+  // --- Build final filename from available parts ---
+  const parts = [companyName, candidateName, role].filter(Boolean);
+  if (parts.length === 0) return "resume_updated.docx";
+  return parts.join(" - ").replace(/[/\\?%*:|"<>]/g, "") + ".docx";
+}
+
 export default function Home() {
   const { user, token, logout, setShowAuthModal, refreshMe } = useAuth();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [file, setFile] = useState<File | null>(null);
+
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
@@ -1781,7 +1835,11 @@ export default function Home() {
                     {isPatchingApplied && downloadUrl ? (
                       <a
                         href={`${API_BASE_URL}${downloadUrl}`}
-                        download
+                        download={buildResumeFilename(
+                          jobDescription,
+                          file?.name,
+                          analysisResult?.overall_summary?.job_title
+                        )}
                         onClick={() => setSuccessNotification("Downloading updated resume...")}
                         className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/25 transition-all duration-300 flex items-center gap-1.5"
                       >
