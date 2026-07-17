@@ -5,6 +5,7 @@ from typing import Optional
 class UserSignupRequest(BaseModel):
     email: str
     password: str
+    name: Optional[str] = None
 
 class UserLoginRequest(BaseModel):
     email: str
@@ -13,13 +14,19 @@ class UserLoginRequest(BaseModel):
 class GoogleLoginRequest(BaseModel):
     credential: str
 
+class ProfileUpdateRequest(BaseModel):
+    name: Optional[str] = None
+
 class UserResponse(BaseModel):
     id: int
     email: str
+    name: Optional[str] = None
     provider: str
     credits: int
     plan_type: str
     subscription_status: str
+    base_resume_id: Optional[str] = None
+    base_resume_filename: Optional[str] = None
     created_at: datetime
 
     class Config:
@@ -29,3 +36,4 @@ class AuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+

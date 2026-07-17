@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.schemas.auth import UserSignupRequest, UserLoginRequest, GoogleLoginRequest, AuthResponse, UserResponse
+from app.schemas.auth import UserSignupRequest, UserLoginRequest, GoogleLoginRequest, ProfileUpdateRequest, AuthResponse, UserResponse
 from app.models import User
 from app.core.security import hash_password, verify_password, create_access_token
 from app.core.exceptions import BadRequestError, UnauthorizedError
@@ -25,6 +25,7 @@ def signup(req: UserSignupRequest, db: Session = Depends(get_db)):
         email=email_clean,
         password_hash=hash_password(req.password),
         provider="credentials",
+        name=req.name.strip() if req.name else None,
         credits=10
     )
     db.add(new_user)
@@ -55,6 +56,7 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
     if settings.ENVIRONMENT != "production" and req.credential == "mock-google-token":
         email = "mockuser@rolecraft.tech"
         google_id = "mock-google-id-12345"
+        google_name = "Mock User"
     else:
         if not settings.GOOGLE_CLIENT_ID:
             raise BadRequestError("Google authentication is not configured on the server.")
@@ -66,6 +68,7 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
             )
             email = idinfo.get("email")
             google_id = idinfo.get("sub")
+            google_name = idinfo.get("name")
             if not email:
                 raise BadRequestError("Google ID Token has no associated email.")
         except ValueError as e:
@@ -75,11 +78,12 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email_clean).first()
 
     if not user:
-        # Register new Google user
+        # Register new Google user with name from Google profile
         user = User(
             email=email_clean,
             provider="google",
             google_id=google_id,
+            name=google_name,
             credits=10
         )
         db.add(user)
@@ -90,8 +94,11 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
         if not user.google_id:
             user.google_id = google_id
             user.provider = "google"
-            db.commit()
-            db.refresh(user)
+        # Populate name from Google if not already set
+        if not user.name and google_name:
+            user.name = google_name
+        db.commit()
+        db.refresh(user)
 
     token = create_access_token({"sub": user.email})
     return AuthResponse(access_token=token, user=user)
@@ -100,3 +107,18 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
 def me(user: User = Depends(get_current_user)):
     """Retrieve details of the active authenticated session."""
     return user
+
+@router.patch("/profile", response_model=UserResponse)
+def update_profile(
+    req: ProfileUpdateRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Update the authenticated user's profile (name)."""
+    if req.name is not None:
+        user.name = req.name.strip() or None
+    db.commit()
+    db.refresh(user)
+    return user
+
+

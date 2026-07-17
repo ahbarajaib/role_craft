@@ -6,10 +6,13 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 export interface User {
   id: number;
   email: string;
+  name: string | null;
   provider: string;
   credits: number;
   plan_type: string;
   subscription_status: string;
+  base_resume_id: string | null;
+  base_resume_filename: string | null;
   created_at: string;
 }
 
@@ -18,7 +21,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, name?: string) => Promise<void>;
   googleLogin: (credential: string) => Promise<void>;
   logout: () => void;
   refreshMe: () => Promise<void>;
@@ -87,11 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setShowAuthModal(false);
   };
 
-  const signup = async (email: string, password: string) => {
+  const signup = async (email: string, password: string, name?: string) => {
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, name: name?.trim() || undefined }),
     });
 
     if (!response.ok) {

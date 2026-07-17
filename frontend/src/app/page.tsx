@@ -391,11 +391,10 @@ function LoadingState() {
  */
 function buildResumeFilename(
   jobDescription: string,
-  resumeFilename: string | undefined,
+  userName: string | null | undefined,
   jobTitle: string | undefined
 ): string {
   // --- Extract company name from job description ---
-  // Looks for patterns like "at [Company]", "Company: [Name]", "About [Company]", "[Company] is hiring"
   const companyPatterns = [
     /(?:^|\n)\s*Company\s*[:\-]\s*([^\n,]+)/i,
     /(?:^|\n)\s*Organization\s*[:\-]\s*([^\n,]+)/i,
@@ -416,19 +415,10 @@ function buildResumeFilename(
     }
   }
 
-  // --- Extract candidate name from resume filename ---
-  // Strips the extension and tries to detect "Name - ..." or "Name_..." patterns
-  let candidateName: string | null = null;
-  if (resumeFilename) {
-    const base = resumeFilename.replace(/\.docx$/i, "").replace(/\.doc$/i, "");
-    // Try "Name - Role" or "Name_Role" or just "Name"
-    const nameMatch = base.match(/^([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)+)/);
-    if (nameMatch) {
-      candidateName = nameMatch[1].trim();
-    }
-  }
+  // --- Use name from user account ---
+  const candidateName = userName?.trim() || null;
 
-  // --- Use detected role from analysis or job description ---
+  // --- Use detected role from analysis ---
   const role = jobTitle?.trim() || null;
 
   // --- Build final filename from available parts ---
@@ -479,6 +469,8 @@ export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [inlineLoadingSections, setInlineLoadingSections] = useState<Record<string, boolean>>({});
   const [isImprovingAll, setIsImprovingAll] = useState(false);
+  const [baseResumeLoaded, setBaseResumeLoaded] = useState(false);
+  const [isSavingBase, setIsSavingBase] = useState(false);
 
   useEffect(() => {
     if (Object.keys(rewrittenSections).length > 0) {
@@ -488,6 +480,17 @@ export default function Home() {
       setIsCartOpen(false);
     }
   }, [rewrittenSections]);
+
+  // Auto-load user's saved base resume when they log in
+  useEffect(() => {
+    if (user && user.base_resume_id && user.base_resume_filename && !file && !baseResumeLoaded) {
+      setDocumentId(user.base_resume_id);
+      // Create a synthetic File-like display object for the UI
+      const synthetic = new File([], user.base_resume_filename, { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+      setFile(synthetic);
+      setBaseResumeLoaded(true);
+    }
+  }, [user]);
 
 
   // Dynamic fit calculations based on resolved recruitment improvements
@@ -846,6 +849,34 @@ export default function Home() {
     setDownloadId(null);
     setDownloadUrl(null);
     setIsPatchingApplied(false);
+    setBaseResumeLoaded(false);
+  };
+
+  const handleSaveBaseResume = async () => {
+    if (!documentId || !file || !token) return;
+    // Don't re-save if it's already the base resume
+    if (documentId === user?.base_resume_id) {
+      setSuccessNotification("This is already your saved base resume.");
+      return;
+    }
+    setIsSavingBase(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/documents/set-base`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ document_id: documentId, filename: file.name }),
+      });
+      if (!response.ok) throw new Error("Failed to save base resume.");
+      await refreshMe();
+      setSuccessNotification("Base resume saved! It will auto-load next time you sign in.");
+    } catch (err: any) {
+      setError(err?.message || "Could not save base resume.");
+    } finally {
+      setIsSavingBase(false);
+    }
   };
 
   const handleAnalyze = (e: React.FormEvent) => {
@@ -971,36 +1002,57 @@ export default function Home() {
                   </p>
                 </div>
               ) : (
-                <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
-                      <FileText className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+                        <FileText className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
+                      </div>
+                      <div className="max-w-[200px] md:max-w-xs">
+                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{file.name}</p>
+                        {file.size > 0 ? (
+                          <p className="text-xs text-slate-400 dark:text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
+                        ) : (
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" /> Saved resume
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div className="max-w-[200px] md:max-w-xs">
-                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{file.name}</p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
+                    <div className="flex items-center gap-2">
+                      {isUploading ? (
+                        <span className="text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-500 animate-ping" />
+                          Uploading...
+                        </span>
+                      ) : documentId ? (
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          {documentId === user?.base_resume_id ? "Saved" : "Uploaded"}
+                        </span>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={clearFile}
+                        className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                        title="Remove and upload a different resume"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {isUploading ? (
-                      <span className="text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-500 animate-ping" />
-                        Uploading...
-                      </span>
-                    ) : documentId ? (
-                      <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        Uploaded
-                      </span>
-                    ) : null}
-                    <button
-                      type="button"
-                      onClick={clearFile}
-                      className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
+                  {/* Use different resume option */}
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="file"
+                      accept=".docx"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <span className="text-xs text-indigo-500 dark:text-indigo-400 hover:underline group-hover:text-indigo-600 transition-colors">
+                      ↑ Upload a different resume for this session
+                    </span>
+                  </label>
                 </div>
               )}
             </div>
@@ -1837,7 +1889,7 @@ export default function Home() {
                         href={`${API_BASE_URL}${downloadUrl}`}
                         download={buildResumeFilename(
                           jobDescription,
-                          file?.name,
+                          user?.name,
                           analysisResult?.overall_summary?.job_title
                         )}
                         onClick={() => setSuccessNotification("Downloading updated resume...")}
@@ -1865,6 +1917,25 @@ export default function Home() {
                       </button>
                     )}
                   </div>
+
+                  {/* Save as base resume - shown when user has uploaded a new (non-base) file */}
+                  {user && token && documentId && documentId !== user?.base_resume_id && (
+                    <button
+                      type="button"
+                      onClick={handleSaveBaseResume}
+                      disabled={isSavingBase}
+                      className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-60 text-slate-200 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-600"
+                      title="Save this as your base resume so it auto-loads next time"
+                    >
+                      {isSavingBase ? (
+                        <div className="h-3 w-3 border-2 border-slate-400/30 border-t-slate-200 rounded-full animate-spin" />
+                      ) : (
+                        <CheckCircle className="h-3.5 w-3.5" />
+                      )}
+                      Save as Base Resume
+                    </button>
+                  )}
+
 
                   <button
                     type="button"

@@ -3,12 +3,13 @@
 import React, { useState } from "react";
 import { useAuth } from "./auth_provider";
 import { GoogleLogin } from "@react-oauth/google";
-import { X, Sparkles, Mail, Lock, AlertCircle, RefreshCw } from "lucide-react";
+import { X, Sparkles, Mail, Lock, AlertCircle, RefreshCw, User } from "lucide-react";
 
 export default function AuthModal() {
   const { showAuthModal, setShowAuthModal, login, signup, googleLogin } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +35,7 @@ export default function AuthModal() {
     setIsSubmitting(true);
     try {
       if (isSignUp) {
-        await signup(emailClean, password);
+        await signup(emailClean, password, name.trim() || undefined);
       } else {
         await login(emailClean, password);
       }
@@ -128,6 +129,25 @@ export default function AuthModal() {
               />
             </div>
           </div>
+
+          {isSignUp && (
+            <div className="space-y-1.5 animate-fade-in-up">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+                Full Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Mohammed Ahbar"
+                  className="w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+          )}
 
           {isSignUp && (
             <div className="space-y-1.5 animate-fade-in-up">
