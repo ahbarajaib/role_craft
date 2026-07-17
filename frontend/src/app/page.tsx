@@ -1886,12 +1886,14 @@ export default function Home() {
                   <div className="flex items-center gap-2">
                     {isPatchingApplied && downloadUrl ? (
                       <a
-                        href={`${API_BASE_URL}${downloadUrl}`}
-                        download={buildResumeFilename(
-                          jobDescription,
-                          user?.name,
-                          analysisResult?.overall_summary?.job_title
-                        )}
+                        href={`${API_BASE_URL}${downloadUrl}?filename=${encodeURIComponent(
+                          buildResumeFilename(
+                            jobDescription,
+                            user?.name,
+                            analysisResult?.overall_summary?.job_title
+                          )
+                        )}`}
+                        download
                         onClick={() => setSuccessNotification("Downloading updated resume...")}
                         className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/25 transition-all duration-300 flex items-center gap-1.5"
                       >

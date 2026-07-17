@@ -111,14 +111,21 @@ def apply_rewrites(
 def download_patched_resume(
     download_id: str,
     settings: Annotated[Settings, Depends(get_settings)],
+    filename: str = "resume_updated.docx",
 ) -> FileResponse:
-    """Stream the generated patched DOCX file."""
+    """Stream the generated patched DOCX file with the given filename."""
     file_path = Path(settings.UPLOAD_DIR) / "generated" / f"{download_id}.docx"
     if not file_path.exists():
         raise NotFoundError(f"Generated download file for ID '{download_id}' not found.")
-        
+
+    # Sanitise the filename — strip path separators and enforce .docx extension
+    safe_name = filename.replace("/", "").replace("\\", "").strip() or "resume_updated.docx"
+    if not safe_name.lower().endswith(".docx"):
+        safe_name += ".docx"
+
     return FileResponse(
         path=file_path,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        filename="resume_updated.docx",
+        filename=safe_name,
     )
+
