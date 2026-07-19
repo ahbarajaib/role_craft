@@ -37,8 +37,9 @@ export default function AuthModal() {
         body: JSON.stringify({ email: emailClean }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error?.detail || data?.message || "Password reset request failed.");
+      if (!res.ok || data?.success === false) {
+        setError(data?.message || data?.error?.detail || "Password reset request failed.");
+        return;
       }
       setSuccessMessage(data.message || `Password reset instructions have been sent to ${emailClean}.`);
     } catch (err: any) {

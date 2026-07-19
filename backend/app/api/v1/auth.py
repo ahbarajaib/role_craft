@@ -137,19 +137,24 @@ def update_profile(
 
 @router.post("/forgot-password", response_model=MessageResponse)
 def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    """Handle password reset requests with detailed, clear error responses."""
+    """Handle password reset requests cleanly without triggering browser console 400 errors."""
     email_clean = req.email.strip().lower()
     user = db.query(User).filter(User.email == email_clean).first()
     if not user:
-        raise NotFoundError("No account found with this email address. Please check your spelling or sign up.")
+        return MessageResponse(
+            message="No account found with this email address. Please check your spelling or sign up.",
+            success=False
+        )
 
     if not user.password_hash or user.provider == "google":
-        raise BadRequestError(
-            "This account was created using Google Sign-In and does not have a password. Please sign in directly with Google."
+        return MessageResponse(
+            message="This account was created using Google Sign-In and does not have a password. Please sign in directly with Google.",
+            success=False
         )
 
     return MessageResponse(
-        message=f"Password reset instructions have been sent to {email_clean}."
+        message=f"Password reset instructions have been sent to {email_clean}.",
+        success=True
     )
 
 
