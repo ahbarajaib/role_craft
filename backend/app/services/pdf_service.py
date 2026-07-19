@@ -62,7 +62,13 @@ class PDFService:
                 logger.warning("LibreOffice CLI conversion failed, falling back to ReportLab", error=str(exc))
 
         # 2. Universal Python Fallback using ReportLab + python-docx
-        return self._render_pdf_reportlab(docx_path, pdf_path)
+        try:
+            return self._render_pdf_reportlab(docx_path, pdf_path)
+        except Exception as exc:
+            logger.error("PDF conversion failed", error=str(exc), path=str(docx_path))
+            raise BadRequestError(
+                f"PDF generation failed for this document: {str(exc)}. Please download the DOCX version or contact support."
+            )
 
     def _render_pdf_reportlab(self, docx_path: Path, pdf_path: Path) -> Path:
         """Pure-python fallback to convert DOCX paragraphs into a PDF using ReportLab."""

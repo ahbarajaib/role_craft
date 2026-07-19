@@ -4,6 +4,12 @@ FROM python:3.12-slim
 # Install uv package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+# Install system dependencies (LibreOffice for PDF rendering)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libreoffice-writer \
+    fonts-liberation \
+    && rm -rf /var/lib/apt/lists/*
+
 # Set working directory inside container
 WORKDIR /app
 

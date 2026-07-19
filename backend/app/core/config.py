@@ -46,7 +46,14 @@ class Settings(BaseSettings):
     # ── CORS ─────────────────────────────────────────────────────────────────
     # Provide as a JSON array in the env file, e.g.
     #   ALLOWED_ORIGINS='["http://localhost:3000"]'
-    ALLOWED_ORIGINS: list[str] = Field(default=["http://localhost:3000"])
+    ALLOWED_ORIGINS: list[str] = Field(
+        default=[
+            "http://localhost:3000",
+            "https://rolecraft.tech",
+            "https://www.rolecraft.tech",
+            "https://api.rolecraft.tech",
+        ]
+    )
 
     # ── Server (used only when running via `python main.py`) ─────────────────
     HOST: str = "0.0.0.0"
