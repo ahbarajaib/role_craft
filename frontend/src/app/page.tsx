@@ -1216,28 +1216,28 @@ export default function Home() {
                         {file.size > 0 ? (
                           <p className="text-xs text-slate-400 dark:text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
                         ) : (
-                          <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3" /> Saved resume
+                          <p className="text-xs text-indigo-500 dark:text-indigo-400 font-medium">
+                            Base Resume
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {isUploading ? (
-                        <span className="text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5">
+                        <span className="text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5 font-medium">
                           <span className="h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-500 animate-ping" />
                           Uploading...
                         </span>
                       ) : documentId ? (
-                        <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
                           <CheckCircle className="h-3.5 w-3.5" />
-                          {documentId === user?.base_resume_id ? "Saved" : "Uploaded"}
+                          Ready
                         </span>
                       ) : null}
                       <button
                         type="button"
                         onClick={clearFile}
-                        className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                        className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
                         title="Remove and upload a different resume"
                       >
                         <X className="h-4 w-4" />
@@ -1270,12 +1270,13 @@ export default function Home() {
                 onChange={(e) => setJobDescription(e.target.value)}
                 placeholder="Paste the job description or requirement spec here (minimum 50 characters)..."
                 rows={8}
+                maxLength={8000}
                 className="w-full bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 text-sm placeholder-slate-400 dark:placeholder-slate-600 transition-all outline-none resize-y shadow-inner"
               />
               <div className="flex items-center justify-between text-xs text-slate-500">
                 <span>Min: 50 chars</span>
-                <span className={jobDescription.length < 50 ? "text-amber-500/70" : "text-emerald-600 dark:text-emerald-500"}>
-                  {jobDescription.length} characters
+                <span className={jobDescription.length < 50 ? "text-amber-500/70" : "text-emerald-600 dark:text-emerald-500 font-semibold"}>
+                  {jobDescription.length.toLocaleString()} / 8,000 characters
                 </span>
               </div>
             </div>
