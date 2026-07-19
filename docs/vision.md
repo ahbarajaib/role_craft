@@ -18,6 +18,8 @@ The application should never invent experience, companies, dates, projects, cert
 
 The user must always remain in control of every modification.
 
+It also includes the capability to search for real jobs and score them against an uploaded resume (ATS scoring) using AI.
+
 ---
 
 ## Long-Term Vision
