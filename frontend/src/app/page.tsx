@@ -487,6 +487,9 @@ export default function Home() {
   const [isAutoTailoring, setIsAutoTailoring] = useState(false);
   const [isWeavingKeywords, setIsWeavingKeywords] = useState(false);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const [metricPercentage, setMetricPercentage] = useState("");
   const [metricScale, setMetricScale] = useState("");
 
@@ -1006,6 +1009,38 @@ export default function Home() {
       uploadMutation.mutate(droppedFile);
     }
   };
+
+  useEffect(() => {
+    if (isPdfPreviewOpen && (downloadId || documentId)) {
+      setIsPdfLoading(true);
+      setPdfError(null);
+      const targetId = downloadId || documentId;
+      const pdfEndpoint = `${API_BASE_URL}/api/v1/resume/download/${targetId}/pdf`;
+
+      fetch(pdfEndpoint, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+          return res.blob();
+        })
+        .then((blob) => {
+          const url = URL.createObjectURL(blob);
+          setPdfBlobUrl(url);
+          setIsPdfLoading(false);
+        })
+        .catch((err) => {
+          console.error("PDF preview blob error:", err);
+          setPdfError("Unable to render live preview. Please click 'Download PDF' to view.");
+          setIsPdfLoading(false);
+        });
+    } else {
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl);
+        setPdfBlobUrl(null);
+      }
+    }
+  }, [isPdfPreviewOpen, downloadId, documentId, token]);
 
   const clearFile = () => {
     setFile(null);
@@ -2487,13 +2522,38 @@ export default function Home() {
                 </button>
               </div>
             </div>
-            {/* Iframe Viewer */}
-            <div className="flex-1 bg-slate-950 p-2">
-              <iframe
-                src={`${API_BASE_URL}/api/v1/resume/download/${downloadId || documentId}/pdf`}
-                className="w-full h-full rounded-xl border border-slate-800/80 bg-slate-900"
-                title="Resume PDF Preview"
-              />
+            {/* Viewer Body */}
+            <div className="flex-1 bg-slate-950 p-2 flex items-center justify-center relative overflow-hidden">
+              {isPdfLoading ? (
+                <div className="flex flex-col items-center justify-center space-y-3 text-slate-400">
+                  <div className="h-8 w-8 border-3 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+                  <p className="text-xs font-medium">Rendering live PDF preview...</p>
+                </div>
+              ) : pdfError ? (
+                <div className="flex flex-col items-center justify-center space-y-4 max-w-md text-center p-6 bg-slate-900 rounded-2xl border border-slate-800">
+                  <ShieldAlert className="h-10 w-10 text-amber-400" />
+                  <p className="text-sm font-semibold text-slate-200">{pdfError}</p>
+                  <a
+                    href={`${API_BASE_URL}/api/v1/resume/download/${downloadId || documentId}/pdf`}
+                    download
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" /> Download PDF File
+                  </a>
+                </div>
+              ) : pdfBlobUrl ? (
+                <object
+                  data={pdfBlobUrl}
+                  type="application/pdf"
+                  className="w-full h-full rounded-xl border border-slate-800/80 bg-slate-900"
+                >
+                  <iframe
+                    src={pdfBlobUrl}
+                    className="w-full h-full rounded-xl border border-slate-800/80 bg-slate-900"
+                    title="Resume PDF Preview"
+                  />
+                </object>
+              ) : null}
             </div>
           </div>
         </div>
