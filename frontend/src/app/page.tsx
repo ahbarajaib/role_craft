@@ -1153,10 +1153,6 @@ export default function Home() {
             </button>
           )}
 
-          <div className="hidden sm:flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
-            <Activity className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
-            <span>Local Engine Active</span>
-          </div>
           <button
             type="button"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
