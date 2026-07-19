@@ -153,7 +153,6 @@ The API will be available at **http://localhost:8000**.
 | `POST` | `/api/v1/compare` | Compare resume against a job description (deterministic) |
 | `POST` | `/api/v1/review-section` | AI review of a single resume section |
 | `POST` | `/api/v1/resume/analyze` | Full resume analysis workflow (primary endpoint) |
-| `POST` | `/api/v1/jobs/search-and-score` | Search for jobs and score them against your resume (ATS scoring) |
 | `GET` | `/docs` | Swagger UI (development only) |
 | `GET` | `/redoc` | ReDoc (development only) |
 

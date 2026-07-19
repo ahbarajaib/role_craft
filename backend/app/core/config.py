@@ -86,10 +86,6 @@ class Settings(BaseSettings):
     RAZORPAY_PLAN_ELITE_ID: str = ""
     RAZORPAY_WEBHOOK_SECRET: str = ""
 
-    # ── Job Search ───────────────────────────────────────────────────────────
-    # Get a free key at https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch
-    JSEARCH_API_KEY: str = ""
-
 
 
 @lru_cache(maxsize=1)
