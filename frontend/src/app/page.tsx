@@ -385,6 +385,13 @@ function LoadingState() {
   );
 }
 
+function cleanKeywordName(rawName: string): string {
+  if (!rawName) return "";
+  return rawName
+    .replace(/^(add|include|highlight|emphasize|condense|surface|rephrase|incorporate|integrate)\s+/i, "")
+    .trim();
+}
+
 /**
  * Builds a smart resume filename from available context:
  * [Company] - [Candidate Name] - [Role].docx
@@ -478,6 +485,7 @@ export default function Home() {
   const [baseResumeLoaded, setBaseResumeLoaded] = useState(false);
   const [isSavingBase, setIsSavingBase] = useState(false);
   const [isAutoTailoring, setIsAutoTailoring] = useState(false);
+  const [isWeavingKeywords, setIsWeavingKeywords] = useState(false);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
   const [metricPercentage, setMetricPercentage] = useState("");
   const [metricScale, setMetricScale] = useState("");
@@ -708,6 +716,76 @@ export default function Home() {
       console.error("Auto-tailor error:", err);
     } finally {
       setIsAutoTailoring(false);
+    }
+  };
+
+  const handleWeaveAllKeywords = async () => {
+    if (!analysisResult || !documentId) return;
+    setIsWeavingKeywords(true);
+    try {
+      const sectionsToImprove = (analysisResult.sections || []).filter(
+        (s) => s.review_status === "improve"
+      );
+
+      const targetSections = sectionsToImprove.length > 0
+        ? sectionsToImprove
+        : (analysisResult.sections || []).slice(0, 2);
+
+      const missingKeywords = Array.from(
+        new Set([
+          ...(analysisResult.sections || []).flatMap((s) => s.missing_keywords || []),
+          ...(analysisResult.top_improvements || []).map((imp) => cleanKeywordName(imp.name)),
+        ])
+      ).filter(Boolean);
+
+      const newRewrites: Record<string, string> = {};
+      await Promise.all(
+        targetSections.map(async (sec) => {
+          try {
+            const res = await rewriteSection({
+              document_id: documentId,
+              section_name: sec.section_name,
+              job_description_text: jobDescription,
+              recommendations: [
+                ...(sec.recommendations || []),
+                `Weave naturally these essential missing ATS keywords: ${missingKeywords.join(", ")}`,
+              ],
+            });
+            newRewrites[sec.section_name.toLowerCase()] = res.rewritten_text;
+          } catch (err) {
+            console.error(`Failed auto weave for ${sec.section_name}:`, err);
+          }
+        })
+      );
+
+      if (Object.keys(newRewrites).length > 0) {
+        setRewrittenSections(newRewrites);
+
+        const acceptedItems = Object.entries(newRewrites).map(([secKey, text]) => {
+          const origSec = (analysisResult.sections || []).find(
+            (s) => s.section_name.toLowerCase() === secKey
+          );
+          return {
+            section: origSec?.section_name || secKey,
+            rewritten_text: text,
+          };
+        });
+
+        const applyRes = await applyMutation.mutateAsync({
+          document_id: documentId,
+          accepted_rewrites: acceptedItems,
+        });
+
+        setDownloadId(applyRes.download_id);
+        setDownloadUrl(applyRes.download_url);
+        setIsPatchingApplied(true);
+        setSuccessNotification("⚡ All ATS Keywords Woven & Resume Updated!");
+        setIsPdfPreviewOpen(true);
+      }
+    } catch (err: any) {
+      console.error("Weave keywords error:", err);
+    } finally {
+      setIsWeavingKeywords(false);
     }
   };
 
@@ -1387,31 +1465,39 @@ export default function Home() {
 
               {/* Interactive ATS Skill & Keyword Matrix Card */}
               <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 space-y-4 shadow-xl">
-                <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
                   <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
-                      <Layers className="h-4 w-4" />
+                    <div className="h-8 w-8 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20 shrink-0">
+                      <Layers className="h-4.5 w-4.5" />
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                         ATS Skill & Keyword Matrix
                       </h3>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Click any missing or supported skill chip to auto-target it in section rewrite.
+                        Match overview & 1-click keyword insertion.
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-[11px] font-semibold">
-                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500" /> Matched
-                    </span>
-                    <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                      <span className="h-2 w-2 rounded-full bg-amber-500" /> Supported
-                    </span>
-                    <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400">
-                      <span className="h-2 w-2 rounded-full bg-rose-500" /> Missing
-                    </span>
-                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleWeaveAllKeywords}
+                    disabled={isWeavingKeywords}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    {isWeavingKeywords ? (
+                      <>
+                        <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        Weaving Keywords...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-200 animate-pulse" />
+                        ⚡ Auto-Weave All Keywords (1-Click)
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 <div className="space-y-4">
@@ -1427,7 +1513,7 @@ export default function Home() {
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
                         >
                           <CheckCircle className="h-3 w-3 shrink-0" />
-                          {typeof s === "string" ? s : s.name}
+                          {typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)}
                         </span>
                       ))}
                     </div>
@@ -1437,14 +1523,14 @@ export default function Home() {
                   {(() => {
                     const supported = (analysisResult.top_improvements || [])
                       .filter((imp) => imp.evidence_reused && imp.evidence_reused.trim())
-                      .map((imp) => ({ name: imp.name, section: imp.section, evidence: imp.evidence_reused }));
+                      .map((imp) => ({ name: cleanKeywordName(imp.name), section: imp.section, evidence: imp.evidence_reused }));
 
                     if (supported.length === 0) return null;
 
                     return (
                       <div className="space-y-1.5">
                         <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-                          🟡 Supported in Evidence (Click to surface into target section)
+                          🟡 Supported in Evidence (Click to surface)
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                           {supported.map((item, idx) => (
@@ -1474,16 +1560,25 @@ export default function Home() {
 
                   {/* 🔴 Missing Keywords / Gaps */}
                   {(() => {
+                    const supportedNames = new Set(
+                      (analysisResult.top_improvements || [])
+                        .filter((imp) => imp.evidence_reused && imp.evidence_reused.trim())
+                        .map((imp) => cleanKeywordName(imp.name))
+                    );
+
                     const missingFromSections = (analysisResult.sections || []).flatMap((s) => s.missing_keywords || []);
-                    const missingFromImps = (analysisResult.top_improvements || []).map((imp) => imp.name);
-                    const allMissing = Array.from(new Set([...missingFromSections, ...missingFromImps])).filter(Boolean);
+                    const missingFromImps = (analysisResult.top_improvements || []).map((imp) => cleanKeywordName(imp.name));
+
+                    const allMissing = Array.from(
+                      new Set([...missingFromSections, ...missingFromImps].map((k) => cleanKeywordName(k)))
+                    ).filter((k) => k && !supportedNames.has(k));
 
                     if (allMissing.length === 0) return null;
 
                     return (
                       <div className="space-y-1.5">
                         <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">
-                          🔴 Missing ATS Keywords (Click chip to weave naturally into rewrite)
+                          🔴 Missing ATS Keywords (Click to weave)
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                           {allMissing.map((kw, idx) => (
