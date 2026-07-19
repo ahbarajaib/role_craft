@@ -130,3 +130,45 @@ def download_patched_resume(
         filename=safe_name,
     )
 
+
+@router.get(
+    "/download/{download_id}/pdf",
+    summary="Download or stream PDF version of the resume",
+    description="Converts and streams the specified resume document as a PDF.",
+)
+def download_patched_resume_pdf(
+    download_id: str,
+    settings: Annotated[Settings, Depends(get_settings)],
+    filename: str = "resume_updated.pdf",
+) -> FileResponse:
+    """Stream the generated resume as a PDF file."""
+    from app.services.pdf_service import PDFService
+
+    upload_dir = Path(settings.UPLOAD_DIR)
+
+    if download_id.startswith("base/"):
+        user_id = download_id.split("/", 1)[1]
+        docx_path = upload_dir / "base" / f"{user_id}.docx"
+        pdf_path = upload_dir / "base" / f"{user_id}.pdf"
+    else:
+        docx_path = upload_dir / "generated" / f"{download_id}.docx"
+        if not docx_path.exists():
+            docx_path = upload_dir / f"{download_id}.docx"
+        pdf_path = upload_dir / "generated" / f"{download_id}.pdf"
+
+    if not docx_path.exists():
+        raise NotFoundError(f"Source resume document '{download_id}' not found.")
+
+    pdf_service = PDFService(upload_dir=upload_dir)
+    pdf_service.convert_docx_to_pdf(docx_path, pdf_path)
+
+    safe_name = filename.replace("/", "").replace("\\", "").strip() or "resume_updated.pdf"
+    if not safe_name.lower().endswith(".pdf"):
+        safe_name = safe_name.rsplit(".", 1)[0] + ".pdf" if "." in safe_name else safe_name + ".pdf"
+
+    return FileResponse(
+        path=pdf_path,
+        media_type="application/pdf",
+        filename=safe_name,
+    )
+

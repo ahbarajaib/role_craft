@@ -29,7 +29,8 @@ import {
   Moon,
   Target,
   Shield,
-  PenTool
+  PenTool,
+  Download
 } from "lucide-react";
 import { uploadResume, analyzeResume, applyRewrites, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
@@ -471,6 +472,7 @@ export default function Home() {
   const [isImprovingAll, setIsImprovingAll] = useState(false);
   const [baseResumeLoaded, setBaseResumeLoaded] = useState(false);
   const [isSavingBase, setIsSavingBase] = useState(false);
+  const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
   const [metricPercentage, setMetricPercentage] = useState("");
   const [metricScale, setMetricScale] = useState("");
 
@@ -1264,6 +1266,135 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* Interactive ATS Skill & Keyword Matrix Card */}
+              <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 space-y-4 shadow-xl">
+                <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                      <Layers className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                        ATS Skill & Keyword Matrix
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Click any missing or supported skill chip to auto-target it in section rewrite.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] font-semibold">
+                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500" /> Matched
+                    </span>
+                    <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                      <span className="h-2 w-2 rounded-full bg-amber-500" /> Supported
+                    </span>
+                    <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400">
+                      <span className="h-2 w-2 rounded-full bg-rose-500" /> Missing
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* 🟢 Matched Skills */}
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                      🟢 Confirmed Matched Skills ({((analysisResult.top_strengths || []).length)})
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(analysisResult.top_strengths || []).map((s: any, idx: number) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
+                        >
+                          <CheckCircle className="h-3 w-3 shrink-0" />
+                          {typeof s === "string" ? s : s.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 🟡 Supported Skills in Evidence */}
+                  {(() => {
+                    const supported = (analysisResult.top_improvements || [])
+                      .filter((imp) => imp.evidence_reused && imp.evidence_reused.trim())
+                      .map((imp) => ({ name: imp.name, section: imp.section, evidence: imp.evidence_reused }));
+
+                    if (supported.length === 0) return null;
+
+                    return (
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
+                          🟡 Supported in Evidence (Click to surface into target section)
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {supported.map((item, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                const targetSec = item.section || "Experience";
+                                const recs = (analysisResult.sections || []).find(
+                                  (s) => s.section_name.toLowerCase() === targetSec.toLowerCase()
+                                )?.recommendations || [];
+                                setUserInstructions(`Surface and emphasize supported keyword: '${item.name}' (Evidence: ${item.evidence})`);
+                                handleImproveClick(targetSec, recs);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 transition-colors cursor-pointer group"
+                              title={`Click to rewrite ${item.section} and surface ${item.name}`}
+                            >
+                              <Sparkles className="h-3 w-3 shrink-0 text-amber-500 group-hover:scale-110 transition-transform" />
+                              {item.name}
+                              <span className="text-[9px] opacity-75">({item.section})</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* 🔴 Missing Keywords / Gaps */}
+                  {(() => {
+                    const missingFromSections = (analysisResult.sections || []).flatMap((s) => s.missing_keywords || []);
+                    const missingFromImps = (analysisResult.top_improvements || []).map((imp) => imp.name);
+                    const allMissing = Array.from(new Set([...missingFromSections, ...missingFromImps])).filter(Boolean);
+
+                    if (allMissing.length === 0) return null;
+
+                    return (
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">
+                          🔴 Missing ATS Keywords (Click chip to weave naturally into rewrite)
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {allMissing.map((kw, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                const firstImproveSection = (analysisResult.sections || []).find(
+                                  (s) => s.review_status === "improve"
+                                )?.section_name || "Experience";
+                                const recs = (analysisResult.sections || []).find(
+                                  (s) => s.section_name.toLowerCase() === firstImproveSection.toLowerCase()
+                                )?.recommendations || [];
+                                setUserInstructions(`Weave and surface missing ATS keyword naturally: '${kw}'`);
+                                handleImproveClick(firstImproveSection, recs);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 transition-colors cursor-pointer group"
+                              title={`Click to weave '${kw}' into section rewrite`}
+                            >
+                              <span className="font-bold text-rose-500 group-hover:scale-125 transition-transform">+</span>
+                              {kw}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
               {/* Section Analysis Breakdown (Actionable cards shown at the top for maximum speed) */}
               <div className="space-y-6">
                 {(() => {
@@ -1984,21 +2115,48 @@ export default function Home() {
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     {isPatchingApplied && downloadUrl ? (
-                      <a
-                        href={`${API_BASE_URL}${downloadUrl}?filename=${encodeURIComponent(
-                          buildResumeFilename(
-                            jobDescription,
-                            user?.name,
-                            analysisResult?.overall_summary?.job_title
-                          )
-                        )}`}
-                        download
-                        onClick={() => setSuccessNotification("Downloading updated resume...")}
-                        className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/25 transition-all duration-300 flex items-center gap-1.5"
-                      >
-                        <FileText className="h-4 w-4" />
-                        Download Updated Resume
-                      </a>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <a
+                          href={`${API_BASE_URL}${downloadUrl}?filename=${encodeURIComponent(
+                            buildResumeFilename(
+                              jobDescription,
+                              user?.name,
+                              analysisResult?.overall_summary?.job_title
+                            )
+                          )}`}
+                          download
+                          onClick={() => setSuccessNotification("Downloading updated DOCX...")}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/25 transition-all duration-300 flex items-center gap-1.5"
+                        >
+                          <FileText className="h-4 w-4" />
+                          DOCX
+                        </a>
+
+                        <a
+                          href={`${API_BASE_URL}${downloadUrl}/pdf?filename=${encodeURIComponent(
+                            buildResumeFilename(
+                              jobDescription,
+                              user?.name,
+                              analysisResult?.overall_summary?.job_title
+                            ).replace(/\.docx$/i, ".pdf")
+                          )}`}
+                          download
+                          onClick={() => setSuccessNotification("Downloading PDF...")}
+                          className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-700/25 transition-all duration-300 flex items-center gap-1.5"
+                        >
+                          <Download className="h-4 w-4" />
+                          PDF
+                        </a>
+
+                        <button
+                          type="button"
+                          onClick={() => setIsPdfPreviewOpen(true)}
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/25 transition-all duration-300 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Preview PDF
+                        </button>
+                      </div>
                     ) : (
                       <button
                         onClick={handleApplyRewrites}
@@ -2087,6 +2245,45 @@ export default function Home() {
       {/* Popover Billing & Subscription Modal */}
       <SubscriptionModal isOpen={isSubscriptionModalOpen} onClose={() => setIsSubscriptionModalOpen(false)} />
 
+      {/* Live PDF Preview Modal */}
+      {isPdfPreviewOpen && (downloadId || documentId) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950/60">
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-indigo-400" />
+                <h3 className="text-sm font-bold text-white">Live PDF Preview</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <a
+                  href={`${API_BASE_URL}/api/v1/resume/download/${downloadId || documentId}/pdf?filename=${encodeURIComponent(
+                    buildResumeFilename(jobDescription, user?.name, analysisResult?.overall_summary?.job_title).replace(/\.docx$/i, ".pdf")
+                  )}`}
+                  download
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                >
+                  <Download className="h-3.5 w-3.5" /> Download PDF
+                </a>
+                <button
+                  onClick={() => setIsPdfPreviewOpen(false)}
+                  className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            {/* Iframe Viewer */}
+            <div className="flex-1 bg-slate-950 p-2">
+              <iframe
+                src={`${API_BASE_URL}/api/v1/resume/download/${downloadId || documentId}/pdf`}
+                className="w-full h-full rounded-xl border border-slate-800/80 bg-slate-900"
+                title="Resume PDF Preview"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
