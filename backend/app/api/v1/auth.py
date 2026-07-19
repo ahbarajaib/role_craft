@@ -49,8 +49,11 @@ def login(req: UserLoginRequest, db: Session = Depends(get_db)):
     """Authenticate email and password credentials."""
     email_clean = req.email.strip().lower()
     user = db.query(User).filter(User.email == email_clean).first()
-    if not user or not user.password_hash:
+    if not user:
         raise UnauthorizedError("Invalid email or password.")
+
+    if not user.password_hash:
+        raise UnauthorizedError("This account was registered using Google Sign-In. Please click 'Continue with Google'.")
 
     if not verify_password(req.password, user.password_hash):
         raise UnauthorizedError("Invalid email or password.")
