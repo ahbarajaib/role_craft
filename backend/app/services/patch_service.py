@@ -32,6 +32,21 @@ from app.schemas.patch import ApplyRewriteRequest, ApplyRewriteResponse
 # Low-level XML helpers
 # ---------------------------------------------------------------------------
 
+def _detect_doc_font(doc) -> str | None:
+    """Detect dominant font name across all runs in document."""
+    fonts = []
+    for p in doc.paragraphs:
+        for r in p.runs:
+            if r.font and r.font.name:
+                fonts.append(r.font.name)
+    if fonts:
+        return max(set(fonts), key=fonts.count)
+    try:
+        return doc.styles["Normal"].font.name
+    except Exception:
+        return None
+
+
 def _set_run_text(run, text: str) -> None:
     """Set the visible text of a single <w:r> without touching its <w:rPr>.
 
@@ -48,41 +63,46 @@ def _set_run_text(run, text: str) -> None:
         t_elem.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
 
 
-def _set_paragraph_text_preserve_fmt(paragraph, new_text: str) -> None:
-    """Replace the visible text of a paragraph while keeping all run formatting.
-
-    Strategy
-    --------
-    1. Write *new_text* into the very first <w:r> run's <w:t>.
-    2. Blank out all remaining runs (their <w:rPr> stays intact so bold
-       headers, colour overrides, etc. are never lost).
-    3. If there are no runs at all, add a plain new run with the text.
-    """
+def _set_paragraph_text_preserve_fmt(paragraph, new_text: str, default_font: str | None = None) -> None:
+    """Replace the visible text of a paragraph while keeping all run formatting and retaining exact font."""
     runs = paragraph.runs
 
+    # Extract target font name from existing runs or document default font
+    target_font = None
+    for r in runs:
+        if r.font and r.font.name:
+            target_font = r.font.name
+            break
+    if not target_font:
+        target_font = default_font
+
     if not runs:
-        paragraph.add_run(new_text)
+        r = paragraph.add_run(new_text)
+        if target_font:
+            r.font.name = target_font
         return
 
     _set_run_text(runs[0], new_text)
+    if target_font and runs[0].font:
+        runs[0].font.name = target_font
+
     for run in runs[1:]:
         _set_run_text(run, "")
 
 
 def _clone_paragraph_xml(
-    template_para, doc_body
+    template_para, doc_body, default_font: str | None = None
 ) -> "docx.text.paragraph.Paragraph":
-    """Deep-copy a paragraph's XML element preserving ALL formatting.
-
-    This copies the entire <w:p> element — including <w:pPr> (paragraph
-    properties: style, spacing, alignment, tab stops), <w:numPr> (bullet /
-    numbered list), and every <w:rPr> (run properties: font, size, colour).
-    The <w:t> text nodes are cleared so fresh text can be written in.
-    """
+    """Deep-copy a paragraph's XML element preserving ALL formatting and font."""
     cloned_p = copy.deepcopy(template_para._p)
     for t_elem in cloned_p.findall(".//" + qn("w:t")):
         t_elem.text = ""
-    return docx.text.paragraph.Paragraph(cloned_p, doc_body)
+    new_para = docx.text.paragraph.Paragraph(cloned_p, doc_body)
+    if default_font:
+        for r in new_para.runs:
+            if r.font and not r.font.name:
+                r.font.name = default_font
+    return new_para
 
 
 # ---------------------------------------------------------------------------
@@ -140,6 +160,7 @@ class PatchService:
             raise NotFoundError(f"Original resume document '{doc_id}' not found.")
 
         doc = docx.Document(file_path)
+        doc_font = _detect_doc_font(doc)
 
         # 2. Detect sections using the existing SectionService.
         sections_response = self._sections.detect_document_sections(doc_id)
@@ -201,17 +222,17 @@ class PatchService:
                             orig_idx += 1
                             continue
 
-                    # Overwrite existing paragraph text only (preserve formatting)
-                    _set_paragraph_text_preserve_fmt(orig_p, ai_text)
+                    # Overwrite existing paragraph text only (preserve formatting and font)
+                    _set_paragraph_text_preserve_fmt(orig_p, ai_text, default_font=doc_font)
                     insertion_cursor = orig_p
                     orig_idx += 1
                     ai_idx += 1
 
                 elif ai_idx < len(new_para_texts):
                     # AI produced more lines than original — clone template
-                    new_p = _clone_paragraph_xml(style_template, doc._body)
+                    new_p = _clone_paragraph_xml(style_template, doc._body, default_font=doc_font)
                     insertion_cursor._p.addnext(new_p._p)
-                    _set_paragraph_text_preserve_fmt(new_p, new_para_texts[ai_idx])
+                    _set_paragraph_text_preserve_fmt(new_p, new_para_texts[ai_idx], default_font=doc_font)
                     insertion_cursor = new_p
                     ai_idx += 1
 
