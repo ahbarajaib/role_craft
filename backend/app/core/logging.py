@@ -11,7 +11,7 @@ from loguru import logger
 
 from app.core.config import Settings
 
-
+##some
 def format_record(record) -> str:
     """Format log record, adding request ID prefix if present."""
     req_id = record["extra"].get("request_id")
