@@ -1206,23 +1206,25 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
-                        <FileText className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
+                  <div className="flex items-center justify-between p-3.5 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="h-9 w-9 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shrink-0">
+                        <FileText className="h-4.5 w-4.5 text-indigo-500 dark:text-indigo-400" />
                       </div>
-                      <div className="max-w-[200px] md:max-w-xs">
-                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{file.name}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" title={file.name}>
+                          {file.name}
+                        </p>
                         {file.size > 0 ? (
-                          <p className="text-xs text-slate-400 dark:text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
+                          <p className="text-[11px] text-slate-400 dark:text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
                         ) : (
-                          <p className="text-xs text-indigo-500 dark:text-indigo-400 font-medium">
+                          <p className="text-[11px] text-indigo-500 dark:text-indigo-400 font-medium">
                             Base Resume
                           </p>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       {isUploading ? (
                         <span className="text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5 font-medium">
                           <span className="h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-500 animate-ping" />
