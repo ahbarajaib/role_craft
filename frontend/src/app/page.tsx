@@ -35,6 +35,8 @@ import { uploadResume, analyzeResume, applyRewrites, API_BASE_URL, ResumeAnalysi
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
+import JobSearchModal from "@/components/JobSearchModal";
+import { Search } from "lucide-react";
 
 interface DiffToken {
   value: string;
@@ -471,6 +473,7 @@ export default function Home() {
   const [isImprovingAll, setIsImprovingAll] = useState(false);
   const [baseResumeLoaded, setBaseResumeLoaded] = useState(false);
   const [isSavingBase, setIsSavingBase] = useState(false);
+  const [isJobSearchModalOpen, setIsJobSearchModalOpen] = useState(false);
 
   useEffect(() => {
     if (Object.keys(rewrittenSections).length > 0) {
@@ -1111,27 +1114,40 @@ export default function Home() {
               </div>
             )}
 
-            {/* Analyze Button */}
-            <button
-              type="submit"
-              disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing}
-              className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${documentId && jobDescription.trim().length >= 50 && !isAnalyzing
-                  ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 cursor-pointer"
-                  : "bg-slate-200 dark:bg-slate-900 text-slate-400 dark:text-slate-500 border border-slate-350 dark:border-slate-800 cursor-not-allowed"
-                }`}
-            >
-              {isAnalyzing ? (
-                <>
-                  <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Running AI Analysis...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  Analyze Gaps & Fit
-                </>
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-3">
+              <button
+                type="submit"
+                disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing}
+                className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${documentId && jobDescription.trim().length >= 50 && !isAnalyzing
+                    ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 cursor-pointer"
+                    : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed"
+                  }`}
+              >
+                {isAnalyzing ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    Running AI Analysis...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Analyze Gaps & Fit
+                  </>
+                )}
+              </button>
+
+              {documentId && (
+                <button
+                  type="button"
+                  onClick={() => setIsJobSearchModalOpen(true)}
+                  className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 border border-slate-700 bg-slate-800/50 hover:bg-slate-800 text-indigo-300 hover:text-indigo-200 shadow-md shadow-black/20 cursor-pointer"
+                >
+                  <Search className="h-4 w-4" />
+                  Find & Score Jobs
+                </button>
               )}
-            </button>
+            </div>
           </form>
 
           {/* Guidelines Box */}
@@ -1987,6 +2003,15 @@ export default function Home() {
 
       {/* Popover Billing & Subscription Modal */}
       <SubscriptionModal isOpen={isSubscriptionModalOpen} onClose={() => setIsSubscriptionModalOpen(false)} />
+
+      {/* Job Search & Score Modal */}
+      {documentId && (
+        <JobSearchModal
+          isOpen={isJobSearchModalOpen}
+          onClose={() => setIsJobSearchModalOpen(false)}
+          documentId={documentId}
+        />
+      )}
     </div>
   );
 }
