@@ -89,6 +89,27 @@ def _clone_paragraph_xml(
 # PatchService
 # ---------------------------------------------------------------------------
 
+def _is_metadata_line(text: str) -> bool:
+    """Detect if a paragraph is a company name, location, date, or role title metadata line."""
+    t = text.strip()
+    if not t:
+        return False
+    if t.startswith("•") or t.startswith("-") or t.startswith("*"):
+        return False
+    meta_keywords = [
+        "inc", "ltd", "llc", "fze", "pvt", "corp", "corporation", "technologies",
+        "solutions", "company", "university", "college", "institute", "school",
+        "dubai", "uae", "usa", "uk", "india", "present", "jan", "feb", "mar",
+        "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"
+    ]
+    t_lower = t.lower()
+    if any(k in t_lower for k in meta_keywords):
+        return True
+    if len(t) < 60 and not t.endswith("."):
+        return True
+    return False
+
+
 class PatchService:
     """Applies AI-rewritten text to a DOCX file while preserving all visual
     formatting of the original document.
@@ -162,30 +183,44 @@ class PatchService:
             # Insertion cursor — new paragraphs are inserted after this element.
             insertion_cursor = heading_para
 
-            total = max(len(body_paras), len(new_para_texts))
+            orig_idx = 0
+            ai_idx = 0
 
-            for i in range(total):
-                if i < len(new_para_texts) and i < len(body_paras):
-                    # ── Case A: overwrite existing paragraph (text only) ──────
-                    # We touch ONLY the <w:t> nodes; every <w:rPr> is preserved.
-                    _set_paragraph_text_preserve_fmt(body_paras[i], new_para_texts[i])
-                    insertion_cursor = body_paras[i]
+            while orig_idx < len(body_paras) or ai_idx < len(new_para_texts):
+                if orig_idx < len(body_paras) and ai_idx < len(new_para_texts):
+                    orig_p = body_paras[orig_idx]
+                    ai_text = new_para_texts[ai_idx]
 
-                elif i < len(new_para_texts):
-                    # ── Case B: AI produced more lines than original ───────────
-                    # Deep-clone the template paragraph so all formatting is
-                    # inherited: style, spacing, bullets, numbering, tab stops.
+                    # Check if original paragraph is a metadata line (company name/location)
+                    # and AI text is a bullet/achievement line that doesn't contain the metadata
+                    if _is_metadata_line(orig_p.text) and not _is_metadata_line(ai_text):
+                        first_word = orig_p.text.strip().split()[0].lower() if orig_p.text.strip() else ""
+                        if first_word and first_word not in ai_text.lower():
+                            # Keep original metadata paragraph intact!
+                            insertion_cursor = orig_p
+                            orig_idx += 1
+                            continue
+
+                    # Overwrite existing paragraph text only (preserve formatting)
+                    _set_paragraph_text_preserve_fmt(orig_p, ai_text)
+                    insertion_cursor = orig_p
+                    orig_idx += 1
+                    ai_idx += 1
+
+                elif ai_idx < len(new_para_texts):
+                    # AI produced more lines than original — clone template
                     new_p = _clone_paragraph_xml(style_template, doc._body)
                     insertion_cursor._p.addnext(new_p._p)
-                    _set_paragraph_text_preserve_fmt(new_p, new_para_texts[i])
+                    _set_paragraph_text_preserve_fmt(new_p, new_para_texts[ai_idx])
                     insertion_cursor = new_p
+                    ai_idx += 1
 
                 else:
-                    # ── Case C: original had more lines than AI output ─────────
-                    # Remove the surplus paragraph entirely.
-                    p = body_paras[i]
+                    # Original had more lines — remove surplus paragraph
+                    p = body_paras[orig_idx]
                     p._p.getparent().remove(p._p)
                     p._p = None  # type: ignore[assignment]
+                    orig_idx += 1
 
             sections_updated += 1
 

@@ -1194,54 +1194,32 @@ export default function Home() {
                     }}
                     className="self-end mt-1 px-3 py-1 bg-red-100 dark:bg-red-500/20 hover:bg-red-200 dark:hover:bg-red-500/30 text-red-700 dark:text-red-200 border border-red-300 dark:border-red-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
                   >
-                    <RefreshCw className="h-3 w-3" />
+            <RefreshCw className="h-3 w-3" />
                     Retry Upload
                   </button>
                 )}
               </div>
             )}
-
             {/* Action Buttons */}
             <div className="flex flex-col gap-3">
               <button
-                type="button"
-                onClick={handleAutoTailor}
-                disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing || isAutoTailoring}
-                className={`w-full py-4 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${
-                  documentId && jobDescription.trim().length >= 50 && !isAnalyzing && !isAutoTailoring
-                    ? "bg-gradient-to-r from-emerald-600 via-indigo-600 to-purple-600 hover:from-emerald-500 hover:to-purple-500 text-white shadow-xl shadow-indigo-600/25 cursor-pointer"
-                    : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-                }`}
-              >
-                {isAutoTailoring ? (
-                  <>
-                    <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    ⚡ Auto-Tailoring Full Resume...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4.5 w-4.5 animate-pulse" />
-                    ⚡ Auto-Tailor Full Resume (1-Click)
-                  </>
-                )}
-              </button>
-
-              <button
                 type="submit"
-                disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing || isAutoTailoring}
-                className={`w-full py-2.5 rounded-xl font-semibold text-xs transition-all duration-300 flex items-center justify-center gap-2 border border-slate-300 dark:border-slate-800 bg-white/80 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850 cursor-pointer ${
-                  (!documentId || jobDescription.trim().length < 50 || isAnalyzing || isAutoTailoring) ? "opacity-50 cursor-not-allowed" : ""
+                disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing}
+                className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${
+                  documentId && jobDescription.trim().length >= 50 && !isAnalyzing
+                    ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 cursor-pointer"
+                    : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed"
                 }`}
               >
                 {isAnalyzing ? (
                   <>
-                    <div className="h-3.5 w-3.5 border-2 border-slate-400/20 border-t-slate-400 rounded-full animate-spin" />
-                    Analyzing...
+                    <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    Running AI Analysis...
                   </>
                 ) : (
                   <>
-                    <Target className="h-3.5 w-3.5 text-indigo-400" />
-                    Analyze Gaps & Fit Only
+                    <Sparkles className="h-4 w-4" />
+                    Analyze Gaps & Fit
                   </>
                 )}
               </button>
@@ -1290,8 +1268,8 @@ export default function Home() {
                   <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Results Driven</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Stronger resume. Better opportunities.</p>
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Quantifiable Impact</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Data-driven outcomes for maximum response.</p>
                 </div>
               </div>
             </div>
@@ -1316,6 +1294,42 @@ export default function Home() {
             </div>
           ) : (
             <div className="space-y-6">
+              {/* ⚡ 1-Click Auto-Tailor Hero Banner */}
+              <div className="bg-gradient-to-r from-emerald-950/60 via-indigo-950/60 to-purple-950/60 border border-emerald-500/40 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl animate-fade-in">
+                <div className="flex items-center gap-3.5">
+                  <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
+                    <Sparkles className="h-5 w-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      ⚡ 1-Click Full Resume Auto-Tailor
+                    </h4>
+                    <p className="text-xs text-slate-300 mt-0.5">
+                      Automatically rewrite all weak sections with ATS keywords & Google XYZ metrics in one click.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAutoTailor}
+                  disabled={isAutoTailoring}
+                  className="px-6 py-3.5 rounded-xl font-bold text-xs bg-gradient-to-r from-emerald-500 via-indigo-600 to-purple-600 hover:from-emerald-400 hover:to-purple-500 text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0"
+                >
+                  {isAutoTailoring ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      ⚡ Auto-Tailoring Resume...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      ⚡ Auto-Tailor Full Resume (1-Click)
+                    </>
+                  )}
+                </button>
+              </div>
+
               {/* Summary Dashboard Card */}
               <div className="glass-panel rounded-2xl p-6 border-indigo-500/35 dark:border-indigo-500/20 bg-gradient-to-r from-white/95 to-indigo-500/5 dark:from-slate-900/50 dark:to-indigo-950/10">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

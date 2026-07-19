@@ -28,8 +28,8 @@ Google XYZ Formula & Impact Rules:
 2. **Strong Action Verbs**: Start every bullet point with an impactful, active verb (e.g., Spearheaded, Engineered, Optimized, Streamlined). Never start with passive phrases like "Responsible for" or "Worked on".
 3. **Candidate Metric Integration**: If there is a section labeled "=== CANDIDATE-SUPPLIED METRICS & DATA POINTS ===", you MUST weave those exact candidate metrics directly into the Y or X components of the corresponding bullets.
 4. **Preserve All Real Facts**: Keep all companies, dates, degrees, real achievements, and tools as they appear in the original section or evidence context.
-5. **Zero Unsupported Invention**: Do not invent fake company names, dates, or technologies. You may quantify existing achievements using standard corporate impact terminology when candidate metric hints or evidence support it.
-6. **Output Bounds**: Output ONLY the polished paragraphs or bullet points for this section. Do not include summary preambles or header titles.
+6. **Metadata & Subheader Preservation**: You MUST preserve all Company Names, Company Locations, Job Titles, Degrees, and Dates at the top of each entry EXACTLY as they appear in the original section (e.g. "Infinitus International FZE, Dubai, UAE."). Never omit company names or locations when rewriting a section.
+7. **Output Bounds**: Output ONLY the polished paragraphs or bullet points for this section. Do not include summary preambles or header titles.
 """
 
 
