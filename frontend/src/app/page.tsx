@@ -471,6 +471,8 @@ export default function Home() {
   const [isImprovingAll, setIsImprovingAll] = useState(false);
   const [baseResumeLoaded, setBaseResumeLoaded] = useState(false);
   const [isSavingBase, setIsSavingBase] = useState(false);
+  const [metricPercentage, setMetricPercentage] = useState("");
+  const [metricScale, setMetricScale] = useState("");
 
   useEffect(() => {
     if (Object.keys(rewrittenSections).length > 0) {
@@ -637,6 +639,8 @@ export default function Home() {
     setRewriteData(null);
     setDraftRewrittenText("");
     setUserInstructions("");
+    setMetricPercentage("");
+    setMetricScale("");
     setDiffModeActive(false);
     setIsRewriteModalOpen(true);
     rewriteMutation.mutate({
@@ -1598,7 +1602,11 @@ export default function Home() {
                         section_name: activeRewriteSection,
                         job_description_text: jobDescription,
                         recommendations: recommendations,
-                        user_instructions: userInstructions
+                        user_instructions: userInstructions,
+                        metric_inputs: (metricPercentage.trim() || metricScale.trim()) ? {
+                          metric_or_percentage: metricPercentage.trim(),
+                          scale_or_volume: metricScale.trim()
+                        } : undefined
                       });
                     }}
                     className="mt-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 transition-all duration-300 flex items-center gap-1.5"
@@ -1678,6 +1686,90 @@ export default function Home() {
                     </div>
                   </div>
 
+                  {/* Google XYZ Formula & Metric Synthesizer Card */}
+                  <div className="bg-gradient-to-r from-indigo-950/40 via-purple-950/30 to-slate-950 p-4 rounded-xl border border-indigo-500/20 space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-md bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                          <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                        </div>
+                        <span className="text-xs font-bold text-indigo-200">
+                          Google XYZ Formula & Metric Synthesizer
+                        </span>
+                      </div>
+                      <span className="text-[10px] bg-indigo-500/10 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/20 font-mono">
+                        Accomplished [X] as measured by [Y], by doing [Z]
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Quantify your impact using Google's formula. Enter real numbers or scale metrics below so AI can seamlessly weave them into your achievement bullets.
+                    </p>
+
+                    {/* Metric Input Fields */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                          Metric / % Improvement [Y]
+                        </label>
+                        <input
+                          type="text"
+                          value={metricPercentage}
+                          onChange={(e) => setMetricPercentage(e.target.value)}
+                          placeholder="e.g. '35% latency reduction', '$120k revenue growth'"
+                          className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                          disabled={rewriteMutation.isPending}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                          Scale / Scope / Volume [Y]
+                        </label>
+                        <input
+                          type="text"
+                          value={metricScale}
+                          onChange={(e) => setMetricScale(e.target.value)}
+                          placeholder="e.g. 'across 15 microservices', '100k daily users'"
+                          className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                          disabled={rewriteMutation.isPending}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick Preset Prompt Chips */}
+                    <div className="pt-2 border-t border-slate-800/60 flex flex-wrap gap-2 items-center">
+                      <span className="text-[10px] text-slate-500 font-semibold uppercase">Presets:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserInstructions("Format all bullets strictly using Google's XYZ formula (Accomplished X as measured by Y, by doing Z)");
+                        }}
+                        className="text-[10px] bg-slate-900 hover:bg-slate-850 text-indigo-300 hover:text-indigo-200 px-2.5 py-1 rounded-md border border-slate-800 transition-colors cursor-pointer"
+                      >
+                        ⚡ Google XYZ Bullets
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserInstructions("Use high-impact active verbs and emphasize quantifiable metrics");
+                        }}
+                        className="text-[10px] bg-slate-900 hover:bg-slate-850 text-emerald-300 hover:text-emerald-200 px-2.5 py-1 rounded-md border border-slate-800 transition-colors cursor-pointer"
+                      >
+                        📊 Action Verbs + Metrics
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserInstructions("Make bullet points concise, impactful, and tailored for senior engineering leadership");
+                        }}
+                        className="text-[10px] bg-slate-900 hover:bg-slate-850 text-amber-300 hover:text-amber-200 px-2.5 py-1 rounded-md border border-slate-800 transition-colors cursor-pointer"
+                      >
+                        🎯 Concise Pitch
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Refinement User Instructions Bar */}
                   <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800 space-y-2.5">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
@@ -1701,7 +1793,11 @@ export default function Home() {
                             section_name: activeRewriteSection,
                             job_description_text: jobDescription,
                             recommendations: rewriteData?.recommendations || [],
-                            user_instructions: userInstructions
+                            user_instructions: userInstructions,
+                            metric_inputs: (metricPercentage.trim() || metricScale.trim()) ? {
+                              metric_or_percentage: metricPercentage.trim(),
+                              scale_or_volume: metricScale.trim()
+                            } : undefined
                           });
                         }}
                         disabled={rewriteMutation.isPending}

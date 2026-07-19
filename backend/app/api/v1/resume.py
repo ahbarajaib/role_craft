@@ -78,6 +78,7 @@ def rewrite_section(
         job_description_text=body.job_description_text,
         recommendations=body.recommendations,
         user_instructions=body.user_instructions,
+        metric_inputs=body.metric_inputs,
     )
 
 

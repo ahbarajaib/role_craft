@@ -48,6 +48,10 @@ class RewriteSectionRequest(BaseModel):
         default=None,
         description="Optional additional instructions from the candidate (e.g. 'make it shorter', 'use stronger verbs')."
     )
+    metric_inputs: dict[str, str] | None = Field(
+        default=None,
+        description="Optional candidate-provided metrics to format into Google XYZ bullets (e.g. {'latency_drop': '35%', 'team_size': '8 engineers'})."
+    )
 
     @field_validator("document_id", "section_name")
     @classmethod

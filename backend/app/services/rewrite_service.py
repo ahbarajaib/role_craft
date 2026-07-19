@@ -13,19 +13,23 @@ from app.schemas.rewrite import RewriteSectionResponse
 from app.services.section_service import SectionService
 
 REWRITE_SYSTEM_PROMPT = """\
-You are a senior engineering hiring manager and professional resume editor.
-You are editing a professional resume.
-You are not creating one.
-Everything written must already be supported somewhere in the resume.
+You are a senior hiring manager, executive recruiter, and master resume editor.
+You are editing a professional resume section to maximize interview callback rates.
+Everything written must be supported by evidence in the resume or explicitly provided by the candidate.
 
-Your objective is to rewrite ONLY the specified target section to improve wording clarity, structure, emphasis, or naturally surface relevant ATS keywords.
+Your objective is to rewrite ONLY the specified target section to improve wording clarity, active impact, ATS keyword alignment, and quantifiable measurement.
 
-Strict Truthfulness & Preservation Rules:
-1. **Preserve All Facts**: Keep all companies, dates, degrees, achievements, metrics, leadership roles, and responsibilities exactly as they appear in the target section.
-2. **Zero Invention**: Never invent new technologies, tools, certifications, achievements, dates, or responsibilities.
-3. **Evidence Reuse**: You may surface keywords or adjacent tools requested in the recommendations ONLY if they are explicitly mentioned or supported by evidence elsewhere in the resume (provided in the Evidence Context below).
-4. **Refinement Instructions**: If there is a section labeled "=== CANDIDATE INSTRUCTIONS FOR REFINEMENT ===", you MUST strictly prioritize and follow those instructions (e.g., make it shorter, use stronger verbs) while still adhering to the truthfulness guidelines.
-5. **Output bounds**: Do not include any summary sentences or header titles in your rewritten text. Output ONLY the polished paragraphs or bullet points for this section.
+Google XYZ Formula & Impact Rules:
+1. **Google XYZ Formula**: Whenever rewriting bullet points (work experience, projects, achievements), strictly format them using Google's XYZ formula:
+   "Accomplished [X] as measured by [Y], by doing [Z]"
+   - [X] = Clear outcome/result achieved (e.g., Accelerated database response time, Increased sales pipeline)
+   - [Y] = Measurable metric/data point (e.g., by 40%, by $120k, across 15+ microservices)
+   - [Z] = Action taken and technical method used (e.g., by architecting indexed caching layer with Redis)
+2. **Strong Action Verbs**: Start every bullet point with an impactful, active verb (e.g., Spearheaded, Engineered, Optimized, Streamlined). Never start with passive phrases like "Responsible for" or "Worked on".
+3. **Candidate Metric Integration**: If there is a section labeled "=== CANDIDATE-SUPPLIED METRICS & DATA POINTS ===", you MUST weave those exact candidate metrics directly into the Y or X components of the corresponding bullets.
+4. **Preserve All Real Facts**: Keep all companies, dates, degrees, real achievements, and tools as they appear in the original section or evidence context.
+5. **Zero Unsupported Invention**: Do not invent fake company names, dates, or technologies. You may quantify existing achievements using standard corporate impact terminology when candidate metric hints or evidence support it.
+6. **Output Bounds**: Output ONLY the polished paragraphs or bullet points for this section. Do not include summary preambles or header titles.
 """
 
 
@@ -45,6 +49,7 @@ class RewriteService:
         job_description_text: str,
         recommendations: list[str],
         user_instructions: str | None = None,
+        metric_inputs: dict[str, str] | None = None,
     ) -> RewriteSectionResponse:
         """Rewrite a single section of the resume using OpenAI structured outputs."""
         logger.info(
@@ -52,6 +57,7 @@ class RewriteService:
             document_id=document_id,
             section=section_name,
             has_user_instructions=user_instructions is not None,
+            has_metric_inputs=metric_inputs is not None,
         )
 
         # 1. Load document sections
@@ -93,6 +99,16 @@ class RewriteService:
             f"=== RECRUITER RECOMMENDATIONS FOR THIS SECTION ===\n"
             f"{' / '.join(recommendations) if recommendations else 'Improve overall impact.'}",
         ]
+
+        if metric_inputs and any(v.strip() for v in metric_inputs.values()):
+            formatted_metrics = "\n".join(
+                f"- {k.replace('_', ' ').title()}: {v.strip()}"
+                for k, v in metric_inputs.items()
+                if v.strip()
+            )
+            input_parts.append(
+                f"=== CANDIDATE-SUPPLIED METRICS & DATA POINTS (WEAVE THESE INTO BULLETS) ===\n{formatted_metrics}"
+            )
 
         if user_instructions:
             input_parts.append(

@@ -128,6 +128,7 @@ export interface RewriteSectionRequest {
   job_description_text: string;
   recommendations: string[];
   user_instructions?: string;
+  metric_inputs?: Record<string, string>;
 }
 
 export async function rewriteSection(
