@@ -10,7 +10,6 @@ Convention
 - Routers from those files are included below with an explicit ``prefix``
   and ``tags`` list so the OpenAPI docs are organised by feature.
 """
-##some
 from fastapi import APIRouter
 
 from app.api.v1 import analysis, comparison, documents, health, job_descriptions, resume, review, auth, payment, jobs

@@ -41,19 +41,30 @@ def _search_via_jsearch(query: str, location: str, limit: int, api_key: str) -> 
 
     jobs: List[ScrapedJob] = []
     for item in data.get("data", [])[:limit]:
+        # Build a clean location string from JSearch fields
+        city = item.get("job_city") or ""
+        state = item.get("job_state") or ""
+        country = item.get("job_country") or ""
+        is_remote = item.get("job_is_remote", False)
+
+        if is_remote:
+            display_location = "Remote"
+        elif city:
+            display_location = f"{city}, {state}".strip(", ") if state else city
+        elif state:
+            display_location = state
+        elif country:
+            display_location = country
+        else:
+            display_location = location  # fall back to user's input
+
         jobs.append(
             ScrapedJob(
                 title=item.get("job_title", "Unknown Role"),
                 company=item.get("employer_name", "Unknown Company"),
                 url=item.get("job_apply_link") or item.get("job_google_link") or "https://jsearch.p.rapidapi.com",
                 snippet=(item.get("job_description") or "")[:400],
-                location=(
-                    item.get("job_city")
-                    or item.get("job_state")
-                    or item.get("job_country")
-                    or location
-                    or "Remote"
-                ),
+                location=display_location,
             )
         )
     return jobs
