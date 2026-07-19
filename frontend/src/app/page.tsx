@@ -1337,55 +1337,6 @@ export default function Home() {
               </button>
             </div>
           </form>
-
-          {/* Guidelines Box */}
-          <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/20 space-y-4">
-            <h3 className="text-xs font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-200/50 dark:border-slate-900">
-              <Info className="h-4.5 w-4.5 text-indigo-500 dark:text-indigo-400" />
-              Developer Principles
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center border border-indigo-500/20 shrink-0">
-                  <Target className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Role Focused</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tailored to the job that matters.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center border border-emerald-500/20 shrink-0">
-                  <Shield className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Truthful</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">100% honest. Always.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center border border-indigo-500/20 shrink-0">
-                  <PenTool className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Smart Crafted</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">AI-powered edits that elevate you.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-lg bg-purple-500/10 dark:bg-purple-500/20 flex items-center justify-center border border-purple-500/20 shrink-0">
-                  <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Quantifiable Impact</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Data-driven outcomes for maximum response.</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Right Results Panel */}
