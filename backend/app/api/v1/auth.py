@@ -13,7 +13,7 @@ from app.schemas.auth import (
 )
 from app.models import User
 from app.core.security import hash_password, verify_password, create_access_token
-from app.core.exceptions import BadRequestError, UnauthorizedError
+from app.core.exceptions import BadRequestError, UnauthorizedError, NotFoundError
 from app.core.config import get_settings
 from app.dependencies.auth import get_current_user
 from google.oauth2 import id_token
@@ -50,13 +50,15 @@ def login(req: UserLoginRequest, db: Session = Depends(get_db)):
     email_clean = req.email.strip().lower()
     user = db.query(User).filter(User.email == email_clean).first()
     if not user:
-        raise UnauthorizedError("Invalid email or password.")
+        raise UnauthorizedError("No account found with this email address.")
 
-    if not user.password_hash:
-        raise UnauthorizedError("This account was registered using Google Sign-In. Please click 'Continue with Google'.")
+    if not user.password_hash or user.provider == "google":
+        raise UnauthorizedError(
+            "This account was created using Google Sign-In and has no password. Please click 'Continue with Google'."
+        )
 
     if not verify_password(req.password, user.password_hash):
-        raise UnauthorizedError("Invalid email or password.")
+        raise UnauthorizedError("Incorrect password. Please try again or click 'Forgot Password?'.")
 
     token = create_access_token({"sub": user.email})
     return AuthResponse(access_token=token, user=user)
@@ -135,11 +137,19 @@ def update_profile(
 
 @router.post("/forgot-password", response_model=MessageResponse)
 def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    """Handle password reset requests gracefully."""
+    """Handle password reset requests with detailed, clear error responses."""
     email_clean = req.email.strip().lower()
     user = db.query(User).filter(User.email == email_clean).first()
+    if not user:
+        raise NotFoundError("No account found with this email address. Please check your spelling or sign up.")
+
+    if not user.password_hash or user.provider == "google":
+        raise BadRequestError(
+            "This account was created using Google Sign-In and does not have a password. Please sign in directly with Google."
+        )
+
     return MessageResponse(
-        message=f"If an account exists for {email_clean}, password reset instructions have been sent to your inbox."
+        message=f"Password reset instructions have been sent to {email_clean}."
     )
 
 
