@@ -30,7 +30,9 @@ import {
   Target,
   Shield,
   PenTool,
-  Download
+  Download,
+  LogOut,
+  User
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
@@ -487,6 +489,7 @@ export default function Home() {
   const [isAutoTailoring, setIsAutoTailoring] = useState(false);
   const [isWeavingKeywords, setIsWeavingKeywords] = useState(false);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
@@ -1117,32 +1120,101 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-3">
           {user ? (
-            <div className="flex items-center gap-3 bg-white/80 dark:bg-slate-900/80 pl-3 pr-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-xs select-none">
-              <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[120px]" title={user.email}>
-                {user.email}
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center gap-1">
-                {user.plan_type === "elite" ? "∞" : user.credits} <span className="text-[9px] font-normal text-slate-400 dark:text-slate-500">CR</span>
-              </span>
-              {user.plan_type !== "free" ? (
-                <span className="px-2 py-0.5 rounded bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-black uppercase text-[9px] tracking-wider">
-                  {user.plan_type}
-                </span>
-              ) : (
-                <button
-                  onClick={() => setIsSubscriptionModalOpen(true)}
-                  className="px-2 py-0.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[9px] uppercase tracking-wider transition-all cursor-pointer"
-                >
-                  Upgrade
-                </button>
-              )}
+            <div className="relative">
               <button
-                onClick={logout}
-                className="ml-1 p-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded transition-colors cursor-pointer"
-                title="Sign Out"
+                type="button"
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className="flex items-center gap-2.5 bg-white dark:bg-slate-900/90 hover:bg-slate-100 dark:hover:bg-slate-850 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs transition-all cursor-pointer select-none"
               >
-                <X className="h-3.5 w-3.5" />
+                <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0">
+                  {(user.name || user.email)[0].toUpperCase()}
+                </div>
+                <span className="font-bold text-slate-800 dark:text-slate-200 max-w-[120px] truncate">
+                  {user.name || user.email.split("@")[0]}
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-[10px]">
+                  {user.plan_type === "elite" ? "∞" : user.credits} CR
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${isProfileMenuOpen ? "rotate-180" : ""}`} />
               </button>
+
+              {/* Profile Dropdown Card */}
+              {isProfileMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-72 z-50 glass-panel bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-4 animate-fade-in-up">
+                    {/* User Header */}
+                    <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-indigo-600/20 shrink-0">
+                        {(user.name || user.email)[0].toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                          {user.name || "User Account"}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Account Status Details */}
+                    <div className="space-y-2.5 text-xs">
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Plan</span>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-black uppercase text-[10px] tracking-wider">
+                            {user.plan_type}
+                          </span>
+                          {user.plan_type === "free" && (
+                            <button
+                              onClick={() => {
+                                setIsProfileMenuOpen(false);
+                                setIsSubscriptionModalOpen(true);
+                              }}
+                              className="px-2 py-0.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[10px] transition-all cursor-pointer"
+                            >
+                              Upgrade
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Credits Available</span>
+                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
+                          {user.plan_type === "elite" ? "Unlimited" : `${user.credits} Credits`}
+                        </span>
+                      </div>
+
+                      {user.base_resume_filename && (
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80">
+                          <span className="text-slate-500 dark:text-slate-400 font-medium">Base Resume</span>
+                          <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[110px]" title={user.base_resume_filename}>
+                            {user.base_resume_filename}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Sign Out Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        logout();
+                      }}
+                      className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      Sign Out
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <button

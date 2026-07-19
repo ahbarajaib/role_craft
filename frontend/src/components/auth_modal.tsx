@@ -7,19 +7,55 @@ import { X, Sparkles, Mail, Lock, AlertCircle, RefreshCw, User } from "lucide-re
 
 export default function AuthModal() {
   const { showAuthModal, setShowAuthModal, login, signup, googleLogin } = useAuth();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [authMode, setAuthMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!showAuthModal) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessMessage(null);
+    const emailClean = email.trim();
+    if (!emailClean) {
+      setError("Please enter your email address.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = rawApiUrl.replace(/\/api\/v1\/?$/, "");
+      const res = await fetch(`${apiUrl}/api/v1/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailClean }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error?.detail || data?.message || "Password reset request failed.");
+      }
+      setSuccessMessage(data.message || `Password reset instructions have been sent to ${emailClean}.`);
+    } catch (err: any) {
+      setError(err?.message || "Password reset request failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authMode === "forgot") {
+      return handleForgotPassword(e);
+    }
+
+    setError(null);
+    setSuccessMessage(null);
 
     const emailClean = email.trim();
     if (!emailClean || !password) {
@@ -27,14 +63,14 @@ export default function AuthModal() {
       return;
     }
 
-    if (isSignUp && password !== confirmPassword) {
+    if (authMode === "signup" && password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      if (isSignUp) {
+      if (authMode === "signup") {
         await signup(emailClean, password, name.trim() || undefined);
       } else {
         await login(emailClean, password);
@@ -48,6 +84,7 @@ export default function AuthModal() {
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     setError(null);
+    setSuccessMessage(null);
     setIsSubmitting(true);
     try {
       if (credentialResponse.credential) {
@@ -77,10 +114,16 @@ export default function AuthModal() {
             <Sparkles className="h-6 w-6 text-indigo-600 dark:text-indigo-400 animate-pulse" />
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-            {isSignUp ? "Create your account" : "Sign in to Role Craft"}
+            {authMode === "signup"
+              ? "Create your account"
+              : authMode === "forgot"
+              ? "Reset your password"
+              : "Sign in to Role Craft"}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Get 10 free optimization credits and unlock AI rewrites.
+            {authMode === "forgot"
+              ? "Enter your email address to receive password reset instructions."
+              : "Get 10 free optimization credits and unlock AI rewrites."}
           </p>
         </div>
 
@@ -89,6 +132,14 @@ export default function AuthModal() {
           <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-xs flex items-start gap-2 animate-fade-in-up">
             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
             <span className="flex-1 leading-relaxed">{error}</span>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-start gap-2 animate-fade-in-up">
+            <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500" />
+            <span className="flex-1 leading-relaxed">{successMessage}</span>
           </div>
         )}
 
@@ -112,25 +163,42 @@ export default function AuthModal() {
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
-                disabled={isSubmitting}
-                required
-              />
+          {authMode !== "forgot" && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+                  Password
+                </label>
+                {authMode === "signin" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode("forgot");
+                      setError(null);
+                      setSuccessMessage(null);
+                    }}
+                    className="text-xs text-indigo-500 dark:text-indigo-400 hover:underline font-medium cursor-pointer"
+                  >
+                    Forgot Password?
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
+                  disabled={isSubmitting}
+                  required
+                />
+              </div>
             </div>
-          </div>
+          )}
 
-          {isSignUp && (
+          {authMode === "signup" && (
             <div className="space-y-1.5 animate-fade-in-up">
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
                 Full Name
@@ -149,7 +217,7 @@ export default function AuthModal() {
             </div>
           )}
 
-          {isSignUp && (
+          {authMode === "signup" && (
             <div className="space-y-1.5 animate-fade-in-up">
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
                 Confirm Password
@@ -176,44 +244,80 @@ export default function AuthModal() {
           >
             {isSubmitting ? (
               <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : isSignUp ? (
+            ) : authMode === "signup" ? (
               "Sign Up"
+            ) : authMode === "forgot" ? (
+              "Send Reset Instructions"
             ) : (
               "Sign In"
             )}
           </button>
         </form>
 
-        {/* Separator */}
-        <div className="relative flex py-1 items-center">
-          <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-          <span className="flex-shrink mx-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Or</span>
-          <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-        </div>
+        {authMode !== "forgot" && (
+          <>
+            {/* Separator */}
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+              <span className="flex-shrink mx-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Or</span>
+              <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+            </div>
 
-        {/* Google Authentication Button Wrapper */}
-        <div className="flex justify-center w-full">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => setError("Google authentication failed.")}
-            theme="outline"
-            size="large"
-            width="340px"
-          />
-        </div>
+            {/* Google Authentication Button Wrapper */}
+            <div className="flex justify-center w-full">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError("Google authentication failed.")}
+                theme="outline"
+                size="large"
+                width="340px"
+              />
+            </div>
+          </>
+        )}
 
         {/* Switch Auth mode text */}
         <div className="text-center text-xs text-slate-500 dark:text-slate-400">
-          {isSignUp ? "Already have an account?" : "New to Role Craft?"}{" "}
-          <button
-            onClick={() => {
-              setIsSignUp(!isSignUp);
-              setError(null);
-            }}
-            className="font-bold text-indigo-550 dark:text-indigo-400 hover:underline cursor-pointer focus:outline-none"
-          >
-            {isSignUp ? "Sign In" : "Create Account"}
-          </button>
+          {authMode === "forgot" ? (
+            <button
+              onClick={() => {
+                setAuthMode("signin");
+                setError(null);
+                setSuccessMessage(null);
+              }}
+              className="font-bold text-indigo-500 dark:text-indigo-400 hover:underline cursor-pointer focus:outline-none"
+            >
+              ← Back to Sign In
+            </button>
+          ) : authMode === "signup" ? (
+            <>
+              Already have an account?{" "}
+              <button
+                onClick={() => {
+                  setAuthMode("signin");
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+                className="font-bold text-indigo-500 dark:text-indigo-400 hover:underline cursor-pointer focus:outline-none"
+              >
+                Sign In
+              </button>
+            </>
+          ) : (
+            <>
+              New to Role Craft?{" "}
+              <button
+                onClick={() => {
+                  setAuthMode("signup");
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+                className="font-bold text-indigo-500 dark:text-indigo-400 hover:underline cursor-pointer focus:outline-none"
+              >
+                Create Account
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

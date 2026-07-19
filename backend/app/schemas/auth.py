@@ -37,3 +37,9 @@ class AuthResponse(BaseModel):
     token_type: str = "bearer"
     user: UserResponse
 
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class MessageResponse(BaseModel):
+    message: str
+

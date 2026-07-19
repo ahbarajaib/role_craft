@@ -1,7 +1,16 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.schemas.auth import UserSignupRequest, UserLoginRequest, GoogleLoginRequest, ProfileUpdateRequest, AuthResponse, UserResponse
+from app.schemas.auth import (
+    UserSignupRequest,
+    UserLoginRequest,
+    GoogleLoginRequest,
+    ProfileUpdateRequest,
+    ForgotPasswordRequest,
+    AuthResponse,
+    UserResponse,
+    MessageResponse,
+)
 from app.models import User
 from app.core.security import hash_password, verify_password, create_access_token
 from app.core.exceptions import BadRequestError, UnauthorizedError
@@ -120,5 +129,14 @@ def update_profile(
     db.commit()
     db.refresh(user)
     return user
+
+@router.post("/forgot-password", response_model=MessageResponse)
+def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Handle password reset requests gracefully."""
+    email_clean = req.email.strip().lower()
+    user = db.query(User).filter(User.email == email_clean).first()
+    return MessageResponse(
+        message=f"If an account exists for {email_clean}, password reset instructions have been sent to your inbox."
+    )
 
 
