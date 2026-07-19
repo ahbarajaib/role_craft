@@ -24,14 +24,16 @@ def search_and_score_jobs(
 ) -> JobSearchResponse:
     """Search for jobs and score each result against the user's uploaded resume."""
 
-    # 1. Parse the resume — ParserService resolves the file path from document_id internally
-    try:
-        parsed_doc = parser_service.parse_document(request.document_id)
-        resume_text = "\n".join(p.text for p in parsed_doc.paragraphs if p.text.strip())
-    except Exception as e:
-        raise HTTPException(
-            status_code=404, detail=f"Failed to load or parse resume: {str(e)}"
-        )
+    # 1. Parse the resume if a document_id is provided — scoring works better with one,
+    #    but the search still works without it (jobs are returned with a 0 ATS score).
+    resume_text = ""
+    if request.document_id:
+        try:
+            parsed_doc = parser_service.parse_document(request.document_id)
+            resume_text = "\n".join(p.text for p in parsed_doc.paragraphs if p.text.strip())
+        except Exception as e:
+            # Don't hard-fail — proceed with empty resume text so jobs still load
+            resume_text = ""
 
     # 2. Scrape / search for jobs
     scraped_jobs = job_search_service.search_jobs(

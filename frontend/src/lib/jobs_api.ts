@@ -15,7 +15,7 @@ export interface JobSearchResponse {
 }
 
 export interface JobSearchRequest {
-  document_id: string;
+  document_id?: string | null;
   query: string;
   location: string;
   limit?: number;

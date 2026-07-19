@@ -2,7 +2,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 class JobSearchRequest(BaseModel):
-    document_id: str = Field(..., description="The ID of the uploaded resume document to score against.")
+    document_id: Optional[str] = Field(None, description="The ID of the uploaded resume document to score against. Optional — if omitted, jobs are returned without personalised ATS scoring.")
     query: str = Field(..., description="The job search query (e.g., 'Software Engineer').")
     location: str = Field(..., description="The location to search for jobs (e.g., 'New York, NY' or 'Remote').")
     limit: int = Field(5, description="Maximum number of jobs to return.")

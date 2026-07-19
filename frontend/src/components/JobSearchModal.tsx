@@ -24,7 +24,7 @@ export default function JobSearchModal({ isOpen, onClose, documentId }: JobSearc
     if (!query || !location) return;
 
     searchMutation.mutate({
-      document_id: documentId,
+      document_id: documentId || null,
       query,
       location,
       limit: 5
