@@ -32,7 +32,7 @@ import {
   PenTool,
   Download
 } from "lucide-react";
-import { uploadResume, analyzeResume, applyRewrites, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
+import { uploadResume, analyzeResume, rewriteSection, applyRewrites, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
@@ -410,9 +410,14 @@ function buildResumeFilename(
   for (const pattern of companyPatterns) {
     const match = jobDescription.match(pattern);
     if (match && match[1]) {
-      companyName = match[1].trim().replace(/[^a-zA-Z0-9& ]/g, "").trim();
-      if (companyName.length > 2) break;
-      companyName = null;
+      const candidate = match[1].trim().replace(/[^a-zA-Z0-9& ]/g, "").trim();
+      if (
+        candidate.length > 2 &&
+        !/^(full job description|job description|description|company|about|organization|role)$/i.test(candidate)
+      ) {
+        companyName = candidate;
+        break;
+      }
     }
   }
 
@@ -472,6 +477,7 @@ export default function Home() {
   const [isImprovingAll, setIsImprovingAll] = useState(false);
   const [baseResumeLoaded, setBaseResumeLoaded] = useState(false);
   const [isSavingBase, setIsSavingBase] = useState(false);
+  const [isAutoTailoring, setIsAutoTailoring] = useState(false);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
   const [metricPercentage, setMetricPercentage] = useState("");
   const [metricScale, setMetricScale] = useState("");
@@ -624,6 +630,84 @@ export default function Home() {
       // Individual errors caught in triggerInlineRewrite
     } finally {
       setIsImprovingAll(false);
+    }
+  };
+
+  const handleAutoTailor = async () => {
+    if (!documentId) return;
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
+    if (user && user.plan_type === "free" && user.credits <= 0) {
+      setIsSubscriptionModalOpen(true);
+      return;
+    }
+    if (jobDescription.trim().length < 50) return;
+
+    setIsAutoTailoring(true);
+    try {
+      let result = analysisResult;
+      if (!result) {
+        result = await analyzeResume(documentId!, jobDescription);
+        setAnalysisResult(result);
+      }
+
+      const sectionsToImprove = (result.sections || []).filter(
+        (s) => s.review_status === "improve"
+      );
+
+      if (sectionsToImprove.length === 0) {
+        setSuccessNotification("Your resume is already highly optimized for this role!");
+        setIsAutoTailoring(false);
+        return;
+      }
+
+      const newRewrites: Record<string, string> = {};
+      await Promise.all(
+        sectionsToImprove.map(async (sec) => {
+          try {
+            const res = await rewriteSection({
+              document_id: documentId,
+              section_name: sec.section_name,
+              job_description_text: jobDescription,
+              recommendations: sec.recommendations || [],
+            });
+            newRewrites[sec.section_name.toLowerCase()] = res.rewritten_text;
+          } catch (err) {
+            console.error(`Failed auto rewrite for ${sec.section_name}:`, err);
+          }
+        })
+      );
+
+      if (Object.keys(newRewrites).length > 0) {
+        setRewrittenSections(newRewrites);
+
+        const acceptedItems = Object.entries(newRewrites).map(([secKey, text]) => {
+          const origSec = (result.sections || []).find(
+            (s) => s.section_name.toLowerCase() === secKey
+          );
+          return {
+            section: origSec?.section_name || secKey,
+            rewritten_text: text,
+          };
+        });
+
+        const applyRes = await applyMutation.mutateAsync({
+          document_id: documentId,
+          accepted_rewrites: acceptedItems,
+        });
+
+        setDownloadId(applyRes.download_id);
+        setDownloadUrl(applyRes.download_url);
+        setIsPatchingApplied(true);
+        setSuccessNotification("⚡ Resume 1-Click Auto-Tailored Successfully!");
+        setIsPdfPreviewOpen(true);
+      }
+    } catch (err: any) {
+      console.error("Auto-tailor error:", err);
+    } finally {
+      setIsAutoTailoring(false);
     }
   };
 
@@ -1120,26 +1204,47 @@ export default function Home() {
             {/* Action Buttons */}
             <div className="flex flex-col gap-3">
               <button
-                type="submit"
-                disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing}
-                className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${documentId && jobDescription.trim().length >= 50 && !isAnalyzing
-                    ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 cursor-pointer"
+                type="button"
+                onClick={handleAutoTailor}
+                disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing || isAutoTailoring}
+                className={`w-full py-4 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${
+                  documentId && jobDescription.trim().length >= 50 && !isAnalyzing && !isAutoTailoring
+                    ? "bg-gradient-to-r from-emerald-600 via-indigo-600 to-purple-600 hover:from-emerald-500 hover:to-purple-500 text-white shadow-xl shadow-indigo-600/25 cursor-pointer"
                     : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-                  }`}
+                }`}
               >
-                {isAnalyzing ? (
+                {isAutoTailoring ? (
                   <>
                     <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    Running AI Analysis...
+                    ⚡ Auto-Tailoring Full Resume...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4" />
-                    Analyze Gaps & Fit
+                    <Sparkles className="h-4.5 w-4.5 animate-pulse" />
+                    ⚡ Auto-Tailor Full Resume (1-Click)
                   </>
                 )}
               </button>
 
+              <button
+                type="submit"
+                disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing || isAutoTailoring}
+                className={`w-full py-2.5 rounded-xl font-semibold text-xs transition-all duration-300 flex items-center justify-center gap-2 border border-slate-300 dark:border-slate-800 bg-white/80 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-850 cursor-pointer ${
+                  (!documentId || jobDescription.trim().length < 50 || isAnalyzing || isAutoTailoring) ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {isAnalyzing ? (
+                  <>
+                    <div className="h-3.5 w-3.5 border-2 border-slate-400/20 border-t-slate-400 rounded-full animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Target className="h-3.5 w-3.5 text-indigo-400" />
+                    Analyze Gaps & Fit Only
+                  </>
+                )}
+              </button>
             </div>
           </form>
 

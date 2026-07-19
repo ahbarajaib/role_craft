@@ -10,6 +10,7 @@ Primary Engine:
 """
 
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -17,6 +18,11 @@ import docx
 from loguru import logger
 
 from app.core.exceptions import NotFoundError
+
+
+def _escape_xml(text: str) -> str:
+    """Safely escape XML special characters."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 class PDFService:
@@ -63,7 +69,7 @@ class PDFService:
         from reportlab.lib.pagesizes import letter
         from reportlab.lib import colors
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, KeepTogether
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
         from reportlab.lib.units import inch
 
         doc = docx.Document(docx_path)
@@ -78,17 +84,15 @@ class PDFService:
 
         styles = getSampleStyleSheet()
 
-        # Custom styles for resume elements
         style_heading = ParagraphStyle(
             "ResumeHeading",
             parent=styles["Heading2"],
             fontName="Helvetica-Bold",
-            fontSize=12,
-            leading=15,
+            fontSize=11,
+            leading=14,
             textColor=colors.HexColor("#1e293b"),
-            spaceBefore=8,
-            spaceAfter=4,
-            borderPadding=(0, 0, 2, 0),
+            spaceBefore=6,
+            spaceAfter=3,
         )
 
         style_body = ParagraphStyle(
@@ -111,45 +115,67 @@ class PDFService:
 
         story = []
 
-        for p in doc.paragraphs:
-            text = p.text.strip()
-            if not text:
-                continue
-
-            # Determine if this paragraph is a section header or bullet point
-            style_name = p.style.name.lower() if p.style else ""
-            is_heading = (
-                "heading" in style_name
-                or "title" in style_name
-                or text.isupper()
-                or (len(text) < 40 and not text.endswith(".") and (text.startswith("[") or ":" in text))
-            )
-
-            # Format runs to HTML for ReportLab Paragraph (support <b>, <i>)
-            html_runs = []
-            for run in p.runs:
-                r_text = run.text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                if not r_text:
+        try:
+            for p in doc.paragraphs:
+                raw_text = p.text.strip()
+                if not raw_text:
                     continue
-                if run.bold:
-                    r_text = f"<b>{r_text}</b>"
-                if run.italic:
-                    r_text = f"<i>{r_text}</i>"
-                html_runs.append(r_text)
 
-            formatted_text = "".join(html_runs) if html_runs else text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                style_name = p.style.name.lower() if p.style else ""
+                is_heading = (
+                    "heading" in style_name
+                    or "title" in style_name
+                    or raw_text.isupper()
+                    or (len(raw_text) < 40 and not raw_text.endswith(".") and (raw_text.startswith("[") or ":" in raw_text))
+                )
 
-            if is_heading:
-                # Add horizontal divider or bold heading
-                story.append(Paragraph(f"<b>{formatted_text.upper()}</b>", style_heading))
-                story.append(Spacer(1, 2))
-            else:
-                if text.startswith("•") or text.startswith("-") or text.startswith("*"):
-                    clean_text = formatted_text.lstrip("•-* ").strip()
-                    story.append(Paragraph(f"• {clean_text}", style_bullet))
+                # Format runs without breaking XML tags
+                html_runs = []
+                for run in p.runs:
+                    r_text = _escape_xml(run.text)
+                    if not r_text:
+                        continue
+                    if run.bold:
+                        r_text = f"<b>{r_text}</b>"
+                    if run.italic:
+                        r_text = f"<i>{r_text}</i>"
+                    html_runs.append(r_text)
+
+                formatted_text = "".join(html_runs) if html_runs else _escape_xml(raw_text)
+
+                if is_heading:
+                    heading_content = f"<b>{_escape_xml(raw_text.upper())}</b>"
+                    story.append(Paragraph(heading_content, style_heading))
+                    story.append(Spacer(1, 2))
                 else:
-                    story.append(Paragraph(formatted_text, style_body))
+                    if raw_text.startswith("•") or raw_text.startswith("-") or raw_text.startswith("*"):
+                        clean_text = formatted_text.lstrip("•-* ").strip()
+                        story.append(Paragraph(f"• {clean_text}", style_bullet))
+                    else:
+                        story.append(Paragraph(formatted_text, style_body))
 
-        pdf_doc.build(story)
-        logger.info("Successfully generated PDF using ReportLab engine", path=str(pdf_path))
-        return pdf_path
+            if not story:
+                story.append(Paragraph("<b>Resume Document</b>", style_heading))
+
+            pdf_doc.build(story)
+            logger.info("Successfully generated PDF using ReportLab engine", path=str(pdf_path))
+            return pdf_path
+
+        except Exception as exc:
+            logger.error("ReportLab generation failed on primary pass, attempting safe plain-text render", error=str(exc))
+            # Safe Fallback: plain text without inline tags
+            story = []
+            for p in doc.paragraphs:
+                raw_text = p.text.strip()
+                if not raw_text:
+                    continue
+                safe_txt = _escape_xml(raw_text)
+                if raw_text.isupper() or len(raw_text) < 30:
+                    story.append(Paragraph(f"<b>{safe_txt}</b>", style_heading))
+                else:
+                    story.append(Paragraph(safe_txt, style_body))
+            if not story:
+                story.append(Paragraph("Resume Document", style_body))
+
+            pdf_doc.build(story)
+            return pdf_path
