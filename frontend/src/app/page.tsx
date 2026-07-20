@@ -200,6 +200,20 @@ function renderSectionCard(
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (triggerInlineRewrite) {
+                        triggerInlineRewrite(section.section_name, section.recommendations);
+                      } else {
+                        onImproveClick(section.section_name, section.recommendations);
+                      }
+                    }}
+                    className="flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold px-2.5 py-1 border border-indigo-500/20 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 hover:border-indigo-500/30 transition-all duration-300 select-none cursor-pointer"
+                  >
+                    <Sparkles className="h-2.5 w-2.5 animate-pulse" />
+                    Regenerate AI
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
                       onImproveClick(section.section_name, section.recommendations);
                     }}
                     className="flex items-center gap-1 text-[10px] text-slate-300 hover:text-white font-semibold px-2.5 py-1 border border-slate-800 rounded-lg bg-slate-900/50 hover:bg-slate-800/80 hover:border-slate-700 transition-all duration-300 select-none cursor-pointer"
