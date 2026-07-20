@@ -46,19 +46,19 @@ def signup(req: UserSignupRequest, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=AuthResponse)
 def login(req: UserLoginRequest, db: Session = Depends(get_db)):
-    """Authenticate email and password credentials."""
+    """Authenticate email and password credentials gracefully without triggering 401 console logs."""
     email_clean = req.email.strip().lower()
     user = db.query(User).filter(User.email == email_clean).first()
     if not user:
-        raise UnauthorizedError("No account found with this email address.")
+        return AuthResponse(error_message="No account found with this email address. Please check your spelling or sign up.")
 
     if not user.password_hash or user.provider == "google":
-        raise UnauthorizedError(
-            "This account was created using Google Sign-In and has no password. Please click 'Continue with Google'."
+        return AuthResponse(
+            error_message="This account was created using Google Sign-In and has no password. Please click 'Continue with Google'."
         )
 
     if not verify_password(req.password, user.password_hash):
-        raise UnauthorizedError("Incorrect password. Please try again or click 'Forgot Password?'.")
+        return AuthResponse(error_message="Incorrect password. Please try again or click 'Forgot Password?'.")
 
     token = create_access_token({"sub": user.email})
     return AuthResponse(access_token=token, user=user)

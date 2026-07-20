@@ -78,12 +78,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       body: JSON.stringify({ email, password }),
     });
 
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data?.error?.detail || "Invalid email or password.");
+    const data = await response.json();
+    if (!response.ok || data?.error_message || data?.error?.detail) {
+      throw new Error(data?.error_message || data?.error?.detail || "Invalid email or password.");
     }
 
-    const data = await response.json();
     setToken(data.access_token);
     setUser(data.user);
     localStorage.setItem("rc_token", data.access_token);

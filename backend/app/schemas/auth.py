@@ -33,9 +33,10 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 class AuthResponse(BaseModel):
-    access_token: str
+    access_token: Optional[str] = None
     token_type: str = "bearer"
-    user: UserResponse
+    user: Optional[UserResponse] = None
+    error_message: Optional[str] = None
 
 class ForgotPasswordRequest(BaseModel):
     email: str
