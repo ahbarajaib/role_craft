@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @variant dark (&:where(.dark, .dark *));
@@ -5,8 +6,8 @@
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
 }
 
 :root {
@@ -16,102 +17,87 @@
   --primary-foreground: #ffffff;
   --card: #ffffff;
   --card-foreground: #0f172a;
-  --border: #cbd5e1;
+  --border: #e2e8f0;
 }
 
 .dark {
-  --background: #09090b;
-  --foreground: #f4f4f5;
+  --background: #080a10;
+  --foreground: #f8fafc;
   --primary: #6366f1;
   --primary-foreground: #ffffff;
-  --card: #18181b;
-  --card-foreground: #f4f4f5;
-  --border: #27272a;
+  --card: #0f172a;
+  --card-foreground: #f8fafc;
+  --border: #1e293b;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1), color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Custom glow and glassmorphism styles */
+/* Elevated glassmorphism & panel styles */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(203, 213, 225, 0.8);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.04), 0 2px 4px -2px rgb(0 0 0 / 0.04);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .dark .glass-panel {
-  background: rgba(24, 24, 27, 0.75);
-  border: 1px solid rgba(63, 63, 70, 0.4);
-  box-shadow: none;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(30, 41, 59, 0.8);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
 }
 
 .glass-panel-hover {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .glass-panel-hover:hover {
   border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 12px 32px -8px rgba(99, 102, 241, 0.15);
   transform: translateY(-2px);
 }
 
-.glow-btn {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-.glow-btn::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 120%;
-  height: 120%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
-  transform: translate(-50%, -50%) scale(0);
-  transition: transform 0.5s ease;
-}
-.glow-btn:hover::after {
-  transform: translate(-50%, -50%) scale(1);
-}
-
 .bg-grid {
-  background-size: 40px 40px;
+  background-size: 36px 36px;
   background-image: 
-    linear-gradient(to right, rgba(148, 163, 184, 0.1) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.1) 1px, transparent 1px);
+    linear-gradient(to right, rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
 }
 
 .dark .bg-grid {
+  background-size: 36px 36px;
   background-image: 
-    linear-gradient(to right, rgba(39, 39, 42, 0.25) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(39, 39, 42, 0.25) 1px, transparent 1px);
+    linear-gradient(to right, rgba(30, 41, 59, 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(30, 41, 59, 0.35) 1px, transparent 1px);
 }
 
 .glow-effect {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.1;
+  filter: blur(120px);
+  opacity: 0.12;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease;
 }
 
 .dark .glow-effect {
-  opacity: 0.15;
+  opacity: 0.22;
 }
 
-/* Keyframes and Animations */
+/* Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -120,20 +106,28 @@ body {
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.4s ease-out forwards;
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
   background: var(--background);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
