@@ -743,13 +743,12 @@ export default function Home() {
     if (!analysisResult || !documentId) return;
     setIsWeavingKeywords(true);
     try {
-      const sectionsToImprove = (analysisResult.sections || []).filter(
-        (s) => s.review_status === "improve"
+      // Target ONLY the Technical Skills section for keyword weaving
+      const skillsSection = (analysisResult.sections || []).find(
+        (s) => s.section_name.toLowerCase().includes("skill") || s.section_name.toLowerCase().includes("technical")
       );
 
-      const targetSections = sectionsToImprove.length > 0
-        ? sectionsToImprove
-        : (analysisResult.sections || []).slice(0, 2);
+      const targetSections = skillsSection ? [skillsSection] : (analysisResult.sections || []).slice(0, 1);
 
       const missingKeywords = Array.from(
         new Set([
@@ -1133,42 +1132,42 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-3">
           {user ? (
-            <div className="relative">
+            <div className="relative z-[100]">
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-2.5 bg-white dark:bg-slate-900/90 hover:bg-slate-100 dark:hover:bg-slate-850 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs transition-all cursor-pointer select-none"
+                className="flex items-center gap-2.5 bg-slate-900/90 dark:bg-slate-900/90 hover:bg-slate-850 dark:hover:bg-slate-800 text-white px-3 py-1.5 rounded-xl border border-slate-700/80 dark:border-slate-800 shadow-md text-xs transition-all cursor-pointer select-none"
               >
-                <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0">
+                <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 shadow-sm">
                   {(user.name || user.email)[0].toUpperCase()}
                 </div>
-                <span className="font-bold text-slate-800 dark:text-slate-200 max-w-[120px] truncate">
+                <span className="font-bold text-slate-100 max-w-[120px] truncate">
                   {user.name || user.email.split("@")[0]}
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-[10px]">
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] border border-emerald-500/30">
                   {user.plan_type === "elite" ? "∞" : user.credits} CR
                 </span>
-                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${isProfileMenuOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`} />
               </button>
 
               {/* Profile Dropdown Card */}
               {isProfileMenuOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-[110]"
                     onClick={() => setIsProfileMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-72 z-50 glass-panel bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-4 animate-fade-in-up">
+                  <div className="absolute right-0 mt-2 w-72 z-[120] bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-700 dark:border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.8)] p-4 space-y-4 animate-fade-in-up">
                     {/* User Header */}
-                    <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-indigo-600/20 shrink-0">
+                    <div className="flex items-center gap-3 pb-3 border-b border-slate-800">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-indigo-600/30 shrink-0">
                         {(user.name || user.email)[0].toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                        <p className="text-sm font-bold text-white truncate">
                           {user.name || "User Account"}
                         </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        <p className="text-xs text-slate-400 truncate">
                           {user.email}
                         </p>
                       </div>
@@ -1176,10 +1175,10 @@ export default function Home() {
 
                     {/* Account Status Details */}
                     <div className="space-y-2.5 text-xs">
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">Plan</span>
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80">
+                        <span className="text-slate-400 font-medium">Plan</span>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-black uppercase text-[10px] tracking-wider">
+                          <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-black uppercase text-[10px] tracking-wider">
                             {user.plan_type}
                           </span>
                           {user.plan_type === "free" && (
@@ -1188,7 +1187,7 @@ export default function Home() {
                                 setIsProfileMenuOpen(false);
                                 setIsSubscriptionModalOpen(true);
                               }}
-                              className="px-2 py-0.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[10px] transition-all cursor-pointer"
+                              className="px-2 py-0.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[10px] transition-all cursor-pointer shadow-sm"
                             >
                               Upgrade
                             </button>
@@ -1196,17 +1195,17 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">Credits Available</span>
-                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80">
+                        <span className="text-slate-400 font-medium">Credits Available</span>
+                        <span className="font-extrabold text-emerald-400">
                           {user.plan_type === "elite" ? "Unlimited" : `${user.credits} Credits`}
                         </span>
                       </div>
 
                       {user.base_resume_filename && (
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80">
-                          <span className="text-slate-500 dark:text-slate-400 font-medium">Base Resume</span>
-                          <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[110px]" title={user.base_resume_filename}>
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80">
+                          <span className="text-slate-400 font-medium">Base Resume</span>
+                          <span className="font-semibold text-slate-300 truncate max-w-[110px]" title={user.base_resume_filename}>
                             {user.base_resume_filename}
                           </span>
                         </div>
@@ -1220,7 +1219,7 @@ export default function Home() {
                         setIsProfileMenuOpen(false);
                         logout();
                       }}
-                      className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <LogOut className="h-3.5 w-3.5" />
                       Sign Out
