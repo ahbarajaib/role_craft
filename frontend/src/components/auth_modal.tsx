@@ -99,8 +99,8 @@ export default function AuthModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in-up">
-      <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-2xl flex flex-col space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in-up">
+      <div className="relative w-full max-w-md glass-panel rounded-2xl p-5 sm:p-8 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-2xl flex flex-col space-y-5 sm:space-y-6 max-h-[92vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={() => setShowAuthModal(false)}
@@ -111,8 +111,8 @@ export default function AuthModal() {
 
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="h-12 w-12 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center border border-indigo-500/25 mx-auto">
-            <Sparkles className="h-6 w-6 text-indigo-600 dark:text-indigo-400 animate-pulse" />
+          <div className="h-12 w-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center border border-emerald-500/25 mx-auto">
+            <Sparkles className="h-6 w-6 text-emerald-600 dark:text-emerald-400 animate-pulse" />
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">
             {authMode === "signup"
@@ -265,14 +265,16 @@ export default function AuthModal() {
             </div>
 
             {/* Google Authentication Button Wrapper */}
-            <div className="flex justify-center w-full">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => setError("Google authentication failed.")}
-                theme="outline"
-                size="large"
-                width="340px"
-              />
+            <div className="flex justify-center w-full overflow-hidden">
+              <div className="max-w-full overflow-hidden flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError("Google authentication failed.")}
+                  theme="outline"
+                  size="large"
+                  width="300px"
+                />
+              </div>
             </div>
           </>
         )}

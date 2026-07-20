@@ -123,8 +123,8 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-2xl glass-panel rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-2xl flex flex-col space-y-6 max-h-[95vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-2xl glass-panel rounded-2xl p-4 sm:p-8 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-2xl flex flex-col space-y-5 sm:space-y-6 max-h-[95vh] overflow-y-auto">
         
         {/* Close Button */}
         <button
@@ -135,14 +135,14 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         </button>
 
         {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex h-10 w-10 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 items-center justify-center border border-indigo-500/25 mx-auto">
-            <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+        <div className="text-center space-y-2 pt-2 sm:pt-0">
+          <div className="inline-flex h-10 w-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 items-center justify-center border border-emerald-500/25 mx-auto">
+            <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
             Upgrade to Role Craft Premium
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
             Unlock professional resume optimizations, unlimited AI rewrites, and instant downloads.
           </p>
         </div>
