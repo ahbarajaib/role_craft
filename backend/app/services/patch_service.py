@@ -109,24 +109,52 @@ def _clone_paragraph_xml(
 # PatchService
 # ---------------------------------------------------------------------------
 
-def _is_metadata_line(text: str) -> bool:
-    """Detect if a paragraph is a company name, location, date, or role title metadata line."""
+def _is_bullet_paragraph(p) -> bool:
+    """Check if a paragraph has bullet/list XML formatting or starts with bullet characters."""
+    t = p.text.strip()
+    if t.startswith("•") or t.startswith("-") or t.startswith("*") or t.startswith("–"):
+        return True
+    try:
+        pPr = p._p.get_or_add_pPr()
+        if pPr.find(qn("w:numPr")) is not None:
+            return True
+        if p.style and ("List" in p.style.name or "Bullet" in p.style.name):
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def _is_metadata_line(text: str, para=None) -> bool:
+    """Detect if a paragraph is a job title, company name, location, or date header line."""
     t = text.strip()
     if not t:
         return False
-    if t.startswith("•") or t.startswith("-") or t.startswith("*"):
+    if para and _is_bullet_paragraph(para):
         return False
+    if t.startswith("•") or t.startswith("-") or t.startswith("*") or t.startswith("–"):
+        return False
+
+    # Check for date years (e.g. 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026)
+    import re
+    if re.search(r'\b(19|20)\d{2}\b', t):
+        return True
+
     meta_keywords = [
         "inc", "ltd", "llc", "fze", "pvt", "corp", "corporation", "technologies",
         "solutions", "company", "university", "college", "institute", "school",
-        "dubai", "uae", "usa", "uk", "india", "present", "jan", "feb", "mar",
-        "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"
+        "dubai", "uae", "usa", "uk", "india", "present", "current", "jan", "feb", "mar",
+        "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec",
+        "developer", "engineer", "architect", "manager", "lead", "designer",
+        "consultant", "analyst", "administrator", "specialist", "intern", "freelance"
     ]
     t_lower = t.lower()
     if any(k in t_lower for k in meta_keywords):
         return True
-    if len(t) < 60 and not t.endswith("."):
+
+    if len(t) < 100 and not t.endswith("."):
         return True
+
     return False
 
 
@@ -198,8 +226,11 @@ class PatchService:
                 if line.strip()
             ]
 
-            # The first body paragraph is the formatting template for new paragraphs.
-            style_template = body_paras[0] if body_paras else heading_para
+            # Select template for cloning new bullet paragraphs
+            bullet_template = next(
+                (p for p in body_paras if _is_bullet_paragraph(p)),
+                body_paras[-1] if body_paras else heading_para
+            )
 
             # Insertion cursor — new paragraphs are inserted after this element.
             insertion_cursor = heading_para
@@ -212,35 +243,32 @@ class PatchService:
                     orig_p = body_paras[orig_idx]
                     ai_text = new_para_texts[ai_idx]
 
-                    # Check if original paragraph is a metadata line (company name/location)
-                    # and AI text is a bullet/achievement line that doesn't contain the metadata
-                    if _is_metadata_line(orig_p.text) and not _is_metadata_line(ai_text):
-                        first_word = orig_p.text.strip().split()[0].lower() if orig_p.text.strip() else ""
-                        if first_word and first_word not in ai_text.lower():
-                            # Keep original metadata paragraph intact!
-                            insertion_cursor = orig_p
-                            orig_idx += 1
-                            continue
+                    # Rule: Never overwrite a job title, company name, location, or date header line!
+                    if _is_metadata_line(orig_p.text, orig_p):
+                        insertion_cursor = orig_p
+                        orig_idx += 1
+                        continue
 
-                    # Overwrite existing paragraph text only (preserve formatting and font)
+                    # Overwrite existing bullet paragraph text only (preserve formatting and font)
                     _set_paragraph_text_preserve_fmt(orig_p, ai_text, default_font=doc_font)
                     insertion_cursor = orig_p
                     orig_idx += 1
                     ai_idx += 1
 
                 elif ai_idx < len(new_para_texts):
-                    # AI produced more lines than original — clone template
-                    new_p = _clone_paragraph_xml(style_template, doc._body, default_font=doc_font)
+                    # AI produced more achievement lines than original bullets — clone bullet_template
+                    new_p = _clone_paragraph_xml(bullet_template, doc._body, default_font=doc_font)
                     insertion_cursor._p.addnext(new_p._p)
                     _set_paragraph_text_preserve_fmt(new_p, new_para_texts[ai_idx], default_font=doc_font)
                     insertion_cursor = new_p
                     ai_idx += 1
 
                 else:
-                    # Original had more lines — remove surplus paragraph
+                    # Original had more lines — remove surplus bullet paragraph (preserve headers)
                     p = body_paras[orig_idx]
-                    p._p.getparent().remove(p._p)
-                    p._p = None  # type: ignore[assignment]
+                    if not _is_metadata_line(p.text, p):
+                        p._p.getparent().remove(p._p)
+                        p._p = None  # type: ignore[assignment]
                     orig_idx += 1
 
             sections_updated += 1
