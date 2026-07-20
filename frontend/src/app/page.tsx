@@ -800,7 +800,6 @@ export default function Home() {
         setDownloadUrl(applyRes.download_url);
         setIsPatchingApplied(true);
         setSuccessNotification("⚡ All ATS Keywords Woven & Resume Updated!");
-        setIsPdfPreviewOpen(true);
       }
     } catch (err: any) {
       console.error("Weave keywords error:", err);

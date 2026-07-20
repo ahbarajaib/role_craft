@@ -63,9 +63,42 @@ def _set_run_text(run, text: str) -> None:
         t_elem.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
 
 
+def _remove_num_pr(paragraph) -> None:
+    """Remove native Word list/bullet XML (<w:numPr>) from a paragraph to ensure it never renders bullet symbols."""
+    try:
+        pPr = paragraph._p.get_or_add_pPr()
+        numPr = pPr.find(qn("w:numPr"))
+        if numPr is not None:
+            pPr.remove(numPr)
+    except Exception:
+        pass
+
+
+def _clean_bullet_text_prefix(text: str, has_num_pr: bool) -> str:
+    """Strip redundant literal bullet characters if Word native list XML (<w:numPr>) is present."""
+    if not has_num_pr:
+        return text
+    t = text.lstrip()
+    symbols = ["•", "-", "*", "–", "—", "\u2022", "\u2013", "\u2014"]
+    for s in symbols:
+        if t.startswith(s):
+            t = t[len(s):].lstrip()
+            break
+    return t
+
+
 def _set_paragraph_text_preserve_fmt(paragraph, new_text: str, default_font: str | None = None) -> None:
     """Replace the visible text of a paragraph while keeping all run formatting and retaining exact font."""
     runs = paragraph.runs
+
+    has_num_pr = False
+    try:
+        pPr = paragraph._p.get_or_add_pPr()
+        has_num_pr = pPr.find(qn("w:numPr")) is not None
+    except Exception:
+        pass
+
+    clean_text = _clean_bullet_text_prefix(new_text, has_num_pr)
 
     # Extract target font name from existing runs or document default font
     target_font = None
@@ -77,12 +110,12 @@ def _set_paragraph_text_preserve_fmt(paragraph, new_text: str, default_font: str
         target_font = default_font
 
     if not runs:
-        r = paragraph.add_run(new_text)
+        r = paragraph.add_run(clean_text)
         if target_font:
             r.font.name = target_font
         return
 
-    _set_run_text(runs[0], new_text)
+    _set_run_text(runs[0], clean_text)
     if target_font and runs[0].font:
         runs[0].font.name = target_font
 
@@ -245,6 +278,7 @@ class PatchService:
 
                     # Rule: Never overwrite a job title, company name, location, or date header line!
                     if _is_metadata_line(orig_p.text, orig_p):
+                        _remove_num_pr(orig_p)
                         insertion_cursor = orig_p
                         orig_idx += 1
                         continue
