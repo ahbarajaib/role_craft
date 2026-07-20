@@ -16,6 +16,7 @@ Formatting preservation guarantee
 import copy
 import uuid
 from pathlib import Path
+from typing import Any
 
 import docx
 import docx.text.paragraph
@@ -176,7 +177,10 @@ def _is_bullet_paragraph(p) -> bool:
 
 
 def _is_metadata_line(text: str, para=None) -> bool:
-    """Detect if a paragraph is a job title, company name, location, or date header line."""
+    """Detect if a paragraph is a job title, company name, location, or date header line in Experience section.
+
+    Returns False for skills category lines (e.g., 'Frontend: React, ...') and achievement bullets.
+    """
     t = text.strip()
     if not t:
         return False
@@ -185,24 +189,36 @@ def _is_metadata_line(text: str, para=None) -> bool:
     if t.startswith("•") or t.startswith("-") or t.startswith("*") or t.startswith("–"):
         return False
 
-    # Check for date years (e.g. 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026)
+    # Skill category lines containing colons (e.g. "Frontend: React, Next.js", "AI & LLM Engineering: OpenAI...") are NOT metadata lines!
+    if ":" in t:
+        colon_idx = t.find(":")
+        label = t[:colon_idx].strip().lower()
+        if label in ["frontend", "backend", "databases", "tools", "languages", "frameworks", "technologies", "ai & llm engineering", "skills", "tools & platforms"]:
+            return False
+        # If line contains comma list after colon, it's a skill line
+        if "," in t[colon_idx:]:
+            return False
+
     import re
-    if re.search(r'\b(19|20)\d{2}\b', t):
-        return True
-
-    meta_keywords = [
-        "inc", "ltd", "llc", "fze", "pvt", "corp", "corporation", "technologies",
-        "solutions", "company", "university", "college", "institute", "school",
-        "dubai", "uae", "usa", "uk", "india", "present", "current", "jan", "feb", "mar",
-        "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec",
-        "developer", "engineer", "architect", "manager", "lead", "designer",
-        "consultant", "analyst", "administrator", "specialist", "intern", "freelance"
-    ]
     t_lower = t.lower()
-    if any(k in t_lower for k in meta_keywords):
+
+    # Check for date years (e.g. 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, Present)
+    has_date = bool(re.search(r'\b(19|20)\d{2}\b', t)) or "present" in t_lower
+
+    company_suffixes = ["inc", "ltd", "llc", "fze", "pvt", "corp", "corporation", "solutions"]
+    has_company = any(re.search(r'\b' + re.escape(s) + r'\b', t_lower) for s in company_suffixes)
+
+    locations = ["dubai", "uae", "usa", "uk", "india", "bangalore", "bhatkal", "remote"]
+    has_location = any(re.search(r'\b' + re.escape(loc) + r'\b', t_lower) for loc in locations)
+
+    role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "administrator", "specialist", "intern", "freelance", "executive"]
+    has_role = any(re.search(r'\b' + re.escape(r) + r'\b', t_lower) for r in role_titles)
+
+    # A line is metadata if it has date OR company OR (short line < 80 chars with role/location)
+    if has_date or has_company:
         return True
 
-    if len(t) < 100 and not t.endswith("."):
+    if (has_role or has_location) and len(t) < 80 and not t.endswith("."):
         return True
 
     return False
@@ -249,8 +265,14 @@ class PatchService:
         def _normalize(t: str) -> str:
             return " ".join(t.replace("[", "").replace("]", "").strip().lower().split())
 
+        # Deduplicate accepted_rewrites by section name (keep latest rewrite per section)
+        unique_rewrites: dict[str, Any] = {}
+        for item in request.accepted_rewrites:
+            unique_rewrites[_normalize(item.section)] = item
+        accepted_items = list(unique_rewrites.values())
+
         # 3. Apply each accepted rewrite.
-        for rewrite_item in request.accepted_rewrites:
+        for rewrite_item in accepted_items:
             target_sec = next(
                 (s for s in sections if _normalize(s.title) == _normalize(rewrite_item.section)),
                 None,
