@@ -88,6 +88,65 @@ function diffWords(oldStr: string, newStr: string): DiffToken[] {
   return result;
 }
 
+function FormattedSectionText({ text, className }: { text: string; className?: string }) {
+  if (!text) return null;
+
+  const lines = text.split("\n").filter((l) => l.trim().length > 0);
+  const bulletSymbols = ["•", "-", "*", "–", "—", "▪", "▸"];
+
+  return (
+    <div className={`space-y-2.5 text-[13px] text-slate-200 leading-relaxed ${className || ""}`}>
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        const bulletMatch = bulletSymbols.find((s) => trimmed.startsWith(s));
+
+        if (bulletMatch) {
+          const content = trimmed.substring(bulletMatch.length).trim();
+          const colonIdx = content.indexOf(":");
+          if (colonIdx > 0 && colonIdx < 30 && !content.substring(0, colonIdx).includes(" ")) {
+            const label = content.substring(0, colonIdx + 1);
+            const rest = content.substring(colonIdx + 1);
+            return (
+              <div key={idx} className="flex items-start gap-2.5 pl-1">
+                <span className="text-indigo-400 font-bold shrink-0 mt-0.5">•</span>
+                <p className="flex-1 select-all">
+                  <span className="font-bold text-white mr-1.5">{label}</span>
+                  {rest}
+                </p>
+              </div>
+            );
+          }
+
+          return (
+            <div key={idx} className="flex items-start gap-2.5 pl-1">
+              <span className="text-indigo-400 font-bold shrink-0 mt-0.5">•</span>
+              <p className="flex-1 select-all">{content}</p>
+            </div>
+          );
+        }
+
+        const colonIdx = trimmed.indexOf(":");
+        if (colonIdx > 0 && colonIdx < 35 && !trimmed.substring(0, colonIdx).includes("\n")) {
+          const label = trimmed.substring(0, colonIdx + 1);
+          const rest = trimmed.substring(colonIdx + 1);
+          return (
+            <div key={idx} className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 select-all flex flex-wrap items-baseline gap-1.5">
+              <span className="font-bold text-indigo-300 text-xs tracking-wide uppercase">{label}</span>
+              <span className="text-slate-200 text-xs">{rest}</span>
+            </div>
+          );
+        }
+
+        return (
+          <p key={idx} className="select-all leading-relaxed">
+            {trimmed}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 function renderSectionCard(
   section: ReviewedSection,
   idx: number,
@@ -142,25 +201,26 @@ function renderSectionCard(
                 : "⚪ Reduce Emphasis"}
           </span>
           {section.review_status === "improve" && (
-            <span className={`text-xs px-2.5 py-0.5 rounded-full border capitalize font-medium ${priorityStyles[section.priority]}`}>
+            <span className={`text-xs px-2.5 py-0.5 rounded-full border font-medium uppercase ${priorityStyles[section.priority]}`}>
               {section.priority} priority
             </span>
           )}
           {rewrittenText && (
-            <span className="text-xs px-2.5 py-0.5 rounded-full border bg-indigo-500/10 border-indigo-500/30 text-indigo-400 font-semibold animate-pulse">
-              ✨ Rewritten
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 font-bold flex items-center gap-1">
+              <CheckCircle className="h-3 w-3 text-indigo-400" />
+              Rewrite Applied
             </span>
           )}
         </div>
 
         <div className="flex items-center gap-2">
-          <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform duration-300 ${isExpanded ? "transform rotate-180" : ""}`} />
+          <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${isExpanded ? "transform rotate-180" : ""}`} />
         </div>
       </div>
 
       {/* Collapsible Details */}
       {isExpanded && (
-        <div className="px-5 pb-5 border-t border-slate-900/60 pt-4 space-y-4 animate-fade-in-up">
+        <div className="px-5 pb-5 border-t border-slate-200 dark:border-slate-800/80 pt-4 space-y-4 animate-fade-in-up">
           {/* AI Reason Summary */}
           <p className="text-sm text-slate-300 leading-relaxed italic">
             "{section.reason}"
@@ -168,10 +228,9 @@ function renderSectionCard(
 
           {/* Rewritten Preview Text */}
           {rewrittenText && (
-            <div className="space-y-3 bg-slate-950/40 p-4.5 rounded-xl border border-indigo-500/25 shadow-inner text-xs animate-fade-in-up">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800/50">
-                <span className="font-bold text-indigo-400 uppercase tracking-wider text-xs flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-indigo-400 animate-pulse" />
+            <div className="bg-indigo-950/20 p-4 rounded-xl border border-indigo-500/30 space-y-2 animate-fade-in-up">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">
                   Rewritten Section Preview
                 </span>
                 <div className="flex items-center gap-2">
@@ -223,9 +282,9 @@ function renderSectionCard(
                   </button>
                 </div>
               </div>
-              <p className="text-[13px] text-slate-200 leading-relaxed whitespace-pre-wrap select-all font-medium pt-1">
-                {rewrittenText}
-              </p>
+              <div className="pt-1">
+                <FormattedSectionText text={rewrittenText} />
+              </div>
             </div>
           )}
 

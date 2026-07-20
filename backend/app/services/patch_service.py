@@ -115,12 +115,29 @@ def _set_paragraph_text_preserve_fmt(paragraph, new_text: str, default_font: str
             r.font.name = target_font
         return
 
-    _set_run_text(runs[0], clean_text)
-    if target_font and runs[0].font:
-        runs[0].font.name = target_font
+    # Check if original paragraph had a category label run (e.g. Run 0: "Frontend:", Run 1: " React, Next.js")
+    colon_idx = clean_text.find(":")
+    if len(runs) >= 2 and colon_idx > 0 and colon_idx < 40:
+        label = clean_text[: colon_idx + 1]
+        rest = clean_text[colon_idx + 1 :]
 
-    for run in runs[1:]:
-        _set_run_text(run, "")
+        _set_run_text(runs[0], label)
+        if target_font and runs[0].font:
+            runs[0].font.name = target_font
+
+        _set_run_text(runs[1], rest)
+        if target_font and runs[1].font:
+            runs[1].font.name = target_font
+
+        for run in runs[2:]:
+            _set_run_text(run, "")
+    else:
+        _set_run_text(runs[0], clean_text)
+        if target_font and runs[0].font:
+            runs[0].font.name = target_font
+
+        for run in runs[1:]:
+            _set_run_text(run, "")
 
 
 def _clone_paragraph_xml(
