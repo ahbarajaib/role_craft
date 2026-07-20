@@ -94,49 +94,71 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
   const lines = text.split("\n").filter((l) => l.trim().length > 0);
   const bulletSymbols = ["•", "-", "*", "–", "—", "▪", "▸"];
 
+  // Heuristic: if most lines are long sentences (> 40 chars), treat the whole block as
+  // a bullet list even if there are no explicit bullet symbols.
+  // This handles AI output that returns bare sentences separated by newlines.
+  const longSentenceLines = lines.filter(
+    (l) => l.trim().length > 40 && !l.trim().includes(": ")
+  );
+  const isImplicitBulletBlock =
+    lines.length >= 2 &&
+    longSentenceLines.length >= Math.ceil(lines.length * 0.6);
+
   return (
     <div className={`space-y-2.5 text-[13px] text-slate-200 leading-relaxed ${className || ""}`}>
       {lines.map((line, idx) => {
         const trimmed = line.trim();
         const bulletMatch = bulletSymbols.find((s) => trimmed.startsWith(s));
 
+        // Case 1: Explicit bullet symbol prefix
         if (bulletMatch) {
           const content = trimmed.substring(bulletMatch.length).trim();
-          const colonIdx = content.indexOf(":");
-          if (colonIdx > 0 && colonIdx < 30 && !content.substring(0, colonIdx).includes(" ")) {
-            const label = content.substring(0, colonIdx + 1);
-            const rest = content.substring(colonIdx + 1);
-            return (
-              <div key={idx} className="flex items-start gap-2.5 pl-1">
-                <span className="text-indigo-400 font-bold shrink-0 mt-0.5">•</span>
-                <p className="flex-1 select-all">
-                  <span className="font-bold text-white mr-1.5">{label}</span>
-                  {rest}
-                </p>
-              </div>
-            );
-          }
-
           return (
             <div key={idx} className="flex items-start gap-2.5 pl-1">
-              <span className="text-indigo-400 font-bold shrink-0 mt-0.5">•</span>
+              <span className="text-indigo-400 font-bold shrink-0 mt-0.5 select-none">•</span>
               <p className="flex-1 select-all">{content}</p>
             </div>
           );
         }
 
+        // Case 2: Skills category lines — "Frontend: React, Next.js, TailwindCSS"
+        // Only treat as category badge if the label part is a single word (no spaces), short, and it's not an implicit bullet block
         const colonIdx = trimmed.indexOf(":");
-        if (colonIdx > 0 && colonIdx < 35 && !trimmed.substring(0, colonIdx).includes("\n")) {
+        const labelPart = colonIdx > 0 ? trimmed.substring(0, colonIdx) : "";
+        const isSkillCategory =
+          !isImplicitBulletBlock &&
+          colonIdx > 0 &&
+          colonIdx < 35 &&
+          !labelPart.includes(" ") &&
+          labelPart.length >= 3;
+
+        if (isSkillCategory) {
           const label = trimmed.substring(0, colonIdx + 1);
           const rest = trimmed.substring(colonIdx + 1);
           return (
-            <div key={idx} className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 select-all flex flex-wrap items-baseline gap-1.5">
-              <span className="font-bold text-indigo-300 text-xs tracking-wide uppercase">{label}</span>
+            <div
+              key={idx}
+              className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 select-all flex flex-wrap items-baseline gap-1.5"
+            >
+              <span className="font-bold text-indigo-300 text-xs tracking-wide uppercase">
+                {label}
+              </span>
               <span className="text-slate-200 text-xs">{rest}</span>
             </div>
           );
         }
 
+        // Case 3: Implicit bullet — long achievement sentences without explicit symbol
+        if (isImplicitBulletBlock) {
+          return (
+            <div key={idx} className="flex items-start gap-2.5 pl-1">
+              <span className="text-indigo-400 font-bold shrink-0 mt-0.5 select-none">•</span>
+              <p className="flex-1 select-all">{trimmed}</p>
+            </div>
+          );
+        }
+
+        // Case 4: Plain paragraph (short lines, descriptions, summaries)
         return (
           <p key={idx} className="select-all leading-relaxed">
             {trimmed}
