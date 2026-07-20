@@ -121,16 +121,25 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
           );
         }
 
-        // Case 2: Skills category lines — "Frontend: React, Next.js, TailwindCSS"
-        // Only treat as category badge if the label part is a single word (no spaces), short, and it's not an implicit bullet block
+        // Case 2: Skills category lines — "Frontend: React, Next.js" OR "AI & LLM Engineering: OpenAI, ..."
+        // Detect: colon appears within first 45 chars, rest is a list (has commas or tech keywords)
         const colonIdx = trimmed.indexOf(":");
         const labelPart = colonIdx > 0 ? trimmed.substring(0, colonIdx) : "";
+        const restPart = colonIdx > 0 ? trimmed.substring(colonIdx + 1).trim() : "";
+
+        // A skill category line has:
+        // - short label (max ~45 chars = up to ~6 words)
+        // - not in an implicit bullet block
+        // - rest of line contains commas (list of values) or is 2–6 words (short tool list)
+        // - label doesn't start with a lowercase letter (which would indicate a continuing sentence)
         const isSkillCategory =
           !isImplicitBulletBlock &&
           colonIdx > 0 &&
-          colonIdx < 35 &&
-          !labelPart.includes(" ") &&
-          labelPart.length >= 3;
+          labelPart.length >= 3 &&
+          labelPart.length <= 45 &&
+          labelPart.split(" ").length <= 6 &&
+          (labelPart[0] === labelPart[0].toUpperCase()) &&
+          (restPart.includes(",") || restPart.split(" ").length <= 8);
 
         if (isSkillCategory) {
           const label = trimmed.substring(0, colonIdx + 1);
