@@ -1200,10 +1200,10 @@ export default function Home() {
   const isUploading = uploadMutation.isPending;
 
   return (
-    <div className={`relative min-h-screen ${theme} ${theme === "dark" ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900"} bg-grid p-6 lg:p-12 overflow-x-hidden transition-colors duration-300`}>
+    <div className={`relative min-h-screen ${theme} ${theme === "dark" ? "bg-[#050a0d] text-emerald-50" : "bg-[#f4f8f6] text-emerald-950"} bg-grid p-6 lg:p-12 overflow-x-hidden transition-colors duration-300`}>
       {/* Decorative Glow Elements */}
-      <div className="glow-effect bg-indigo-500 w-[500px] h-[500px] -top-40 -left-40" />
-      <div className="glow-effect bg-purple-500 w-[400px] h-[400px] top-[40%] -right-20" />
+      <div className="glow-effect bg-emerald-500 w-[550px] h-[550px] -top-40 -left-40" />
+      <div className="glow-effect bg-amber-500 w-[450px] h-[450px] top-[35%] -right-20" />
 
       {/* Header */}
       <header className="relative max-w-[1440px] mx-auto flex items-center justify-between mb-12 animate-fade-in-up">
@@ -1211,13 +1211,13 @@ export default function Home() {
           <img
             src={theme === "dark" ? "/logo.png" : "/logo-light.png"}
             alt="Role Craft Logo"
-            className="h-14 w-14 object-contain rounded-xl shadow-lg shadow-indigo-600/10 dark:shadow-indigo-600/20 transition-all duration-300"
+            className="h-14 w-14 object-contain rounded-xl shadow-lg shadow-emerald-600/10 dark:shadow-emerald-600/20 transition-all duration-300"
           />
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-              Role Craft <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Engine v1.0</span>
+            <h1 className="text-2xl font-black tracking-tight text-emerald-950 dark:text-white flex items-center gap-2">
+              Role Craft <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">Engine v1.0</span>
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Craft every resume for the role.</p>
+            <p className="text-sm text-emerald-700/70 dark:text-emerald-400/80">Craft every resume for the role.</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
