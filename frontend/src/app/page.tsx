@@ -1206,37 +1206,43 @@ export default function Home() {
       <div className="glow-effect bg-amber-500 w-[450px] h-[450px] top-[35%] -right-20" />
 
       {/* Header */}
-      <header className="relative max-w-[1440px] mx-auto flex items-center justify-between mb-12 animate-fade-in-up">
+      <header className="relative max-w-[1440px] mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-8 sm:mb-12 animate-fade-in-up">
         <div className="flex items-center gap-3">
           <img
             src={theme === "dark" ? "/logo.png" : "/logo-light.png"}
             alt="Role Craft Logo"
-            className="h-14 w-14 object-contain rounded-xl shadow-lg shadow-emerald-600/10 dark:shadow-emerald-600/20 transition-all duration-300"
+            className="h-10 w-10 sm:h-14 sm:w-14 object-contain rounded-xl shadow-lg shadow-emerald-600/10 dark:shadow-emerald-600/20 transition-all duration-300 shrink-0"
           />
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-emerald-950 dark:text-white flex items-center gap-2">
-              Role Craft <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">Engine v1.0</span>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
+              <span>Role Craft</span>
+              <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold shrink-0">
+                Engine v1.0
+              </span>
             </h1>
-            <p className="text-sm text-emerald-700/70 dark:text-emerald-400/80">Craft every resume for the role.</p>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium truncate">
+              Craft every resume for the role.
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+
+        <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-auto">
           {/* Theme Switcher Toggle Button */}
           <button
             type="button"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="flex items-center gap-2 bg-white/80 dark:bg-slate-900/90 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-bold transition-all cursor-pointer select-none"
+            className="flex items-center gap-1.5 bg-white/90 dark:bg-slate-900/90 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-bold transition-all cursor-pointer select-none"
             title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
             {theme === "dark" ? (
               <>
                 <Sun className="h-3.5 w-3.5 text-amber-400" />
-                <span className="hidden sm:inline">Light Mode</span>
+                <span className="hidden sm:inline">Light</span>
               </>
             ) : (
               <>
                 <Moon className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                <span className="hidden sm:inline">Dark Mode</span>
+                <span className="hidden sm:inline">Dark</span>
               </>
             )}
           </button>
@@ -1246,15 +1252,15 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-2.5 bg-slate-900/90 dark:bg-slate-900/90 hover:bg-slate-850 dark:hover:bg-slate-800 text-white px-3 py-1.5 rounded-xl border border-slate-700/80 dark:border-slate-800 shadow-md text-xs transition-all cursor-pointer select-none"
+                className="flex items-center gap-2 bg-slate-900/90 dark:bg-slate-900/90 hover:bg-slate-850 dark:hover:bg-slate-800 text-white px-3 py-1.5 rounded-xl border border-slate-700/80 dark:border-slate-800 shadow-md text-xs transition-all cursor-pointer select-none"
               >
-                <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 shadow-sm">
+                <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 shadow-sm">
                   {(user.name || user.email)[0].toUpperCase()}
                 </div>
-                <span className="font-bold text-slate-100 max-w-[120px] truncate">
+                <span className="font-bold text-slate-100 max-w-[70px] sm:max-w-[120px] truncate">
                   {user.name || user.email.split("@")[0]}
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] border border-emerald-500/30">
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] border border-emerald-500/30">
                   {user.plan_type === "elite" ? "∞" : user.credits} CR
                 </span>
                 <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`} />
@@ -1346,15 +1352,6 @@ export default function Home() {
               Sign In
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-2 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-sm transition-colors cursor-pointer select-none"
-            title={theme === "dark" ? "Switch to Light Theme" : "Switch to Dark Theme"}
-          >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
         </div>
       </header>
 
@@ -2425,15 +2422,15 @@ export default function Home() {
         </div>
       )}
 
-      {/* Sticky Action Footer */}
+      {/* Floating Sticky Action Dock */}
       {Object.keys(rewrittenSections).length > 0 && isBottomBarVisible && (
         <>
-          <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-4 shadow-2xl animate-fade-in-up transition-all duration-300">
-            <div className="max-w-3xl mx-auto">
+          <div className="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-6 z-40 sm:max-w-2xl bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 dark:border-slate-800 p-3.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] animate-fade-in-up transition-all duration-300">
+            <div className="w-full mx-auto space-y-3">
 
               {/* Expandable Drawer for Accepted Improvements */}
               {isCartOpen && !isPatchingApplied && (
-                <div className="border-b border-slate-800/80 pb-4 mb-4 space-y-3 animate-fade-in-up">
+                <div className="border-b border-slate-800 pb-3 space-y-2 animate-fade-in-up">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
                       Accepted Improvements
@@ -2451,7 +2448,7 @@ export default function Home() {
                       Clear All
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-2 max-h-[140px] overflow-y-auto pr-1">
+                  <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1">
                     {Object.keys(rewrittenSections).map((secKey) => {
                       const originalSection = (analysisResult?.sections || []).find(
                         (s) => s.section_name.toLowerCase() === secKey
@@ -2459,8 +2456,8 @@ export default function Home() {
                       const displayName = originalSection?.section_name || secKey;
 
                       return (
-                        <div key={secKey} className="flex items-center gap-1.5 text-xs bg-slate-950/60 border border-slate-850/40 px-3 py-1.5 rounded-xl">
-                          <span className="text-slate-200 font-semibold truncate capitalize max-w-[200px]">
+                        <div key={secKey} className="flex items-center gap-1.5 text-xs bg-slate-950/60 border border-slate-850/40 px-2.5 py-1 rounded-lg">
+                          <span className="text-slate-200 font-semibold truncate capitalize max-w-[140px]">
                             {displayName}
                           </span>
                           <button
@@ -2479,36 +2476,36 @@ export default function Home() {
               )}
 
               {/* Main Footer Row */}
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${isPatchingApplied ? 'bg-emerald-500/20 text-emerald-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${isPatchingApplied ? 'bg-emerald-500/20 text-emerald-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
                     {isPatchingApplied ? <CheckCircle className="h-4 w-4" /> : <Sparkles className="h-4 w-4 animate-pulse" />}
                   </div>
-                  <div>
-                    <span className="text-xs font-bold text-white block">
-                      {isPatchingApplied ? "✅ Resume Updated" : `${Object.keys(rewrittenSections).length} accepted improvement${Object.keys(rewrittenSections).length > 1 ? 's' : ''}`}
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-white block truncate">
+                      {isPatchingApplied ? "✅ Resume Updated" : `${Object.keys(rewrittenSections).length} improvement${Object.keys(rewrittenSections).length > 1 ? 's' : ''} ready`}
                     </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400">
-                        {isPatchingApplied ? "Your modifications have been applied." : "Ready to apply edits to your original Word file."}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400 truncate hidden xs:inline">
+                        {isPatchingApplied ? "Applied to file" : "Ready to apply"}
                       </span>
                       {!isPatchingApplied && (
                         <button
                           type="button"
                           onClick={() => setIsCartOpen(!isCartOpen)}
-                          className="text-[10px] text-indigo-400 hover:text-indigo-350 underline font-semibold select-none cursor-pointer"
+                          className="text-[10px] text-indigo-400 hover:text-indigo-350 underline font-semibold select-none cursor-pointer shrink-0"
                         >
-                          {isCartOpen ? "Hide Details" : "View Details"}
+                          {isCartOpen ? "Hide" : "Details"}
                         </button>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 shrink-0">
                   <div className="flex items-center gap-2">
                     {isPatchingApplied && downloadUrl ? (
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5">
                         <a
                           href={`${API_BASE_URL}${downloadUrl}?filename=${encodeURIComponent(
                             buildResumeFilename(
@@ -2519,10 +2516,10 @@ export default function Home() {
                           )}`}
                           download
                           onClick={() => setSuccessNotification("Downloading updated DOCX...")}
-                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/25 transition-all duration-300 flex items-center gap-1.5"
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1"
                         >
-                          <FileText className="h-4 w-4" />
-                          DOCX
+                          <FileText className="h-3.5 w-3.5" />
+                          <span>DOCX</span>
                         </a>
 
                         <a
@@ -2535,31 +2532,31 @@ export default function Home() {
                           )}`}
                           download
                           onClick={() => setSuccessNotification("Downloading PDF...")}
-                          className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-700/25 transition-all duration-300 flex items-center gap-1.5"
+                          className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1"
                         >
-                          <Download className="h-4 w-4" />
-                          PDF
+                          <Download className="h-3.5 w-3.5" />
+                          <span>PDF</span>
                         </a>
 
                         <button
                           type="button"
                           onClick={() => setIsPdfPreviewOpen(true)}
-                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/25 transition-all duration-300 flex items-center gap-1.5 cursor-pointer"
+                          className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1 cursor-pointer"
                         >
-                          <FileText className="h-4 w-4" />
-                          Preview PDF
+                          <FileText className="h-3.5 w-3.5" />
+                          <span>Preview</span>
                         </button>
                       </div>
                     ) : (
                       <button
                         onClick={handleApplyRewrites}
                         disabled={applyMutation.isPending}
-                        className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-650 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/35 transition-all duration-300 flex items-center gap-1.5"
+                        className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-50 text-slate-950 rounded-xl text-xs font-extrabold shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5"
                       >
                         {applyMutation.isPending ? (
                           <>
-                            <div className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                            Applying edits...
+                            <div className="h-3 w-3 border-2 border-slate-950/20 border-t-slate-950 rounded-full animate-spin" />
+                            Applying...
                           </>
                         ) : (
                           <>
@@ -2569,25 +2566,6 @@ export default function Home() {
                       </button>
                     )}
                   </div>
-
-                  {/* Save as base resume - shown when user has uploaded a new (non-base) file */}
-                  {user && token && documentId && documentId !== user?.base_resume_id && (
-                    <button
-                      type="button"
-                      onClick={handleSaveBaseResume}
-                      disabled={isSavingBase}
-                      className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-60 text-slate-200 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-1.5 border border-slate-600"
-                      title="Save this as your base resume so it auto-loads next time"
-                    >
-                      {isSavingBase ? (
-                        <div className="h-3 w-3 border-2 border-slate-400/30 border-t-slate-200 rounded-full animate-spin" />
-                      ) : (
-                        <CheckCircle className="h-3.5 w-3.5" />
-                      )}
-                      Save as Base Resume
-                    </button>
-                  )}
-
 
                   <button
                     type="button"
@@ -2602,7 +2580,7 @@ export default function Home() {
                       setIsBottomBarVisible(false);
                       setIsCartOpen(false);
                     }}
-                    className="p-2 text-slate-500 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer select-none"
+                    className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer select-none shrink-0"
                     title={isPatchingApplied ? "Clear and start new tailoring pass" : "Dismiss bar"}
                   >
                     <X className="h-4 w-4" />
