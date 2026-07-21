@@ -527,6 +527,7 @@ function cleanKeywordName(rawName: string): string {
     .replace(/^(add|include|highlight|emphasize|condense|surface|rephrase|incorporate|integrate)\s+/i, "")
     .replace(/\s+in\s+.*$/i, "")
     .replace(/\s+for\s+.*$/i, "")
+    .replace(/\s+(usage|skills|experience|experiences|knowledge|stack|level|concepts|proficiency)$/i, "")
     .trim();
 }
 
@@ -553,9 +554,20 @@ function isActualATSKeyword(kw: string): boolean {
     "strong",
     "proven",
     "background",
+    "usage",
   ];
   const lower = clean.toLowerCase();
   return !forbiddenWords.some((w) => lower.includes(w));
+}
+
+function extractStrictKeywordsFromRaw(raw: string): string[] {
+  if (!raw) return [];
+  const cleaned = cleanKeywordName(raw);
+  // Split on "and", ",", "&"
+  const parts = cleaned.split(/\s+(?:and|&)\s+|,\s*/i);
+  return parts
+    .map((p) => cleanKeywordName(p))
+    .filter((p) => isActualATSKeyword(p));
 }
 
 /**
@@ -951,15 +963,11 @@ export default function Home() {
 
       const allRawKeywords = [
         ...(analysisResult.sections || []).flatMap((s) => s.missing_keywords || []),
-        ...(analysisResult.top_improvements || []).map((imp) => cleanKeywordName(imp.name)),
+        ...(analysisResult.top_improvements || []).map((imp) => imp.name),
       ];
 
       const missingKeywords = Array.from(
-        new Set(
-          allRawKeywords
-            .map((k) => cleanKeywordName(k))
-            .filter((k) => isActualATSKeyword(k))
-        )
+        new Set(allRawKeywords.flatMap((k) => extractStrictKeywordsFromRaw(k)))
       );
 
       console.log("🏷️ [RoleCraft Audit] Missing Keywords to Weave:", missingKeywords);

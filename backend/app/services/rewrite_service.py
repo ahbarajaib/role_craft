@@ -33,6 +33,21 @@ Google XYZ Formula & Impact Rules:
 7. **Output Bounds**: Output ONLY the polished paragraphs or bullet points for this section. Do not include summary preambles or header titles.
 """
 
+SKILLS_REWRITE_SYSTEM_PROMPT = """\
+You are a senior executive recruiter and master ATS resume editor.
+You are rewriting the TECHNICAL SKILLS / PROFICIENCIES section of a professional resume.
+
+CRITICAL SKILLS SECTION RULES:
+1. **Strict Category List Format**: Technical skills MUST be output strictly as concise, category-based lists.
+   Format: "Category Name: Skill1, Skill2, Skill3, Skill4"
+   Examples:
+   "Frontend: React.js, Next.js, Redux Toolkit, Tailwind CSS, JavaScript (ES6+), HTML5, CSS3, TypeScript"
+   "Backend & Systems: Node.js, Express.js, REST APIs, WebSockets, JWT Authentication, Async Workflows, API Integration"
+2. **NO Sentences or Action Verbs**: DO NOT write full sentences, achievement paragraphs, or action verbs (e.g. NEVER write "Developed scalable applications using...", "Engineered robust backend solutions using...").
+3. **Preserve & Weave Keywords**: Retain all existing skills from the original text and weave the missing ATS keywords naturally into their appropriate category lists.
+4. **Output Bounds**: Output ONLY the category skill lines. Do not include preambles or header titles.
+"""
+
 
 class RewriteService:
     """Handles AI-powered, truth-preserving resume section rewrites."""
@@ -88,6 +103,11 @@ class RewriteService:
         orig_lines = [l.strip() for l in original_text.split("\n") if l.strip()]
         orig_line_count = max(len(orig_lines), 1)
 
+        # Determine if this is a skills section
+        sec_lower = section_name.lower()
+        is_skills_section = any(k in sec_lower for k in ["skill", "technologies", "proficiencies", "tech stack"])
+        system_prompt = SKILLS_REWRITE_SYSTEM_PROMPT if is_skills_section else REWRITE_SYSTEM_PROMPT
+
         # 3. Compile evidence context from all OTHER sections
         evidence_parts = []
         for s in sections:
@@ -102,8 +122,11 @@ class RewriteService:
             f"=== TARGET JOB DESCRIPTION ===\n{job_description_text.strip()}",
             f"=== RECRUITER RECOMMENDATIONS FOR THIS SECTION ===\n"
             f"{' / '.join(recommendations) if recommendations else 'Improve overall impact.'}",
-            f"=== LENGTH & BULLET COUNT CONSTRAINT ===\nThis section originally has {orig_line_count} line(s)/bullet(s). Output at most {min(orig_line_count, 4)} concise, ultra-impactful bullet points. DO NOT generate more than {min(orig_line_count, 4)} bullets.",
         ]
+        if not is_skills_section:
+            input_parts.append(
+                f"=== LENGTH & BULLET COUNT CONSTRAINT ===\nThis section originally has {orig_line_count} line(s)/bullet(s). Output at most {min(orig_line_count, 4)} concise, ultra-impactful bullet points. DO NOT generate more than {min(orig_line_count, 4)} bullets."
+            )
 
         if metric_inputs and any(v.strip() for v in metric_inputs.values()):
             formatted_metrics = "\n".join(
@@ -129,7 +152,7 @@ class RewriteService:
 
         # 5. Execute Structured LLM call
         result = self._provider.parse_response(
-            instructions=REWRITE_SYSTEM_PROMPT,
+            instructions=system_prompt,
             input_text=input_text,
             response_format=RewriteSectionResponse,
         )
