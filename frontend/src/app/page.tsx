@@ -690,6 +690,11 @@ export default function Home() {
   });
 
   const triggerInlineRewrite = async (sectionName: string, recommendations: string[]) => {
+    console.log(
+      "%c 🤖 [RoleCraft Audit] Trigger Inline Rewrite Clicked ",
+      "background: #059669; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+      { sectionName, recommendations, documentId }
+    );
     if (!documentId) return;
     if (!token) {
       setShowAuthModal(true);
@@ -702,14 +707,35 @@ export default function Home() {
     setInlineLoadingSections((prev) => ({ ...prev, [sectionName]: true }));
     try {
       const { rewriteSection } = require("@/lib/api");
+      const startTime = performance.now();
       const data = await rewriteSection({
         document_id: documentId,
         section_name: sectionName,
         job_description_text: jobDescription,
         recommendations: recommendations
       });
+      const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+      const lines = data.rewritten_text.split("\n").filter((l: string) => l.trim());
+      
+      console.log(
+        `%c ✨ [RoleCraft Audit] AI Response Received for "${sectionName}" (${duration}s) `,
+        "background: #10b981; color: #000; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+        {
+          sectionName,
+          charLength: data.rewritten_text.length,
+          lineCount: lines.length,
+          rawText: data.rewritten_text,
+          linesArray: lines,
+        }
+      );
+
       const lowerSec = sectionName.toLowerCase();
       if (rewrittenSections[lowerSec]) {
+        console.log(
+          `%c ⚠️ [RoleCraft Audit] Replacing Existing Rewrite for "${sectionName}" `,
+          "background: #f59e0b; color: #000; font-weight: bold;",
+          { oldText: rewrittenSections[lowerSec], newText: data.rewritten_text }
+        );
         setPreviousRewrittenSections((prev) => ({
           ...prev,
           [lowerSec]: rewrittenSections[lowerSec]
@@ -722,6 +748,7 @@ export default function Home() {
       setSuccessNotification(`AI rewrite complete for ${sectionName}.`);
       setIsPatchingApplied(false);
     } catch (err: any) {
+      console.error(`❌ [RoleCraft Audit] Rewrite failed for "${sectionName}":`, err);
       setError(err?.message || `Failed to rewrite ${sectionName}. Please try again.`);
     } finally {
       setInlineLoadingSections((prev) => ({ ...prev, [sectionName]: false }));
@@ -729,6 +756,11 @@ export default function Home() {
   };
 
   const handleImproveAllClick = async (sectionsToImprove: any[]) => {
+    console.log(
+      "%c ⚡ [RoleCraft Audit] 'Improve All with AI' Clicked ",
+      "background: #7c3aed; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+      { count: sectionsToImprove.length, sections: sectionsToImprove.map((s) => s.section_name) }
+    );
     if (!documentId || sectionsToImprove.length === 0) return;
     if (!token) {
       setShowAuthModal(true);
@@ -745,13 +777,18 @@ export default function Home() {
       );
       setSuccessNotification("All recommended sections tailored successfully!");
     } catch (err: any) {
-      // Individual errors caught in triggerInlineRewrite
+      console.error("❌ [RoleCraft Audit] Improve All failed:", err);
     } finally {
       setIsImprovingAll(false);
     }
   };
 
   const handleAutoTailor = async () => {
+    console.log(
+      "%c ⚡ [RoleCraft Audit] '1-Click Full Resume Auto-Tailor' Clicked ",
+      "background: #0284c7; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+      { documentId }
+    );
     if (!documentId) return;
     if (!token) {
       setShowAuthModal(true);
@@ -767,6 +804,7 @@ export default function Home() {
     try {
       let result = analysisResult;
       if (!result) {
+        console.log("🔍 [RoleCraft Audit] No existing analysis found – triggering analyzeResume first");
         result = await analyzeResume(documentId!, jobDescription);
         setAnalysisResult(result);
       }
@@ -774,6 +812,8 @@ export default function Home() {
       const sectionsToImprove = (result.sections || []).filter(
         (s) => s.review_status === "improve"
       );
+
+      console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToImprove.map(s => s.section_name));
 
       if (sectionsToImprove.length === 0) {
         setSuccessNotification("Your resume is already highly optimized for this role!");
@@ -791,9 +831,10 @@ export default function Home() {
               job_description_text: jobDescription,
               recommendations: sec.recommendations || [],
             });
+            console.log(`✨ [RoleCraft Audit] Auto-Tailored section "${sec.section_name}":`, res.rewritten_text);
             newRewrites[sec.section_name.toLowerCase()] = res.rewritten_text;
           } catch (err) {
-            console.error(`Failed auto rewrite for ${sec.section_name}:`, err);
+            console.error(`❌ [RoleCraft Audit] Failed auto rewrite for ${sec.section_name}:`, err);
           }
         })
       );
@@ -811,10 +852,14 @@ export default function Home() {
           };
         });
 
+        console.log("💾 [RoleCraft Audit] Submitting DOCX Patch Payload:", acceptedItems);
+
         const applyRes = await applyMutation.mutateAsync({
           document_id: documentId,
           accepted_rewrites: acceptedItems,
         });
+
+        console.log("🎉 [RoleCraft Audit] DOCX Patch Applied Successfully! Download ID:", applyRes.download_id);
 
         setDownloadId(applyRes.download_id);
         setDownloadUrl(applyRes.download_url);
@@ -823,13 +868,18 @@ export default function Home() {
         setIsPdfPreviewOpen(true);
       }
     } catch (err: any) {
-      console.error("Auto-tailor error:", err);
+      console.error("❌ [RoleCraft Audit] Auto-tailor error:", err);
     } finally {
       setIsAutoTailoring(false);
     }
   };
 
   const handleWeaveAllKeywords = async () => {
+    console.log(
+      "%c ⚡ [RoleCraft Audit] 'Auto-Weave All Keywords (1-Click)' Clicked ",
+      "background: #d97706; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+      { documentId }
+    );
     if (!analysisResult || !documentId) return;
     setIsWeavingKeywords(true);
     try {
@@ -847,6 +897,8 @@ export default function Home() {
         ])
       ).filter(Boolean);
 
+      console.log("🏷️ [RoleCraft Audit] Missing Keywords to Weave:", missingKeywords);
+
       const newRewrites: Record<string, string> = {};
       await Promise.all(
         targetSections.map(async (sec) => {
@@ -860,9 +912,10 @@ export default function Home() {
                 `Weave naturally these essential missing ATS keywords: ${missingKeywords.join(", ")}`,
               ],
             });
+            console.log(`✨ [RoleCraft Audit] Keywords woven into "${sec.section_name}":`, res.rewritten_text);
             newRewrites[sec.section_name.toLowerCase()] = res.rewritten_text;
           } catch (err) {
-            console.error(`Failed auto weave for ${sec.section_name}:`, err);
+            console.error(`❌ [RoleCraft Audit] Failed auto weave for ${sec.section_name}:`, err);
           }
         })
       );
@@ -880,6 +933,8 @@ export default function Home() {
           };
         });
 
+        console.log("💾 [RoleCraft Audit] Submitting Keyword Weave DOCX Patch Payload:", acceptedItems);
+
         const applyRes = await applyMutation.mutateAsync({
           document_id: documentId,
           accepted_rewrites: acceptedItems,
@@ -891,13 +946,18 @@ export default function Home() {
         setSuccessNotification("⚡ All ATS Keywords Woven & Resume Updated!");
       }
     } catch (err: any) {
-      console.error("Weave keywords error:", err);
+      console.error("❌ [RoleCraft Audit] Weave keywords error:", err);
     } finally {
       setIsWeavingKeywords(false);
     }
   };
 
   const handleImproveClick = (sectionName: string, recommendations: string[]) => {
+    console.log(
+      "%c ✏️ [RoleCraft Audit] 'Improve with AI' (Modal) Clicked ",
+      "background: #4f46e5; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+      { sectionName, recommendations, documentId }
+    );
     if (!documentId) return;
     if (!token) {
       setShowAuthModal(true);
@@ -924,6 +984,11 @@ export default function Home() {
   };
 
   const handleRevert = (sectionName: string) => {
+    console.log(
+      "%c 🔄 [RoleCraft Audit] Revert Clicked ",
+      "background: #ef4444; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+      { sectionName }
+    );
     setRewrittenSections((prev) => {
       const copy = { ...prev };
       delete copy[sectionName.toLowerCase()];
@@ -938,6 +1003,11 @@ export default function Home() {
   };
 
   const handleUndoLastRewrite = (sectionName: string) => {
+    console.log(
+      "%c ↩️ [RoleCraft Audit] Undo Last Rewrite Clicked ",
+      "background: #64748b; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+      { sectionName }
+    );
     const lowerSec = sectionName.toLowerCase();
     const prevText = previousRewrittenSections[lowerSec];
     if (prevText === undefined) return;
@@ -959,6 +1029,11 @@ export default function Home() {
   const applyMutation = useMutation({
     mutationFn: applyRewrites,
     onSuccess: (data) => {
+      console.log(
+        "%c 🎉 [RoleCraft Audit] Apply Rewrites Mutation Succeeded ",
+        "background: #10b981; color: #000; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+        data
+      );
       setDownloadId(data.download_id);
       setDownloadUrl(data.download_url);
       setIsPatchingApplied(true);
@@ -966,11 +1041,17 @@ export default function Home() {
       setSuccessNotification("Changes applied to resume.");
     },
     onError: (err: any) => {
+      console.error("❌ [RoleCraft Audit] Apply Rewrites Mutation Failed:", err);
       setError(err?.message || "Failed to apply modifications. Please try again.");
     }
   });
 
   const handleApplyRewrites = () => {
+    console.log(
+      "%c 💾 [RoleCraft Audit] 'Apply to Resume' Clicked ",
+      "background: #059669; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+      { rewrittenSectionsKeys: Object.keys(rewrittenSections), documentId }
+    );
     if (!documentId) return;
     if (!token) {
       setShowAuthModal(true);
@@ -992,6 +1073,8 @@ export default function Home() {
 
     if (rewrites.length === 0) return;
 
+    console.log("💾 [RoleCraft Audit] Sending Patch Payload to API:", rewrites);
+
     applyMutation.mutate({
       document_id: documentId,
       accepted_rewrites: rewrites
@@ -1002,6 +1085,11 @@ export default function Home() {
   const uploadMutation = useMutation({
     mutationFn: uploadResume,
     onSuccess: (data) => {
+      console.log(
+        "%c 📄 [RoleCraft Audit] File Upload Succeeded ",
+        "background: #0284c7; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+        data
+      );
       setDocumentId(data.document_id);
       setError(null);
       setRewrittenSections({});
@@ -1012,6 +1100,7 @@ export default function Home() {
       setSuccessNotification("Resume uploaded successfully.");
     },
     onError: (err: any) => {
+      console.error("❌ [RoleCraft Audit] File Upload Failed:", err);
       setError(err?.message || "File upload failed. Only .docx files up to 5MB are accepted.");
       setFile(null);
     }
@@ -1020,6 +1109,11 @@ export default function Home() {
   // 2. Full Workflow Analysis Mutation
   const analyzeMutation = useMutation({
     mutationFn: async () => {
+      console.log(
+        "%c 🚀 [RoleCraft Audit] 'Analyze Gaps & Fit' Clicked ",
+        "background: #7c3aed; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+        { documentId, jobDescriptionLength: jobDescription.length }
+      );
       if (!documentId) throw new Error("Please upload a resume first");
       if (jobDescription.trim().length < 50) {
         throw new Error("Job description must be at least 50 characters long");
@@ -1027,6 +1121,18 @@ export default function Home() {
       return analyzeResume(documentId, jobDescription);
     },
     onSuccess: (data) => {
+      console.log(
+        "%c 📊 [RoleCraft Audit] Resume Analysis Complete ",
+        "background: #10b981; color: #000; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
+        {
+          overallScore: data.overall_summary?.overall_coverage_percentage,
+          sectionsCount: data.sections?.length,
+          sectionsToImprove: data.overall_summary?.sections_to_improve,
+          topStrengths: data.top_strengths,
+          topImprovements: data.top_improvements,
+          sections: data.sections,
+        }
+      );
       setAnalysisResult(data);
       setError(null);
       setRewrittenSections({});
@@ -1050,6 +1156,7 @@ export default function Home() {
       setSuccessNotification("Resume analysis complete!");
     },
     onError: (err: any) => {
+      console.error("❌ [RoleCraft Audit] Resume Analysis Failed:", err);
       setError(err?.message || "Analysis failed. Please check your backend connection and OpenAI API Key.");
       if (
         err?.message?.toLowerCase().includes("limit") ||
