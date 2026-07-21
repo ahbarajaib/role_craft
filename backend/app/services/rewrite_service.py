@@ -28,6 +28,7 @@ Google XYZ Formula & Impact Rules:
 2. **Strong Action Verbs**: Start every bullet point with an impactful, active verb (e.g., Spearheaded, Engineered, Optimized, Streamlined). Never start with passive phrases like "Responsible for" or "Worked on".
 3. **Candidate Metric Integration**: If there is a section labeled "=== CANDIDATE-SUPPLIED METRICS & DATA POINTS ===", you MUST weave those exact candidate metrics directly into the Y or X components of the corresponding bullets.
 4. **Preserve All Real Facts**: Keep all companies, dates, degrees, real achievements, and tools as they appear in the original section or evidence context.
+5. **Strict Bullet Count Limit**: Maintain the SAME number of bullet points as the original section (or at most 3 to 4 concise, high-impact bullet points per job entry). NEVER generate an overwhelming wall of text or more than 4 bullet points per job position under any circumstance!
 6. **Metadata & Subheader Preservation**: You MUST preserve all Company Names, Company Locations, Job Titles, Degrees, and Dates at the top of each entry EXACTLY as they appear in the original section (e.g. "Infinitus International FZE, Dubai, UAE."). Never omit company names or locations when rewriting a section.
 7. **Output Bounds**: Output ONLY the polished paragraphs or bullet points for this section. Do not include summary preambles or header titles.
 """
@@ -84,6 +85,9 @@ class RewriteService:
         if not original_text.strip():
             raise BadRequestError(f"Section '{section_name}' contains no text to rewrite.")
 
+        orig_lines = [l.strip() for l in original_text.split("\n") if l.strip()]
+        orig_line_count = max(len(orig_lines), 1)
+
         # 3. Compile evidence context from all OTHER sections
         evidence_parts = []
         for s in sections:
@@ -98,6 +102,7 @@ class RewriteService:
             f"=== TARGET JOB DESCRIPTION ===\n{job_description_text.strip()}",
             f"=== RECRUITER RECOMMENDATIONS FOR THIS SECTION ===\n"
             f"{' / '.join(recommendations) if recommendations else 'Improve overall impact.'}",
+            f"=== LENGTH & BULLET COUNT CONSTRAINT ===\nThis section originally has {orig_line_count} line(s)/bullet(s). Output at most {min(orig_line_count, 4)} concise, ultra-impactful bullet points. DO NOT generate more than {min(orig_line_count, 4)} bullets.",
         ]
 
         if metric_inputs and any(v.strip() for v in metric_inputs.values()):
