@@ -865,7 +865,6 @@ export default function Home() {
         setDownloadUrl(applyRes.download_url);
         setIsPatchingApplied(true);
         setSuccessNotification("⚡ Resume 1-Click Auto-Tailored Successfully!");
-        setIsPdfPreviewOpen(true);
       }
     } catch (err: any) {
       console.error("❌ [RoleCraft Audit] Auto-tailor error:", err);
@@ -2725,8 +2724,8 @@ export default function Home() {
 
       {/* Live PDF Preview Modal */}
       {isPdfPreviewOpen && (downloadId || documentId) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md animate-fade-in">
+          <div className="bg-slate-900 border border-slate-700/80 dark:border-slate-800 rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950/60">
               <div className="flex items-center gap-2">
