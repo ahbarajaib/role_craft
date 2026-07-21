@@ -111,24 +111,47 @@ def _set_paragraph_text_preserve_fmt(paragraph, new_text: str, default_font: str
         target_font = default_font
 
     if not runs:
-        r = paragraph.add_run(clean_text)
-        if target_font:
-            r.font.name = target_font
+        colon_idx = clean_text.find(":")
+        if colon_idx > 0 and colon_idx < 50:
+            label = clean_text[: colon_idx + 1]
+            rest = clean_text[colon_idx + 1 :]
+            r0 = paragraph.add_run(label)
+            r0.bold = True
+            if target_font:
+                r0.font.name = target_font
+            r1 = paragraph.add_run(rest)
+            r1.bold = False
+            if target_font:
+                r1.font.name = target_font
+        else:
+            r = paragraph.add_run(clean_text)
+            if target_font:
+                r.font.name = target_font
         return
 
-    # Check if original paragraph had a category label run (e.g. Run 0: "Frontend:", Run 1: " React, Next.js")
+    # Check if paragraph contains a category label prefix (e.g. "Backend & Systems: Engineered ...")
     colon_idx = clean_text.find(":")
-    if len(runs) >= 2 and colon_idx > 0 and colon_idx < 40:
+    if colon_idx > 0 and colon_idx < 50:
         label = clean_text[: colon_idx + 1]
         rest = clean_text[colon_idx + 1 :]
 
+        # Run 0: Category Label (e.g. "Backend & Systems:") -> ALWAYS BOLD
         _set_run_text(runs[0], label)
+        runs[0].bold = True
         if target_font and runs[0].font:
             runs[0].font.name = target_font
 
-        _set_run_text(runs[1], rest)
-        if target_font and runs[1].font:
-            runs[1].font.name = target_font
+        # Run 1: Category Description / Items -> ALWAYS REGULAR (NON-BOLD)
+        if len(runs) >= 2:
+            _set_run_text(runs[1], rest)
+            runs[1].bold = False
+            if target_font and runs[1].font:
+                runs[1].font.name = target_font
+        else:
+            r1 = paragraph.add_run(rest)
+            r1.bold = False
+            if target_font:
+                r1.font.name = target_font
 
         for run in runs[2:]:
             _set_run_text(run, "")
