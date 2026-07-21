@@ -1313,7 +1313,7 @@ export default function Home() {
       <div className="glow-effect bg-amber-500 w-[450px] h-[450px] top-[35%] -right-20" />
 
       {/* Header */}
-      <header className="relative max-w-[1440px] mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-8 sm:mb-12 animate-fade-in-up">
+      <header className="relative z-[200] max-w-[1440px] mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-8 sm:mb-12">
         <div className="flex items-center gap-3">
           <img
             src={theme === "dark" ? "/logo.png" : "/logo-light.png"}
@@ -1355,11 +1355,11 @@ export default function Home() {
           </button>
 
           {user ? (
-            <div className="relative z-[100]">
+            <div className="relative z-[300]">
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-2 bg-slate-900/90 dark:bg-slate-900/90 hover:bg-slate-850 dark:hover:bg-slate-800 text-white px-3 py-1.5 rounded-xl border border-slate-700/80 dark:border-slate-800 shadow-md text-xs transition-all cursor-pointer select-none"
+                className="flex items-center gap-2 bg-slate-900 dark:bg-slate-900 hover:bg-slate-800 dark:hover:bg-slate-800 text-white px-3 py-1.5 rounded-xl border border-slate-700 dark:border-slate-800 shadow-md text-xs transition-all cursor-pointer select-none"
               >
                 <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 shadow-sm">
                   {(user.name || user.email)[0].toUpperCase()}
@@ -1377,10 +1377,10 @@ export default function Home() {
               {isProfileMenuOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-[110]"
+                    className="fixed inset-0 z-[310]"
                     onClick={() => setIsProfileMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-72 z-[120] bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-700 dark:border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.8)] p-4 space-y-4 animate-fade-in-up">
+                  <div className="absolute right-0 mt-2 w-72 z-[320] bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-700 dark:border-slate-800 shadow-[0_25px_60px_rgba(0,0,0,0.9)] p-4 space-y-4 animate-fade-in-up">
                     {/* User Header */}
                     <div className="flex items-center gap-3 pb-3 border-b border-slate-800">
                       <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-indigo-600/30 shrink-0">
