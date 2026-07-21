@@ -525,7 +525,37 @@ function cleanKeywordName(rawName: string): string {
   if (!rawName) return "";
   return rawName
     .replace(/^(add|include|highlight|emphasize|condense|surface|rephrase|incorporate|integrate)\s+/i, "")
+    .replace(/\s+in\s+.*$/i, "")
+    .replace(/\s+for\s+.*$/i, "")
     .trim();
+}
+
+function isActualATSKeyword(kw: string): boolean {
+  if (!kw) return false;
+  const clean = kw.trim();
+  if (clean.length > 30 || clean.split(" ").length > 4) return false;
+
+  const forbiddenWords = [
+    "experience",
+    "experiences",
+    "project",
+    "projects",
+    "technique",
+    "techniques",
+    "knowledge",
+    "understanding",
+    "focus",
+    "skills",
+    "relevant",
+    "professional",
+    "optimization",
+    "ability",
+    "strong",
+    "proven",
+    "background",
+  ];
+  const lower = clean.toLowerCase();
+  return !forbiddenWords.some((w) => lower.includes(w));
 }
 
 /**
@@ -919,12 +949,18 @@ export default function Home() {
 
       const targetSections = skillsSection ? [skillsSection] : (analysisResult.sections || []).slice(0, 1);
 
+      const allRawKeywords = [
+        ...(analysisResult.sections || []).flatMap((s) => s.missing_keywords || []),
+        ...(analysisResult.top_improvements || []).map((imp) => cleanKeywordName(imp.name)),
+      ];
+
       const missingKeywords = Array.from(
-        new Set([
-          ...(analysisResult.sections || []).flatMap((s) => s.missing_keywords || []),
-          ...(analysisResult.top_improvements || []).map((imp) => cleanKeywordName(imp.name)),
-        ])
-      ).filter(Boolean);
+        new Set(
+          allRawKeywords
+            .map((k) => cleanKeywordName(k))
+            .filter((k) => isActualATSKeyword(k))
+        )
+      );
 
       console.log("🏷️ [RoleCraft Audit] Missing Keywords to Weave:", missingKeywords);
 
