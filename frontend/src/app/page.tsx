@@ -157,7 +157,37 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
           );
         }
 
-        // Case 3: Implicit bullet — long achievement sentences without explicit symbol
+        // Case 3: Job Title / Role & Date header line (e.g. "Wordpress Developer      Feb 2025 - Present")
+        const lowerLine = trimmed.toLowerCase();
+        const isDateHeader = /\b(19|20)\d{2}\b/.test(trimmed) || lowerLine.includes("present");
+        const isJobRoleHeader =
+          !isImplicitBulletBlock &&
+          (isDateHeader ||
+            ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst"].some(r => lowerLine.includes(r)));
+
+        if (isJobRoleHeader && trimmed.length < 90 && !trimmed.endsWith(".")) {
+          return (
+            <div key={idx} className="font-extrabold text-white text-sm pt-2.5 pb-1 flex items-center justify-between border-b border-slate-800/80 mt-1">
+              <span>{trimmed}</span>
+            </div>
+          );
+        }
+
+        // Case 4: Company & Location header line (e.g. "Infinitus International FZE, Dubai, UAE.")
+        const isCompanyHeader =
+          !isImplicitBulletBlock &&
+          (trimmed.includes(",") || trimmed.endsWith(".")) &&
+          ["inc", "ltd", "llc", "fze", "pvt", "corp", "dubai", "uae", "usa", "uk", "india", "bangalore", "remote", "freelance"].some(loc => lowerLine.includes(loc));
+
+        if (isCompanyHeader && trimmed.length < 80) {
+          return (
+            <div key={idx} className="font-semibold text-emerald-400 text-xs italic mb-2">
+              {trimmed}
+            </div>
+          );
+        }
+
+        // Case 5: Implicit bullet — long achievement sentences without explicit symbol
         if (isImplicitBulletBlock) {
           return (
             <div key={idx} className="flex items-start gap-2.5 pl-1">
@@ -167,7 +197,7 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
           );
         }
 
-        // Case 4: Plain paragraph (short lines, descriptions, summaries)
+        // Case 6: Plain paragraph (short lines, descriptions, summaries)
         return (
           <p key={idx} className="select-all leading-relaxed">
             {trimmed}

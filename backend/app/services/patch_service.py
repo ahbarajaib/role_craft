@@ -314,11 +314,11 @@ class PatchService:
             heading_para = doc.paragraphs[target_sec.paragraph_indexes[0]]
             body_paras = [doc.paragraphs[idx] for idx in target_sec.paragraph_indexes[1:]]
 
-            # Split the AI output into non-empty lines.
+            # Split the AI output into non-empty lines, filtering out metadata headers if returned by AI.
             new_para_texts = [
                 line.strip()
                 for line in rewrite_item.rewritten_text.split("\n")
-                if line.strip()
+                if line.strip() and not _is_metadata_line(line.strip())
             ]
 
             # Select template for cloning new bullet paragraphs
