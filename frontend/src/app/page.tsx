@@ -643,6 +643,34 @@ export default function Home() {
   const [activeNavTab, setActiveNavTab] = useState<"landing" | "workspace">("landing");
   const [file, setFile] = useState<File | null>(null);
 
+  const switchNavTab = (tab: "landing" | "workspace") => {
+    setActiveNavTab(tab);
+    if (typeof window !== "undefined") {
+      if (tab === "workspace") {
+        window.history.pushState(null, "", "#workspace");
+      } else {
+        window.history.pushState(null, "", window.location.pathname === "/workspace" ? "/" : window.location.pathname);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const syncTab = () => {
+      if (typeof window !== "undefined") {
+        if (window.location.hash === "#workspace" || window.location.pathname.startsWith("/workspace")) {
+          setActiveNavTab("workspace");
+        }
+      }
+    };
+    syncTab();
+    window.addEventListener("hashchange", syncTab);
+    window.addEventListener("popstate", syncTab);
+    return () => {
+      window.removeEventListener("hashchange", syncTab);
+      window.removeEventListener("popstate", syncTab);
+    };
+  }, []);
+
   const [jobDescription, setJobDescription] = useState("");
   const [jobInputMode, setJobInputMode] = useState<"text" | "url">("text");
   const [jobUrl, setJobUrl] = useState("");
@@ -1481,7 +1509,7 @@ export default function Home() {
 
       {/* Header */}
       <header className="relative z-[200] max-w-[1440px] mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 sm:mb-12 pb-4 border-b border-slate-200/80">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveNavTab("landing")}>
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => switchNavTab("landing")}>
           <img
             src="/logo.png"
             alt="Role Craft Logo"
@@ -1503,7 +1531,7 @@ export default function Home() {
         {/* Navigation Bar Links */}
         <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto py-1 text-xs font-bold text-slate-700">
           <button
-            onClick={() => setActiveNavTab("landing")}
+            onClick={() => switchNavTab("landing")}
             className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
               activeNavTab === "landing" ? "bg-emerald-600 text-white shadow-sm" : "hover:bg-slate-200/60 text-slate-700"
             }`}
@@ -1512,35 +1540,35 @@ export default function Home() {
           </button>
           <a
             href="#how-it-works"
-            onClick={() => setActiveNavTab("landing")}
+            onClick={() => switchNavTab("landing")}
             className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
           >
             How It Works
           </a>
           <a
             href="#features"
-            onClick={() => setActiveNavTab("landing")}
+            onClick={() => switchNavTab("landing")}
             className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
           >
             Features
           </a>
           <a
             href="#before-after"
-            onClick={() => setActiveNavTab("landing")}
+            onClick={() => switchNavTab("landing")}
             className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap hidden sm:inline-block"
           >
             Before & After
           </a>
           <a
             href="#pricing"
-            onClick={() => setActiveNavTab("landing")}
+            onClick={() => switchNavTab("landing")}
             className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
           >
             Pricing
           </a>
           <a
             href="#faq"
-            onClick={() => setActiveNavTab("landing")}
+            onClick={() => switchNavTab("landing")}
             className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap hidden md:inline-block"
           >
             FAQ
@@ -1551,7 +1579,7 @@ export default function Home() {
         <div className="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
           <button
             type="button"
-            onClick={() => setActiveNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
+            onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${
               activeNavTab === "workspace"
                 ? "bg-slate-900 text-white ring-2 ring-emerald-500"
@@ -1689,7 +1717,7 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <button
-                onClick={() => setActiveNavTab("workspace")}
+                onClick={() => switchNavTab("workspace")}
                 className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-base shadow-xl shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-105"
               >
                 <Sparkles className="h-5 w-5 text-amber-300" />
