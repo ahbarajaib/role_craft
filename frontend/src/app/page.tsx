@@ -1447,7 +1447,7 @@ export default function Home() {
                   {user.name || user.email.split("@")[0]}
                 </span>
                 <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-extrabold text-[10px] border border-emerald-500/20 dark:border-emerald-500/30">
-                  {user.plan_type === "elite" ? "∞" : user.credits} CR
+                  {user.credits} CR
                 </span>
                 <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`} />
               </button>
@@ -1500,7 +1500,7 @@ export default function Home() {
                       <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80">
                         <span className="text-slate-500 dark:text-slate-400 font-medium">Credits Available</span>
                         <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
-                          {user.plan_type === "elite" ? "Unlimited" : `${user.credits} Credits`}
+                          {user.credits} Credits
                         </span>
                       </div>
 

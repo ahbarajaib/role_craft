@@ -109,16 +109,17 @@ async def razorpay_webhook(
         # Deduce tier based on plan configuration IDs
         if plan_id == settings.RAZORPAY_PLAN_ELITE_ID:
             user.plan_type = "elite"
-            user.credits = 9999 # unlimited representation
+            user.credits = 400
         else:
             user.plan_type = "pro"
-            user.credits = 50
+            user.credits = 200
 
         user.subscription_status = "active"
         db.commit()
     elif event in ["subscription.cancelled", "subscription.halted"]:
         user.plan_type = "free"
         user.subscription_status = "inactive"
+        user.credits = 50
         db.commit()
 
     return {"status": "processed"}
@@ -142,7 +143,7 @@ def simulate_payment_success(
 
     user.plan_type = plan_clean
     user.subscription_status = "active"
-    user.credits = 50 if plan_clean == "pro" else 9999
+    user.credits = 200 if plan_clean == "pro" else 400
     db.commit()
     db.refresh(user)
 

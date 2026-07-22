@@ -124,7 +124,7 @@ export default function AuthModal() {
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {authMode === "forgot"
               ? "Enter your email address to receive password reset instructions."
-              : "Get 10 free optimization credits and unlock AI rewrites."}
+              : "Get 50 free optimization credits per month and unlock AI rewrites."}
           </p>
         </div>
 

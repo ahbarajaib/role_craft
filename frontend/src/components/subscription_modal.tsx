@@ -189,15 +189,15 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
               <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-350 border-t border-slate-200 dark:border-slate-850 pt-4">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span><strong>50 Resume Analyses</strong> / mo</span>
+                  <span><strong>200 Optimization Credits</strong> / mo</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Unlimited AI Section Rewrites</span>
+                  <span>AI Section Rewrites & Keyword Weaving</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Unlimited patched DOCX downloads</span>
+                  <span>Patched DOCX & PDF Downloads</span>
                 </li>
               </ul>
             </div>
@@ -223,7 +223,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                   <Award className="h-4 w-4" /> Elite Plan
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Unlimited access for power users.
+                  Maximum capacity for power job seekers.
                 </p>
               </div>
               <div className="flex items-baseline gap-2">
@@ -234,11 +234,11 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
               <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-350 border-t border-slate-200 dark:border-slate-850 pt-4">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span><strong>Unlimited Analyses</strong></span>
+                  <span><strong>400 Optimization Credits</strong> / mo</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Unlimited AI Section Rewrites</span>
+                  <span>AI Section Rewrites & Keyword Weaving</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />

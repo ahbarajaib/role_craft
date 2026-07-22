@@ -35,7 +35,7 @@ def signup(req: UserSignupRequest, db: Session = Depends(get_db)):
         password_hash=hash_password(req.password),
         provider="credentials",
         name=req.name.strip() if req.name else None,
-        credits=10
+        credits=50
     )
     db.add(new_user)
     db.commit()
@@ -99,7 +99,7 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
             provider="google",
             google_id=google_id,
             name=google_name,
-            credits=100 if email_clean in vip_emails else 10
+            credits=200 if email_clean in vip_emails else 50
         )
         db.add(user)
         db.commit()
@@ -112,9 +112,9 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
         # Populate name from Google if not already set
         if not user.name and google_name:
             user.name = google_name
-        # Grant 100 credits for VIP account
-        if email_clean in vip_emails and user.credits < 100:
-            user.credits = 100
+        # Grant 200 credits for VIP account
+        if email_clean in vip_emails and user.credits < 200:
+            user.credits = 200
         db.commit()
         db.refresh(user)
 
@@ -125,8 +125,8 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
 def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Retrieve details of the active authenticated session."""
     vip_emails = ["absarajaib@gmail.com", "ahbarajaib@gmail.com"]
-    if user.email.strip().lower() in vip_emails and user.credits < 100:
-        user.credits = 100
+    if user.email.strip().lower() in vip_emails and user.credits < 200:
+        user.credits = 200
         db.commit()
         db.refresh(user)
     return user
