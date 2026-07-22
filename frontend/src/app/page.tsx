@@ -38,6 +38,10 @@ import { uploadResume, analyzeResume, rewriteSection, applyRewrites, API_BASE_UR
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
+import BeforeAfterSlider from "@/components/before_after_slider";
+import FeaturesShowcase from "@/components/features_showcase";
+import TestimonialsSection from "@/components/testimonials_section";
+import FaqSection from "@/components/faq_section";
 
 interface DiffToken {
   value: string;
@@ -633,6 +637,7 @@ function buildResumeFilename(
 export default function Home() {
   const { user, token, logout, setShowAuthModal, refreshMe } = useAuth();
   const [theme] = useState<"light">("light");
+  const [activeNavTab, setActiveNavTab] = useState<"landing" | "workspace">("landing");
   const [file, setFile] = useState<File | null>(null);
 
   const [jobDescription, setJobDescription] = useState("");
@@ -1411,42 +1416,102 @@ export default function Home() {
       <div className="glow-effect bg-amber-500/20 w-[450px] h-[450px] top-[35%] -right-20" />
 
       {/* Header */}
-      <header className="relative z-[200] max-w-[1440px] mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-8 sm:mb-12">
-        <div className="flex items-center gap-3">
+      <header className="relative z-[200] max-w-[1440px] mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 sm:mb-12 pb-4 border-b border-slate-200/80">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveNavTab("landing")}>
           <img
             src="/logo.png"
             alt="Role Craft Logo"
-            className="h-10 w-10 sm:h-14 sm:w-14 object-contain rounded-xl bg-white p-1 border border-slate-200/80 shadow-md transition-all duration-300 shrink-0"
+            className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-xl bg-white p-1 border border-slate-200/80 shadow-md transition-all shrink-0"
           />
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
               <span>Role Craft</span>
               <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 font-bold shrink-0">
                 Engine v1.0
               </span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 font-semibold truncate">
+            <p className="text-xs text-slate-600 font-semibold truncate">
               Craft every resume for the role.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-auto">
+        {/* Navigation Bar Links */}
+        <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto py-1 text-xs font-bold text-slate-700">
+          <button
+            onClick={() => setActiveNavTab("landing")}
+            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+              activeNavTab === "landing" ? "bg-emerald-600 text-white shadow-sm" : "hover:bg-slate-200/60 text-slate-700"
+            }`}
+          >
+            Overview
+          </button>
+          <a
+            href="#how-it-works"
+            onClick={() => setActiveNavTab("landing")}
+            className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
+          >
+            How It Works
+          </a>
+          <a
+            href="#features"
+            onClick={() => setActiveNavTab("landing")}
+            className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
+          >
+            Features
+          </a>
+          <a
+            href="#before-after"
+            onClick={() => setActiveNavTab("landing")}
+            className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap hidden sm:inline-block"
+          >
+            Before & After
+          </a>
+          <a
+            href="#pricing"
+            onClick={() => setActiveNavTab("landing")}
+            className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
+          >
+            Pricing
+          </a>
+          <a
+            href="#faq"
+            onClick={() => setActiveNavTab("landing")}
+            className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap hidden md:inline-block"
+          >
+            FAQ
+          </a>
+        </nav>
+
+        {/* Action Controls */}
+        <div className="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
+          <button
+            type="button"
+            onClick={() => setActiveNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${
+              activeNavTab === "workspace"
+                ? "bg-slate-900 text-white ring-2 ring-emerald-500"
+                : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+            <span>{activeNavTab === "workspace" ? "← Back to Overview" : "⚡ Launch Workspace"}</span>
+          </button>
 
           {user ? (
             <div className="relative z-[300]">
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-2 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs transition-all cursor-pointer select-none"
+                className="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm text-xs transition-all cursor-pointer select-none"
               >
                 <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 shadow-sm">
                   {(user.name || user.email)[0].toUpperCase()}
                 </div>
-                <span className="font-bold text-slate-800 dark:text-slate-100 max-w-[70px] sm:max-w-[120px] truncate">
+                <span className="font-bold text-slate-800 max-w-[70px] sm:max-w-[120px] truncate">
                   {user.name || user.email.split("@")[0]}
                 </span>
-                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-extrabold text-[10px] border border-emerald-500/20 dark:border-emerald-500/30">
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 font-extrabold text-[10px] border border-emerald-500/20">
                   {user.credits} CR
                 </span>
                 <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`} />
@@ -1459,17 +1524,17 @@ export default function Home() {
                     className="fixed inset-0 z-[310]"
                     onClick={() => setIsProfileMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-72 z-[320] bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-4 animate-fade-in-up">
+                  <div className="absolute right-0 mt-2 w-72 z-[320] bg-white rounded-2xl border border-slate-200 shadow-2xl p-4 space-y-4 animate-fade-in-up">
                     {/* User Header */}
-                    <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center gap-3 pb-3 border-b border-slate-200">
                       <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-indigo-600/30 shrink-0">
                         {(user.name || user.email)[0].toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                        <p className="text-sm font-bold text-slate-900 truncate">
                           {user.name || "User Account"}
                         </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        <p className="text-xs text-slate-500 truncate">
                           {user.email}
                         </p>
                       </div>
@@ -1477,10 +1542,10 @@ export default function Home() {
 
                     {/* Account Status Details */}
                     <div className="space-y-2.5 text-xs">
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">Plan</span>
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                        <span className="text-slate-500 font-medium">Plan</span>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 dark:border-indigo-500/30 font-black uppercase text-[10px] tracking-wider">
+                          <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-700 border border-indigo-500/20 font-black uppercase text-[10px] tracking-wider">
                             {user.plan_type}
                           </span>
                           {user.plan_type === "free" && (
@@ -1497,17 +1562,17 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">Credits Available</span>
-                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                        <span className="text-slate-500 font-medium">Credits Available</span>
+                        <span className="font-extrabold text-emerald-600">
                           {user.credits} Credits
                         </span>
                       </div>
 
                       {user.base_resume_filename && (
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80">
-                          <span className="text-slate-500 dark:text-slate-400 font-medium">Base Resume</span>
-                          <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[110px]" title={user.base_resume_filename}>
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                          <span className="text-slate-500 font-medium">Base Resume</span>
+                          <span className="font-semibold text-slate-700 truncate max-w-[110px]" title={user.base_resume_filename}>
                             {user.base_resume_filename}
                           </span>
                         </div>
@@ -1521,7 +1586,7 @@ export default function Home() {
                         setIsProfileMenuOpen(false);
                         logout();
                       }}
-                      className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/20 dark:border-rose-500/30 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 border border-rose-500/20 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <LogOut className="h-3.5 w-3.5" />
                       Sign Out
@@ -1533,7 +1598,7 @@ export default function Home() {
           ) : (
             <button
               onClick={() => setShowAuthModal(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all cursor-pointer"
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all cursor-pointer"
             >
               Sign In
             </button>
@@ -1541,8 +1606,296 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="relative max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {activeNavTab === "landing" ? (
+        <div className="relative max-w-[1440px] mx-auto space-y-24 py-4 animate-fade-in">
+          {/* HERO BANNER SECTION */}
+          <section className="text-center space-y-8 max-w-4xl mx-auto pt-6 pb-10">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 font-extrabold text-xs shadow-sm">
+              <Sparkles className="h-4 w-4 text-emerald-600 animate-pulse" />
+              <span>Recruiter-Grade AI Resume Optimization Engine</span>
+            </div>
+
+            <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-[1.15]">
+              Tailor Your Resume to Any Role in <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-indigo-600">1-Click</span>
+            </h1>
+
+            <p className="text-base sm:text-xl text-slate-600 font-medium max-w-2xl mx-auto leading-relaxed">
+              Beat ATS scanners, weave missing technical keywords naturally, and triple your interview callbacks while preserving 100% of your DOCX font & layout formatting.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              <button
+                onClick={() => setActiveNavTab("workspace")}
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-base shadow-xl shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-105"
+              >
+                <Sparkles className="h-5 w-5 text-amber-300" />
+                <span>⚡ Launch Optimizer Workspace — 50 Free Credits</span>
+              </button>
+              <a
+                href="#how-it-works"
+                className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-800 font-bold text-base border border-slate-200 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>See How It Works</span>
+                <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+
+            {/* Live Trust Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-10 border-t border-slate-200/80">
+              <div className="space-y-1">
+                <div className="text-2xl font-black text-slate-900">98.4%</div>
+                <div className="text-xs font-semibold text-slate-500">ATS Pass Rate</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-2xl font-black text-slate-900">3.8x</div>
+                <div className="text-xs font-semibold text-slate-500">More Interview Calls</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-2xl font-black text-slate-900">&lt; 15s</div>
+                <div className="text-xs font-semibold text-slate-500">Full 1-Click Tailor</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-2xl font-black text-slate-900">100%</div>
+                <div className="text-xs font-semibold text-slate-500">DOCX Layout Integrity</div>
+              </div>
+            </div>
+          </section>
+
+          {/* HOW IT WORKS SECTION */}
+          <section id="how-it-works" className="space-y-8 scroll-mt-24">
+            <div className="text-center space-y-3 max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                How RoleCraft Works in 3 Simple Steps
+              </h2>
+              <p className="text-sm sm:text-base text-slate-600 font-medium">
+                No manual retyping. No broken Word formatting. Instant tailored results.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md space-y-4 relative overflow-hidden">
+                <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 font-black text-lg flex items-center justify-center">
+                  1
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">Upload Base Resume</h3>
+                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                  Upload your existing `.docx` base resume. RoleCraft parses low-level XML tags to map structure, fonts, and styles.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md space-y-4 relative overflow-hidden">
+                <div className="h-10 w-10 rounded-xl bg-indigo-100 text-indigo-700 font-black text-lg flex items-center justify-center">
+                  2
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">Paste Job Description</h3>
+                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                  Paste the Target Job Description. Our LLM pipeline detects key skills, missing keywords, and role priorities.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md space-y-4 relative overflow-hidden">
+                <div className="h-10 w-10 rounded-xl bg-amber-100 text-amber-700 font-black text-lg flex items-center justify-center">
+                  3
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">1-Click Auto-Tailor & Download</h3>
+                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                  Click '⚡ Auto-Tailor Full Resume' to rewrite summary, weave keywords, and download your patched `.docx` resume.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* BEFORE & AFTER TRANSFORMATION */}
+          <section id="before-after" className="space-y-8 scroll-mt-24">
+            <div className="text-center space-y-3 max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                Before & After Bullet Transformation
+              </h2>
+              <p className="text-sm sm:text-base text-slate-600 font-medium">
+                Compare generic resume bullets against RoleCraft Google XYZ formula bullets.
+              </p>
+            </div>
+            <BeforeAfterSlider />
+          </section>
+
+          {/* KEY CAPABILITIES */}
+          <section id="features" className="space-y-8 scroll-mt-24">
+            <div className="text-center space-y-3 max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                Engineered for Recruiter Callbacks
+              </h2>
+              <p className="text-sm sm:text-base text-slate-600 font-medium">
+                Built with low-level OpenXML preservation and recruiter-grade evaluation algorithms.
+              </p>
+            </div>
+            <FeaturesShowcase />
+          </section>
+
+          {/* RECRUITER STATS & TESTIMONIALS */}
+          <section className="space-y-8">
+            <div className="text-center space-y-3 max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                Trusted by Top Tech Candidates
+              </h2>
+              <p className="text-sm sm:text-base text-slate-600 font-medium">
+                See real metrics and stories from candidates who landed offers.
+              </p>
+            </div>
+            <TestimonialsSection />
+          </section>
+
+          {/* PRICING */}
+          <section id="pricing" className="space-y-8 scroll-mt-24">
+            <div className="text-center space-y-3 max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                Transparent Monthly Plans
+              </h2>
+              <p className="text-sm sm:text-base text-slate-600 font-medium">
+                Choose the tier that fits your job search pace. Upgrade or cancel anytime.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {/* Free Plan Card */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md flex flex-col justify-between space-y-6">
+                <div className="space-y-4">
+                  <span className="text-xs font-black uppercase text-slate-500 tracking-wider">Free Tier</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-black text-slate-900">₹0</span>
+                    <span className="text-xs text-slate-500 font-bold">/ forever</span>
+                  </div>
+                  <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-4 border-t border-slate-100">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span><strong>50 Credits</strong> / Month</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>Standard AI Resume Analysis</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>Basic Keyword Matching</span>
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => setActiveNavTab("workspace")}
+                  className="w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition-all cursor-pointer"
+                >
+                  Start Free
+                </button>
+              </div>
+
+              {/* Pro Plan Card */}
+              <div className="rounded-2xl border-2 border-emerald-600 bg-white p-6 shadow-xl flex flex-col justify-between space-y-6 relative">
+                <div className="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-emerald-600 text-white font-extrabold text-[10px] uppercase tracking-wider shadow">
+                  Most Popular
+                </div>
+                <div className="space-y-4">
+                  <span className="text-xs font-black uppercase text-emerald-700 tracking-wider">Pro Plan</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-black text-slate-900">₹399</span>
+                    <span className="text-xs text-slate-400 line-through">₹2,000</span>
+                    <span className="text-xs text-slate-500 font-bold">/ month</span>
+                  </div>
+                  <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-4 border-t border-slate-100">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span><strong>200 Credits</strong> / Month</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>1-Click Full Resume Auto-Tailor</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>Google XYZ Formula Bullet Rewriter</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>100% DOCX & PDF Downloads</span>
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => setIsSubscriptionModalOpen(true)}
+                  className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/20 transition-all cursor-pointer"
+                >
+                  Upgrade to Pro Plan
+                </button>
+              </div>
+
+              {/* Elite Plan Card */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md flex flex-col justify-between space-y-6">
+                <div className="space-y-4">
+                  <span className="text-xs font-black uppercase text-indigo-600 tracking-wider">Elite Plan</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-black text-slate-900">₹599</span>
+                    <span className="text-xs text-slate-400 line-through">₹3,000</span>
+                    <span className="text-xs text-slate-500 font-bold">/ month</span>
+                  </div>
+                  <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-4 border-t border-slate-100">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span><strong>400 Credits</strong> / Month</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>Everything in Pro Plan</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>Priority Support & Maximum Capacity</span>
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => setIsSubscriptionModalOpen(true)}
+                  className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/10 transition-all cursor-pointer"
+                >
+                  Upgrade to Elite Plan
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* FAQ */}
+          <section id="faq" className="space-y-8 scroll-mt-24">
+            <div className="text-center space-y-3 max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                Frequently Asked Questions
+              </h2>
+              <p className="text-sm sm:text-base text-slate-600 font-medium">
+                Everything you need to know about RoleCraft formatting, privacy, and tailoring.
+              </p>
+            </div>
+            <FaqSection />
+          </section>
+
+          {/* FOOTER */}
+          <footer className="pt-12 pb-8 border-t border-slate-200 text-center space-y-6">
+            <div className="flex items-center justify-center gap-3">
+              <img src="/logo.png" alt="RoleCraft Logo" className="h-8 w-8 object-contain rounded-lg bg-white p-1 border border-slate-200 shadow-sm" />
+              <span className="text-lg font-black text-slate-900">RoleCraft</span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium max-w-md mx-auto">
+              Craft every resume for the role. Recruiter-grade AI tailoring with 100% visual DOCX formatting preservation.
+            </p>
+            <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-600 flex-wrap">
+              <a href="#how-it-works" onClick={() => setActiveNavTab("landing")} className="hover:text-emerald-600">How It Works</a>
+              <a href="#features" onClick={() => setActiveNavTab("landing")} className="hover:text-emerald-600">Features</a>
+              <a href="#pricing" onClick={() => setActiveNavTab("landing")} className="hover:text-emerald-600">Pricing</a>
+              <button onClick={() => setActiveNavTab("workspace")} className="hover:text-emerald-600">Workspace</button>
+            </div>
+            <p className="text-[11px] text-slate-400 font-medium pt-4">
+              © 2026 RoleCraft Inc. All rights reserved. Built for job seekers worldwide.
+            </p>
+          </footer>
+        </div>
+      ) : (
+        /* Main Workspace Container */
+        <main className="relative max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Form Panel */}
         <div className="lg:col-span-4 space-y-6 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
           <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
@@ -2321,6 +2674,7 @@ export default function Home() {
           )}
         </div>
       </main>
+      )}
 
       {/* Side-by-Side Rewrite Modal */}
       {isRewriteModalOpen && activeRewriteSection && (
