@@ -101,9 +101,21 @@ class JobUrlService:
 
         job_title = self._extract_job_title(soup, domain)
         company_name = self._extract_company_name(soup, domain)
-        description_text = self._extract_job_description(soup, domain)
+        raw_description = self._extract_job_description(soup, domain)
 
-        if not description_text or len(description_text.strip()) < 80:
+        header_lines = []
+        if job_title and job_title != "Target Role":
+            header_lines.append(f"Job Designation: {job_title}")
+        if company_name and company_name != "Target Company":
+            header_lines.append(f"Company: {company_name}")
+
+        if header_lines:
+            header_prefix = "\n".join(header_lines) + "\n\n"
+            description_text = header_prefix + raw_description
+        else:
+            description_text = raw_description
+
+        if not raw_description or len(raw_description.strip()) < 80:
             return {
                 "success": False,
                 "url": clean_url,

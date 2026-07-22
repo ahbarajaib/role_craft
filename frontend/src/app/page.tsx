@@ -660,18 +660,7 @@ export default function Home() {
     try {
       const res = await fetchJobUrl(jobUrl.trim());
       if (res.success && res.job_description) {
-        const headerParts = [];
-        if (res.job_title && res.job_title !== "Target Role") {
-          headerParts.push(`JOB DESIGNATION: ${res.job_title}`);
-        }
-        if (res.company_name && res.company_name !== "Target Company") {
-          headerParts.push(`COMPANY: ${res.company_name}`);
-        }
-        const fullJobText = headerParts.length > 0
-          ? `${headerParts.join("\n")}\n\n${res.job_description}`
-          : res.job_description;
-
-        setJobDescription(fullJobText);
+        setJobDescription(res.job_description);
         setUrlFetchStatus({
           type: "success",
           message: `✓ Extracted ${res.job_title || "Job Posting"}${res.company_name ? ` at ${res.company_name}` : ""} (${res.char_count} chars)`,
