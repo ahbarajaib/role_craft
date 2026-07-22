@@ -1790,28 +1790,38 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="flex items-center gap-3 flex-wrap">
-                      <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
-                        {rewrittenSections["header"] || analysisResult.overall_summary.job_title || "Target Role"}
-                      </h3>
-                      {analysisResult.overall_summary.job_title && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newTitle = analysisResult.overall_summary.job_title;
-                            setRewrittenSections((prev) => ({
-                              ...prev,
-                              header: newTitle,
-                            }));
-                            setIsPatchingApplied(false);
-                            setSuccessNotification(`Applied target job title: "${newTitle}"`);
-                          }}
-                          className="px-3 py-1 text-xs font-bold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all cursor-pointer flex items-center gap-1 select-none"
-                          title="Apply this target job title to your resume header"
-                        >
-                          <CheckCircle className="h-3.5 w-3.5" />
-                          {rewrittenSections["header"] === analysisResult.overall_summary.job_title ? "Title Applied" : "Apply Job Title"}
-                        </button>
-                      )}
+                      {(() => {
+                        const rawJobTitle = analysisResult.overall_summary.job_title || "";
+                        const isGenericTitle = !rawJobTitle || ["full job description", "job description", "about the role", "overview", "target role", "description"].includes(rawJobTitle.toLowerCase().trim());
+                        const displayTitle = rewrittenSections["header"] || (!isGenericTitle ? rawJobTitle : "Target Role");
+                        const canApply = !isGenericTitle;
+
+                        return (
+                          <>
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
+                              {displayTitle}
+                            </h3>
+                            {canApply && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRewrittenSections((prev) => ({
+                                    ...prev,
+                                    header: rawJobTitle,
+                                  }));
+                                  setIsPatchingApplied(false);
+                                  setSuccessNotification(`Applied target job title: "${rawJobTitle}"`);
+                                }}
+                                className="px-3 py-1 text-xs font-bold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all cursor-pointer flex items-center gap-1 select-none"
+                                title="Apply this target job title to your resume header"
+                              >
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                {rewrittenSections["header"] === rawJobTitle ? "Title Applied" : "Apply Job Title"}
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
 

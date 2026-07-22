@@ -156,7 +156,7 @@ def parse_job_description(text: str) -> JobDescription:
     preamble = buckets.get("preamble", [])
 
     return JobDescription(
-        title=_extract_title(preamble),
+        title=_extract_title(preamble, lines),
         company=_extract_company(preamble, text),
         location=_extract_location(preamble, text),
         employment_type=_extract_employment_type(text),
@@ -239,16 +239,53 @@ def _clean_list(lines: list[str]) -> list[str]:
 # ── Metadata extractors ───────────────────────────────────────────────────────
 
 
-def _extract_title(preamble: list[str]) -> str:
-    """Return the most likely job title from the preamble.
+def _extract_title(preamble: list[str], lines: list[str] | None = None) -> str:
+    """Return the most likely job title from the preamble or full lines.
 
-    The first non-empty preamble line is usually the title in most job
-    postings.  If the preamble is empty, return an empty string.
+    Skips generic header phrases like 'Full job description', 'About the role', etc.
     """
+    generic_headers = {
+        "full job description", "job description", "about the role", "overview",
+        "job summary", "description", "about us", "position overview", "role summary",
+        "job title", "details", "role details", "careers", "position description", "about the position"
+    }
+
+    all_lines = preamble + (lines or [])
+
+    # 1. Look for explicit label "Job Title: <Role>" or "Role: <Role>"
+    for line in all_lines:
+        t = line.strip()
+        lower = t.lower().rstrip(":").strip()
+        if not t:
+            continue
+        if lower.startswith("title:") or lower.startswith("job title:") or lower.startswith("role:"):
+            colon_idx = t.find(":")
+            val = t[colon_idx + 1:].strip()
+            if val and val.lower() not in generic_headers:
+                return val
+
+    # 2. Check preamble lines, skipping generic headers
+    role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "administrator", "executive"]
+
     for line in preamble:
-        if line:
-            return line
-    return ""
+        t = line.strip()
+        lower = t.lower().rstrip(":").strip()
+        if not t or lower in generic_headers or lower.startswith("http"):
+            continue
+        if len(t) <= 60:
+            return t
+
+    # 3. Fallback: find first short line containing a role title
+    if lines:
+        for line in lines:
+            t = line.strip()
+            lower = t.lower().rstrip(":").strip()
+            if not t or lower in generic_headers or lower.startswith("http"):
+                continue
+            if len(t) <= 60 and any(r in lower for r in role_titles):
+                return t
+
+    return "Target Role"
 
 
 def _extract_company(preamble: list[str], text: str) -> str:
