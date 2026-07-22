@@ -45,15 +45,26 @@ class JobUrlService:
         except Exception:
             raise BadRequestError("Invalid URL format. Please check the web address.")
 
-        logger.info(f"[JobUrlService] Fetching job posting via Chrome Impersonation from: {clean_url}")
+        # Extract LinkedIn Job ID if present in URL (e.g. currentJobId=4440780790 or /jobs/view/4440780790)
+        linkedin_job_id = None
+        if "linkedin.com" in domain:
+            match = re.search(r"(?:currentJobId=|/jobs/view/|/jobs/view/\d+/|jobId=)(\d{8,12})", clean_url)
+            if match:
+                linkedin_job_id = match.group(1)
+                logger.info(f"[JobUrlService] Extracted LinkedIn Job ID: {linkedin_job_id}")
 
         html_content = ""
         status_code = 0
 
         try:
-            # Bypasses Cloudflare & Indeed Anti-Bot fingerprinting via Chrome 120 TLS impersonation
             async with AsyncSession(impersonate="chrome120", timeout=15) as session:
-                response = await session.get(clean_url, headers=self.headers, allow_redirects=True)
+                if linkedin_job_id:
+                    # Fetch direct public guest job posting HTML from LinkedIn Public Guest API
+                    guest_api_url = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{linkedin_job_id}"
+                    logger.info(f"[JobUrlService] Fetching LinkedIn Guest API: {guest_api_url}")
+                    response = await session.get(guest_api_url, headers=self.headers, allow_redirects=True)
+                else:
+                    response = await session.get(clean_url, headers=self.headers, allow_redirects=True)
                 status_code = response.status_code
                 html_content = response.text
         except Exception as e:
@@ -128,7 +139,11 @@ class JobUrlService:
 
         # LinkedIn Title
         if "linkedin" in domain:
-            li_title = soup.find("h1", class_=re.compile(r"top-card-layout__title|topcard__title", re.I))
+            li_title = (
+                soup.find("h1", class_=re.compile(r"top-card-layout__title|topcard__title", re.I))
+                or soup.find("h2", class_=re.compile(r"top-card-layout__title|topcard__title", re.I))
+                or soup.find("a", class_=re.compile(r"topcard__link", re.I))
+            )
             if li_title:
                 return self._clean_title_string(li_title.get_text())
 
