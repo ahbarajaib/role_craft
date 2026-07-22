@@ -227,27 +227,27 @@ function renderSectionCard(
 ) {
   // Status-based styles
   const statusStyles = {
-    improve: "border-amber-500/30 dark:border-amber-500/20 hover:border-indigo-500/40",
-    keep: "border-emerald-500/30 dark:border-emerald-500/20 hover:border-slate-350 dark:hover:border-slate-700 bg-emerald-50/10 dark:bg-slate-950/10",
-    reduce_emphasis: "border-slate-200 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-800/80 bg-slate-100/25 dark:bg-slate-950/20 opacity-70"
+    improve: "border-amber-300 hover:border-amber-400 bg-amber-50/20 shadow-sm",
+    keep: "border-emerald-300 hover:border-emerald-400 bg-emerald-50/20 shadow-sm",
+    reduce_emphasis: "border-slate-200 bg-slate-50/60 opacity-80"
   };
 
   const badgeStyles = {
-    improve: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30",
-    keep: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30",
-    reduce_emphasis: "bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-500/30"
+    improve: "bg-amber-100 text-amber-900 border-amber-300 font-extrabold",
+    keep: "bg-emerald-100 text-emerald-900 border-emerald-300 font-extrabold",
+    reduce_emphasis: "bg-slate-100 text-slate-800 border-slate-300 font-bold"
   };
 
   const priorityStyles = {
-    high: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20 dark:border-rose-500/30",
-    medium: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30",
-    low: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30"
+    high: "bg-rose-100 text-rose-900 border-rose-300 font-extrabold",
+    medium: "bg-amber-100 text-amber-900 border-amber-300 font-extrabold",
+    low: "bg-emerald-100 text-emerald-900 border-emerald-300 font-extrabold"
   };
 
   return (
     <div
       key={`${section.section_name}-${idx}`}
-      className={`glass-panel rounded-xl border transition-all duration-300 ${statusStyles[section.review_status]}`}
+      className={`rounded-2xl border transition-all duration-300 bg-white shadow-xs ${statusStyles[section.review_status]}`}
     >
       {/* Clickable Header for Collapsing */}
       <div
@@ -255,10 +255,10 @@ function renderSectionCard(
         className="flex flex-wrap items-center justify-between gap-4 p-5 cursor-pointer select-none"
       >
         <div className="flex items-center gap-3">
-          <span className="text-base font-bold capitalize text-slate-850 dark:text-white">
+          <span className="text-base font-black capitalize text-slate-900">
             {section.section_name}
           </span>
-          <span className={`text-xs px-2.5 py-0.5 rounded-full border font-medium ${badgeStyles[section.review_status]}`}>
+          <span className={`text-xs px-2.5 py-0.5 rounded-full border font-bold ${badgeStyles[section.review_status]}`}>
             {section.review_status === "improve"
               ? "🟡 Improve"
               : section.review_status === "keep"
@@ -266,13 +266,13 @@ function renderSectionCard(
                 : "⚪ Reduce Emphasis"}
           </span>
           {section.review_status === "improve" && (
-            <span className={`text-xs px-2.5 py-0.5 rounded-full border font-medium uppercase ${priorityStyles[section.priority]}`}>
+            <span className={`text-xs px-2.5 py-0.5 rounded-full border font-extrabold uppercase ${priorityStyles[section.priority]}`}>
               {section.priority} priority
             </span>
           )}
           {rewrittenText && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 font-bold flex items-center gap-1">
-              <CheckCircle className="h-3 w-3 text-indigo-400" />
+            <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-300 font-extrabold flex items-center gap-1">
+              <CheckCircle className="h-3 w-3 text-indigo-600" />
               Rewrite Applied
             </span>
           )}
@@ -287,15 +287,15 @@ function renderSectionCard(
       {isExpanded && (
         <div className="px-5 pb-5 border-t border-slate-200 dark:border-slate-800/80 pt-4 space-y-4 animate-fade-in-up">
           {/* AI Reason Summary */}
-          <p className="text-sm text-slate-300 leading-relaxed italic">
+          <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed italic font-medium bg-slate-100/60 p-3 rounded-xl border border-slate-200/80">
             "{section.reason}"
           </p>
 
           {/* Rewritten Preview Text */}
           {rewrittenText && (
-            <div className="bg-indigo-950/20 p-4 rounded-xl border border-indigo-500/30 space-y-2 animate-fade-in-up">
+            <div className="bg-indigo-50/70 p-4 rounded-xl border border-indigo-200 space-y-2 animate-fade-in-up">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">
+                <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider block">
                   Rewritten Section Preview
                 </span>
                 <div className="flex items-center gap-2">
@@ -305,7 +305,7 @@ function renderSectionCard(
                         e.stopPropagation();
                         onUndoLastRewrite(section.section_name);
                       }}
-                      className="flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 font-semibold px-2.5 py-1 border border-amber-500/20 rounded-lg bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/30 transition-all duration-300 select-none cursor-pointer"
+                      className="flex items-center gap-1 text-[10px] text-amber-700 hover:text-amber-800 font-extrabold px-2.5 py-1 border border-amber-300 rounded-lg bg-amber-100 hover:bg-amber-200 transition-all duration-300 select-none cursor-pointer"
                     >
                       <RotateCcw className="h-2.5 w-2.5" />
                       Undo
@@ -316,7 +316,7 @@ function renderSectionCard(
                       e.stopPropagation();
                       onRevert(section.section_name);
                     }}
-                    className="flex items-center gap-1 text-[10px] text-rose-400 hover:text-rose-350 font-semibold px-2.5 py-1 border border-rose-500/20 rounded-lg bg-rose-500/5 hover:bg-rose-500/10 hover:border-rose-500/30 transition-all duration-300 select-none cursor-pointer"
+                    className="flex items-center gap-1 text-[10px] text-rose-700 hover:text-rose-800 font-extrabold px-2.5 py-1 border border-rose-300 rounded-lg bg-rose-100 hover:bg-rose-200 transition-all duration-300 select-none cursor-pointer"
                   >
                     <X className="h-2.5 w-2.5" />
                     Revert
@@ -330,7 +330,7 @@ function renderSectionCard(
                         onImproveClick(section.section_name, section.recommendations);
                       }
                     }}
-                    className="flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold px-2.5 py-1 border border-indigo-500/20 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 hover:border-indigo-500/30 transition-all duration-300 select-none cursor-pointer"
+                    className="flex items-center gap-1 text-[10px] text-indigo-700 hover:text-indigo-800 font-extrabold px-2.5 py-1 border border-indigo-300 rounded-lg bg-indigo-100 hover:bg-indigo-200 transition-all duration-300 select-none cursor-pointer"
                   >
                     <Sparkles className="h-2.5 w-2.5 animate-pulse" />
                     Regenerate AI
@@ -340,7 +340,7 @@ function renderSectionCard(
                       e.stopPropagation();
                       onImproveClick(section.section_name, section.recommendations);
                     }}
-                    className="flex items-center gap-1 text-[10px] text-slate-300 hover:text-white font-semibold px-2.5 py-1 border border-slate-800 rounded-lg bg-slate-900/50 hover:bg-slate-800/80 hover:border-slate-700 transition-all duration-300 select-none cursor-pointer"
+                    className="flex items-center gap-1 text-[10px] text-slate-800 hover:text-slate-900 font-extrabold px-2.5 py-1 border border-slate-300 rounded-lg bg-slate-100 hover:bg-slate-200 transition-all duration-300 select-none cursor-pointer"
                   >
                     <Edit className="h-2.5 w-2.5" />
                     Manual Edit
@@ -356,14 +356,14 @@ function renderSectionCard(
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Strengths */}
             {section.strengths.length > 0 && (
-              <div className="space-y-2">
-                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
-                  Strengths
+              <div className="space-y-2 bg-emerald-50/40 p-3 rounded-xl border border-emerald-100">
+                <span className="text-xs font-black text-emerald-800 uppercase tracking-wider block">
+                  STRENGTHS
                 </span>
                 <ul className="space-y-1.5">
                   {section.strengths.map((str, i) => (
-                    <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
-                      <CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <li key={i} className="text-xs text-slate-800 font-semibold flex items-start gap-2">
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
                       <span>{str}</span>
                     </li>
                   ))}
@@ -373,14 +373,14 @@ function renderSectionCard(
 
             {/* Recommendations */}
             {section.recommendations.length > 0 && (
-              <div className="space-y-2">
-                <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider block">
-                  Recommendations
+              <div className="space-y-2 bg-indigo-50/40 p-3 rounded-xl border border-indigo-100">
+                <span className="text-xs font-black text-indigo-800 uppercase tracking-wider block">
+                  RECOMMENDATIONS
                 </span>
                 <ul className="space-y-1.5">
                   {section.recommendations.map((rec, i) => (
-                    <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
-                      <AlertCircle className="h-3.5 w-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                    <li key={i} className="text-xs text-slate-800 font-semibold flex items-start gap-2">
+                      <AlertCircle className="h-3.5 w-3.5 text-indigo-600 shrink-0 mt-0.5" />
                       <span>{rec}</span>
                     </li>
                   ))}
@@ -391,13 +391,13 @@ function renderSectionCard(
 
           {/* Evidence Used Badges */}
           {section.evidence_used && section.evidence_used.length > 0 && (
-            <div className="pt-3 border-t border-slate-900">
-              <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider block mb-2">
+            <div className="pt-3 border-t border-slate-200">
+              <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider block mb-2">
                 Evidence Reused from Resume
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {section.evidence_used.map((ev, i) => (
-                  <span key={i} className="text-[10px] bg-indigo-950/40 border border-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded">
+                  <span key={i} className="text-[10px] bg-indigo-50 border border-indigo-200 text-indigo-800 font-bold px-2 py-0.5 rounded">
                     {ev}
                   </span>
                 ))}
@@ -2533,25 +2533,25 @@ export default function Home() {
                 <div className="space-y-6 pt-2 animate-fade-in-up">
                   {/* Top Strengths Panel */}
                   {analysisResult.top_strengths && analysisResult.top_strengths.length > 0 && (
-                    <div className="glass-panel rounded-2xl p-6 border-emerald-500/20 bg-emerald-950/5 space-y-4">
-                      <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2 border-b border-slate-900 pb-2">
-                        <TrendingUp className="h-4 w-4" />
+                    <div className="rounded-2xl p-6 border border-emerald-200 bg-emerald-50/60 space-y-4 shadow-sm">
+                      <h3 className="text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-2 border-b border-emerald-200 pb-2">
+                        <TrendingUp className="h-4 w-4 text-emerald-600" />
                         Top Strengths Match
                       </h3>
                       <div className="grid grid-cols-1 gap-3">
                         {analysisResult.top_strengths.map((strength, i) => (
-                          <div key={i} className="flex items-start gap-3 bg-slate-950/45 p-3 rounded-xl border border-slate-900/60">
-                            <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                              <CategoryIcon category={strength.category} className="h-4 w-4 text-emerald-400" />
+                          <div key={i} className="flex items-start gap-3 bg-white p-3.5 rounded-xl border border-emerald-200/80 shadow-xs">
+                            <div className="h-7 w-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 mt-0.5">
+                              <CategoryIcon category={strength.category} className="h-4 w-4 text-emerald-700" />
                             </div>
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold text-white">{strength.name}</span>
-                                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-800 uppercase font-medium">
+                                <span className="text-sm font-bold text-slate-900">{strength.name}</span>
+                                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase font-extrabold">
                                   {strength.category}
                                 </span>
                               </div>
-                              <p className="text-xs text-slate-400 leading-relaxed">{strength.reason}</p>
+                              <p className="text-xs text-slate-700 font-medium leading-relaxed">{strength.reason}</p>
                             </div>
                           </div>
                         ))}
@@ -2561,9 +2561,9 @@ export default function Home() {
 
                   {/* Top Improvements Panel */}
                   {analysisResult.top_improvements && analysisResult.top_improvements.length > 0 && (
-                    <div className="glass-panel rounded-2xl p-6 border-amber-500/20 bg-amber-950/5 space-y-4">
-                      <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2 border-b border-slate-900 pb-2">
-                        <ShieldAlert className="h-4 w-4" />
+                    <div className="rounded-2xl p-6 border border-amber-200 bg-amber-50/60 space-y-4 shadow-sm">
+                      <h3 className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-2 border-b border-amber-200 pb-2">
+                        <ShieldAlert className="h-4 w-4 text-amber-600" />
                         Top Recommended Improvements
                       </h3>
                       <div className="grid grid-cols-1 gap-3">
@@ -2575,17 +2575,17 @@ export default function Home() {
                           return sortedImprovements.map((imp, i) => {
                             const isExpanded = !!expandedImprovements[imp.name];
                             const priorityColor = [
-                              "bg-rose-500/10 text-rose-400 border-rose-500/30",
-                              "bg-rose-500/10 text-rose-400 border-rose-500/30",
-                              "bg-amber-500/10 text-amber-400 border-amber-500/30",
-                              "bg-sky-500/10 text-sky-400 border-sky-500/30",
-                              "bg-slate-500/10 text-slate-400 border-slate-500/30"
-                            ][imp.priority - 1] || "bg-slate-500/10 text-slate-400 border-slate-500/30";
+                              "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
+                              "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
+                              "bg-amber-100 text-amber-800 border-amber-300 font-extrabold",
+                              "bg-sky-100 text-sky-800 border-sky-300 font-extrabold",
+                              "bg-slate-100 text-slate-800 border-slate-300 font-bold"
+                            ][imp.priority - 1] || "bg-slate-100 text-slate-800 border-slate-300 font-bold";
 
                             return (
                               <div
                                 key={i}
-                                className="glass-panel rounded-xl border border-slate-900/60 hover:border-slate-800 transition-all duration-300 bg-slate-950/20"
+                                className="rounded-xl border border-slate-200 hover:border-slate-300 transition-all duration-300 bg-white shadow-xs"
                               >
                                 {/* Clickable Header for Collapsing */}
                                 <div
@@ -2593,36 +2593,36 @@ export default function Home() {
                                   className="flex flex-wrap items-center justify-between gap-4 p-4 cursor-pointer select-none"
                                 >
                                   <div className="flex items-center gap-3">
-                                    <span className={`text-[10px] px-2.5 py-0.5 rounded-full border font-medium uppercase ${priorityColor}`}>
+                                    <span className={`text-[10px] px-2.5 py-0.5 rounded-full border uppercase ${priorityColor}`}>
                                       Priority #{imp.priority}
                                     </span>
-                                    <span className="text-sm font-semibold text-white">{imp.name}</span>
+                                    <span className="text-sm font-bold text-slate-900">{imp.name}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform duration-300 ${isExpanded ? "transform rotate-180" : ""}`} />
+                                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${isExpanded ? "transform rotate-180" : ""}`} />
                                   </div>
                                 </div>
 
                                 {/* Collapsible Details */}
                                 {isExpanded && (
-                                  <div className="px-4 pb-4 border-t border-slate-900/60 pt-3 space-y-3.5 animate-fade-in-up">
+                                  <div className="px-4 pb-4 border-t border-slate-200 pt-3 space-y-3.5 animate-fade-in-up">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                                       {/* Rationale */}
-                                      <div className="space-y-1 bg-slate-950/40 p-3 rounded-lg border border-slate-900/60">
-                                        <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider block">
+                                      <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                        <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider block">
                                           Hiring Manager Rationale
                                         </span>
-                                        <p className="text-[11px] text-slate-300 leading-relaxed italic">
+                                        <p className="text-[11px] text-slate-700 font-medium leading-relaxed italic">
                                           "{imp.reason}"
                                         </p>
                                       </div>
 
                                       {/* Expected Impact */}
-                                      <div className="space-y-1 bg-slate-950/40 p-3 rounded-lg border border-slate-900/60">
-                                        <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider block">
+                                      <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                        <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider block">
                                           Expected Interview Impact
                                         </span>
-                                        <p className="text-[11px] text-slate-300 leading-relaxed">
+                                        <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
                                           {imp.expected_interview_impact}
                                         </p>
                                       </div>
@@ -2630,29 +2630,29 @@ export default function Home() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                                       {/* Evidence Reused */}
-                                      <div className="space-y-1 bg-slate-950/40 p-3 rounded-lg border border-slate-900/60">
-                                        <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider block">
+                                      <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                        <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider block">
                                           Evidence Reused or Adjacent Skills
                                         </span>
-                                        <p className="text-[11px] text-slate-300 leading-relaxed">
+                                        <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
                                           {imp.evidence_reused || "No direct/adjacent evidence found. Recommended with caution."}
                                         </p>
                                       </div>
 
                                       {/* Metrics (Section & Confidence) */}
-                                      <div className="space-y-2 bg-slate-950/40 p-3 rounded-lg border border-slate-900/60">
+                                      <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
                                         <div className="flex items-center justify-between text-[11px]">
-                                          <span className="font-semibold text-slate-400 uppercase tracking-wider text-[10px]">Target Section</span>
-                                          <span className="text-white font-medium capitalize">{imp.section}</span>
+                                          <span className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Target Section</span>
+                                          <span className="text-slate-900 font-bold capitalize">{imp.section}</span>
                                         </div>
-                                        <div className="space-y-1 pt-1 border-t border-slate-900">
+                                        <div className="space-y-1 pt-1 border-t border-slate-200">
                                           <div className="flex items-center justify-between text-[11px]">
-                                            <span className="font-semibold text-slate-400 uppercase tracking-wider text-[10px]">Recruiter Confidence</span>
-                                            <span className="text-indigo-400 font-bold">{Math.round(imp.confidence * 100)}%</span>
+                                            <span className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Recruiter Confidence</span>
+                                            <span className="text-indigo-700 font-extrabold">{Math.round(imp.confidence * 100)}%</span>
                                           </div>
-                                          <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                                          <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
                                             <div
-                                              className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                                              className="h-full bg-indigo-600 rounded-full transition-all duration-500"
                                               style={{ width: `${imp.confidence * 100}%` }}
                                             />
                                           </div>
