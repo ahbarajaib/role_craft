@@ -2134,17 +2134,38 @@ export default function Home() {
 
                   {/* Fetch Feedback Status Banner */}
                   {urlFetchStatus && (
-                    <div className={`p-3 rounded-lg border text-xs font-semibold flex items-start gap-2 ${
+                    <div className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col gap-2.5 ${
                       urlFetchStatus.type === "success"
-                        ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                        : "bg-amber-50 text-amber-900 border-amber-200"
+                        ? "bg-emerald-50 text-emerald-900 border-emerald-300"
+                        : urlFetchStatus.type === "info"
+                        ? "bg-indigo-50 text-indigo-900 border-indigo-300"
+                        : "bg-amber-50 text-amber-900 border-amber-300"
                     }`}>
-                      {urlFetchStatus.type === "success" ? (
-                        <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                      ) : (
-                        <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2">
+                        {urlFetchStatus.type === "success" ? (
+                          <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                        ) : urlFetchStatus.type === "info" ? (
+                          <Sparkles className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5 animate-pulse" />
+                        ) : (
+                          <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                        )}
+                        <span className="leading-relaxed flex-1">{urlFetchStatus.message}</span>
+                      </div>
+
+                      {urlFetchStatus.type === "error" && (
+                        <div className="flex items-center gap-2 pt-1 border-t border-amber-200/80">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setJobInputMode("text");
+                              setUrlFetchStatus(null);
+                            }}
+                            className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-lg shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                          >
+                            📋 Switch to Paste Text
+                          </button>
+                        </div>
                       )}
-                      <span>{urlFetchStatus.message}</span>
                     </div>
                   )}
                 </div>
