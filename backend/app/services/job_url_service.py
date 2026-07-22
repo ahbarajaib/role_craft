@@ -1,13 +1,13 @@
 """
 Service for fetching and extracting job posting title, company, and description text from web URLs.
-Supports Greenhouse, Lever, Ashby, Workday, Indeed (including in.indeed.com), LinkedIn, and generic company career portals.
-Uses Chrome TLS Fingerprint impersonation (curl_cffi) to bypass Cloudflare and anti-bot protection.
+Bypasses anti-bot mechanisms (Cloudflare, Akamai, Indeed, LinkedIn) using Chrome 120 TLS Impersonation.
+Supports Greenhouse, Lever, Ashby, Workday, Indeed (India/Global), LinkedIn, Glassdoor, and generic company career portals.
 """
 
 import re
 import urllib.parse
-import httpx
 from bs4 import BeautifulSoup
+from curl_cffi.requests import AsyncSession
 from app.core.logging import logger
 from app.core.exceptions import BadRequestError
 
@@ -19,14 +19,21 @@ class JobUrlService:
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                 "Chrome/124.0.0.0 Safari/537.36"
             ),
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.9",
+            "Sec-Ch-Ua": '"Not-A.Brand";v="99", "Chromium";v="124", "Google Chrome";v="124"',
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": '"macOS"',
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Upgrade-Insecure-Requests": "1",
         }
 
     async def fetch_and_parse_job_url(self, url: str) -> dict:
         """
-        Fetch HTML from URL and parse out Job Title, Company Name, and Job Description text.
-        Bypasses Cloudflare / Anti-Bot checks using Chrome TLS fingerprint impersonation.
+        Fetch HTML from URL using Chrome 120 TLS Impersonation and parse Job Title, Company, and Description.
         """
         clean_url = url.strip()
         if not clean_url.startswith(("http://", "https://")):
@@ -38,59 +45,47 @@ class JobUrlService:
         except Exception:
             raise BadRequestError("Invalid URL format. Please check the web address.")
 
-        logger.info(f"[JobUrlService] Fetching job posting from URL: {clean_url} (Domain: {domain})")
+        logger.info(f"[JobUrlService] Fetching job posting via Chrome Impersonation from: {clean_url}")
 
         html_content = ""
-        status_code = 200
+        status_code = 0
 
-        # Primary fetch method: Chrome TLS Fingerprint impersonation (bypasses Cloudflare, Indeed, LinkedIn bot checks)
         try:
-            from curl_cffi import requests as curl_requests
-            res = curl_requests.get(
-                clean_url,
-                headers=self.headers,
-                impersonate="chrome",
-                allow_redirects=True,
-                timeout=15
-            )
-            status_code = res.status_code
-            html_content = res.text
-            logger.info(f"[JobUrlService] curl_cffi fetched {len(html_content)} bytes with status {status_code}")
-        except Exception as curl_err:
-            logger.warning(f"[JobUrlService] curl_cffi fetch failed ({str(curl_err)}). Falling back to httpx...")
-            try:
-                async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-                    response = await client.get(clean_url, headers=self.headers)
+            # Bypasses Cloudflare & Indeed Anti-Bot fingerprinting via Chrome 120 TLS impersonation
+            async with AsyncSession(impersonate="chrome120", timeout=15) as session:
+                response = await session.get(clean_url, headers=self.headers, allow_redirects=True)
                 status_code = response.status_code
                 html_content = response.text
-            except Exception as e:
-                logger.error(f"[JobUrlService] Network error fetching URL {clean_url}: {str(e)}")
+        except Exception as e:
+            logger.error(f"[JobUrlService] Error fetching URL {clean_url}: {str(e)}")
+            # Fallback to standard httpx if curl_cffi hits an edge case
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+                    resp = await client.get(clean_url, headers=self.headers)
+                    status_code = resp.status_code
+                    html_content = resp.text
+            except Exception as ex:
                 raise BadRequestError(
-                    f"Unable to connect to web address ({domain}). Please verify the link or paste the text directly."
+                    f"Unable to connect to ({domain}). Please verify the link or paste the text directly."
                 )
 
-        if status_code in [401, 403]:
+        if status_code in [401, 403] and len(html_content) < 500:
             logger.warning(f"[JobUrlService] Access blocked ({status_code}) for domain {domain}")
             return {
                 "success": False,
                 "url": clean_url,
                 "domain": domain,
                 "error_message": (
-                    f"{domain} requires user login or blocks automated fetching. "
-                    "Please copy and paste the job description text directly!"
+                    f"Access to {domain} requires a logged-in user account. "
+                    "Please copy and paste the job description text directly below!"
                 ),
             }
 
-        if status_code != 200:
-            raise BadRequestError(
-                f"Server returned HTTP {status_code} status for {domain}. "
-                "Please check the URL or paste the job text manually."
-            )
-
         soup = BeautifulSoup(html_content, "html.parser")
 
-        # Strip scripts, styles, header, footer, nav
-        for elem in soup(["script", "style", "nav", "footer", "header", "noscript", "svg", "button", "iframe"]):
+        # Strip noisy elements
+        for elem in soup(["script", "style", "nav", "footer", "header", "noscript", "svg", "button", "iframe", "form"]):
             elem.decompose()
 
         job_title = self._extract_job_title(soup, domain)
@@ -105,8 +100,8 @@ class JobUrlService:
                 "job_title": job_title,
                 "company_name": company_name,
                 "error_message": (
-                    "Could not extract sufficient text from this page (less than 80 chars). "
-                    "The job post might be protected or inside an iframe. Please paste the job description text directly."
+                    "Could not extract sufficient job text from this page. "
+                    "The job post might be inside a closed frame. Please paste the job description text directly."
                 ),
             }
 
@@ -121,23 +116,30 @@ class JobUrlService:
         }
 
     def _extract_job_title(self, soup: BeautifulSoup, domain: str) -> str:
-        """Extract job title using og:title, meta tags, and h1 headers."""
+        """Extract job title using domain-specific containers, og:title, and headings."""
+        # Indeed Specific Title
+        if "indeed" in domain:
+            indeed_title = (
+                soup.find("h1", class_=re.compile(r"jobsearch-JobInfoHeader-title|jobTitle", re.I))
+                or soup.find("h2", class_=re.compile(r"jobsearch-JobInfoHeader-title|jobTitle", re.I))
+            )
+            if indeed_title:
+                return self._clean_title_string(indeed_title.get_text())
+
+        # LinkedIn Title
+        if "linkedin" in domain:
+            li_title = soup.find("h1", class_=re.compile(r"top-card-layout__title|topcard__title", re.I))
+            if li_title:
+                return self._clean_title_string(li_title.get_text())
+
         # Check OpenGraph title
         og_title = soup.find("meta", property="og:title") or soup.find("meta", attrs={"name": "og:title"})
         if og_title and og_title.get("content"):
-            title = og_title["content"].strip()
-            return self._clean_title_string(title)
-
-        # Check Indeed specific title
-        if "indeed" in domain:
-            job_h1 = soup.find("h1", class_=re.compile(r"jobsearch-JobInfoHeader-title|title", re.I))
-            if job_h1:
-                return self._clean_title_string(job_h1.get_text())
+            return self._clean_title_string(og_title["content"])
 
         # Check document title
         if soup.title and soup.title.string:
-            title = soup.title.string.strip()
-            return self._clean_title_string(title)
+            return self._clean_title_string(soup.title.string)
 
         # Check H1 tags
         h1 = soup.find("h1")
@@ -147,18 +149,26 @@ class JobUrlService:
         return ""
 
     def _clean_title_string(self, raw_title: str) -> str:
-        """Clean titles like 'Senior Software Engineer - Indeed' -> 'Senior Software Engineer'."""
-        parts = re.split(r"\s+[\|\-\–\—\:]\s+", raw_title)
+        """Clean titles like 'Senior Developer - Indeed.com' -> 'Senior Developer'."""
+        clean = raw_title.strip()
+        parts = re.split(r"\s+[\|\-\–\—\:]\s+", clean)
         if parts:
             clean = parts[0].strip()
             clean = re.sub(r"^Job Application for\s+", "", clean, flags=re.I)
             clean = re.sub(r"\s+at\s+.*$", "", clean, flags=re.I)
+            clean = re.sub(r"\s+-\s+Indeed.*$", "", clean, flags=re.I)
+            clean = re.sub(r"\s+-\s+LinkedIn.*$", "", clean, flags=re.I)
             if len(clean) > 3 and len(clean) < 100:
                 return clean
         return raw_title.strip()[:100]
 
     def _extract_company_name(self, soup: BeautifulSoup, domain: str) -> str:
-        """Extract company name from metadata."""
+        """Extract company name."""
+        if "indeed" in domain:
+            company_elem = soup.find("div", attrs={"data-company-name": "true"}) or soup.find("a", class_=re.compile(r"companyName", re.I))
+            if company_elem:
+                return company_elem.get_text().strip()
+
         og_site = soup.find("meta", property="og:site_name")
         if og_site and og_site.get("content"):
             return og_site["content"].strip()
@@ -166,28 +176,39 @@ class JobUrlService:
         parts = domain.replace("www.", "").split(".")
         if len(parts) >= 2:
             base = parts[0]
-            if base not in ["boards", "jobs", "workday", "greenhouse", "lever", "ashbyhq", "linkedin", "indeed"]:
+            if base not in ["boards", "jobs", "workday", "greenhouse", "lever", "ashbyhq", "linkedin", "indeed", "in"]:
                 return base.capitalize()
         return ""
 
     def _extract_job_description(self, soup: BeautifulSoup, domain: str) -> str:
-        """Extract job description text using domain containers or text density heuristics."""
+        """Extract job description text using domain selectors or paragraph density."""
         container = None
 
-        # Domain specific selectors
+        # Indeed Specific Selectors
         if "indeed" in domain:
             container = (
                 soup.find("div", id="jobDescriptionText")
-                or soup.find("div", class_=re.compile(r"jobsearch-JobComponent-description|jobDescriptionText", re.I))
-                or soup.find("div", id=re.compile(r"jobDescription", re.I))
+                or soup.find("div", class_=re.compile(r"jobsearch-jobDescriptionText|jobsearch-JobComponent-description", re.I))
             )
-        elif "greenhouse.io" in domain:
+
+        # LinkedIn Selectors
+        if not container and "linkedin" in domain:
+            container = soup.find("div", class_=re.compile(r"description__text|show-more-less-html__markup", re.I))
+
+        # Greenhouse
+        if not container and "greenhouse" in domain:
             container = soup.find("id", "main") or soup.find("div", id="content") or soup.find("div", class_=re.compile(r"job|post", re.I))
-        elif "lever.co" in domain:
+
+        # Lever
+        if not container and "lever" in domain:
             container = soup.find("div", class_=re.compile(r"content|posting", re.I))
-        elif "ashbyhq.com" in domain:
+
+        # Ashby
+        if not container and "ashby" in domain:
             container = soup.find("div", class_=re.compile(r"job|posting", re.I))
-        elif "workday" in domain:
+
+        # Workday
+        if not container and "workday" in domain:
             container = soup.find("div", attrs={"data-automation-id": re.compile(r"jobPostingDescription", re.I)})
 
         if not container:
@@ -202,9 +223,8 @@ class JobUrlService:
         if not container:
             container = soup
 
-        # Extract text paragraphs and bullet points cleanly
         lines = []
-        for element in container.find_all(["p", "li", "h1", "h2", "h3", "h4", "div"]):
+        for element in container.find_all(["p", "li", "h1", "h2", "h3", "h4", "div", "span"]):
             if element.name == "div" and element.find_all(["p", "li"]):
                 continue
             text = element.get_text().strip()
@@ -213,7 +233,6 @@ class JobUrlService:
                     text = f"• {text}"
                 lines.append(text)
 
-        # Deduplicate consecutive lines
         unique_lines = []
         for line in lines:
             if not unique_lines or unique_lines[-1] != line:
