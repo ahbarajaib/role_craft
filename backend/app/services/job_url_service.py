@@ -190,15 +190,56 @@ class JobUrlService:
         return raw_title.strip()[:100]
 
     def _extract_company_name(self, soup: BeautifulSoup, domain: str) -> str:
-        """Extract company name."""
+        """Extract company name across Indeed, LinkedIn, Greenhouse, Lever, Ashby, Workday, and generic meta tags."""
+        # 1. Indeed Company Selectors
+        if "indeed" in domain:
+            indeed_comp = (
+                soup.find("div", attrs={"data-company-name": "true"})
+                or soup.find("a", class_=re.compile(r"companyName|jobsearch-CompanyReview", re.I))
+                or soup.find("div", class_=re.compile(r"companyName|jobsearch-InlineCompanyRating", re.I))
+                or soup.find("span", class_=re.compile(r"companyName", re.I))
+            )
+            if indeed_comp:
+                clean_comp = indeed_comp.get_text().strip()
+                if clean_comp:
+                    return clean_comp
+
+        # 2. LinkedIn Company Selectors
         if "linkedin" in domain:
-            comp_elem = (
+            li_comp = (
                 soup.find("a", class_=re.compile(r"topcard__org-name-link|topcard__flavor--black-link", re.I))
                 or soup.find("a", class_=re.compile(r"topcard__flavor", re.I))
                 or soup.find("span", class_=re.compile(r"topcard__flavor", re.I))
             )
-            if comp_elem:
-                return comp_elem.get_text().strip()
+            if li_comp:
+                clean_comp = li_comp.get_text().strip()
+                if clean_comp:
+                    return clean_comp
+
+        # 3. Meta tag fallbacks (og:site_name, og:title, twitter:creator, author)
+        og_site = soup.find("meta", property="og:site_name") or soup.find("meta", attrs={"name": "og:site_name"})
+        if og_site and og_site.get("content"):
+            return og_site["content"].strip()
+
+        meta_author = soup.find("meta", attrs={"name": "author"}) or soup.find("meta", property="article:author")
+        if meta_author and meta_author.get("content"):
+            return meta_author["content"].strip()
+
+        # 4. Text regex fallback (e.g. "DataAnnotation is committed to creating quality AI...")
+        body_text = soup.get_text("\n", strip=True)
+        match = re.search(r"(?:^|[.\n]\s*)([A-Z][a-zA-Z0-9\s]{1,30})\s+(?:is|are)\s+(?:committed|looking|hiring|seeking|building|a global|an enterprise|providing)", body_text)
+        if match:
+            possible_comp = match.group(1).strip()
+            if possible_comp.lower() not in ["we", "this", "our", "the", "your", "indeed", "linkedin"]:
+                return possible_comp
+
+        # 5. Domain parsing fallback
+        parts = domain.replace("www.", "").split(".")
+        if len(parts) >= 2:
+            base = parts[0]
+            if base not in ["boards", "jobs", "workday", "greenhouse", "lever", "ashbyhq", "linkedin", "indeed", "in"]:
+                return base.capitalize()
+        return ""
 
     def _extract_job_description(self, soup: BeautifulSoup, domain: str) -> str:
         """Extract job description text using domain selectors or paragraph density."""
