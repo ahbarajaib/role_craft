@@ -632,20 +632,8 @@ function buildResumeFilename(
 
 export default function Home() {
   const { user, token, logout, setShowAuthModal, refreshMe } = useAuth();
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme] = useState<"light">("light");
   const [file, setFile] = useState<File | null>(null);
-
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("theme", theme);
-  }, [theme]);
 
   const [jobDescription, setJobDescription] = useState("");
   const [documentId, setDocumentId] = useState<string | null>(null);
@@ -712,26 +700,31 @@ export default function Home() {
     (s) => s.review_status === "improve"
   );
   const totalNeeded = sectionsToImproveList.length;
+
+  // Track how many sections needing improvement have been accepted/rewritten
   const improvedCount = sectionsToImproveList.filter(
-    (s) => !!rewrittenSections[s.section_name.toLowerCase()]
-  ).length;
-  const sectionsStillNeedingImprovement = totalNeeded - improvedCount;
-
-  // Find how many improvement items have been resolved by matching rewritten sections
-  const normalizedRewrittenKeys = new Set(
-    Object.keys(rewrittenSections).map((k) => k.replace(/\s+/g, " ").trim())
-  );
-
-  const resolvedCount = (analysisResult?.top_improvements || []).filter((imp) =>
-    normalizedRewrittenKeys.has(imp.section.toLowerCase().replace(/\s+/g, " ").trim())
+    (s) => !!rewrittenSections[s.section_name.toLowerCase()] ||
+           Object.keys(rewrittenSections).some((rk) => s.section_name.toLowerCase().includes(rk) || rk.includes(s.section_name.toLowerCase()))
   ).length;
 
-  const initialScore = analysisResult?.overall_summary.overall_coverage_percentage || 0;
-  const initialMissingCount = (analysisResult?.top_improvements || []).length;
+  // Track total accepted rewrites count across all sections (including header/summary/skills)
+  const totalAcceptedRewrites = Object.keys(rewrittenSections).length;
 
-  const currentScore = initialMissingCount > 0
-    ? Math.round(initialScore + (100 - initialScore) * (resolvedCount / initialMissingCount))
-    : initialScore;
+  // Track if keyword weaving has been applied
+  const wovenBoost = (isKeywordsWoven || appliedWovenKeywords.length > 0) ? 1 : 0;
+
+  // Target count of tasks to achieve 100% fit (sections needing improvement + keyword weaving)
+  const totalTargets = Math.max(1, totalNeeded + (appliedWovenKeywords.length || analysisResult?.top_improvements?.length ? 1 : 0));
+  const completedTargets = Math.min(totalTargets, Math.max(improvedCount, totalAcceptedRewrites) + wovenBoost);
+
+  const initialScore = analysisResult?.overall_summary?.overall_coverage_percentage || 0;
+
+  // Calculate dynamic progress from initialScore up to 100%
+  const currentScore = analysisResult
+    ? Math.min(100, Math.round(initialScore + (100 - initialScore) * (completedTargets / totalTargets)))
+    : 0;
+
+  const sectionsStillNeedingImprovement = Math.max(0, totalNeeded - improvedCount);
 
 
   useEffect(() => {
@@ -1412,52 +1405,33 @@ export default function Home() {
   const isUploading = uploadMutation.isPending;
 
   return (
-    <div className={`relative min-h-screen ${theme} ${theme === "dark" ? "bg-[#050a0d] text-emerald-50" : "bg-[#f4f8f6] text-emerald-950"} bg-grid p-6 lg:p-12 overflow-x-hidden transition-colors duration-300`}>
+    <div className="relative min-h-screen bg-slate-50 text-slate-900 bg-grid p-6 lg:p-12 overflow-x-hidden transition-colors duration-300">
       {/* Decorative Glow Elements */}
-      <div className="glow-effect bg-emerald-500 w-[550px] h-[550px] -top-40 -left-40" />
-      <div className="glow-effect bg-amber-500 w-[450px] h-[450px] top-[35%] -right-20" />
+      <div className="glow-effect bg-emerald-500/20 w-[550px] h-[550px] -top-40 -left-40" />
+      <div className="glow-effect bg-amber-500/20 w-[450px] h-[450px] top-[35%] -right-20" />
 
       {/* Header */}
       <header className="relative z-[200] max-w-[1440px] mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-8 sm:mb-12">
         <div className="flex items-center gap-3">
           <img
-            src={theme === "dark" ? "/logo.png" : "/logo-light.png"}
+            src="/logo.png"
             alt="Role Craft Logo"
-            className="h-10 w-10 sm:h-14 sm:w-14 object-contain rounded-xl shadow-lg shadow-emerald-600/10 dark:shadow-emerald-600/20 transition-all duration-300 shrink-0"
+            className="h-10 w-10 sm:h-14 sm:w-14 object-contain rounded-xl shadow-lg shadow-emerald-600/10 transition-all duration-300 shrink-0"
           />
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2 flex-wrap">
               <span>Role Craft</span>
-              <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold shrink-0">
+              <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 font-bold shrink-0">
                 Engine v1.0
               </span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium truncate">
+            <p className="text-xs sm:text-sm text-slate-500 font-medium truncate">
               Craft every resume for the role.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-auto">
-          {/* Theme Switcher Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="flex items-center gap-1.5 bg-white/90 dark:bg-slate-900/90 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-bold transition-all cursor-pointer select-none"
-            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          >
-            {theme === "dark" ? (
-              <>
-                <Sun className="h-3.5 w-3.5 text-amber-400" />
-                <span className="hidden sm:inline">Light</span>
-              </>
-            ) : (
-              <>
-                <Moon className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                <span className="hidden sm:inline">Dark</span>
-              </>
-            )}
-          </button>
 
           {user ? (
             <div className="relative z-[300]">
