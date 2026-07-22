@@ -99,8 +99,8 @@ export default function AuthModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in-up">
-      <div className="relative w-full max-w-md glass-panel rounded-2xl p-5 sm:p-8 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-2xl flex flex-col space-y-5 sm:space-y-6 max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in-up">
+      <div className="relative w-full max-w-md rounded-2xl p-5 sm:p-8 border border-slate-200 bg-white shadow-2xl flex flex-col space-y-5 sm:space-y-6 max-h-[92vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={() => setShowAuthModal(false)}

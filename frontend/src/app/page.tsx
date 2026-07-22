@@ -1416,7 +1416,7 @@ export default function Home() {
           <img
             src="/logo.png"
             alt="Role Craft Logo"
-            className="h-10 w-10 sm:h-14 sm:w-14 object-contain rounded-xl shadow-lg shadow-emerald-600/10 transition-all duration-300 shrink-0"
+            className="h-10 w-10 sm:h-14 sm:w-14 object-contain rounded-xl bg-white p-1 border border-slate-200/80 shadow-md transition-all duration-300 shrink-0"
           />
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2 flex-wrap">
@@ -1425,7 +1425,7 @@ export default function Home() {
                 Engine v1.0
               </span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium truncate">
+            <p className="text-xs sm:text-sm text-slate-600 font-semibold truncate">
               Craft every resume for the role.
             </p>
           </div>
@@ -1971,11 +1971,10 @@ export default function Home() {
                                 handleImproveClick(targetSec, recs);
                               }}
                               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 transition-colors cursor-pointer group"
-                              title={`Click to rewrite ${item.section} and surface ${item.name}`}
+                              title={`Click to surface ${item.name}`}
                             >
                               <Sparkles className="h-3 w-3 shrink-0 text-amber-500 group-hover:scale-110 transition-transform" />
                               {item.name}
-                              <span className="text-[9px] opacity-75">({item.section})</span>
                             </button>
                           ))}
                         </div>
