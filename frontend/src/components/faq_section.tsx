@@ -21,7 +21,7 @@ export default function FaqSection() {
     },
     {
       q: "How do monthly credits work?",
-      a: "Every new account receives 50 free credits per month. Pro users get 200 credits/mo and Elite users get 400 credits/mo. 1 credit is used for a section rewrite or document patch.",
+      a: "Every new account receives 15 free credits per month. Pro users get 200 credits/mo and Elite users get 400 credits/mo. 1 credit is used for a section rewrite or document patch.",
     },
     {
       q: "Can I download my final tailored resume as both DOCX and PDF?",

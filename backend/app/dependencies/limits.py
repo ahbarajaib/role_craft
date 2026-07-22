@@ -11,7 +11,7 @@ def verify_analysis_permission(
 ) -> None:
     """Verify that the user has remaining credits or an active Pro/Elite subscription."""
     if not optional_user:
-        raise UnauthorizedError("Authentication is required to analyze resumes. Sign up to get 50 free credits!")
+        raise UnauthorizedError("Authentication is required to analyze resumes. Sign up to get 15 free credits!")
 
     if optional_user.plan_type == "elite" and optional_user.subscription_status == "active":
         # Elite plan has unlimited usage

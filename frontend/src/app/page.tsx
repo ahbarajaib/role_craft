@@ -1629,7 +1629,7 @@ export default function Home() {
                 className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-base shadow-xl shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-105"
               >
                 <Sparkles className="h-5 w-5 text-amber-300" />
-                <span>⚡ Launch Optimizer Workspace — 50 Free Credits</span>
+                <span>⚡ Launch Optimizer Workspace — 15 Free Credits</span>
               </button>
               <a
                 href="#how-it-works"
@@ -1767,7 +1767,7 @@ export default function Home() {
                   <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-4 border-t border-slate-100">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span><strong>50 Credits</strong> / Month</span>
+                      <span><strong>15 Credits</strong> / Month</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />

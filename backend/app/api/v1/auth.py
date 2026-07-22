@@ -35,7 +35,7 @@ def signup(req: UserSignupRequest, db: Session = Depends(get_db)):
         password_hash=hash_password(req.password),
         provider="credentials",
         name=req.name.strip() if req.name else None,
-        credits=50
+        credits=15
     )
     db.add(new_user)
     db.commit()
@@ -99,7 +99,7 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
             provider="google",
             google_id=google_id,
             name=google_name,
-            credits=200 if email_clean in vip_emails else 50
+            credits=200 if email_clean in vip_emails else 15
         )
         db.add(user)
         db.commit()
