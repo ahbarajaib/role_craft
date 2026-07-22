@@ -676,6 +676,8 @@ export default function Home() {
   const [isSavingBase, setIsSavingBase] = useState(false);
   const [isAutoTailoring, setIsAutoTailoring] = useState(false);
   const [isWeavingKeywords, setIsWeavingKeywords] = useState(false);
+  const [appliedWovenKeywords, setAppliedWovenKeywords] = useState<string[]>([]);
+  const [isKeywordsWoven, setIsKeywordsWoven] = useState(false);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
@@ -1041,6 +1043,8 @@ export default function Home() {
           accepted_rewrites: acceptedItems,
         });
 
+        setAppliedWovenKeywords((prev) => Array.from(new Set([...prev, ...missingKeywords])));
+        setIsKeywordsWoven(true);
         setDownloadId(applyRes.download_id);
         setDownloadUrl(applyRes.download_url);
         setIsPatchingApplied(true);
@@ -1898,12 +1902,21 @@ export default function Home() {
                     type="button"
                     onClick={handleWeaveAllKeywords}
                     disabled={isWeavingKeywords}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      isKeywordsWoven
+                        ? "bg-emerald-600/90 hover:bg-emerald-600 text-white border border-emerald-400/30 shadow-md shadow-emerald-600/30"
+                        : "bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white shadow-md shadow-emerald-600/20"
+                    }`}
                   >
                     {isWeavingKeywords ? (
                       <>
                         <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                         Weaving Keywords...
+                      </>
+                    ) : isKeywordsWoven ? (
+                      <>
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-200" />
+                        ✓ Keywords Woven & Applied
                       </>
                     ) : (
                       <>
@@ -1916,25 +1929,37 @@ export default function Home() {
 
                 <div className="space-y-4">
                   {/* 🟢 Matched Skills */}
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
-                      🟢 Confirmed Matched Skills ({((analysisResult.top_strengths || []).length)})
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(analysisResult.top_strengths || []).map((s: any, idx: number) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
-                        >
-                          <CheckCircle className="h-3 w-3 shrink-0" />
-                          {typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)}
+                  {(() => {
+                    const originalMatched = (analysisResult.top_strengths || []).map((s: any) =>
+                      typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
+                    );
+                    const allMatched = Array.from(
+                      new Set([...originalMatched, ...appliedWovenKeywords.map((k) => cleanKeywordName(k))])
+                    ).filter(Boolean);
+
+                    return (
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                          🟢 Confirmed Matched Skills ({allMatched.length})
                         </span>
-                      ))}
-                    </div>
-                  </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {allMatched.map((skillName, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
+                            >
+                              <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500" />
+                              {skillName}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* 🟡 Supported Skills in Evidence */}
                   {(() => {
+                    const wovenLower = new Set(appliedWovenKeywords.map((k) => k.toLowerCase().trim()));
                     const supported = (analysisResult.top_improvements || [])
                       .filter((imp) => imp.evidence_reused && imp.evidence_reused.trim())
                       .flatMap((imp) => {
@@ -1945,7 +1970,11 @@ export default function Home() {
                           evidence: imp.evidence_reused,
                         }));
                       })
-                      .filter((item) => isActualATSKeyword(item.name));
+                      .filter(
+                        (item) =>
+                          isActualATSKeyword(item.name) &&
+                          !wovenLower.has(item.name.toLowerCase().trim())
+                      );
 
                     if (supported.length === 0) return null;
 
@@ -1982,18 +2011,29 @@ export default function Home() {
 
                   {/* 🔴 Missing Keywords / Gaps */}
                   {(() => {
+                    const wovenLower = new Set(appliedWovenKeywords.map((k) => k.toLowerCase().trim()));
                     const supportedNames = new Set(
                       (analysisResult.top_improvements || [])
                         .filter((imp) => imp.evidence_reused && imp.evidence_reused.trim())
-                        .map((imp) => cleanKeywordName(imp.name))
+                        .map((imp) => cleanKeywordName(imp.name).toLowerCase())
                     );
 
                     const missingFromSections = (analysisResult.sections || []).flatMap((s) => s.missing_keywords || []);
-                    const missingFromImps = (analysisResult.top_improvements || []).map((imp) => cleanKeywordName(imp.name));
+                    const missingFromImps = (analysisResult.top_improvements || []).map((imp) => imp.name);
 
                     const allMissing = Array.from(
-                      new Set([...missingFromSections, ...missingFromImps].map((k) => cleanKeywordName(k)))
-                    ).filter((k) => k && !supportedNames.has(k));
+                      new Set(
+                        [...missingFromSections, ...missingFromImps]
+                          .flatMap((k) => extractStrictKeywordsFromRaw(k))
+                          .map((k) => cleanKeywordName(k))
+                      )
+                    ).filter(
+                      (k) =>
+                        k &&
+                        isActualATSKeyword(k) &&
+                        !supportedNames.has(k.toLowerCase()) &&
+                        !wovenLower.has(k.toLowerCase().trim())
+                    );
 
                     if (allMissing.length === 0) return null;
 
