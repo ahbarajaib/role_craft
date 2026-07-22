@@ -885,17 +885,33 @@ export default function Home() {
         (s) => s.review_status === "improve"
       );
 
-      console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToImprove.map(s => s.section_name));
+      // Ensure Professional Summary section is included in 1-Click Auto-Tailor
+      const summarySection = (result.sections || []).find(
+        (s) => s.section_name.toLowerCase().includes("summary") || s.section_name.toLowerCase().includes("profile")
+      );
+      
+      const sectionsToTailor = [...sectionsToImprove];
+      if (summarySection && !sectionsToTailor.some(s => s.section_name.toLowerCase() === summarySection.section_name.toLowerCase())) {
+        sectionsToTailor.unshift(summarySection);
+      }
 
-      if (sectionsToImprove.length === 0) {
+      console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToTailor.map(s => s.section_name));
+
+      if (sectionsToTailor.length === 0 && !result.overall_summary?.job_title) {
         setSuccessNotification("Your resume is already highly optimized for this role!");
         setIsAutoTailoring(false);
         return;
       }
 
       const newRewrites: Record<string, string> = {};
+
+      // Automatically tailor Target Job Title in Header
+      if (result.overall_summary?.job_title) {
+        newRewrites["header"] = result.overall_summary.job_title;
+      }
+
       await Promise.all(
-        sectionsToImprove.map(async (sec) => {
+        sectionsToTailor.map(async (sec) => {
           try {
             const res = await rewriteSection({
               document_id: documentId,
@@ -919,7 +935,7 @@ export default function Home() {
             (s) => s.section_name.toLowerCase() === secKey
           );
           return {
-            section: origSec?.section_name || secKey,
+            section: origSec ? origSec.section_name : (secKey === "header" ? "header" : secKey),
             rewritten_text: text,
           };
         });
@@ -936,7 +952,7 @@ export default function Home() {
         setDownloadId(applyRes.download_id);
         setDownloadUrl(applyRes.download_url);
         setIsPatchingApplied(true);
-        setSuccessNotification("⚡ Resume 1-Click Auto-Tailored Successfully!");
+        setSuccessNotification("⚡ Resume 1-Click Auto-Tailored (Job Title, Summary, Skills & Experience) Successfully!");
       }
     } catch (err: any) {
       console.error("❌ [RoleCraft Audit] Auto-tailor error:", err);
@@ -1770,13 +1786,33 @@ export default function Home() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 dark:border-indigo-500/30">
-                        Summary
+                        Target Role Detected
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">Position Detected</span>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
-                      {analysisResult.overall_summary.job_title || "Target Role"}
-                    </h3>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
+                        {rewrittenSections["header"] || analysisResult.overall_summary.job_title || "Target Role"}
+                      </h3>
+                      {analysisResult.overall_summary.job_title && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newTitle = analysisResult.overall_summary.job_title;
+                            setRewrittenSections((prev) => ({
+                              ...prev,
+                              header: newTitle,
+                            }));
+                            setIsPatchingApplied(false);
+                            setSuccessNotification(`Applied target job title: "${newTitle}"`);
+                          }}
+                          className="px-3 py-1 text-xs font-bold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all cursor-pointer flex items-center gap-1 select-none"
+                          title="Apply this target job title to your resume header"
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          {rewrittenSections["header"] === analysisResult.overall_summary.job_title ? "Title Applied" : "Apply Job Title"}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Overall Score Circle */}

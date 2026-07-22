@@ -296,8 +296,9 @@ class PatchService:
 
         # 3. Apply each accepted rewrite.
         for rewrite_item in accepted_items:
+            norm_sec_name = _normalize(rewrite_item.section)
             target_sec = next(
-                (s for s in sections if _normalize(s.title) == _normalize(rewrite_item.section)),
+                (s for s in sections if _normalize(s.title) == norm_sec_name or (norm_sec_name in ["header", "job title", "target role", "title"] and s.normalized_name == "header")),
                 None,
             )
             if not target_sec:
@@ -308,6 +309,21 @@ class PatchService:
                 continue
 
             if not target_sec.paragraph_indexes:
+                continue
+
+            # Special Case: Patching Candidate Job Title in Header Section
+            if target_sec.normalized_name == "header" or norm_sec_name in ["header", "job title", "target role", "title"]:
+                header_paras = [doc.paragraphs[idx] for idx in target_sec.paragraph_indexes if idx < len(doc.paragraphs)]
+                if header_paras:
+                    # Find candidate job title paragraph (role keywords, or paragraph 1 if name is paragraph 0)
+                    role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive"]
+                    title_para = next(
+                        (p for p in header_paras if any(r in p.text.lower() for r in role_titles)),
+                        header_paras[1] if len(header_paras) > 1 else header_paras[0]
+                    )
+                    new_title_text = rewrite_item.rewritten_text.strip().split("\n")[0]
+                    _set_paragraph_text_preserve_fmt(title_para, new_title_text, default_font=doc_font)
+                    sections_updated += 1
                 continue
 
             # The first index is the section heading — we never touch its text.

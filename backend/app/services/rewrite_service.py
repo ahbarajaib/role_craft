@@ -48,6 +48,18 @@ CRITICAL SKILLS SECTION RULES:
 4. **Output Bounds**: Output ONLY the category skill lines. Do not include preambles or header titles.
 """
 
+SUMMARY_REWRITE_SYSTEM_PROMPT = """\
+You are a senior hiring manager, executive recruiter, and master resume writer.
+You are rewriting the PROFESSIONAL SUMMARY / PROFILE section of a resume to align perfectly with the target Job Description.
+
+CRITICAL PROFESSIONAL SUMMARY RULES:
+1. **Compelling 1-Paragraph Executive Summary**: Write a powerful 3-5 sentence professional summary tailored specifically to the target job title, required technical stack, and core domain background.
+2. **Target Role Alignment**: Frame the candidate's years of experience, primary skills, and major achievements directly around the target role.
+3. **No Fluff or Invented Claims**: Keep all years of experience, core technical stack, and factual background grounded strictly in the candidate's actual resume evidence.
+4. **Active & High-Impact Tone**: Use confident, professional wording emphasizing problem-solving impact, production delivery, and domain expertise.
+5. **Output Bounds**: Output ONLY the polished summary paragraph text. Do not include preambles or section title headers.
+"""
+
 
 class RewriteService:
     """Handles AI-powered, truth-preserving resume section rewrites."""
@@ -103,10 +115,17 @@ class RewriteService:
         orig_lines = [l.strip() for l in original_text.split("\n") if l.strip()]
         orig_line_count = max(len(orig_lines), 1)
 
-        # Determine if this is a skills section
+        # Determine section type and prompt selection
         sec_lower = section_name.lower()
         is_skills_section = any(k in sec_lower for k in ["skill", "technologies", "proficiencies", "tech stack"])
-        system_prompt = SKILLS_REWRITE_SYSTEM_PROMPT if is_skills_section else REWRITE_SYSTEM_PROMPT
+        is_summary_section = any(k in sec_lower for k in ["summary", "profile", "about", "objective", "bio"])
+
+        if is_skills_section:
+            system_prompt = SKILLS_REWRITE_SYSTEM_PROMPT
+        elif is_summary_section:
+            system_prompt = SUMMARY_REWRITE_SYSTEM_PROMPT
+        else:
+            system_prompt = REWRITE_SYSTEM_PROMPT
 
         # 3. Compile evidence context from all OTHER sections
         evidence_parts = []
