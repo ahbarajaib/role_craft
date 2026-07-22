@@ -328,14 +328,23 @@ class PatchService:
 
             # The first index is the section heading — we never touch its text.
             heading_para = doc.paragraphs[target_sec.paragraph_indexes[0]]
-            body_paras = [doc.paragraphs[idx] for idx in target_sec.paragraph_indexes[1:]]
+            body_paras = [doc.paragraphs[idx] for idx in target_sec.paragraph_indexes[1:] if idx < len(doc.paragraphs)]
 
-            # Split the AI output into non-empty lines, filtering out metadata headers if returned by AI.
+            # Check if this section is an Experience section (where role/company/date metadata headers exist)
+            is_experience_sec = any(
+                kw in target_sec.title.lower() or kw in (target_sec.normalized_name or "").lower()
+                for kw in ["experience", "employment", "history", "work", "job", "career", "positions"]
+            )
+
+            # Split the AI output into non-empty lines, filtering out metadata headers ONLY for experience sections
             new_para_texts = [
                 line.strip()
                 for line in rewrite_item.rewritten_text.split("\n")
-                if line.strip() and not _is_metadata_line(line.strip())
+                if line.strip() and (not is_experience_sec or not _is_metadata_line(line.strip()))
             ]
+
+            if not new_para_texts:
+                continue
 
             # Select template for cloning new bullet paragraphs
             bullet_template = next(
@@ -354,33 +363,39 @@ class PatchService:
                     orig_p = body_paras[orig_idx]
                     ai_text = new_para_texts[ai_idx]
 
-                    # Rule: Never overwrite a job title, company name, location, or date header line!
-                    if _is_metadata_line(orig_p.text, orig_p):
+                    # Rule: Never overwrite a job title, company name, location, or date header line in Experience sections!
+                    if is_experience_sec and _is_metadata_line(orig_p.text, orig_p):
                         _remove_num_pr(orig_p)
                         insertion_cursor = orig_p
                         orig_idx += 1
                         continue
 
-                    # Overwrite existing bullet paragraph text only (preserve formatting and font)
+                    # Overwrite existing paragraph text (preserve formatting and font)
                     _set_paragraph_text_preserve_fmt(orig_p, ai_text, default_font=doc_font)
+                    if not is_experience_sec and not any(kw in target_sec.title.lower() for kw in ["skill", "tool"]):
+                        _remove_num_pr(orig_p)
                     insertion_cursor = orig_p
                     orig_idx += 1
                     ai_idx += 1
 
                 elif ai_idx < len(new_para_texts):
-                    # AI produced more achievement lines than original bullets — clone bullet_template
+                    # AI produced more lines than original bullets — clone bullet_template
                     new_p = _clone_paragraph_xml(bullet_template, doc._body, default_font=doc_font)
+                    if not is_experience_sec and not any(kw in target_sec.title.lower() for kw in ["skill", "tool"]):
+                        _remove_num_pr(new_p)
                     insertion_cursor._p.addnext(new_p._p)
                     _set_paragraph_text_preserve_fmt(new_p, new_para_texts[ai_idx], default_font=doc_font)
                     insertion_cursor = new_p
                     ai_idx += 1
 
                 else:
-                    # Original had more lines — remove surplus bullet paragraph (preserve headers)
+                    # Original had more lines — remove surplus bullet paragraph (preserve headers in experience)
                     p = body_paras[orig_idx]
-                    if not _is_metadata_line(p.text, p):
-                        p._p.getparent().remove(p._p)
-                        p._p = None  # type: ignore[assignment]
+                    if not is_experience_sec or not _is_metadata_line(p.text, p):
+                        try:
+                            p._p.getparent().remove(p._p)
+                        except Exception:
+                            pass
                     orig_idx += 1
 
             sections_updated += 1
