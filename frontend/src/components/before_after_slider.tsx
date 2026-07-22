@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Sparkles, AlertCircle, CheckCircle2, Sliders, ArrowRight } from "lucide-react";
 
 export default function BeforeAfterSlider() {
-  const [sliderPosition, setSliderPosition] = useState(50);
+  const [sliderVal, setSliderVal] = useState(50);
   const [activeTab, setActiveTab] = useState<"bullet1" | "bullet2" | "bullet3">("bullet1");
 
   const examples = {
@@ -12,12 +12,12 @@ export default function BeforeAfterSlider() {
       role: "Full Stack Engineer",
       before: {
         text: "Worked on React and Node.js applications for client web projects and fixed database performance bugs.",
-        flaws: ["No quantifiable impact", "Passive action verbs", "Missed core ATS keywords: RAG Systems, Microservices, Redis"],
+        flaws: ["No quantifiable impact metric", "Passive 'Worked on' action verb", "Missed core ATS keywords: Microservices, Redis, RAG"],
         score: "42% ATS Match",
       },
       after: {
         text: "Engineered scalable React.js & Node.js microservices, reducing API query response latency by 42% across 15+ production modules using Redis caching and RAG workflows.",
-        gains: ["Google XYZ Formula Applied", "+42% Speed Metric", "100% ATS Keyword Match"],
+        gains: ["Google XYZ Formula Applied", "+42% Speed Latency Metric", "100% Target ATS Keywords Woven"],
         score: "96% ATS Match",
       },
     },
@@ -25,7 +25,7 @@ export default function BeforeAfterSlider() {
       role: "AI & ML Engineer",
       before: {
         text: "Used OpenAI APIs and Python scripts to build a chatbot for customer support.",
-        flaws: ["Lacks engineering depth", "Zero accuracy metrics", "Generic wording"],
+        flaws: ["Lacks engineering depth", "Zero accuracy or scale metrics", "Generic non-quantified wording"],
         score: "48% ATS Match",
       },
       after: {
@@ -38,7 +38,7 @@ export default function BeforeAfterSlider() {
       role: "Backend Developer",
       before: {
         text: "Responsible for managing PostgreSQL database tables and writing REST API endpoints.",
-        flaws: ["Passive 'Responsible for' phrasing", "No scale or volume metrics", "Unformatted bullets"],
+        flaws: ["Passive 'Responsible for' phrasing", "No throughput or volume metrics", "Unformatted plain text"],
         score: "39% ATS Match",
       },
       after: {
@@ -70,22 +70,48 @@ export default function BeforeAfterSlider() {
         ))}
       </div>
 
-      {/* Visual Comparison Card */}
+      {/* Interactive Slider Control Bar */}
+      <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+          <Sliders className="h-4 w-4 text-emerald-600" />
+          <span>Interactive Comparison Slider:</span>
+        </div>
+        <div className="flex-1 w-full max-w-md flex items-center gap-3">
+          <span className="text-[11px] font-extrabold text-rose-600 uppercase">Generic</span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={sliderVal}
+            onChange={(e) => setSliderVal(Number(e.target.value))}
+            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+          />
+          <span className="text-[11px] font-extrabold text-emerald-600 uppercase">Tailored</span>
+        </div>
+        <span className="text-xs font-black text-slate-900 bg-slate-100 px-2.5 py-1 rounded border border-slate-200">
+          {sliderVal}% Tailored View
+        </span>
+      </div>
+
+      {/* Visual Side-by-Side Grid */}
       <div className="relative rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xl overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
           
           {/* BEFORE CARD */}
-          <div className="rounded-xl border border-rose-200 bg-rose-50/40 p-5 space-y-4">
+          <div
+            className="rounded-xl border border-rose-200 bg-rose-50/40 p-5 space-y-4 transition-all duration-300"
+            style={{ opacity: sliderVal > 85 ? 0.3 : 1 }}
+          >
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-rose-700 bg-rose-100 px-2.5 py-1 rounded-full border border-rose-200">
                 <AlertCircle className="h-3.5 w-3.5" /> Before (Generic Resume)
               </span>
-              <span className="text-xs font-extrabold text-rose-600">
+              <span className="text-xs font-extrabold text-rose-600 bg-rose-100 px-2 py-0.5 rounded border border-rose-200">
                 {current.before.score}
               </span>
             </div>
             
-            <p className="text-sm text-slate-800 font-medium leading-relaxed bg-white/80 p-3.5 rounded-lg border border-rose-100 italic">
+            <p className="text-sm text-slate-800 font-medium leading-relaxed bg-white/90 p-4 rounded-xl border border-rose-100 italic shadow-xs">
               "{current.before.text}"
             </p>
 
@@ -103,7 +129,10 @@ export default function BeforeAfterSlider() {
           </div>
 
           {/* AFTER CARD */}
-          <div className="rounded-xl border border-emerald-300 bg-emerald-50/40 p-5 space-y-4 shadow-sm">
+          <div
+            className="rounded-xl border-2 border-emerald-500 bg-emerald-50/50 p-5 space-y-4 shadow-md transition-all duration-300"
+            style={{ opacity: sliderVal < 15 ? 0.3 : 1 }}
+          >
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full border border-emerald-300">
                 <Sparkles className="h-3.5 w-3.5 text-emerald-600" /> After (RoleCraft 1-Click Tailored)
@@ -113,7 +142,7 @@ export default function BeforeAfterSlider() {
               </span>
             </div>
 
-            <p className="text-sm text-slate-900 font-semibold leading-relaxed bg-white p-3.5 rounded-lg border border-emerald-200 shadow-sm">
+            <p className="text-sm text-slate-900 font-semibold leading-relaxed bg-white p-4 rounded-xl border border-emerald-200 shadow-sm">
               "{current.after.text}"
             </p>
 
