@@ -105,7 +105,7 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
     longSentenceLines.length >= Math.ceil(lines.length * 0.6);
 
   return (
-    <div className={`space-y-2.5 text-[13px] text-slate-200 leading-relaxed ${className || ""}`}>
+    <div className={`space-y-2.5 text-[13px] text-slate-800 dark:text-slate-200 leading-relaxed ${className || ""}`}>
       {lines.map((line, idx) => {
         const trimmed = line.trim();
         const bulletMatch = bulletSymbols.find((s) => trimmed.startsWith(s));
@@ -115,7 +115,7 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
           const content = trimmed.substring(bulletMatch.length).trim();
           return (
             <div key={idx} className="flex items-start gap-2.5 pl-1">
-              <span className="text-indigo-400 font-bold shrink-0 mt-0.5 select-none">•</span>
+              <span className="text-indigo-600 dark:text-indigo-400 font-bold shrink-0 mt-0.5 select-none">•</span>
               <p className="flex-1 select-all">{content}</p>
             </div>
           );
@@ -147,12 +147,12 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
           return (
             <div
               key={idx}
-              className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 select-all flex flex-wrap items-baseline gap-1.5"
+              className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 select-all flex flex-wrap items-baseline gap-1.5"
             >
-              <span className="font-bold text-indigo-300 text-xs tracking-wide uppercase">
+              <span className="font-bold text-indigo-700 dark:text-indigo-300 text-xs tracking-wide uppercase">
                 {label}
               </span>
-              <span className="text-slate-200 text-xs">{rest}</span>
+              <span className="text-slate-800 dark:text-slate-200 text-xs">{rest}</span>
             </div>
           );
         }
@@ -167,7 +167,7 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
 
         if (isJobRoleHeader && trimmed.length < 90 && !trimmed.endsWith(".")) {
           return (
-            <div key={idx} className="font-extrabold text-white text-sm pt-2.5 pb-1 flex items-center justify-between border-b border-slate-800/80 mt-1">
+            <div key={idx} className="font-extrabold text-slate-900 dark:text-white text-sm pt-2.5 pb-1 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 mt-1">
               <span>{trimmed}</span>
             </div>
           );
@@ -181,7 +181,7 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
 
         if (isCompanyHeader && trimmed.length < 80) {
           return (
-            <div key={idx} className="font-semibold text-emerald-400 text-xs italic mb-2">
+            <div key={idx} className="font-semibold text-emerald-600 dark:text-emerald-400 text-xs italic mb-2">
               {trimmed}
             </div>
           );
@@ -191,7 +191,7 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
         if (isImplicitBulletBlock) {
           return (
             <div key={idx} className="flex items-start gap-2.5 pl-1">
-              <span className="text-indigo-400 font-bold shrink-0 mt-0.5 select-none">•</span>
+              <span className="text-indigo-600 dark:text-indigo-400 font-bold shrink-0 mt-0.5 select-none">•</span>
               <p className="flex-1 select-all">{trimmed}</p>
             </div>
           );
@@ -1464,15 +1464,15 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-2 bg-slate-900 dark:bg-slate-900 hover:bg-slate-800 dark:hover:bg-slate-800 text-white px-3 py-1.5 rounded-xl border border-slate-700 dark:border-slate-800 shadow-md text-xs transition-all cursor-pointer select-none"
+                className="flex items-center gap-2 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs transition-all cursor-pointer select-none"
               >
                 <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 shadow-sm">
                   {(user.name || user.email)[0].toUpperCase()}
                 </div>
-                <span className="font-bold text-slate-100 max-w-[70px] sm:max-w-[120px] truncate">
+                <span className="font-bold text-slate-800 dark:text-slate-100 max-w-[70px] sm:max-w-[120px] truncate">
                   {user.name || user.email.split("@")[0]}
                 </span>
-                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] border border-emerald-500/30">
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-extrabold text-[10px] border border-emerald-500/20 dark:border-emerald-500/30">
                   {user.plan_type === "elite" ? "∞" : user.credits} CR
                 </span>
                 <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`} />
@@ -1485,17 +1485,17 @@ export default function Home() {
                     className="fixed inset-0 z-[310]"
                     onClick={() => setIsProfileMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-72 z-[320] bg-slate-900 dark:bg-slate-900 rounded-2xl border border-slate-700 dark:border-slate-800 shadow-[0_25px_60px_rgba(0,0,0,0.9)] p-4 space-y-4 animate-fade-in-up">
+                  <div className="absolute right-0 mt-2 w-72 z-[320] bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-4 animate-fade-in-up">
                     {/* User Header */}
-                    <div className="flex items-center gap-3 pb-3 border-b border-slate-800">
+                    <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
                       <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-indigo-600/30 shrink-0">
                         {(user.name || user.email)[0].toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-white truncate">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                           {user.name || "User Account"}
                         </p>
-                        <p className="text-xs text-slate-400 truncate">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                           {user.email}
                         </p>
                       </div>
@@ -1503,10 +1503,10 @@ export default function Home() {
 
                     {/* Account Status Details */}
                     <div className="space-y-2.5 text-xs">
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80">
-                        <span className="text-slate-400 font-medium">Plan</span>
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Plan</span>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-black uppercase text-[10px] tracking-wider">
+                          <span className="px-2 py-0.5 rounded bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 dark:border-indigo-500/30 font-black uppercase text-[10px] tracking-wider">
                             {user.plan_type}
                           </span>
                           {user.plan_type === "free" && (
@@ -1523,17 +1523,17 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80">
-                        <span className="text-slate-400 font-medium">Credits Available</span>
-                        <span className="font-extrabold text-emerald-400">
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Credits Available</span>
+                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
                           {user.plan_type === "elite" ? "Unlimited" : `${user.credits} Credits`}
                         </span>
                       </div>
 
                       {user.base_resume_filename && (
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80">
-                          <span className="text-slate-400 font-medium">Base Resume</span>
-                          <span className="font-semibold text-slate-300 truncate max-w-[110px]" title={user.base_resume_filename}>
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80">
+                          <span className="text-slate-500 dark:text-slate-400 font-medium">Base Resume</span>
+                          <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[110px]" title={user.base_resume_filename}>
                             {user.base_resume_filename}
                           </span>
                         </div>
@@ -1547,7 +1547,7 @@ export default function Home() {
                         setIsProfileMenuOpen(false);
                         logout();
                       }}
-                      className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/20 dark:border-rose-500/30 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <LogOut className="h-3.5 w-3.5" />
                       Sign Out
@@ -2352,16 +2352,16 @@ export default function Home() {
       {/* Side-by-Side Rewrite Modal */}
       {isRewriteModalOpen && activeRewriteSection && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
 
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 p-5 bg-slate-950/50">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 p-5 bg-slate-50 dark:bg-slate-950/50">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-indigo-400 animate-pulse" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400 animate-pulse" />
                   AI Section Rewrite: {cleanSectionTitle(activeRewriteSection)}
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Review changes, hiring manager reasoning, and customize section text.
                 </p>
               </div>
@@ -2370,7 +2370,7 @@ export default function Home() {
                   setIsRewriteModalOpen(false);
                   rewriteMutation.reset();
                 }}
-                className="text-slate-400 hover:text-white transition-colors"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -2381,7 +2381,7 @@ export default function Home() {
               {rewriteMutation.isPending ? (
                 <div className="flex flex-col items-center justify-center py-16 space-y-4">
                   <div className="h-10 w-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-                  <p className="text-sm text-indigo-400 font-semibold animate-pulse">
+                  <p className="text-sm text-indigo-600 dark:text-indigo-400 font-semibold animate-pulse">
                     AI hiring manager is polishing your section...
                   </p>
                   <p className="text-xs text-slate-500 max-w-xs text-center leading-relaxed">
@@ -2393,10 +2393,10 @@ export default function Home() {
                   <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
                     <ShieldAlert className="h-6 w-6" />
                   </div>
-                  <p className="text-sm text-rose-400 font-semibold">
+                  <p className="text-sm text-rose-600 dark:text-rose-400 font-semibold">
                     Failed to generate AI rewrite
                   </p>
-                  <p className="text-xs text-slate-400 max-w-sm text-center leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm text-center leading-relaxed">
                     {rewriteMutation.error?.message || "An unexpected error occurred while communicating with the AI. Please verify your connection or OpenAI API Key and try again."}
                   </p>
                   <button
@@ -2425,20 +2425,20 @@ export default function Home() {
               ) : rewriteData ? (
                 <>
                   {/* Mode Selector and Split Headers */}
-                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Compare & Edit
                     </span>
-                    <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-[10px]">
+                    <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px]">
                       <button
                         onClick={() => setDiffModeActive(false)}
-                        className={`px-3 py-1 rounded font-semibold transition-all ${!diffModeActive ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-white"}`}
+                        className={`px-3 py-1 rounded font-semibold transition-all ${!diffModeActive ? "bg-indigo-600 text-white" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                       >
                         Edit Mode
                       </button>
                       <button
                         onClick={() => setDiffModeActive(true)}
-                        className={`px-3 py-1 rounded font-semibold transition-all ${diffModeActive ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-white"}`}
+                        className={`px-3 py-1 rounded font-semibold transition-all ${diffModeActive ? "bg-indigo-600 text-white" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                       >
                         Visual Diff
                       </button>
@@ -2449,32 +2449,32 @@ export default function Home() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Original Content */}
                     <div className="space-y-2.5">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                         Original Section
                       </span>
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-900 text-xs text-slate-400 leading-relaxed min-h-[160px] max-h-[300px] overflow-y-auto select-none opacity-80 whitespace-pre-wrap">
+                      <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-900 text-xs text-slate-600 dark:text-slate-400 leading-relaxed min-h-[160px] max-h-[300px] overflow-y-auto select-none opacity-80 whitespace-pre-wrap">
                         {rewriteData.original_text}
                       </div>
                     </div>
 
                     {/* Rewritten Content */}
                     <div className="space-y-2.5">
-                      <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">
+                      <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">
                         {diffModeActive ? "Visual Diff Highlight" : "AI Rewritten Section (Editable)"}
                       </span>
                       {diffModeActive ? (
-                        <div className="bg-indigo-950/10 p-4 rounded-xl border border-indigo-500/30 text-xs text-slate-200 leading-relaxed min-h-[160px] max-h-[300px] overflow-y-auto whitespace-pre-wrap select-all">
+                        <div className="bg-indigo-50/50 dark:bg-indigo-950/10 p-4 rounded-xl border border-indigo-200 dark:border-indigo-500/30 text-xs text-slate-800 dark:text-slate-200 leading-relaxed min-h-[160px] max-h-[300px] overflow-y-auto whitespace-pre-wrap select-all">
                           {diffWords(rewriteData.original_text, draftRewrittenText).map((token, index) => {
                             if (token.added) {
                               return (
-                                <span key={index} className="bg-emerald-500/20 text-emerald-300 px-0.5 rounded border-b border-emerald-500/30 font-medium">
+                                <span key={index} className="bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 px-0.5 rounded border-b border-emerald-500/30 font-medium">
                                   {token.value}
                                 </span>
                               );
                             }
                             if (token.removed) {
                               return (
-                                <span key={index} className="bg-rose-500/20 text-rose-300 line-through px-0.5 rounded border-b border-rose-500/30">
+                                <span key={index} className="bg-rose-500/20 text-rose-800 dark:text-rose-300 line-through px-0.5 rounded border-b border-rose-500/30">
                                   {token.value}
                                 </span>
                               );
@@ -2486,7 +2486,7 @@ export default function Home() {
                         <textarea
                           value={draftRewrittenText}
                           onChange={(e) => setDraftRewrittenText(e.target.value)}
-                          className="w-full bg-indigo-950/10 p-4 rounded-xl border border-indigo-500/30 text-xs text-slate-200 leading-relaxed min-h-[160px] max-h-[300px] overflow-y-auto focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none"
+                          className="w-full bg-indigo-50/50 dark:bg-indigo-950/10 p-4 rounded-xl border border-indigo-200 dark:border-indigo-500/30 text-xs text-slate-800 dark:text-slate-200 leading-relaxed min-h-[160px] max-h-[300px] overflow-y-auto focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none"
                           placeholder="Loading rewrite text..."
                         />
                       )}
@@ -2494,29 +2494,29 @@ export default function Home() {
                   </div>
 
                   {/* Google XYZ Formula & Metric Synthesizer Card */}
-                  <div className="bg-gradient-to-r from-indigo-950/40 via-purple-950/30 to-slate-950 p-4 rounded-xl border border-indigo-500/20 space-y-3">
+                  <div className="bg-gradient-to-r from-indigo-50/80 via-purple-50/60 to-slate-100 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-slate-950 p-4 rounded-xl border border-indigo-200 dark:border-indigo-500/20 space-y-3">
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-md bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                        <div className="h-6 w-6 rounded-md bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/30">
                           <Sparkles className="h-3.5 w-3.5 animate-pulse" />
                         </div>
-                        <span className="text-xs font-bold text-indigo-200">
+                        <span className="text-xs font-bold text-indigo-900 dark:text-indigo-200">
                           Google XYZ Formula & Metric Synthesizer
                         </span>
                       </div>
-                      <span className="text-[10px] bg-indigo-500/10 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/20 font-mono">
+                      <span className="text-[10px] bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/20 font-mono">
                         Accomplished [X] as measured by [Y], by doing [Z]
                       </span>
                     </div>
 
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
                       Quantify your impact using Google's formula. Enter real numbers or scale metrics below so AI can seamlessly weave them into your achievement bullets.
                     </p>
 
                     {/* Metric Input Fields */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                           Metric / % Improvement [Y]
                         </label>
                         <input
@@ -2524,13 +2524,13 @@ export default function Home() {
                           value={metricPercentage}
                           onChange={(e) => setMetricPercentage(e.target.value)}
                           placeholder="e.g. '35% latency reduction', '$120k revenue growth'"
-                          className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
                           disabled={rewriteMutation.isPending}
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                           Scale / Scope / Volume [Y]
                         </label>
                         <input
@@ -2538,21 +2538,21 @@ export default function Home() {
                           value={metricScale}
                           onChange={(e) => setMetricScale(e.target.value)}
                           placeholder="e.g. 'across 15 microservices', '100k daily users'"
-                          className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
                           disabled={rewriteMutation.isPending}
                         />
                       </div>
                     </div>
 
                     {/* Quick Preset Prompt Chips */}
-                    <div className="pt-2 border-t border-slate-800/60 flex flex-wrap gap-2 items-center">
+                    <div className="pt-2 border-t border-slate-200 dark:border-slate-800/60 flex flex-wrap gap-2 items-center">
                       <span className="text-[10px] text-slate-500 font-semibold uppercase">Presets:</span>
                       <button
                         type="button"
                         onClick={() => {
                           setUserInstructions("Format all bullets strictly using Google's XYZ formula (Accomplished X as measured by Y, by doing Z)");
                         }}
-                        className="text-[10px] bg-slate-900 hover:bg-slate-850 text-indigo-300 hover:text-indigo-200 px-2.5 py-1 rounded-md border border-slate-800 transition-colors cursor-pointer"
+                        className="text-[10px] bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
                       >
                         ⚡ Google XYZ Bullets
                       </button>
@@ -2561,7 +2561,7 @@ export default function Home() {
                         onClick={() => {
                           setUserInstructions("Use high-impact active verbs and emphasize quantifiable metrics");
                         }}
-                        className="text-[10px] bg-slate-900 hover:bg-slate-850 text-emerald-300 hover:text-emerald-200 px-2.5 py-1 rounded-md border border-slate-800 transition-colors cursor-pointer"
+                        className="text-[10px] bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
                       >
                         📊 Action Verbs + Metrics
                       </button>
@@ -2570,7 +2570,7 @@ export default function Home() {
                         onClick={() => {
                           setUserInstructions("Make bullet points concise, impactful, and tailored for senior engineering leadership");
                         }}
-                        className="text-[10px] bg-slate-900 hover:bg-slate-850 text-amber-300 hover:text-amber-200 px-2.5 py-1 rounded-md border border-slate-800 transition-colors cursor-pointer"
+                        className="text-[10px] bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
                       >
                         🎯 Concise Pitch
                       </button>
@@ -2578,8 +2578,8 @@ export default function Home() {
                   </div>
 
                   {/* Refinement User Instructions Bar */}
-                  <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800 space-y-2.5">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                  <div className="bg-slate-50/50 dark:bg-slate-950/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2.5">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                       Refine Rewrite with Instructions
                     </span>
                     <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
@@ -2588,7 +2588,7 @@ export default function Home() {
                         value={userInstructions}
                         onChange={(e) => setUserInstructions(e.target.value)}
                         placeholder="e.g. 'make it shorter', 'use stronger action verbs', 'emphasize leadership'"
-                        className="flex-1 bg-slate-900 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
+                        className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
                         disabled={rewriteMutation.isPending}
                       />
                       <button
@@ -2617,11 +2617,11 @@ export default function Home() {
                   </div>
 
                   {/* Hiring Manager Reasoning */}
-                  <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-900 space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                  <div className="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl border border-slate-200 dark:border-slate-900 space-y-2">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                       Hiring Manager Reasoning
                     </span>
-                    <p className="text-xs text-slate-300 leading-relaxed italic">
+                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed italic">
                       "{rewriteData.reasoning}"
                     </p>
                   </div>
@@ -2629,25 +2629,25 @@ export default function Home() {
                   {/* AI Changes Log */}
                   {rewriteData.changes && rewriteData.changes.length > 0 && (
                     <div className="space-y-3">
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                         Edits Made
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {rewriteData.changes.map((change: any, idx: number) => {
                           const badgeColorMap: Record<string, string> = {
-                            keyword: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-                            clarity: "bg-sky-500/10 text-sky-400 border-sky-500/30",
-                            structure: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
-                            emphasis: "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                            keyword: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30",
+                            clarity: "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/20 dark:border-sky-500/30",
+                            structure: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20 dark:border-indigo-500/30",
+                            emphasis: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30"
                           };
-                          const badgeColor = badgeColorMap[change.type] || "bg-slate-500/10 text-slate-400 border-slate-500/30";
+                          const badgeColor = badgeColorMap[change.type] || "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20 dark:border-slate-500/30";
 
                           return (
-                            <div key={idx} className="p-3 bg-slate-950/30 rounded-lg border border-slate-900 flex items-start gap-2.5">
+                            <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-950/30 rounded-lg border border-slate-200 dark:border-slate-900 flex items-start gap-2.5">
                               <span className={`text-[9px] px-2 py-0.5 rounded border uppercase font-medium shrink-0 mt-0.5 ${badgeColor}`}>
                                 {change.type}
                               </span>
-                              <p className="text-xs text-slate-400 leading-relaxed">
+                              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                                 {change.description}
                               </p>
                             </div>
@@ -2665,14 +2665,14 @@ export default function Home() {
             </div>
 
             {/* Modal Actions */}
-            <div className="border-t border-slate-800 p-5 flex items-center justify-end gap-3 bg-slate-950/30">
+            <div className="border-t border-slate-200 dark:border-slate-800 p-5 flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-950/30">
               <button
                 onClick={() => {
                   setIsRewriteModalOpen(false);
                   rewriteMutation.reset();
                 }}
                 disabled={rewriteMutation.isPending}
-                className="px-4 py-2 border border-slate-800 hover:border-slate-700 disabled:opacity-40 disabled:hover:border-slate-800 disabled:cursor-not-allowed text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition-all duration-300"
+                className="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 disabled:opacity-40 disabled:hover:border-slate-200 dark:disabled:hover:border-slate-800 disabled:cursor-not-allowed text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-xl text-xs font-semibold transition-all duration-300"
               >
                 Cancel
               </button>
@@ -2711,7 +2711,7 @@ export default function Home() {
       {/* Floating Sticky Action Dock */}
       {Object.keys(rewrittenSections).length > 0 && isBottomBarVisible && (
         <>
-          <div className="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-6 z-40 sm:max-w-2xl bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 dark:border-slate-800 p-3.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] animate-fade-in-up transition-all duration-300">
+          <div className="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-6 z-40 sm:max-w-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl shadow-2xl text-slate-800 dark:text-white animate-fade-in-up transition-all duration-300">
             <div className="w-full mx-auto space-y-3">
 
               {/* Expandable Drawer for Accepted Improvements */}
@@ -2905,12 +2905,12 @@ export default function Home() {
       {/* Live PDF Preview Modal */}
       {isPdfPreviewOpen && (downloadId || documentId) && (
         <div className="fixed inset-0 z-[500] flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md animate-fade-in">
-          <div className="bg-slate-900 border border-slate-700/80 dark:border-slate-800 rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950/60">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
               <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-indigo-400" />
-                <h3 className="text-sm font-bold text-white">Live PDF Preview</h3>
+                <FileText className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Live PDF Preview</h3>
               </div>
               <div className="flex items-center gap-3">
                 <a
@@ -2924,23 +2924,23 @@ export default function Home() {
                 </a>
                 <button
                   onClick={() => setIsPdfPreviewOpen(false)}
-                  className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
             </div>
             {/* Viewer Body */}
-            <div className="flex-1 bg-slate-950 p-2 flex items-center justify-center relative overflow-hidden">
+            <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-2 flex items-center justify-center relative overflow-hidden">
               {isPdfLoading ? (
-                <div className="flex flex-col items-center justify-center space-y-3 text-slate-400">
+                <div className="flex flex-col items-center justify-center space-y-3 text-slate-500 dark:text-slate-400">
                   <div className="h-8 w-8 border-3 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
                   <p className="text-xs font-medium">Rendering live PDF preview...</p>
                 </div>
               ) : pdfError ? (
-                <div className="flex flex-col items-center justify-center space-y-4 max-w-md text-center p-6 bg-slate-900 rounded-2xl border border-slate-800">
-                  <ShieldAlert className="h-10 w-10 text-amber-400" />
-                  <p className="text-sm font-semibold text-slate-200">{pdfError}</p>
+                <div className="flex flex-col items-center justify-center space-y-4 max-w-md text-center p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <ShieldAlert className="h-10 w-10 text-amber-500" />
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{pdfError}</p>
                   <a
                     href={`${API_BASE_URL}/api/v1/resume/download/${downloadId || documentId}/pdf`}
                     download
@@ -2953,11 +2953,11 @@ export default function Home() {
                 <object
                   data={pdfBlobUrl}
                   type="application/pdf"
-                  className="w-full h-full rounded-xl border border-slate-800/80 bg-slate-900"
+                  className="w-full h-full rounded-xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900"
                 >
                   <iframe
                     src={pdfBlobUrl}
-                    className="w-full h-full rounded-xl border border-slate-800/80 bg-slate-900"
+                    className="w-full h-full rounded-xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900"
                     title="Resume PDF Preview"
                   />
                 </object>
