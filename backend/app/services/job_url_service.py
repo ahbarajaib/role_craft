@@ -179,21 +179,14 @@ class JobUrlService:
 
     def _extract_company_name(self, soup: BeautifulSoup, domain: str) -> str:
         """Extract company name."""
-        if "indeed" in domain:
-            company_elem = soup.find("div", attrs={"data-company-name": "true"}) or soup.find("a", class_=re.compile(r"companyName", re.I))
-            if company_elem:
-                return company_elem.get_text().strip()
-
-        og_site = soup.find("meta", property="og:site_name")
-        if og_site and og_site.get("content"):
-            return og_site["content"].strip()
-
-        parts = domain.replace("www.", "").split(".")
-        if len(parts) >= 2:
-            base = parts[0]
-            if base not in ["boards", "jobs", "workday", "greenhouse", "lever", "ashbyhq", "linkedin", "indeed", "in"]:
-                return base.capitalize()
-        return ""
+        if "linkedin" in domain:
+            comp_elem = (
+                soup.find("a", class_=re.compile(r"topcard__org-name-link|topcard__flavor--black-link", re.I))
+                or soup.find("a", class_=re.compile(r"topcard__flavor", re.I))
+                or soup.find("span", class_=re.compile(r"topcard__flavor", re.I))
+            )
+            if comp_elem:
+                return comp_elem.get_text().strip()
 
     def _extract_job_description(self, soup: BeautifulSoup, domain: str) -> str:
         """Extract job description text using domain selectors or paragraph density."""
