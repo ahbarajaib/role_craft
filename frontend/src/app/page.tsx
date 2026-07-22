@@ -570,6 +570,18 @@ function extractStrictKeywordsFromRaw(raw: string): string[] {
     .filter((p) => isActualATSKeyword(p));
 }
 
+function cleanSectionTitle(title: string): string {
+  if (!title) return "";
+  const parts = title.trim().split(/\s+/);
+  const deduplicated: string[] = [];
+  for (const p of parts) {
+    if (deduplicated.length === 0 || deduplicated[deduplicated.length - 1].toLowerCase() !== p.toLowerCase()) {
+      deduplicated.push(p);
+    }
+  }
+  return deduplicated.join(" ");
+}
+
 /**
  * Builds a smart resume filename from available context:
  * [Company] - [Candidate Name] - [Role].docx
@@ -1925,7 +1937,15 @@ export default function Home() {
                   {(() => {
                     const supported = (analysisResult.top_improvements || [])
                       .filter((imp) => imp.evidence_reused && imp.evidence_reused.trim())
-                      .map((imp) => ({ name: cleanKeywordName(imp.name), section: imp.section, evidence: imp.evidence_reused }));
+                      .flatMap((imp) => {
+                        const kws = extractStrictKeywordsFromRaw(imp.name);
+                        return kws.map((kw) => ({
+                          name: kw,
+                          section: imp.section,
+                          evidence: imp.evidence_reused,
+                        }));
+                      })
+                      .filter((item) => isActualATSKeyword(item.name));
 
                     if (supported.length === 0) return null;
 
@@ -2299,7 +2319,7 @@ export default function Home() {
               <div>
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-indigo-400 animate-pulse" />
-                  AI Section Rewrite: {activeRewriteSection}
+                  AI Section Rewrite: {cleanSectionTitle(activeRewriteSection)}
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
                   Review changes, hiring manager reasoning, and customize section text.

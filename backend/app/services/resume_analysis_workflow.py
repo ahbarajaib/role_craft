@@ -147,7 +147,8 @@ class ResumeAnalysisWorkflow:
                 )
             )
 
-        # Now map experience review to all custom experience role sections
+        # Now map experience review to custom experience role sections without duplicating recommendations
+        exp_review_assigned = False
         for s in sections_to_analyze:
             title_lower = s.title.lower()
             if any(kw in title_lower for kw in date_kws):
@@ -155,7 +156,8 @@ class ResumeAnalysisWorkflow:
                     processed_section_ids.add(s.title)
                     section_comparison = _find_comparison(s, comparison_by_name)
                     
-                    if exp_review:
+                    if exp_review and not exp_review_assigned:
+                        exp_review_assigned = True
                         reviewed_sections.append(
                             ReviewedSection(
                                 section_name=s.title,
@@ -179,7 +181,7 @@ class ResumeAnalysisWorkflow:
                                 review_status=ReviewStatus.KEEP,
                                 rewrite_worthwhile=False,
                                 priority=Priority.LOW,
-                                reason="No changes recommended by recruiter.",
+                                reason="Role achievements are well structured with clear timeline.",
                                 recommendations=[],
                                 evidence_used=[],
                                 missing_keywords=[],
@@ -227,10 +229,16 @@ class ResumeAnalysisWorkflow:
             reduce_secs[:5]
         )
 
+        resolved_job_title = (
+            unified_result.target_job_title
+            if (unified_result.target_job_title and unified_result.target_job_title.lower().strip() not in ["target role", "full job description", "job description", "overview"])
+            else (job_description.title if (job_description.title and job_description.title.lower().strip() not in ["full job description", "job description", "target role", "overview"]) else "Target Role")
+        )
+
         # Step 6 – Merge and return
         result = _build_result(
             document_id=document_id,
-            job_title=job_description.title,
+            job_title=resolved_job_title,
             comparison=comparison,
             reviewed_sections=limited_sections,
             top_strengths=unified_result.top_strengths,

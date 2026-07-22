@@ -62,6 +62,10 @@ SectionReview = SectionReviewItem
 class UnifiedReviewResult(BaseModel):
     """Structured response containing full recruiter analysis."""
 
+    target_job_title: str = Field(
+        default="Target Role",
+        description="Concise 2-4 word professional job title derived from the target job description (e.g. 'AI Application Engineer' or 'Full Stack Developer')."
+    )
     sections: list[SectionReviewItem] = Field(
         description="Recruiter reviews of each section."
     )
