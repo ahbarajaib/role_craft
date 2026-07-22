@@ -90,13 +90,32 @@ class JobUrlService:
         job_title = self._extract_job_title(soup, domain)
         company_name = self._extract_company_name(soup, domain)
 
-        if (
+        # Check if Cloudflare or CAPTCHA challenge returned
+        is_blocked = (
             status_code in [401, 403]
             or "security check" in job_title.lower()
             or "just a moment" in job_title.lower()
             or "captcha" in html_content.lower()
-        ):
-            logger.warning(f"[JobUrlService] Security check or CAPTCHA detected for domain {domain}")
+            or len(html_content) < 400
+        )
+
+        if is_blocked:
+            logger.info(f"[JobUrlService] Cloudflare / CAPTCHA detected for {domain}. Retrying with Playwright headless browser...")
+            playwright_html = await self._fetch_with_playwright(clean_url)
+            if playwright_html and len(playwright_html) > 500:
+                soup = BeautifulSoup(playwright_html, "html.parser")
+                for elem in soup(["script", "style", "nav", "footer", "header", "noscript", "svg", "button", "iframe", "form"]):
+                    elem.decompose()
+                job_title = self._extract_job_title(soup, domain)
+                company_name = self._extract_company_name(soup, domain)
+                is_blocked = (
+                    "security check" in job_title.lower()
+                    or "just a moment" in job_title.lower()
+                    or "captcha" in playwright_html.lower()
+                )
+
+        if is_blocked:
+            logger.warning(f"[JobUrlService] Security check or CAPTCHA persistent for domain {domain}")
             return {
                 "success": False,
                 "url": clean_url,
@@ -311,5 +330,30 @@ class JobUrlService:
                 unique_lines.append(line)
 
         return "\n\n".join(unique_lines)
+
+    async def _fetch_with_playwright(self, url: str) -> str:
+        """Fetch full JS-rendered HTML using headless Playwright Chromium browser."""
+        logger.info(f"[JobUrlService] Launching Playwright Chromium fallback for: {url}")
+        try:
+            from playwright.async_api import async_playwright
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=True)
+                context = await browser.new_context(
+                    user_agent=(
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/124.0.0.0 Safari/537.36"
+                    ),
+                    viewport={"width": 1280, "height": 800},
+                )
+                page = await context.new_page()
+                await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+                await page.wait_for_timeout(2500)
+                content = await page.content()
+                await browser.close()
+                return content
+        except Exception as e:
+            logger.error(f"[JobUrlService] Playwright fetch failed: {str(e)}")
+            return ""
 
 job_url_service = JobUrlService()

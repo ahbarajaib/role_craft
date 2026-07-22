@@ -37,7 +37,7 @@ import {
   Link as LinkIcon,
   ExternalLink
 } from "lucide-react";
-import { uploadResume, analyzeResume, rewriteSection, applyRewrites, fetchJobUrl, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
+import { uploadResume, analyzeResume, rewriteSection, applyRewrites, fetchJobUrl, fetchClientSideJobUrl, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
@@ -668,11 +668,38 @@ export default function Home() {
         setJobInputMode("text");
       } else {
         setUrlFetchStatus({
-          type: "error",
-          message: res.error_message || "Could not fetch job text. Please paste text directly.",
+          type: "info",
+          message: "⚡ Retrying via secondary web proxy...",
         });
+        const clientRes = await fetchClientSideJobUrl(jobUrl.trim());
+        if (clientRes.success && clientRes.job_description) {
+          setJobDescription(clientRes.job_description);
+          setUrlFetchStatus({
+            type: "success",
+            message: `✓ Extracted ${clientRes.job_title || "Job Posting"} (${clientRes.char_count} chars)`,
+          });
+          setJobInputMode("text");
+        } else {
+          setUrlFetchStatus({
+            type: "error",
+            message: res.error_message || "Could not fetch job text. Please paste text directly.",
+          });
+        }
       }
     } catch (err: any) {
+      try {
+        const clientRes = await fetchClientSideJobUrl(jobUrl.trim());
+        if (clientRes.success && clientRes.job_description) {
+          setJobDescription(clientRes.job_description);
+          setUrlFetchStatus({
+            type: "success",
+            message: `✓ Extracted ${clientRes.job_title || "Job Posting"} (${clientRes.char_count} chars)`,
+          });
+          setJobInputMode("text");
+          return;
+        }
+      } catch (_) {}
+
       setUrlFetchStatus({
         type: "error",
         message: err.message || "Failed to fetch URL. Please copy and paste the job description text below.",

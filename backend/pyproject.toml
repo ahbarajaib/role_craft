@@ -25,4 +25,5 @@ dependencies = [
     "reportlab>=4.1.0",
     "beautifulsoup4>=4.15.0",
     "curl-cffi>=0.15.0",
+    "playwright>=1.61.0",
 ]
