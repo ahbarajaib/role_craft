@@ -81,18 +81,6 @@ class JobUrlService:
                     f"Unable to connect to ({domain}). Please verify the link or paste the text directly."
                 )
 
-        if status_code in [401, 403] and len(html_content) < 500:
-            logger.warning(f"[JobUrlService] Access blocked ({status_code}) for domain {domain}")
-            return {
-                "success": False,
-                "url": clean_url,
-                "domain": domain,
-                "error_message": (
-                    f"Access to {domain} requires a logged-in user account. "
-                    "Please copy and paste the job description text directly below!"
-                ),
-            }
-
         soup = BeautifulSoup(html_content, "html.parser")
 
         # Strip noisy elements
@@ -101,6 +89,26 @@ class JobUrlService:
 
         job_title = self._extract_job_title(soup, domain)
         company_name = self._extract_company_name(soup, domain)
+
+        if (
+            status_code in [401, 403]
+            or "security check" in job_title.lower()
+            or "just a moment" in job_title.lower()
+            or "captcha" in html_content.lower()
+        ):
+            logger.warning(f"[JobUrlService] Security check or CAPTCHA detected for domain {domain}")
+            return {
+                "success": False,
+                "url": clean_url,
+                "domain": domain,
+                "job_title": job_title,
+                "company_name": company_name,
+                "error_message": (
+                    f"Access to {domain} is protected by Cloudflare/CAPTCHA verification. "
+                    "Please copy and paste the job description text directly below!"
+                ),
+            }
+
         raw_description = self._extract_job_description(soup, domain)
 
         header_lines = []
@@ -284,18 +292,21 @@ class JobUrlService:
         if not container:
             container = soup
 
-        lines = []
-        for element in container.find_all(["p", "li", "h1", "h2", "h3", "h4", "div", "span"]):
-            if element.name == "div" and element.find_all(["p", "li"]):
-                continue
-            text = element.get_text().strip()
-            if text and len(text) > 15:
-                if element.name == "li" and not text.startswith(("•", "-", "*")):
-                    text = f"• {text}"
-                lines.append(text)
+        raw_text = container.get_text(separator="\n", strip=True)
+        junk_patterns = [
+            "skip to main content", "cookie policy", "terms of service", "all rights reserved",
+            "privacy policy", "copyright ©", "sign in to save", "report job", "create alert",
+            "employers / post job", "help center", "security check"
+        ]
+
+        clean_lines = []
+        for line in raw_text.split("\n"):
+            line_str = line.strip()
+            if len(line_str) > 15 and not any(junk in line_str.lower() for junk in junk_patterns):
+                clean_lines.append(line_str)
 
         unique_lines = []
-        for line in lines:
+        for line in clean_lines:
             if not unique_lines or unique_lines[-1] != line:
                 unique_lines.append(line)
 
