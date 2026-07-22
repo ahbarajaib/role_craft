@@ -2,14 +2,14 @@
 
 ### Craft every resume for the role you’re applying to.
 
-AI-powered resume optimisation platform. Upload a DOCX resume, provide a job description, and receive a tailored resume that preserves your original formatting.
+AI-powered resume optimization platform. Upload a DOCX resume, provide a job description, and receive a 1-click tailored resume that preserves 100% of your original formatting and fonts.
 
 ---
 
 ## Project Status
 
-> **Milestone 14 – Production Hardening (Complete)**
-> The application has been hardened with schema-level validators, async file cleanup background tasks, structured Loguru request-id tracing correlation, OpenAI call request timeouts, parse error recovery, and frontend user retry capabilities. Refer to the production [Deployment Guide](docs/DEPLOYMENT.md) for Docker builds, compose structures, and reverse-proxy configurations.
+> **Milestone 15 – High-Converting SaaS Landing Page & Multi-Section Application (Complete)**
+> RoleCraft has been transformed into a full-featured SaaS marketing platform and resume optimizer workspace. Includes interactive Before & After bullet transformation sliders, ATS keyword weaver, Google XYZ formula engine, 100% low-level OpenXML formatting preservation, updated credit tiers (50 Free / 200 Pro / 400 Elite), light mode design system, and Razorpay subscription checkout.
 
 ---
 
