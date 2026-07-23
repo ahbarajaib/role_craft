@@ -150,8 +150,7 @@ class ResumeAnalysisWorkflow:
                 )
             )
 
-        # Now map experience review to custom experience role sections without duplicating recommendations
-        exp_review_assigned = False
+        # Map experience review to ALL experience role entries so every job position is tailored to the JD
         for s in sections_to_analyze:
             title_lower = s.title.lower()
             if any(kw in title_lower for kw in date_kws):
@@ -159,8 +158,7 @@ class ResumeAnalysisWorkflow:
                     processed_section_ids.add(s.title)
                     section_comparison = _find_comparison(s, comparison_by_name)
                     
-                    if exp_review and not exp_review_assigned:
-                        exp_review_assigned = True
+                    if exp_review:
                         reviewed_sections.append(
                             ReviewedSection(
                                 section_name=s.title,
@@ -181,14 +179,14 @@ class ResumeAnalysisWorkflow:
                         reviewed_sections.append(
                             ReviewedSection(
                                 section_name=s.title,
-                                review_status=ReviewStatus.KEEP,
-                                rewrite_worthwhile=False,
-                                priority=Priority.LOW,
-                                reason="Role achievements are well structured with clear timeline.",
-                                recommendations=[],
+                                review_status=ReviewStatus.IMPROVE,
+                                rewrite_worthwhile=True,
+                                priority=Priority.HIGH,
+                                reason="Tailor role achievements and technical metrics to match target job requirements.",
+                                recommendations=["Align technical bullet points with required skills in target job description."],
                                 evidence_used=[],
                                 missing_keywords=[],
-                                strengths=["Maintains clear chronological formatting."],
+                                strengths=["Chronological employment history preserved."],
                                 coverage_percentage=section_comparison.coverage_percentage,
                                 recruiter_impact="",
                                 ats_impact="",

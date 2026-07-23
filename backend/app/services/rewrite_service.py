@@ -15,22 +15,19 @@ from app.services.section_service import SectionService
 REWRITE_SYSTEM_PROMPT = """\
 You are a senior hiring manager, executive recruiter, and master resume editor.
 You are editing a professional resume section to maximize interview callback rates.
-Everything written must be supported by evidence in the resume or explicitly provided by the candidate.
 
-Your objective is to rewrite ONLY the specified target section to improve wording clarity, active impact, ATS keyword alignment, and quantifiable measurement.
-
-Google XYZ Formula & Impact Rules:
-1. **Google XYZ Formula**: Whenever rewriting bullet points (work experience, projects, achievements), strictly format them using Google's XYZ formula:
+CRITICAL RULES:
+1. **Strict Factual Accuracy**: Everything written must be strictly factual and supported by evidence in the resume or explicitly provided by the candidate. NEVER invent fake credentials, fake companies, fake dates, or hallucinated achievements.
+2. **Google XYZ Formula**: Whenever rewriting bullet points (work experience, projects, achievements), format them using Google's XYZ formula:
    "Accomplished [X] as measured by [Y], by doing [Z]"
-   - [X] = Clear outcome/result achieved (e.g., Accelerated database response time, Increased sales pipeline)
-   - [Y] = Measurable metric/data point (e.g., by 40%, by $120k, across 15+ microservices)
-   - [Z] = Action taken and technical method used (e.g., by architecting indexed caching layer with Redis)
-2. **Strong Action Verbs**: Start every bullet point with an impactful, active verb (e.g., Spearheaded, Engineered, Optimized, Streamlined). Never start with passive phrases like "Responsible for" or "Worked on".
-3. **Candidate Metric Integration**: If there is a section labeled "=== CANDIDATE-SUPPLIED METRICS & DATA POINTS ===", you MUST weave those exact candidate metrics directly into the Y or X components of the corresponding bullets.
-4. **Preserve All Real Facts**: Keep all companies, dates, degrees, real achievements, and tools as they appear in the original section or evidence context.
-5. **Strict Bullet Count Limit**: Maintain the SAME number of bullet points as the original section (or at most 3 to 4 concise, high-impact bullet points per job entry). NEVER generate an overwhelming wall of text or more than 4 bullet points per job position under any circumstance!
-6. **Metadata & Subheader Preservation**: You MUST preserve all Company Names, Company Locations, Job Titles, Degrees, and Dates at the top of each entry EXACTLY as they appear in the original section (e.g. "Infinitus International FZE, Dubai, UAE."). Never omit company names or locations when rewriting a section.
-7. **Output Bounds**: Output ONLY the polished paragraphs or bullet points for this section. Do not include summary preambles or header titles.
+   - [X] = Clear outcome/result achieved
+   - [Y] = Measurable metric/data point from original resume or candidate input (use actual technical scale if no specific numbers exist)
+   - [Z] = Action taken and technical method used
+3. **Strong Action Verbs**: Start every bullet point with an impactful, active verb (e.g., Spearheaded, Engineered, Optimized, Streamlined). Never start with passive phrases like "Responsible for" or "Worked on".
+4. **Candidate Metric Integration**: If there is a section labeled "=== CANDIDATE-SUPPLIED METRICS & DATA POINTS ===", weave those exact candidate metrics directly into the corresponding bullets.
+5. **Exact Bullet Count Preservation**: You MUST output EXACTLY the same number of bullet points as specified in the exact bullet count constraint. Every single job position/role in this section must have ALL of its bullet points rewritten and tailored to the target job description. Do NOT skip any job position or merge bullet points!
+6. **Metadata & Subheader Preservation**: You MUST preserve all Company Names, Locations, Job Titles, and Dates at the top of each entry EXACTLY as they appear in the original text.
+7. **Output Bounds**: Output ONLY the polished paragraphs or bullet points for this section. Do not include summary preambles or section title headers.
 """
 
 SKILLS_REWRITE_SYSTEM_PROMPT = """\
@@ -154,8 +151,15 @@ class RewriteService:
             f"{' / '.join(recommendations) if recommendations else 'Improve overall impact.'}",
         ]
         if not is_skills_section:
+            from app.services.patch_service import _is_metadata_line
+            non_meta_lines = [l for l in orig_lines if not _is_metadata_line(l)]
+            target_bullet_count = len(non_meta_lines) if non_meta_lines else orig_line_count
+
             input_parts.append(
-                f"=== LENGTH & BULLET COUNT CONSTRAINT ===\nThis section originally has {orig_line_count} line(s)/bullet(s). Output at most {min(orig_line_count, 4)} concise, ultra-impactful bullet points. DO NOT generate more than {min(orig_line_count, 4)} bullets."
+                f"=== EXACT BULLET COUNT CONSTRAINT ===\n"
+                f"This section originally contains {target_bullet_count} bullet point(s) across its job entries. "
+                f"You MUST output EXACTLY {target_bullet_count} rewritten bullet points (matching the exact bullet count of each job entry in document order). "
+                f"DO NOT add or omit bullet points! (Target count: exactly {target_bullet_count} bullets)."
             )
 
         if metric_inputs and any(v.strip() for v in metric_inputs.values()):
