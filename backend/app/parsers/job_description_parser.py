@@ -74,12 +74,20 @@ _SECTION_PATTERNS: list[tuple[str, str]] = [
     # Technologies (merged into technologies list)
     (r"tech(nologies|nical) stack", "technologies"),
     (r"tools? (and|&) technologies", "technologies"),
-    # Benefits / about sections – collect but ignore
-    (r"about (us|the (company|role|team))", "_ignore"),
+    # Benefits, perks, company info, and web page noise – collect but ignore
+    (r"about (us|the (company|role|team|goodspace))", "_ignore"),
     (r"benefits?$", "_ignore"),
     (r"perks?$", "_ignore"),
     (r"what we offer", "_ignore"),
     (r"compensation", "_ignore"),
+    (r"why join", "_ignore"),
+    (r"job search faster", "_ignore"),
+    (r"reactivate premium", "_ignore"),
+    (r"messagingyou are on", "_ignore"),
+    (r"people you can reach out to", "_ignore"),
+    (r"meet the hiring team", "_ignore"),
+    (r"job poster", "_ignore"),
+    (r"show match details", "_ignore"),
 ]
 
 # ── Technology allow-list ─────────────────────────────────────────────────────
