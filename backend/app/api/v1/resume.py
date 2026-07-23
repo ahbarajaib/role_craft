@@ -30,7 +30,10 @@ from app.schemas.patch import ApplyRewriteRequest, ApplyRewriteResponse
 from app.services.resume_analysis_workflow import ResumeAnalysisWorkflow
 from app.services.rewrite_service import RewriteService
 from app.services.patch_service import PatchService
-from app.dependencies.limits import verify_analysis_permission, verify_premium_permission
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.models import User
+from app.dependencies.limits import verify_analysis_permission, verify_premium_permission, deduct_analysis_credit
 
 router = APIRouter(prefix="/resume", tags=["resume"])
 
@@ -47,17 +50,20 @@ router = APIRouter(prefix="/resume", tags=["resume"])
         "Returns overall metrics, per-section analysis, skill gaps, "
         "and strengths. Does not rewrite anything."
     ),
-    dependencies=[Depends(verify_analysis_permission)],
 )
 def analyze_resume(
     body: ResumeAnalysisRequest,
     workflow: Annotated[ResumeAnalysisWorkflow, Depends(get_resume_analysis_workflow)],
+    user: Annotated[User, Depends(verify_analysis_permission)],
+    db: Annotated[Session, Depends(get_db)],
 ) -> ResumeAnalysisResult:
     """Delegate the full workflow to the workflow service."""
-    return workflow.run(
+    result = workflow.run(
         document_id=body.document_id,
         job_description_text=body.job_description_text,
     )
+    deduct_analysis_credit(db, user)
+    return result
 
 
 @router.post(

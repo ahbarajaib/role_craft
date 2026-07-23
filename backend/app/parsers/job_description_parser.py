@@ -166,6 +166,7 @@ def parse_job_description(text: str) -> JobDescription:
         preferred_skills=_clean_list(buckets.get("preferred_skills", [])),
         technologies=_extract_technologies(text),
         keywords=_extract_keywords(text),
+        raw_text=text,
     )
 
 

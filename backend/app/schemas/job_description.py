@@ -49,7 +49,7 @@ class JobDescription(BaseModel):
     keywords: list[str] = Field(
         description="Important nouns and repeated technical terms."
     )
-    raw_text: str = Field(description="Original unparsed text.")
+    raw_text: str = Field(default="", description="Original unparsed text.")
 
 class FetchUrlRequest(BaseModel):
     url: str = Field(..., description="Job posting URL")
