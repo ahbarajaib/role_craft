@@ -663,6 +663,18 @@ function buildResumeFilename(
   return `${baseName}.docx`;
 }
 
+/**
+ * Cleans section titles for modal headers, removing dates or subheaders.
+ */
+function cleanSectionModalTitle(title: string): string {
+  if (!title) return "";
+  const clean = title
+    .replace(/(?:\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b|\b201\d|\b202\d|\bpresent\b).*/i, "")
+    .replace(/[,|\-–•].*$/, "")
+    .trim();
+  return clean || title;
+}
+
 export default function Home() {
   const { user, token, logout, setShowAuthModal, refreshMe } = useAuth();
   const [theme] = useState<"light">("light");
@@ -2742,11 +2754,11 @@ export default function Home() {
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 p-5 bg-slate-50 dark:bg-slate-950/50">
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400 animate-pulse" />
-                  AI Section Rewrite: {cleanSectionTitle(activeRewriteSection)}
+                  AI Section Rewrite: {cleanSectionModalTitle(activeRewriteSection)}
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Review changes, hiring manager reasoning, and customize section text.
                 </p>
               </div>
@@ -2755,7 +2767,7 @@ export default function Home() {
                   setIsRewriteModalOpen(false);
                   rewriteMutation.reset();
                 }}
-                className="text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -2811,19 +2823,19 @@ export default function Home() {
                 <>
                   {/* Mode Selector and Split Headers */}
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-3">
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Compare & Edit
+                    <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Compare & Tailor Content
                     </span>
-                    <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px]">
+                    <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
                       <button
                         onClick={() => setDiffModeActive(false)}
-                        className={`px-3 py-1 rounded font-semibold transition-all ${!diffModeActive ? "bg-indigo-600 text-white" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
+                        className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${!diffModeActive ? "bg-indigo-600 text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                       >
                         Edit Mode
                       </button>
                       <button
                         onClick={() => setDiffModeActive(true)}
-                        className={`px-3 py-1 rounded font-semibold transition-all ${diffModeActive ? "bg-indigo-600 text-white" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
+                        className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${diffModeActive ? "bg-indigo-600 text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                       >
                         Visual Diff
                       </button>
@@ -2831,35 +2843,58 @@ export default function Home() {
                   </div>
 
                   {/* Side-by-Side Comparison */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {/* Original Content */}
-                    <div className="space-y-2.5">
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                        Original Section
-                      </span>
-                      <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-900 text-xs text-slate-600 dark:text-slate-400 leading-relaxed min-h-[160px] max-h-[300px] overflow-y-auto select-none opacity-80 whitespace-pre-wrap">
+                    <div className="space-y-2 flex flex-col">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-slate-400"></span>
+                          Original Section
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-semibold">Read Only</span>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-950/80 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed min-h-[220px] max-h-[360px] overflow-y-auto select-none whitespace-pre-wrap flex-1 shadow-inner">
                         {rewriteData.original_text}
                       </div>
                     </div>
 
                     {/* Rewritten Content */}
-                    <div className="space-y-2.5">
-                      <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">
-                        {diffModeActive ? "Visual Diff Highlight" : "AI Rewritten Section (Editable)"}
-                      </span>
+                    <div className="space-y-2 flex flex-col">
+                      <div className="flex items-center justify-between flex-wrap gap-1">
+                        <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <Sparkles className="h-3.5 w-3.5 text-indigo-500 animate-pulse" />
+                          {diffModeActive ? "Visual Diff Highlight" : "AI Rewritten Section (Editable)"}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {!diffModeActive && draftRewrittenText !== rewriteData.rewritten_text && (
+                            <button
+                              type="button"
+                              onClick={() => setDraftRewrittenText(rewriteData.rewritten_text)}
+                              className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold cursor-pointer"
+                              title="Reset text to original AI generation"
+                            >
+                              <RotateCcw className="h-3 w-3" /> Reset AI
+                            </button>
+                          )}
+                          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-extrabold border border-indigo-500/20">
+                            ✨ Tailored & Fact-Checked
+                          </span>
+                        </div>
+                      </div>
+
                       {diffModeActive ? (
-                        <div className="bg-indigo-50/50 dark:bg-indigo-950/10 p-4 rounded-xl border border-indigo-200 dark:border-indigo-500/30 text-xs text-slate-800 dark:text-slate-200 leading-relaxed min-h-[160px] max-h-[300px] overflow-y-auto whitespace-pre-wrap select-all">
+                        <div className="bg-gradient-to-br from-indigo-50/60 via-white to-purple-50/30 dark:from-indigo-950/30 dark:via-slate-900 dark:to-purple-950/20 p-4 sm:p-5 rounded-2xl border border-indigo-200 dark:border-indigo-500/30 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed min-h-[220px] max-h-[360px] overflow-y-auto whitespace-pre-wrap select-all flex-1 shadow-md">
                           {diffWords(rewriteData.original_text, draftRewrittenText).map((token, index) => {
                             if (token.added) {
                               return (
-                                <span key={index} className="bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 px-0.5 rounded border-b border-emerald-500/30 font-medium">
+                                <span key={index} className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 px-1 py-0.5 mx-0.5 rounded border-b-2 border-emerald-500 font-semibold shadow-2xs">
                                   {token.value}
                                 </span>
                               );
                             }
                             if (token.removed) {
                               return (
-                                <span key={index} className="bg-rose-500/20 text-rose-800 dark:text-rose-300 line-through px-0.5 rounded border-b border-rose-500/30">
+                                <span key={index} className="bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 line-through opacity-75 px-1 py-0.5 mx-0.5 rounded border-b border-rose-300">
                                   {token.value}
                                 </span>
                               );
@@ -2868,12 +2903,22 @@ export default function Home() {
                           })}
                         </div>
                       ) : (
-                        <textarea
-                          value={draftRewrittenText}
-                          onChange={(e) => setDraftRewrittenText(e.target.value)}
-                          className="w-full bg-indigo-50/50 dark:bg-indigo-950/10 p-4 rounded-xl border border-indigo-200 dark:border-indigo-500/30 text-xs text-slate-800 dark:text-slate-200 leading-relaxed min-h-[160px] max-h-[300px] overflow-y-auto focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none"
-                          placeholder="Loading rewrite text..."
-                        />
+                        <div className="relative flex flex-col flex-1">
+                          <textarea
+                            value={draftRewrittenText}
+                            onChange={(e) => setDraftRewrittenText(e.target.value)}
+                            className="w-full bg-white dark:bg-slate-950 p-4 sm:p-5 pb-10 rounded-2xl border-2 border-indigo-500/40 hover:border-indigo-500 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 text-xs sm:text-sm text-slate-900 dark:text-slate-100 leading-relaxed min-h-[220px] max-h-[360px] overflow-y-auto focus:outline-none resize-none font-sans shadow-md transition-all"
+                            placeholder="Loading rewrite text..."
+                          />
+                          <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-[10px] text-slate-400 pointer-events-none select-none">
+                            <span className="bg-slate-100 dark:bg-slate-900/90 px-2.5 py-0.5 rounded-md border border-slate-200 dark:border-slate-800 font-mono font-semibold text-slate-600 dark:text-slate-400">
+                              {draftRewrittenText.split("\n").filter(l => l.trim()).length} Bullets • {draftRewrittenText.trim().split(/\s+/).length} Words
+                            </span>
+                            <span className="text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">
+                              ✏️ Click text to customize
+                            </span>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
