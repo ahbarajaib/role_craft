@@ -330,15 +330,21 @@ class PatchService:
             if target_sec.normalized_name == "header" or norm_sec_name in ["header", "job title", "target role", "title"]:
                 header_paras = [doc.paragraphs[idx] for idx in target_sec.paragraph_indexes if idx < len(doc.paragraphs)]
                 if header_paras:
-                    # Find candidate job title paragraph (role keywords, or paragraph 1 if name is paragraph 0)
-                    role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive"]
+                    # SAFETY: Only patch an existing role/title paragraph — NEVER touch the candidate name.
+                    role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance"]
                     title_para = next(
                         (p for p in header_paras if any(r in p.text.lower() for r in role_titles)),
-                        header_paras[1] if len(header_paras) > 1 else header_paras[0]
+                        None,
                     )
-                    new_title_text = rewrite_item.rewritten_text.strip().split("\n")[0]
-                    _set_paragraph_text_preserve_fmt(title_para, new_title_text, default_font=doc_font)
-                    sections_updated += 1
+                    if title_para:
+                        new_title_text = rewrite_item.rewritten_text.strip().split("\n")[0]
+                        _set_paragraph_text_preserve_fmt(title_para, new_title_text, default_font=doc_font)
+                        sections_updated += 1
+                    else:
+                        logger.info(
+                            "Skipping header title patch: no existing role/title paragraph found in header. "
+                            "Refusing to overwrite candidate name."
+                        )
                 continue
 
             # The first index is the section heading — we never touch its text.
@@ -387,8 +393,7 @@ class PatchService:
 
                     # Overwrite existing paragraph text (preserve formatting and font)
                     _set_paragraph_text_preserve_fmt(orig_p, ai_text, default_font=doc_font)
-                    if not is_experience_sec and not any(kw in target_sec.title.lower() for kw in ["skill", "tool"]):
-                        _remove_num_pr(orig_p)
+                    # NEVER strip bullet formatting — preserve <w:numPr> on all paragraphs
                     insertion_cursor = orig_p
                     orig_idx += 1
                     ai_idx += 1
@@ -396,21 +401,19 @@ class PatchService:
                 elif ai_idx < len(new_para_texts):
                     # AI produced more lines than original bullets — clone bullet_template
                     new_p = _clone_paragraph_xml(bullet_template, doc._body, default_font=doc_font)
-                    if not is_experience_sec and not any(kw in target_sec.title.lower() for kw in ["skill", "tool"]):
-                        _remove_num_pr(new_p)
                     insertion_cursor._p.addnext(new_p._p)
                     _set_paragraph_text_preserve_fmt(new_p, new_para_texts[ai_idx], default_font=doc_font)
                     insertion_cursor = new_p
                     ai_idx += 1
 
                 else:
-                    # Original had more lines — remove surplus bullet paragraph (preserve headers in experience)
+                    # Original had more lines — blank surplus bullet text instead of deleting XML
+                    # to preserve document structure, spacing, and page layout.
                     p = body_paras[orig_idx]
                     if not is_experience_sec or not _is_metadata_line(p.text, p):
-                        try:
-                            p._p.getparent().remove(p._p)
-                        except Exception:
-                            pass
+                        # Blank the text but keep the paragraph element intact
+                        for run in p.runs:
+                            _set_run_text(run, "")
                     orig_idx += 1
 
             sections_updated += 1
