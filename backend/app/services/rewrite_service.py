@@ -117,6 +117,17 @@ class RewriteService:
 
         # Determine section type and prompt selection
         sec_lower = section_name.lower()
+
+        # Preserve Education content untouched
+        if any(k in sec_lower for k in ["education", "academic", "qualification", "degree"]):
+            return RewriteSectionResponse(
+                section=section_name,
+                original_text=original_text,
+                rewritten_text=original_text,
+                reasoning="Education content is preserved as-is without modification.",
+                changes=[],
+            )
+
         is_skills_section = any(k in sec_lower for k in ["skill", "technologies", "proficiencies", "tech stack"])
         is_summary_section = any(k in sec_lower for k in ["summary", "profile", "about", "objective", "bio"])
 

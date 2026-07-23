@@ -66,16 +66,19 @@ class ResumeAnalysisWorkflow:
         # Step 4 – Unified Recruiter Review
         logger.info("Running unified recruiter-centric resume review")
         
-        # Filter sections to only analyze major content sections, reducing LLM token generation size and latency
+        # Filter sections to only analyze major content sections, excluding Education, headers, and contact details
         sections_to_analyze = []
         for s in sections:
-            if s.normalized_name == "header":
+            if s.normalized_name in ["header", "education"]:
                 continue
             
             title_lower = s.title.lower().strip()
-            # Skip sections that are contact details, links, or technology listings
+            # Skip sections that are education, academic background, contact details, links, or technology listings
             if (
-                title_lower.startswith("technologies:")
+                "education" in title_lower
+                or "academic" in title_lower
+                or "qualification" in title_lower
+                or title_lower.startswith("technologies:")
                 or title_lower.startswith("tech:")
                 or title_lower.startswith("tech stack:")
                 or title_lower.startswith("+")

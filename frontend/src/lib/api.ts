@@ -88,31 +88,7 @@ export async function uploadResume(file: File): Promise<DocumentUploadResponse> 
   return response.json();
 }
 
-export interface FetchUrlResponse {
-  success: boolean;
-  url: string;
-  domain: string;
-  job_title?: string;
-  company_name?: string;
-  job_description?: string;
-  char_count?: number;
-  error_message?: string;
-}
 
-export async function fetchJobUrl(url: string): Promise<FetchUrlResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/job-descriptions/fetch-url`, {
-    method: "POST",
-    headers: getHeaders("application/json"),
-    body: JSON.stringify({ url }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData?.error?.detail || errorData?.detail || "Failed to fetch job URL");
-  }
-
-  return response.json();
-}
 
 
 export async function analyzeResume(
