@@ -215,19 +215,84 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
   );
 }
 
-function renderSectionCard(
-  section: ReviewedSection,
-  idx: number,
-  isExpanded: boolean,
-  onToggle: () => void,
-  rewrittenText: string | undefined,
-  previousRewrittenText: string | undefined,
-  onRevert: (name: string) => void,
-  onUndoLastRewrite: (name: string) => void,
-  onImproveClick: (name: string, recs: string[]) => void,
-  inlineLoadingSections: Record<string, boolean> = {},
-  triggerInlineRewrite?: (name: string, recs: string[]) => void
-) {
+// ─── Helper: parse bullet lines from a rewritten text block ───────────────────
+function parseBulletsFromText(text: string): { line: string; isBullet: boolean }[] {
+  if (!text) return [];
+  const bulletSymbols = ["•", "-", "*", "–", "—", "▪", "▸"];
+  return text
+    .split("\n")
+    .filter((l) => l.trim().length > 0)
+    .map((line) => {
+      const trimmed = line.trim();
+      const isBullet = bulletSymbols.some((s) => trimmed.startsWith(s)) || trimmed.length > 40;
+      return { line: trimmed, isBullet };
+    });
+}
+
+// ─── Helper: rebuild text string, omitting lines at excluded indexes ────────
+function filterBulletsByChecked(text: string, excludedIndexes: Set<number>): string {
+  if (!text || excludedIndexes.size === 0) return text;
+  const lines = text.split("\n").filter((l) => l.trim().length > 0);
+  return lines.filter((_, i) => !excludedIndexes.has(i)).join("\n");
+}
+
+// ─── SectionCard React Component (replaces renderSectionCard function) ────────
+interface SectionCardProps {
+  section: ReviewedSection;
+  idx: number;
+  isExpanded: boolean;
+  onToggle: () => void;
+  rewrittenText: string | undefined;
+  previousRewrittenText: string | undefined;
+  onRevert: (name: string) => void;
+  onUndoLastRewrite: (name: string) => void;
+  onImproveClick: (name: string, recs: string[]) => void;
+  inlineLoadingSections?: Record<string, boolean>;
+  triggerInlineRewrite?: (name: string, recs: string[]) => void;
+  onBulletExclusionChange?: (sectionName: string, excludedIndexes: Set<number>) => void;
+}
+
+function SectionCard({
+  section,
+  idx,
+  isExpanded,
+  onToggle,
+  rewrittenText,
+  previousRewrittenText,
+  onRevert,
+  onUndoLastRewrite,
+  onImproveClick,
+  inlineLoadingSections = {},
+  triggerInlineRewrite,
+  onBulletExclusionChange,
+}: SectionCardProps) {
+  // Per-bullet checkbox state: set of line indexes that are UNCHECKED (excluded)
+  const [uncheckedBullets, setUncheckedBullets] = useState<Set<number>>(new Set());
+
+  // Reset unchecked bullets when the rewritten text changes
+  useEffect(() => {
+    setUncheckedBullets(new Set());
+    if (onBulletExclusionChange) {
+      onBulletExclusionChange(section.section_name, new Set());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rewrittenText]);
+
+  const handleBulletToggle = (lineIdx: number) => {
+    setUncheckedBullets((prev) => {
+      const next = new Set(prev);
+      if (next.has(lineIdx)) {
+        next.delete(lineIdx);
+      } else {
+        next.add(lineIdx);
+      }
+      if (onBulletExclusionChange) {
+        onBulletExclusionChange(section.section_name, next);
+      }
+      return next;
+    });
+  };
+
   // Status-based styles
   const statusStyles = {
     improve: "border-amber-300 hover:border-amber-400 bg-amber-50/20 shadow-sm",
@@ -246,6 +311,9 @@ function renderSectionCard(
     medium: "bg-amber-100 text-amber-900 border-amber-300 font-extrabold",
     low: "bg-emerald-100 text-emerald-900 border-emerald-300 font-extrabold"
   };
+
+  const parsedBullets = rewrittenText ? parseBulletsFromText(rewrittenText) : [];
+  const hasBullets = parsedBullets.some((b) => b.isBullet);
 
   return (
     <div
@@ -294,13 +362,20 @@ function renderSectionCard(
             "{section.reason}"
           </p>
 
-          {/* Rewritten Preview Text */}
+          {/* Rewritten Preview Text with per-bullet checkboxes */}
           {rewrittenText && (
             <div className="bg-indigo-50/70 p-4 rounded-xl border border-indigo-200 space-y-2 animate-fade-in-up">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider block">
-                  Rewritten Section Preview
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider block">
+                    Rewritten Section Preview
+                  </span>
+                  {hasBullets && (
+                    <span className="text-[9px] font-semibold text-indigo-600 bg-indigo-100 border border-indigo-200 px-1.5 py-0.5 rounded-md">
+                      ✓ Uncheck bullets to exclude from resume
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   {previousRewrittenText && (
                     <button
@@ -350,9 +425,68 @@ function renderSectionCard(
                   </button>
                 </div>
               </div>
-              <div className="pt-1">
-                <FormattedSectionText text={rewrittenText} />
+
+              {/* Bullet list with checkboxes, or plain text */}
+              <div className="pt-1 space-y-1.5">
+                {hasBullets ? (
+                  parsedBullets.map((item, lineIdx) => {
+                    const isUnchecked = uncheckedBullets.has(lineIdx);
+                    const bulletSymbols = ["•", "-", "*", "–", "—", "▪", "▸"];
+                    const bulletMatch = bulletSymbols.find((s) => item.line.startsWith(s));
+                    const content = bulletMatch ? item.line.substring(bulletMatch.length).trim() : item.line;
+
+                    if (!item.isBullet) {
+                      // Non-bullet lines (headers, categories, summaries) — show as-is
+                      return (
+                        <p key={lineIdx} className="text-[13px] text-slate-800 leading-relaxed select-all">
+                          {item.line}
+                        </p>
+                      );
+                    }
+
+                    return (
+                      <div
+                        key={lineIdx}
+                        className={`flex items-start gap-2.5 group rounded-lg px-2 py-1 transition-all duration-150 ${isUnchecked ? "opacity-40 bg-slate-100/60" : "hover:bg-indigo-50/60"}`}
+                      >
+                        {/* Checkbox */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBulletToggle(lineIdx);
+                          }}
+                          className={`mt-0.5 shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-all duration-150 cursor-pointer ${
+                            isUnchecked
+                              ? "border-slate-300 bg-white"
+                              : "border-indigo-500 bg-indigo-500"
+                          }`}
+                          title={isUnchecked ? "Click to include in resume" : "Click to exclude from resume"}
+                        >
+                          {!isUnchecked && (
+                            <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 10" fill="none">
+                              <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </button>
+                        {/* Bullet content */}
+                        <p className={`flex-1 text-[13px] leading-relaxed select-all ${isUnchecked ? "line-through text-slate-400" : "text-slate-800"}`}>
+                          {content}
+                        </p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <FormattedSectionText text={rewrittenText} />
+                )}
               </div>
+
+              {uncheckedBullets.size > 0 && (
+                <p className="text-[10px] text-amber-600 font-semibold mt-1 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3 shrink-0" />
+                  {uncheckedBullets.size} bullet{uncheckedBullets.size > 1 ? "s" : ""} will be excluded from the applied resume
+                </p>
+              )}
             </div>
           )}
 
@@ -438,6 +572,40 @@ function renderSectionCard(
         </div>
       )}
     </div>
+  );
+}
+
+// Legacy wrapper to keep call-sites working during migration (will be replaced below)
+function renderSectionCard(
+  section: ReviewedSection,
+  idx: number,
+  isExpanded: boolean,
+  onToggle: () => void,
+  rewrittenText: string | undefined,
+  previousRewrittenText: string | undefined,
+  onRevert: (name: string) => void,
+  onUndoLastRewrite: (name: string) => void,
+  onImproveClick: (name: string, recs: string[]) => void,
+  inlineLoadingSections: Record<string, boolean> = {},
+  triggerInlineRewrite?: (name: string, recs: string[]) => void,
+  onBulletExclusionChange?: (sectionName: string, excludedIndexes: Set<number>) => void
+) {
+  return (
+    <SectionCard
+      key={`${section.section_name}-${idx}`}
+      section={section}
+      idx={idx}
+      isExpanded={isExpanded}
+      onToggle={onToggle}
+      rewrittenText={rewrittenText}
+      previousRewrittenText={previousRewrittenText}
+      onRevert={onRevert}
+      onUndoLastRewrite={onUndoLastRewrite}
+      onImproveClick={onImproveClick}
+      inlineLoadingSections={inlineLoadingSections}
+      triggerInlineRewrite={triggerInlineRewrite}
+      onBulletExclusionChange={onBulletExclusionChange}
+    />
   );
 }
 
@@ -742,6 +910,17 @@ export default function Home() {
   const [appliedWovenKeywords, setAppliedWovenKeywords] = useState<string[]>([]);
   const [isKeywordsWoven, setIsKeywordsWoven] = useState(false);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+
+  // ── Keyword Weave Modal state ──────────────────────────────────────────────
+  const [isKeywordWeaveModalOpen, setIsKeywordWeaveModalOpen] = useState(false);
+  const [keywordsForWeaveModal, setKeywordsForWeaveModal] = useState<{ kw: string; type: 'missing' | 'supported' }[]>([]);
+  const [selectedKeywordsToWeave, setSelectedKeywordsToWeave] = useState<Set<string>>(new Set());
+
+  // ── Manually removed skills (🟢 Confirmed Matched) ────────────────────────
+  const [manuallyRemovedSkills, setManuallyRemovedSkills] = useState<Set<string>>(new Set());
+
+  // ── Per-section excluded bullet indexes (for DOCX patch filtering) ─────────
+  const [excludedBullets, setExcludedBullets] = useState<Record<string, Set<number>>>({});
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
@@ -1043,13 +1222,63 @@ export default function Home() {
     }
   };
 
-  const handleWeaveAllKeywords = async () => {
+  // ── Open the keyword selection modal (⚡ Auto-Weave button) ────────────────
+  const openKeywordWeaveModal = () => {
+    if (!analysisResult) return;
+
+    const wovenLower = new Set(appliedWovenKeywords.map((k) => k.toLowerCase().trim()));
+    const supportedNames = new Set(
+      (analysisResult.top_improvements || [])
+        .filter((imp) => imp.evidence_reused && imp.evidence_reused.trim())
+        .map((imp) => cleanKeywordName(imp.name).toLowerCase())
+    );
+
+    // Collect supported keywords
+    const supportedKws: { kw: string; type: 'missing' | 'supported' }[] = (analysisResult.top_improvements || [])
+      .filter((imp) => imp.evidence_reused && imp.evidence_reused.trim())
+      .flatMap((imp) => extractStrictKeywordsFromRaw(imp.name).map((kw) => ({ kw, type: 'supported' as const })))
+      .filter((item) => isActualATSKeyword(item.kw) && !wovenLower.has(item.kw.toLowerCase().trim()));
+
+    // Collect missing keywords
+    const missingFromSections = (analysisResult.sections || []).flatMap((s) => s.missing_keywords || []);
+    const missingFromImps = (analysisResult.top_improvements || []).map((imp) => imp.name);
+    const missingKws: { kw: string; type: 'missing' | 'supported' }[] = Array.from(
+      new Set(
+        [...missingFromSections, ...missingFromImps]
+          .flatMap((k) => extractStrictKeywordsFromRaw(k))
+          .map((k) => cleanKeywordName(k))
+      )
+    ).filter(
+      (k) =>
+        k &&
+        isActualATSKeyword(k) &&
+        !supportedNames.has(k.toLowerCase()) &&
+        !wovenLower.has(k.toLowerCase().trim())
+    ).map((kw) => ({ kw, type: 'missing' as const }));
+
+    const allModalKeywords = [...supportedKws, ...missingKws];
+    // Deduplicate by name
+    const seen = new Set<string>();
+    const deduped = allModalKeywords.filter(({ kw }) => {
+      const lower = kw.toLowerCase();
+      if (seen.has(lower)) return false;
+      seen.add(lower);
+      return true;
+    });
+
+    setKeywordsForWeaveModal(deduped);
+    setSelectedKeywordsToWeave(new Set(deduped.map((k) => k.kw)));
+    setIsKeywordWeaveModalOpen(true);
+  };
+
+  const handleWeaveAllKeywords = async (keywordsToWeave?: string[]) => {
     console.log(
       "%c ⚡ [RoleCraft Audit] 'Auto-Weave All Keywords (1-Click)' Clicked ",
       "background: #d97706; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
       { documentId }
     );
     if (!analysisResult || !documentId) return;
+    setIsKeywordWeaveModalOpen(false);
     setIsWeavingKeywords(true);
     try {
       // Target ONLY the Technical Skills section for keyword weaving
@@ -1059,14 +1288,19 @@ export default function Home() {
 
       const targetSections = skillsSection ? [skillsSection] : (analysisResult.sections || []).slice(0, 1);
 
-      const allRawKeywords = [
-        ...(analysisResult.sections || []).flatMap((s) => s.missing_keywords || []),
-        ...(analysisResult.top_improvements || []).map((imp) => imp.name),
-      ];
-
-      const missingKeywords = Array.from(
-        new Set(allRawKeywords.flatMap((k) => extractStrictKeywordsFromRaw(k)))
-      );
+      // Use provided keyword list (from modal) or compute all missing
+      let missingKeywords: string[];
+      if (keywordsToWeave && keywordsToWeave.length > 0) {
+        missingKeywords = keywordsToWeave;
+      } else {
+        const allRawKeywords = [
+          ...(analysisResult.sections || []).flatMap((s) => s.missing_keywords || []),
+          ...(analysisResult.top_improvements || []).map((imp) => imp.name),
+        ];
+        missingKeywords = Array.from(
+          new Set(allRawKeywords.flatMap((k) => extractStrictKeywordsFromRaw(k)))
+        );
+      }
 
       console.log("🏷️ [RoleCraft Audit] Missing Keywords to Weave:", missingKeywords);
 
@@ -1116,7 +1350,7 @@ export default function Home() {
         setDownloadId(applyRes.download_id);
         setDownloadUrl(applyRes.download_url);
         setIsPatchingApplied(true);
-        setSuccessNotification("⚡ All ATS Keywords Woven & Resume Updated!");
+        setSuccessNotification("⚡ Selected ATS Keywords Woven & Resume Updated!");
       }
     } catch (err: any) {
       console.error("❌ [RoleCraft Audit] Weave keywords error:", err);
@@ -1238,9 +1472,14 @@ export default function Home() {
       const section = (analysisResult?.sections || []).find(
         (s) => s.section_name.toLowerCase() === sectionName.toLowerCase()
       );
+      // Filter out excluded bullets before sending to DOCX patch
+      const excluded = excludedBullets[section?.section_name || sectionName] || excludedBullets[sectionName];
+      const filteredText = excluded && excluded.size > 0
+        ? filterBulletsByChecked(rewrittenText, excluded)
+        : rewrittenText;
       return {
         section: section ? section.section_name : sectionName,
-        rewritten_text: rewrittenText
+        rewritten_text: filteredText
       };
     });
 
@@ -1252,6 +1491,12 @@ export default function Home() {
       document_id: documentId,
       accepted_rewrites: rewrites
     });
+  };
+
+  // ── Quick single-click keyword weave (optimistic, no modal) ───────────────
+  const handleQuickWeaveKeyword = (kw: string) => {
+    setAppliedWovenKeywords((prev) => Array.from(new Set([...prev, kw])));
+    setSuccessNotification(`"${kw}" added to your matched skills. Click 'Apply to Resume' to include in DOCX.`);
   };
 
   // 1. File Upload Mutation
@@ -2297,7 +2542,7 @@ export default function Home() {
 
                   <button
                     type="button"
-                    onClick={handleWeaveAllKeywords}
+                    onClick={openKeywordWeaveModal}
                     disabled={isWeavingKeywords}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                       isKeywordsWoven
@@ -2325,14 +2570,14 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-4">
-                  {/* 🟢 Matched Skills */}
+                  {/* 🟢 Matched Skills — click to remove */}
                   {(() => {
                     const originalMatched = (analysisResult.top_strengths || []).map((s: any) =>
                       typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
                     );
                     const allMatched = Array.from(
                       new Set([...originalMatched, ...appliedWovenKeywords.map((k) => cleanKeywordName(k))])
-                    ).filter(Boolean);
+                    ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
 
                     return (
                       <div className="space-y-1.5">
@@ -2341,20 +2586,30 @@ export default function Home() {
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                           {allMatched.map((skillName, idx) => (
-                            <span
+                            <button
                               key={idx}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
+                              type="button"
+                              onClick={() => {
+                                setManuallyRemovedSkills((prev) => {
+                                  const next = new Set(prev);
+                                  next.add(skillName.toLowerCase());
+                                  return next;
+                                });
+                              }}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 hover:bg-rose-500/10 text-emerald-700 hover:text-rose-600 dark:text-emerald-300 border border-emerald-500/20 hover:border-rose-400/30 transition-all duration-150 cursor-pointer group"
+                              title={`Click to remove '${skillName}' from matched skills`}
                             >
-                              <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500" />
+                              <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 group-hover:hidden" />
+                              <X className="h-3 w-3 shrink-0 text-rose-500 hidden group-hover:block" />
                               {skillName}
-                            </span>
+                            </button>
                           ))}
                         </div>
                       </div>
                     );
                   })()}
 
-                  {/* 🟡 Supported Skills in Evidence */}
+                  {/* 🟡 Supported Skills in Evidence — single click to promote to matched */}
                   {(() => {
                     const wovenLower = new Set(appliedWovenKeywords.map((k) => k.toLowerCase().trim()));
                     const supported = (analysisResult.top_improvements || [])
@@ -2370,7 +2625,8 @@ export default function Home() {
                       .filter(
                         (item) =>
                           isActualATSKeyword(item.name) &&
-                          !wovenLower.has(item.name.toLowerCase().trim())
+                          !wovenLower.has(item.name.toLowerCase().trim()) &&
+                          !manuallyRemovedSkills.has(item.name.toLowerCase())
                       );
 
                     if (supported.length === 0) return null;
@@ -2385,18 +2641,12 @@ export default function Home() {
                             <button
                               key={idx}
                               type="button"
-                              onClick={() => {
-                                const targetSec = item.section || "Experience";
-                                const recs = (analysisResult.sections || []).find(
-                                  (s) => s.section_name.toLowerCase() === targetSec.toLowerCase()
-                                )?.recommendations || [];
-                                setUserInstructions(`Surface and emphasize supported keyword: '${item.name}' (Evidence: ${item.evidence})`);
-                                handleImproveClick(targetSec, recs);
-                              }}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 transition-colors cursor-pointer group"
-                              title={`Click to surface ${item.name}`}
+                              onClick={() => handleQuickWeaveKeyword(item.name)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 hover:bg-emerald-500/15 text-amber-700 hover:text-emerald-700 dark:text-amber-300 border border-amber-500/30 hover:border-emerald-400/40 transition-all duration-150 cursor-pointer group"
+                              title={`Click to add '${item.name}' to matched skills`}
                             >
-                              <Sparkles className="h-3 w-3 shrink-0 text-amber-500 group-hover:scale-110 transition-transform" />
+                              <Sparkles className="h-3 w-3 shrink-0 text-amber-500 group-hover:hidden transition-all" />
+                              <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 hidden group-hover:block transition-all" />
                               {item.name}
                             </button>
                           ))}
@@ -2405,7 +2655,7 @@ export default function Home() {
                     );
                   })()}
 
-                  {/* 🔴 Missing Keywords / Gaps */}
+                  {/* 🔴 Missing Keywords / Gaps — single click to promote to matched */}
                   {(() => {
                     const wovenLower = new Set(appliedWovenKeywords.map((k) => k.toLowerCase().trim()));
                     const supportedNames = new Set(
@@ -2428,7 +2678,8 @@ export default function Home() {
                         k &&
                         isActualATSKeyword(k) &&
                         !supportedNames.has(k.toLowerCase()) &&
-                        !wovenLower.has(k.toLowerCase().trim())
+                        !wovenLower.has(k.toLowerCase().trim()) &&
+                        !manuallyRemovedSkills.has(k.toLowerCase())
                     );
 
                     if (allMissing.length === 0) return null;
@@ -2443,20 +2694,12 @@ export default function Home() {
                             <button
                               key={idx}
                               type="button"
-                              onClick={() => {
-                                const firstImproveSection = (analysisResult.sections || []).find(
-                                  (s) => s.review_status === "improve"
-                                )?.section_name || "Experience";
-                                const recs = (analysisResult.sections || []).find(
-                                  (s) => s.section_name.toLowerCase() === firstImproveSection.toLowerCase()
-                                )?.recommendations || [];
-                                setUserInstructions(`Weave and surface missing ATS keyword naturally: '${kw}'`);
-                                handleImproveClick(firstImproveSection, recs);
-                              }}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 transition-colors cursor-pointer group"
-                              title={`Click to weave '${kw}' into section rewrite`}
+                              onClick={() => handleQuickWeaveKeyword(kw)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/10 hover:bg-emerald-500/15 text-rose-700 hover:text-emerald-700 dark:text-rose-300 border border-rose-500/30 hover:border-emerald-400/40 transition-all duration-150 cursor-pointer group"
+                              title={`Click to add '${kw}' to matched skills`}
                             >
-                              <span className="font-bold text-rose-500 group-hover:scale-125 transition-transform">+</span>
+                              <span className="font-bold text-rose-500 group-hover:hidden transition-all">+</span>
+                              <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 hidden group-hover:block transition-all" />
                               {kw}
                             </button>
                           ))}
@@ -2524,7 +2767,8 @@ export default function Home() {
                                 handleUndoLastRewrite,
                                 handleImproveClick,
                                 inlineLoadingSections,
-                                triggerInlineRewrite
+                                triggerInlineRewrite,
+                                (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))
                               )
                             )}
                           </div>
@@ -2550,7 +2794,8 @@ export default function Home() {
                                 handleUndoLastRewrite,
                                 handleImproveClick,
                                 inlineLoadingSections,
-                                triggerInlineRewrite
+                                triggerInlineRewrite,
+                                (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))
                               )
                             )}
                           </div>
@@ -2576,7 +2821,8 @@ export default function Home() {
                                 handleUndoLastRewrite,
                                 handleImproveClick,
                                 inlineLoadingSections,
-                                triggerInlineRewrite
+                                triggerInlineRewrite,
+                                (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))
                               )
                             )}
                           </div>
@@ -2744,6 +2990,184 @@ export default function Home() {
           )}
         </div>
       </main>
+      )}
+
+      {/* ─── ⚡ Keyword Weave Selection Modal ───────────────────────────────── */}
+      {isKeywordWeaveModalOpen && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 p-5 bg-gradient-to-r from-emerald-50 to-indigo-50">
+              <div>
+                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-indigo-600 animate-pulse" />
+                  Select Keywords to Weave
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Choose which ATS keywords to weave into your skills section.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsKeywordWeaveModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Quick Select Bar */}
+            <div className="flex items-center gap-2 px-5 py-3 border-b border-slate-100 bg-slate-50/80">
+              <span className="text-xs font-bold text-slate-600">
+                {selectedKeywordsToWeave.size} / {keywordsForWeaveModal.length} selected
+              </span>
+              <div className="flex-1" />
+              <button
+                type="button"
+                onClick={() => setSelectedKeywordsToWeave(new Set(keywordsForWeaveModal.map((k) => k.kw)))}
+                className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all cursor-pointer"
+              >
+                Select All
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedKeywordsToWeave(new Set())}
+                className="text-[10px] font-bold text-slate-500 hover:text-slate-700 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer"
+              >
+                Deselect All
+              </button>
+            </div>
+
+            {/* Keyword Checklist */}
+            <div className="overflow-y-auto flex-1 p-5">
+              {keywordsForWeaveModal.length === 0 ? (
+                <p className="text-sm text-slate-500 text-center py-8">No keywords available to weave.</p>
+              ) : (
+                <div className="space-y-4">
+                  {/* Supported keywords group */}
+                  {keywordsForWeaveModal.filter((k) => k.type === 'supported').length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider block">
+                        🟡 Supported in Evidence
+                      </span>
+                      <div className="space-y-1.5">
+                        {keywordsForWeaveModal.filter((k) => k.type === 'supported').map((item, i) => {
+                          const isChecked = selectedKeywordsToWeave.has(item.kw);
+                          return (
+                            <label
+                              key={i}
+                              className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${
+                                isChecked
+                                  ? "bg-amber-50 border-amber-300"
+                                  : "bg-slate-50 border-slate-200 hover:border-slate-300 opacity-60"
+                              }`}
+                            >
+                              <div
+                                className={`shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-all duration-150 ${
+                                  isChecked ? "border-amber-500 bg-amber-500" : "border-slate-300 bg-white"
+                                }`}
+                                onClick={() => {
+                                  setSelectedKeywordsToWeave((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(item.kw)) next.delete(item.kw);
+                                    else next.add(item.kw);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                {isChecked && (
+                                  <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 10" fill="none">
+                                    <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                )}
+                              </div>
+                              <span className={`text-sm font-semibold ${isChecked ? "text-slate-900" : "text-slate-400"}`}>
+                                {item.kw}
+                              </span>
+                              <span className="ml-auto text-[10px] text-amber-600 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded font-bold">
+                                evidence
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Missing keywords group */}
+                  {keywordsForWeaveModal.filter((k) => k.type === 'missing').length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-black text-rose-600 uppercase tracking-wider block">
+                        🔴 Missing from Resume
+                      </span>
+                      <div className="space-y-1.5">
+                        {keywordsForWeaveModal.filter((k) => k.type === 'missing').map((item, i) => {
+                          const isChecked = selectedKeywordsToWeave.has(item.kw);
+                          return (
+                            <label
+                              key={i}
+                              className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${
+                                isChecked
+                                  ? "bg-rose-50 border-rose-300"
+                                  : "bg-slate-50 border-slate-200 hover:border-slate-300 opacity-60"
+                              }`}
+                            >
+                              <div
+                                className={`shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-all duration-150 ${
+                                  isChecked ? "border-rose-500 bg-rose-500" : "border-slate-300 bg-white"
+                                }`}
+                                onClick={() => {
+                                  setSelectedKeywordsToWeave((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(item.kw)) next.delete(item.kw);
+                                    else next.add(item.kw);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                {isChecked && (
+                                  <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 10" fill="none">
+                                    <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                )}
+                              </div>
+                              <span className={`text-sm font-semibold ${isChecked ? "text-slate-900" : "text-slate-400"}`}>
+                                {item.kw}
+                              </span>
+                              <span className="ml-auto text-[10px] text-rose-600 bg-rose-100 border border-rose-200 px-1.5 py-0.5 rounded font-bold">
+                                missing
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center gap-3 p-5 border-t border-slate-200 bg-slate-50/80">
+              <button
+                type="button"
+                onClick={() => setIsKeywordWeaveModalOpen(false)}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={selectedKeywordsToWeave.size === 0 || isWeavingKeywords}
+                onClick={() => handleWeaveAllKeywords(Array.from(selectedKeywordsToWeave))}
+                className="flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                Weave {selectedKeywordsToWeave.size} Selected Keyword{selectedKeywordsToWeave.size !== 1 ? "s" : ""}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Side-by-Side Rewrite Modal */}
