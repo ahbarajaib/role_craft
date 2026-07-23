@@ -99,7 +99,22 @@ def _set_paragraph_text_preserve_fmt(paragraph, new_text: str, default_font: str
     except Exception:
         pass
 
+    # Detect if the original paragraph used a literal text bullet character (e.g. '• ', '- ', '* ')
+    orig_text = paragraph.text.strip()
+    bullet_symbols = ["•", "-", "*", "–", "—", "\u2022", "\u2013", "\u2014"]
+    orig_bullet_symbol = None
+    for s in bullet_symbols:
+        if orig_text.startswith(s):
+            orig_bullet_symbol = s
+            break
+
     clean_text = _clean_bullet_text_prefix(new_text, has_num_pr)
+
+    # Preserve literal bullet symbol if original paragraph was a literal text bullet and Word has no native <w:numPr>
+    if orig_bullet_symbol and not has_num_pr:
+        t_clean = clean_text.strip()
+        if not any(t_clean.startswith(s) for s in bullet_symbols):
+            clean_text = f"{orig_bullet_symbol} {t_clean}"
 
     # Extract target font name from existing runs or document default font
     target_font = None
