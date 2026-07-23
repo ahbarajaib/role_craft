@@ -53,8 +53,8 @@ class JobUrlService:
             match = re.search(r"(?:currentJobId=|/jobs/view/|/jobs/view/\d+/|jobId=)(\d{8,12})", clean_url)
             if match:
                 linkedin_job_id = match.group(1)
-                target_fetch_url = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{linkedin_job_id}"
-                logger.info(f"[JobUrlService] Extracted LinkedIn Job ID: {linkedin_job_id}")
+                target_fetch_url = f"https://www.linkedin.com/jobs/view/{linkedin_job_id}/"
+                logger.info(f"[JobUrlService] Extracted LinkedIn Job ID: {linkedin_job_id}, target: {target_fetch_url}")
 
         # Extract Indeed Job Key if present in URL (e.g. vjk=331b0ee047690ff3 or jk=331b0ee047690ff3)
         if "indeed" in domain:
@@ -72,6 +72,17 @@ class JobUrlService:
                 response = await session.get(target_fetch_url, headers=self.headers, allow_redirects=True)
                 status_code = response.status_code
                 html_content = response.text
+
+                # If LinkedIn view URL gave minimal text, attempt the guest API endpoint as a quick HTTP fallback
+                if linkedin_job_id and len(html_content) < 400:
+                    guest_api_url = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{linkedin_job_id}"
+                    try:
+                        guest_resp = await session.get(guest_api_url, headers=self.headers, allow_redirects=True)
+                        if guest_resp.status_code == 200 and len(guest_resp.text) > 400:
+                            html_content = guest_resp.text
+                            status_code = 200
+                    except Exception:
+                        pass
         except Exception as e:
             logger.error(f"[JobUrlService] Error fetching URL {target_fetch_url}: {str(e)}")
             # Fallback to standard httpx if curl_cffi hits an edge case
@@ -95,17 +106,23 @@ class JobUrlService:
         job_title = self._extract_job_title(soup, domain)
         company_name = self._extract_company_name(soup, domain)
 
-        # Check if Cloudflare or CAPTCHA challenge returned
+        # Check if Cloudflare, CAPTCHA, Authwall, or 404 Page Not Found challenge returned
         is_blocked = (
-            status_code in [401, 403]
+            status_code in [401, 403, 404]
             or "security check" in job_title.lower()
             or "just a moment" in job_title.lower()
+            or "page not found" in job_title.lower()
+            or "sign in" in job_title.lower()
+            or "log in" in job_title.lower()
             or "captcha" in html_content.lower()
+            or "can't seem to find the page" in html_content.lower()
+            or "can’t seem to find the page" in html_content.lower()
+            or "halaman ini tidak dapat ditemukan" in html_content.lower()
             or len(html_content) < 400
         )
 
         if is_blocked:
-            logger.info(f"[JobUrlService] Cloudflare / CAPTCHA detected for {domain}. Retrying with Playwright headless browser on {target_fetch_url}...")
+            logger.info(f"[JobUrlService] Protection or expired page detected for {domain}. Retrying with Playwright headless browser on {target_fetch_url}...")
             playwright_html = await self._fetch_with_playwright(target_fetch_url)
             if playwright_html and len(playwright_html) > 500:
                 soup = BeautifulSoup(playwright_html, "html.parser")
@@ -116,11 +133,16 @@ class JobUrlService:
                 is_blocked = (
                     "security check" in job_title.lower()
                     or "just a moment" in job_title.lower()
+                    or "page not found" in job_title.lower()
+                    or "sign in" in job_title.lower()
+                    or "log in" in job_title.lower()
                     or "captcha" in playwright_html.lower()
+                    or "can't seem to find the page" in playwright_html.lower()
+                    or "can’t seem to find the page" in playwright_html.lower()
                 )
 
         if is_blocked:
-            logger.warning(f"[JobUrlService] Security check or CAPTCHA persistent for domain {domain}")
+            logger.warning(f"[JobUrlService] Protection, auth wall, or expired page persistent for domain {domain}")
             return {
                 "success": False,
                 "url": clean_url,
@@ -128,7 +150,7 @@ class JobUrlService:
                 "job_title": job_title,
                 "company_name": company_name,
                 "error_message": (
-                    f"Access to {domain} is protected by Cloudflare/CAPTCHA verification. "
+                    f"Access to {domain} requires login or the job post has expired. "
                     "Please copy and paste the job description text directly below!"
                 ),
             }
