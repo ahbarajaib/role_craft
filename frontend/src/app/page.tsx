@@ -590,16 +590,46 @@ function cleanSectionTitle(title: string): string {
 }
 
 /**
- * Builds a smart resume filename from available context:
- * [Company] - [Candidate Name] - [Role].docx
- * Only includes parts that are available; falls back to "resume_updated.docx".
+ * Builds a smart resume filename matching the format:
+ * [name] - [designation if exist] - [company if exist].docx
  */
 function buildResumeFilename(
   jobDescription: string,
   userName: string | null | undefined,
-  jobTitle: string | undefined
+  jobTitle: string | undefined,
+  fallbackFileName?: string
 ): string {
-  // --- Extract company name from job description ---
+  // 1. Candidate Name
+  let candidateName = userName?.trim() || null;
+
+  if (!candidateName && fallbackFileName) {
+    const cleanName = fallbackFileName.replace(/\.(docx|pdf)$/i, "").replace(/[^a-zA-Z0-9& ]/g, " ").trim();
+    if (cleanName.length > 2 && !/^(resume|my_resume|cv|document|base)$/i.test(cleanName)) {
+      candidateName = cleanName;
+    }
+  }
+
+  if (!candidateName) {
+    candidateName = "Resume";
+  }
+
+  // 2. Designation (Target Role Title)
+  let designation: string | null = jobTitle?.trim() || null;
+  if (designation && /^(target role|full job description|job description|overview|target)$/i.test(designation)) {
+    designation = null;
+  }
+
+  if (!designation && jobDescription) {
+    const titleMatch = jobDescription.match(/(?:^|\n)\s*(?:Job Designation|Role|Job Title|Position)\s*[:\-]\s*([^\n,]+)/i);
+    if (titleMatch && titleMatch[1]) {
+      const parsedTitle = titleMatch[1].trim().replace(/[^a-zA-Z0-9& ]/g, "").trim();
+      if (parsedTitle.length > 2 && !/^(target role|full job description|job description)$/i.test(parsedTitle)) {
+        designation = parsedTitle;
+      }
+    }
+  }
+
+  // 3. Company Name
   const companyPatterns = [
     /(?:^|\n)\s*Company\s*[:\-]\s*([^\n,]+)/i,
     /(?:^|\n)\s*Organization\s*[:\-]\s*([^\n,]+)/i,
@@ -611,30 +641,26 @@ function buildResumeFilename(
   ];
 
   let companyName: string | null = null;
-  for (const pattern of companyPatterns) {
-    const match = jobDescription.match(pattern);
-    if (match && match[1]) {
-      const candidate = match[1].trim().replace(/[^a-zA-Z0-9& ]/g, "").trim();
-      if (
-        candidate.length > 2 &&
-        !/^(full job description|job description|description|company|about|organization|role)$/i.test(candidate)
-      ) {
-        companyName = candidate;
-        break;
+  if (jobDescription) {
+    for (const pattern of companyPatterns) {
+      const match = jobDescription.match(pattern);
+      if (match && match[1]) {
+        const candidate = match[1].trim().replace(/[^a-zA-Z0-9& ]/g, "").trim();
+        if (
+          candidate.length > 2 &&
+          !/^(full job description|job description|description|company|about|organization|role|target company)$/i.test(candidate)
+        ) {
+          companyName = candidate;
+          break;
+        }
       }
     }
   }
 
-  // --- Use name from user account ---
-  const candidateName = userName?.trim() || null;
-
-  // --- Use detected role from analysis ---
-  const role = jobTitle?.trim() || null;
-
-  // --- Build final filename from available parts ---
-  const parts = [companyName, candidateName, role].filter(Boolean);
-  if (parts.length === 0) return "resume_updated.docx";
-  return parts.join(" - ").replace(/[/\\?%*:|"<>]/g, "") + ".docx";
+  // Combine: [name] - [designation if exist] - [company if exist]
+  const parts = [candidateName, designation, companyName].filter(Boolean);
+  const baseName = parts.join(" - ").replace(/[/\\?%*:|"<>]/g, "");
+  return `${baseName}.docx`;
 }
 
 export default function Home() {
@@ -3156,7 +3182,8 @@ export default function Home() {
                             buildResumeFilename(
                               jobDescription,
                               user?.name,
-                              analysisResult?.overall_summary?.job_title
+                              analysisResult?.overall_summary?.job_title,
+                              file?.name
                             )
                           )}`}
                           download
@@ -3172,7 +3199,8 @@ export default function Home() {
                             buildResumeFilename(
                               jobDescription,
                               user?.name,
-                              analysisResult?.overall_summary?.job_title
+                              analysisResult?.overall_summary?.job_title,
+                              file?.name
                             ).replace(/\.docx$/i, ".pdf")
                           )}`}
                           download
@@ -3274,7 +3302,7 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <a
                   href={`${API_BASE_URL}/api/v1/resume/download/${downloadId || documentId}/pdf?filename=${encodeURIComponent(
-                    buildResumeFilename(jobDescription, user?.name, analysisResult?.overall_summary?.job_title).replace(/\.docx$/i, ".pdf")
+                    buildResumeFilename(jobDescription, user?.name, analysisResult?.overall_summary?.job_title, file?.name).replace(/\.docx$/i, ".pdf")
                   )}`}
                   download
                   className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
