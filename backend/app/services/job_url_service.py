@@ -45,35 +45,40 @@ class JobUrlService:
         except Exception:
             raise BadRequestError("Invalid URL format. Please check the web address.")
 
+        target_fetch_url = clean_url
+
         # Extract LinkedIn Job ID if present in URL (e.g. currentJobId=4440780790 or /jobs/view/4440780790)
         linkedin_job_id = None
         if "linkedin.com" in domain:
             match = re.search(r"(?:currentJobId=|/jobs/view/|/jobs/view/\d+/|jobId=)(\d{8,12})", clean_url)
             if match:
                 linkedin_job_id = match.group(1)
+                target_fetch_url = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{linkedin_job_id}"
                 logger.info(f"[JobUrlService] Extracted LinkedIn Job ID: {linkedin_job_id}")
+
+        # Extract Indeed Job Key if present in URL (e.g. vjk=331b0ee047690ff3 or jk=331b0ee047690ff3)
+        if "indeed" in domain:
+            match = re.search(r"(?:vjk=|jk=|[/\-]|\=)([a-fA-F0-9]{16})(?:[\?\#/\&]|$)", clean_url)
+            if match:
+                indeed_jk = match.group(1)
+                target_fetch_url = f"https://{domain}/viewjob?jk={indeed_jk}"
+                logger.info(f"[JobUrlService] Normalized Indeed URL to viewjob endpoint: {target_fetch_url}")
 
         html_content = ""
         status_code = 0
 
         try:
             async with AsyncSession(impersonate="chrome120", timeout=15) as session:
-                if linkedin_job_id:
-                    # Fetch direct public guest job posting HTML from LinkedIn Public Guest API
-                    guest_api_url = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{linkedin_job_id}"
-                    logger.info(f"[JobUrlService] Fetching LinkedIn Guest API: {guest_api_url}")
-                    response = await session.get(guest_api_url, headers=self.headers, allow_redirects=True)
-                else:
-                    response = await session.get(clean_url, headers=self.headers, allow_redirects=True)
+                response = await session.get(target_fetch_url, headers=self.headers, allow_redirects=True)
                 status_code = response.status_code
                 html_content = response.text
         except Exception as e:
-            logger.error(f"[JobUrlService] Error fetching URL {clean_url}: {str(e)}")
+            logger.error(f"[JobUrlService] Error fetching URL {target_fetch_url}: {str(e)}")
             # Fallback to standard httpx if curl_cffi hits an edge case
             try:
                 import httpx
                 async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-                    resp = await client.get(clean_url, headers=self.headers)
+                    resp = await client.get(target_fetch_url, headers=self.headers)
                     status_code = resp.status_code
                     html_content = resp.text
             except Exception as ex:
@@ -100,8 +105,8 @@ class JobUrlService:
         )
 
         if is_blocked:
-            logger.info(f"[JobUrlService] Cloudflare / CAPTCHA detected for {domain}. Retrying with Playwright headless browser...")
-            playwright_html = await self._fetch_with_playwright(clean_url)
+            logger.info(f"[JobUrlService] Cloudflare / CAPTCHA detected for {domain}. Retrying with Playwright headless browser on {target_fetch_url}...")
+            playwright_html = await self._fetch_with_playwright(target_fetch_url)
             if playwright_html and len(playwright_html) > 500:
                 soup = BeautifulSoup(playwright_html, "html.parser")
                 for elem in soup(["script", "style", "nav", "footer", "header", "noscript", "svg", "button", "iframe", "form"]):
