@@ -114,48 +114,6 @@ export async function fetchJobUrl(url: string): Promise<FetchUrlResponse> {
   return response.json();
 }
 
-export async function fetchClientSideJobUrl(targetUrl: string): Promise<FetchUrlResponse> {
-  try {
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-    const response = await fetch(proxyUrl);
-    if (!response.ok) throw new Error("CORS proxy request failed");
-    const data = await response.json();
-    const html = data.contents || "";
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-
-    doc.querySelectorAll("script, style, nav, footer, header, svg, iframe, button, noscript").forEach(el => el.remove());
-
-    const title = doc.querySelector("h1, meta[property='og:title']")?.textContent?.trim() || "Target Role";
-    const bodyText = doc.body?.textContent || "";
-
-    const lines = bodyText.split("\n")
-      .map(l => l.trim())
-      .filter(l => l.length > 20 && !l.toLowerCase().includes("cookie") && !l.toLowerCase().includes("privacy") && !l.toLowerCase().includes("skip to main"));
-
-    const description = lines.join("\n\n");
-    if (description.length < 80) {
-      throw new Error("Extracted text too short");
-    }
-
-    return {
-      success: true,
-      url: targetUrl,
-      domain: new URL(targetUrl).hostname,
-      job_title: title,
-      job_description: `Job Designation: ${title}\n\n${description}`,
-      char_count: description.length
-    };
-  } catch (err: any) {
-    return {
-      success: false,
-      url: targetUrl,
-      domain: "web",
-      error_message: "Could not fetch URL. Please copy and paste the job description text directly!"
-    };
-  }
-}
 
 export async function analyzeResume(
   documentId: string,
