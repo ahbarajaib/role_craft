@@ -1474,7 +1474,7 @@ export default function Home() {
       <div className="glow-effect bg-amber-500/20 w-[450px] h-[450px] top-[35%] -right-20" />
 
       {/* Header */}
-      <header className="relative z-[200] max-w-[1440px] mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 sm:mb-12 pb-4 border-b border-slate-200/80">
+      <header className="relative z-30 max-w-[1440px] mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 sm:mb-12 pb-4 border-b border-slate-200/80">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => switchNavTab("landing")}>
           <img
             src="/logo.png"
@@ -1557,7 +1557,7 @@ export default function Home() {
           </button>
 
           {user ? (
-            <div className="relative z-[300]">
+            <div className="relative z-40">
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
@@ -1579,10 +1579,10 @@ export default function Home() {
               {isProfileMenuOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-[310]"
+                    className="fixed inset-0 z-40"
                     onClick={() => setIsProfileMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-72 z-[320] bg-white rounded-2xl border border-slate-200 shadow-2xl p-4 space-y-4 animate-fade-in-up">
+                  <div className="absolute right-0 mt-2 w-72 z-50 bg-white rounded-2xl border border-slate-200 shadow-2xl p-4 space-y-4 animate-fade-in-up">
                     {/* User Header */}
                     <div className="flex items-center gap-3 pb-3 border-b border-slate-200">
                       <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-indigo-600/30 shrink-0">
@@ -2736,7 +2736,7 @@ export default function Home() {
 
       {/* Side-by-Side Rewrite Modal */}
       {isRewriteModalOpen && activeRewriteSection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
 
             {/* Modal Header */}
