@@ -1493,10 +1493,79 @@ export default function Home() {
     });
   };
 
-  // ── Quick single-click keyword weave (optimistic, no modal) ───────────────
-  const handleQuickWeaveKeyword = (kw: string) => {
+  // ── Quick single-click keyword weave (weaves into section & patches docx) ────────
+  const [weavingSingleKeyword, setWeavingSingleKeyword] = useState<string | null>(null);
+
+  const handleQuickWeaveKeyword = async (kw: string) => {
+    if (!analysisResult || !documentId) return;
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
+    if (user && user.plan_type === "free" && user.credits <= 0) {
+      setIsSubscriptionModalOpen(true);
+      return;
+    }
+
+    setWeavingSingleKeyword(kw);
     setAppliedWovenKeywords((prev) => Array.from(new Set([...prev, kw])));
-    setSuccessNotification(`"${kw}" added to your matched skills. Click 'Apply to Resume' to include in DOCX.`);
+
+    try {
+      // Find Technical Skills section (or fallback to first section)
+      const skillsSection = (analysisResult.sections || []).find(
+        (s) => s.section_name.toLowerCase().includes("skill") || s.section_name.toLowerCase().includes("technical")
+      );
+      const targetSecName = skillsSection ? skillsSection.section_name : (analysisResult.sections || [])[0]?.section_name || "Skills";
+
+      const res = await rewriteSection({
+        document_id: documentId,
+        section_name: targetSecName,
+        job_description_text: jobDescription,
+        recommendations: [
+          ...(skillsSection?.recommendations || []),
+          `Weave naturally this essential missing ATS keyword: ${kw}`,
+        ],
+      });
+
+      const lowerSec = targetSecName.toLowerCase();
+      const updatedRewrites = {
+        ...rewrittenSections,
+        [lowerSec]: res.rewritten_text,
+      };
+      setRewrittenSections(updatedRewrites);
+
+      // Build patch payload including all current rewrites
+      const acceptedItems = Object.entries(updatedRewrites).map(([secKey, text]) => {
+        const origSec = (analysisResult.sections || []).find(
+          (s) => s.section_name.toLowerCase() === secKey
+        );
+        const excluded = excludedBullets[origSec?.section_name || secKey] || excludedBullets[secKey];
+        const filteredText = excluded && excluded.size > 0
+          ? filterBulletsByChecked(text, excluded)
+          : text;
+        return {
+          section: origSec?.section_name || secKey,
+          rewritten_text: filteredText,
+        };
+      });
+
+      console.log("💾 [RoleCraft Audit] Submitting Single Keyword Weave DOCX Patch Payload:", acceptedItems);
+
+      const applyRes = await applyMutation.mutateAsync({
+        document_id: documentId,
+        accepted_rewrites: acceptedItems,
+      });
+
+      setDownloadId(applyRes.download_id);
+      setDownloadUrl(applyRes.download_url);
+      setIsPatchingApplied(true);
+      setSuccessNotification(`⚡ "${kw}" woven into resume & DOCX updated!`);
+    } catch (err: any) {
+      console.error(`❌ Quick weave error for "${kw}":`, err);
+      setError(err?.message || `Failed to weave "${kw}" into DOCX.`);
+    } finally {
+      setWeavingSingleKeyword(null);
+    }
   };
 
   // 1. File Upload Mutation
@@ -2641,12 +2710,19 @@ export default function Home() {
                             <button
                               key={idx}
                               type="button"
+                              disabled={weavingSingleKeyword === item.name}
                               onClick={() => handleQuickWeaveKeyword(item.name)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 hover:bg-emerald-500/15 text-amber-700 hover:text-emerald-700 dark:text-amber-300 border border-amber-500/30 hover:border-emerald-400/40 transition-all duration-150 cursor-pointer group"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 hover:bg-emerald-500/15 text-amber-700 hover:text-emerald-700 dark:text-amber-300 border border-amber-500/30 hover:border-emerald-400/40 transition-all duration-150 cursor-pointer group disabled:opacity-50"
                               title={`Click to add '${item.name}' to matched skills`}
                             >
-                              <Sparkles className="h-3 w-3 shrink-0 text-amber-500 group-hover:hidden transition-all" />
-                              <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 hidden group-hover:block transition-all" />
+                              {weavingSingleKeyword === item.name ? (
+                                <div className="h-3 w-3 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin shrink-0" />
+                              ) : (
+                                <>
+                                  <Sparkles className="h-3 w-3 shrink-0 text-amber-500 group-hover:hidden transition-all" />
+                                  <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 hidden group-hover:block transition-all" />
+                                </>
+                              )}
                               {item.name}
                             </button>
                           ))}
@@ -2694,12 +2770,19 @@ export default function Home() {
                             <button
                               key={idx}
                               type="button"
+                              disabled={weavingSingleKeyword === kw}
                               onClick={() => handleQuickWeaveKeyword(kw)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/10 hover:bg-emerald-500/15 text-rose-700 hover:text-emerald-700 dark:text-rose-300 border border-rose-500/30 hover:border-emerald-400/40 transition-all duration-150 cursor-pointer group"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/10 hover:bg-emerald-500/15 text-rose-700 hover:text-emerald-700 dark:text-rose-300 border border-rose-500/30 hover:border-emerald-400/40 transition-all duration-150 cursor-pointer group disabled:opacity-50"
                               title={`Click to add '${kw}' to matched skills`}
                             >
-                              <span className="font-bold text-rose-500 group-hover:hidden transition-all">+</span>
-                              <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 hidden group-hover:block transition-all" />
+                              {weavingSingleKeyword === kw ? (
+                                <div className="h-3 w-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin shrink-0" />
+                              ) : (
+                                <>
+                                  <span className="font-bold text-rose-500 group-hover:hidden transition-all">+</span>
+                                  <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 hidden group-hover:block transition-all" />
+                                </>
+                              )}
                               {kw}
                             </button>
                           ))}
