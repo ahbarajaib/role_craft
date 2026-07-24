@@ -2539,11 +2539,15 @@ export default function Home() {
                                   setIsPatchingApplied(false);
                                   setSuccessNotification(`Applied target job title: "${rawJobTitle}"`);
                                 }}
-                                className="px-3 py-1 text-xs font-bold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all cursor-pointer flex items-center gap-1 select-none"
+                                className={`px-3.5 py-1.5 text-xs font-black rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${
+                                  rewrittenSections["header"] === rawJobTitle
+                                    ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
+                                    : "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-600 shadow-emerald-600/20 hover:scale-105"
+                                }`}
                                 title="Apply this target job title to your resume header"
                               >
-                                <CheckCircle className="h-3.5 w-3.5" />
-                                {rewrittenSections["header"] === rawJobTitle ? "Title Applied" : "Apply Job Title"}
+                                <CheckCircle className="h-3.5 w-3.5 text-white shrink-0" />
+                                <span>{rewrittenSections["header"] === rawJobTitle ? "Title Applied" : "Apply Job Title"}</span>
                               </button>
                             )}
                           </>
