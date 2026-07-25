@@ -214,52 +214,127 @@ def _is_bullet_paragraph(p) -> bool:
     return False
 
 
-def _is_metadata_line(text: str, para=None) -> bool:
-    """Detect if a paragraph is a job title, company name, location, or date header line in Experience section.
+ACTION_VERBS = {
+    "built", "developed", "achieved", "ensured", "customized", "implemented", "engineered",
+    "designed", "created", "optimized", "spearheaded", "managed", "led", "architected",
+    "formulated", "coordinated", "reduced", "increased", "automated", "delivered", "integrated",
+    "executed", "maintained", "supervised", "pioneered", "overhauled", "championed", "established",
+    "launched", "migrated", "scaled", "refactored", "deployed", "directed", "authored", "expanded",
+    "accelerated", "streamlined", "transformed", "generated", "produced", "introduced", "handled",
+    "constructed", "authored", "devised", "established", "structured", "revamped", "maximized"
+}
 
-    Returns False for skills category lines (e.g., 'Frontend: React, ...') and achievement bullets.
+
+def _is_metadata_line(text: str, para=None) -> bool:
+    """Detect if a paragraph is a job title, company name, location, or date header line.
+
+    Rules (checked in order):
+    - Bullet paragraphs are never metadata.
+    - Skill category lines ("Frontend: React, ...") are not metadata.
+    - Rule 1: Contains date / company suffix / location / role title → metadata.
+    - Rule 2: Short line (< 85 chars) that is not an action-verb sentence → metadata.
     """
     t = text.strip()
     if not t:
         return False
     if para and _is_bullet_paragraph(para):
         return False
-    if t.startswith("•") or t.startswith("-") or t.startswith("*") or t.startswith("–"):
+    bullet_symbols = ["•", "-", "*", "–", "—", "▪", "▸", "\u2022", "\u2013", "\u2014"]
+    if any(t.startswith(s) for s in bullet_symbols):
         return False
 
-    # Skill category lines containing colons (e.g. "Frontend: React, Next.js", "AI & LLM Engineering: OpenAI...") are NOT metadata lines!
+    # Skill category lines (e.g. "Frontend: React, Next.js") are NOT metadata
     if ":" in t:
         colon_idx = t.find(":")
         label = t[:colon_idx].strip().lower()
-        if label in ["frontend", "backend", "databases", "tools", "languages", "frameworks", "technologies", "ai & llm engineering", "skills", "tools & platforms"]:
+        skill_labels = [
+            "frontend", "backend", "databases", "tools", "languages", "frameworks",
+            "technologies", "ai & llm engineering", "skills", "tools & platforms",
+            "concepts", "responsibilities", "other", "backend & systems",
+        ]
+        if label in skill_labels:
             return False
-        # If line contains comma list after colon, it's a skill line
         if "," in t[colon_idx:]:
             return False
 
     import re
     t_lower = t.lower()
+    words = t_lower.split()
+    first_word = words[0] if words else ""
 
-    # Check for date years (e.g. 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, Present)
-    has_date = bool(re.search(r'\b(19|20)\d{2}\b', t)) or "present" in t_lower
+    # --- Rule 1: structural signals (checked BEFORE action-verb early-exit) ---
+    months = [
+        "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec",
+        "january", "february", "march", "april", "june", "july", "august",
+        "september", "october", "november", "december",
+    ]
+    has_date = (
+        bool(re.search(r'\b(19|20)\d{2}\b', t))
+        or "present" in t_lower
+        or any(re.search(r'\b' + re.escape(m) + r'\b', t_lower) for m in months)
+    )
 
-    company_suffixes = ["inc", "ltd", "llc", "fze", "pvt", "corp", "corporation", "solutions"]
+    company_suffixes = [
+        "inc", "ltd", "llc", "fze", "pvt", "corp", "corporation", "co", "solutions",
+        "technologies", "labs", "studio", "agency", "software", "systems", "global",
+        "services", "holdings", "enterprises", "ventures", "partners", "consulting",
+        "international", "group", "ltd.", "inc.", "corp.", "pvt ltd", "pvt. ltd.",
+        "llc.", "fze.",
+    ]
     has_company = any(re.search(r'\b' + re.escape(s) + r'\b', t_lower) for s in company_suffixes)
 
-    locations = ["dubai", "uae", "usa", "uk", "india", "bangalore", "bhatkal", "remote"]
+    locations = [
+        "dubai", "uae", "usa", "uk", "india", "bangalore", "bhatkal", "remote", "london",
+        "new york", "san francisco", "singapore", "toronto", "sydney", "berlin", "paris",
+        "california", "texas", "seattle", "austin", "chicago", "boston", "amsterdam",
+    ]
     has_location = any(re.search(r'\b' + re.escape(loc) + r'\b', t_lower) for loc in locations)
 
-    role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "administrator", "specialist", "intern", "freelance", "executive"]
+    role_titles = [
+        "developer", "engineer", "architect", "manager", "lead", "designer",
+        "consultant", "analyst", "administrator", "specialist", "intern",
+        "freelance", "executive", "director", "officer", "head", "founder",
+        "co-founder", "cto", "ceo", "vp", "programmer", "associate",
+    ]
     has_role = any(re.search(r'\b' + re.escape(r) + r'\b', t_lower) for r in role_titles)
 
-    # A line is metadata if it has date OR company OR (short line < 80 chars with role/location)
-    if has_date or has_company:
+    # Structural signal → definite metadata regardless of action verbs
+    if has_date or has_company or has_location or has_role:
         return True
 
-    if (has_role or has_location) and len(t) < 80 and not t.endswith("."):
+    # --- Rule 2: heuristic for unlabelled short non-sentence lines ---
+    # An achievement sentence starts with an action verb AND is long or ends with punctuation.
+    is_achievement_sentence = (
+        first_word in ACTION_VERBS
+        and (len(t) > 50 or t.endswith(".") or t.endswith(";"))
+    )
+    if is_achievement_sentence:
+        return False
+
+    # Short non-action-verb line without terminal punctuation → header / company name
+    if len(t) < 85 and not t.endswith("."):
         return True
 
     return False
+
+
+def _is_overview_paragraph(para) -> bool:
+    """Return True if this paragraph is a non-bullet, non-metadata prose overview.
+
+    In many resumes the first content paragraph under a job entry is a short
+    narrative sentence (e.g. "Spearheaded the development of...") that is
+    neither a bullet nor a structural metadata line.  We detect it so the
+    patching loop can handle it separately from list bullets.
+    """
+    if _is_bullet_paragraph(para):
+        return False
+    t = para.text.strip()
+    if not t:
+        return False
+    if _is_metadata_line(t, para):
+        return False
+    # Must look like a prose sentence (has a verb / ends with period or is long)
+    return True
 
 
 class PatchService:
@@ -357,7 +432,9 @@ class PatchService:
                 for kw in ["experience", "employment", "history", "work", "job", "career", "positions"]
             )
 
-            # Split the AI output into non-empty lines, filtering out metadata headers ONLY for experience sections
+            # Split the AI output into non-empty lines.
+            # For experience sections: strip any metadata lines the AI may have echoed back
+            # (job titles, company names, dates) — those are preserved from the original DOCX.
             new_para_texts = [
                 line.strip()
                 for line in rewrite_item.rewritten_text.split("\n")
@@ -367,10 +444,16 @@ class PatchService:
             if not new_para_texts:
                 continue
 
-            # Select template for cloning new bullet paragraphs
+            # Select template for cloning new bullet paragraphs (used when AI adds more lines)
             bullet_template = next(
                 (p for p in body_paras if _is_bullet_paragraph(p)),
                 body_paras[-1] if body_paras else heading_para
+            )
+
+            # Select template for cloning new overview paragraphs (non-bullet prose)
+            overview_template = next(
+                (p for p in body_paras if _is_overview_paragraph(p)),
+                None
             )
 
             # Insertion cursor — new paragraphs are inserted after this element.
@@ -384,36 +467,45 @@ class PatchService:
                     orig_p = body_paras[orig_idx]
                     ai_text = new_para_texts[ai_idx]
 
-                    # Rule: Never overwrite a job title, company name, location, or date header line in Experience sections!
+                    # --- METADATA LINES (job title / company / location / date) ---
+                    # Skip them — they come from the original DOCX and must NEVER be overwritten.
                     if is_experience_sec and _is_metadata_line(orig_p.text, orig_p):
                         _remove_num_pr(orig_p)
                         insertion_cursor = orig_p
                         orig_idx += 1
                         continue
 
-                    # Overwrite existing paragraph text (preserve formatting and font)
+                    # --- OVERVIEW PARAGRAPH (non-bullet prose sentence at top of a role) ---
+                    # Match it to the first available AI content line, preserving its paragraph style.
+                    if is_experience_sec and _is_overview_paragraph(orig_p):
+                        _set_paragraph_text_preserve_fmt(orig_p, ai_text, default_font=doc_font)
+                        insertion_cursor = orig_p
+                        orig_idx += 1
+                        ai_idx += 1
+                        continue
+
+                    # --- REGULAR BULLET / CONTENT PARAGRAPH ---
                     _set_paragraph_text_preserve_fmt(orig_p, ai_text, default_font=doc_font)
-                    # NEVER strip bullet formatting — preserve <w:numPr> on all paragraphs
                     insertion_cursor = orig_p
                     orig_idx += 1
                     ai_idx += 1
 
                 elif ai_idx < len(new_para_texts):
-                    # AI produced more lines than original bullets — clone bullet_template
-                    new_p = _clone_paragraph_xml(bullet_template, doc._body, default_font=doc_font)
+                    # AI produced more lines than original paragraphs — clone appropriate template.
+                    ai_text = new_para_texts[ai_idx]
+                    # Use overview template for prose lines (no leading bullet char), bullet template otherwise
+                    bullet_chars = ["•", "-", "*", "–", "—", "▪"]
+                    is_prose = not any(ai_text.startswith(c) for c in bullet_chars)
+                    tmpl = overview_template if (is_prose and overview_template) else bullet_template
+                    new_p = _clone_paragraph_xml(tmpl, doc._body, default_font=doc_font)
                     insertion_cursor._p.addnext(new_p._p)
-                    _set_paragraph_text_preserve_fmt(new_p, new_para_texts[ai_idx], default_font=doc_font)
+                    _set_paragraph_text_preserve_fmt(new_p, ai_text, default_font=doc_font)
                     insertion_cursor = new_p
                     ai_idx += 1
 
                 else:
-                    # Original had more lines — blank surplus bullet text instead of deleting XML
-                    # to preserve document structure, spacing, and page layout.
-                    p = body_paras[orig_idx]
-                    if not is_experience_sec or not _is_metadata_line(p.text, p):
-                        # Blank the text but keep the paragraph element intact
-                        for run in p.runs:
-                            _set_run_text(run, "")
+                    # Original had more paragraphs than AI rewrites.
+                    # Preserve all remaining original paragraphs UNTOUCHED — never erase content.
                     orig_idx += 1
 
             sections_updated += 1

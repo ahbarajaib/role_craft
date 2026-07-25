@@ -151,16 +151,48 @@ class RewriteService:
             f"{' / '.join(recommendations) if recommendations else 'Improve overall impact.'}",
         ]
         if not is_skills_section:
-            from app.services.patch_service import _is_metadata_line
-            non_meta_lines = [l for l in orig_lines if not _is_metadata_line(l)]
-            target_bullet_count = len(non_meta_lines) if non_meta_lines else orig_line_count
+            from app.services.patch_service import _is_metadata_line, _is_bullet_paragraph, _is_overview_paragraph
+            import docx as _docx_mod
 
-            input_parts.append(
-                f"=== EXACT BULLET COUNT CONSTRAINT ===\n"
-                f"This section originally contains {target_bullet_count} bullet point(s) across its job entries. "
-                f"You MUST output EXACTLY {target_bullet_count} rewritten bullet points (matching the exact bullet count of each job entry in document order). "
-                f"DO NOT add or omit bullet points! (Target count: exactly {target_bullet_count} bullets)."
-            )
+            # Count non-metadata non-empty content lines from the original section text
+            non_meta_lines = [l for l in orig_lines if not _is_metadata_line(l)]
+
+            # Try to detect if there is a non-bullet overview paragraph at the top of each role
+            # by inspecting the raw text lines (we cannot call _is_overview_paragraph without a para object,
+            # so we approximate: a non-bullet line that starts with an action verb or is a long sentence)
+            import re as _re
+            from app.services.patch_service import ACTION_VERBS as _AV
+            _action_starts = tuple(_AV)
+            overview_lines = [
+                l for l in non_meta_lines
+                if not any(l.startswith(s) for s in ["•", "-", "*", "–", "—", "▪"])
+                and (l.lower().split()[0] in _AV if l.split() else False)
+            ]
+            bullet_only_lines = [
+                l for l in non_meta_lines
+                if any(l.startswith(s) for s in ["•", "-", "*", "–", "—", "▪"])
+            ]
+
+            # Total rewriteable content = overview sentences + bullet points
+            target_content_count = len(non_meta_lines) if non_meta_lines else orig_line_count
+            has_overview = len(overview_lines) > 0
+
+            if has_overview:
+                input_parts.append(
+                    f"=== CONTENT STRUCTURE CONSTRAINT ===\n"
+                    f"This section has {len(overview_lines)} prose overview paragraph(s) followed by {len(bullet_only_lines)} bullet point(s).\n"
+                    f"You MUST output EXACTLY {len(overview_lines)} rewritten prose overview paragraph(s) (matching position and style of the originals) "
+                    f"followed by EXACTLY {len(bullet_only_lines)} rewritten bullet point(s). "
+                    f"Total rewriteable content lines: exactly {target_content_count}. "
+                    f"DO NOT add, merge, or omit any lines!"
+                )
+            else:
+                input_parts.append(
+                    f"=== EXACT BULLET COUNT CONSTRAINT ===\n"
+                    f"This section originally contains {target_content_count} bullet point(s) across its job entries. "
+                    f"You MUST output EXACTLY {target_content_count} rewritten bullet points (matching the exact bullet count of each job entry in document order). "
+                    f"DO NOT add or omit bullet points! (Target count: exactly {target_content_count} bullets)."
+                )
 
         if metric_inputs and any(v.strip() for v in metric_inputs.values()):
             formatted_metrics = "\n".join(
