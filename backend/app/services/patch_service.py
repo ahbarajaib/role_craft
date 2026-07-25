@@ -425,10 +425,17 @@ class PatchService:
             heading_para = doc.paragraphs[target_sec.paragraph_indexes[0]]
             body_paras = [doc.paragraphs[idx] for idx in target_sec.paragraph_indexes[1:] if idx < len(doc.paragraphs)]
 
-            # Check if this section is an Experience section (where role/company/date metadata headers exist)
-            is_experience_sec = any(
-                kw in target_sec.title.lower() or kw in (target_sec.normalized_name or "").lower()
-                for kw in ["experience", "employment", "history", "work", "job", "career", "positions"]
+            # Check if this section is an Experience section or individual job entry sub-section
+            # (where role/company/date metadata headers exist)
+            title_l = target_sec.title.lower()
+            norm_l = (target_sec.normalized_name or "").lower()
+            role_kws = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance"]
+            is_experience_sec = (
+                norm_l == "experience"
+                or any(kw in title_l or kw in norm_l for kw in ["experience", "employment", "history", "work", "job", "career", "positions"])
+                or any(rk in title_l for rk in role_kws)
+                or re.search(r"\b(19|20)\d{2}\b", title_l) is not None
+                or "present" in title_l
             )
 
             # --- SPECIAL CASE: "Professional Experiences" is a heading-only section ---

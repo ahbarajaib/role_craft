@@ -111,10 +111,15 @@ class RewriteService:
 
         # --- SPECIAL CASE: Experience section is heading-only (sub-job-entries are separate sections) ---
         # Collect all sub-job-entry content so the AI gets the full experience to rewrite.
+        import re
         sec_lower_check = _normalize_title(section_name)
-        is_exp_sec = any(
-            kw in sec_lower_check
-            for kw in ["experience", "employment", "history", "work", "job", "career", "positions"]
+        role_kws = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance"]
+        is_exp_sec = (
+            target_sec.normalized_name == "experience"
+            or any(kw in sec_lower_check for kw in ["experience", "employment", "history", "work", "job", "career", "positions"])
+            or any(rk in sec_lower_check for rk in role_kws)
+            or re.search(r"\b(19|20)\d{2}\b", sec_lower_check) is not None
+            or "present" in sec_lower_check
         )
         if is_exp_sec and not original_text.strip():
             exp_sec_idx = sections.index(target_sec)
