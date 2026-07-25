@@ -35,7 +35,8 @@ import {
   User,
   Globe,
   Link as LinkIcon,
-  ExternalLink
+  ExternalLink,
+  Briefcase
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
@@ -216,15 +217,41 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
 }
 
 // ─── Helper: parse bullet lines from a rewritten text block ───────────────────
-function parseBulletsFromText(text: string): { line: string; isBullet: boolean }[] {
+function parseBulletsFromText(text: string): { line: string; isBullet: boolean; isHeader?: boolean; isCompany?: boolean }[] {
   if (!text) return [];
   const bulletSymbols = ["•", "-", "*", "–", "—", "▪", "▸"];
+
   return text
     .split("\n")
     .filter((l) => l.trim().length > 0)
     .map((line) => {
       const trimmed = line.trim();
-      const isBullet = bulletSymbols.some((s) => trimmed.startsWith(s)) || trimmed.length > 40;
+      const lowerLine = trimmed.toLowerCase();
+      const isExplicitBullet = bulletSymbols.some((s) => trimmed.startsWith(s));
+
+      // Check header / company heuristics (short lines with dates/roles/company suffixes)
+      const isDateHeader = /\b(19|20)\d{2}\b/.test(trimmed) || lowerLine.includes("present");
+      const isJobRoleHeader =
+        !isExplicitBullet &&
+        trimmed.length < 90 &&
+        !trimmed.endsWith(".") &&
+        (isDateHeader || ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst"].some(r => lowerLine.includes(r)));
+
+      const isCompanyHeader =
+        !isExplicitBullet &&
+        trimmed.length < 80 &&
+        (trimmed.includes(",") || trimmed.endsWith(".")) &&
+        ["inc", "ltd", "llc", "fze", "pvt", "corp", "dubai", "uae", "usa", "uk", "india", "bangalore", "remote", "freelance"].some(loc => lowerLine.includes(loc));
+
+      if (isJobRoleHeader) {
+        return { line: trimmed, isBullet: false, isHeader: true };
+      }
+      if (isCompanyHeader) {
+        return { line: trimmed, isBullet: false, isCompany: true };
+      }
+
+      // Default: bullet point if explicit symbol or long sentence
+      const isBullet = isExplicitBullet || trimmed.length > 40;
       return { line: trimmed, isBullet };
     });
 }
@@ -435,10 +462,29 @@ function SectionCard({
                     const bulletMatch = bulletSymbols.find((s) => item.line.startsWith(s));
                     const content = bulletMatch ? item.line.substring(bulletMatch.length).trim() : item.line;
 
+                    if (item.isHeader) {
+                      return (
+                        <div key={lineIdx} className="font-extrabold text-slate-900 dark:text-white text-xs pt-3 pb-1 flex items-center justify-between border-b border-indigo-200 dark:border-indigo-800/80 mt-2">
+                          <span className="flex items-center gap-1.5 text-indigo-950 dark:text-indigo-200">
+                            <Briefcase className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                            {item.line}
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    if (item.isCompany) {
+                      return (
+                        <div key={lineIdx} className="font-semibold text-emerald-700 dark:text-emerald-400 text-[11px] italic mb-1.5 pl-5">
+                          {item.line}
+                        </div>
+                      );
+                    }
+
                     if (!item.isBullet) {
                       // Non-bullet lines (headers, categories, summaries) — show as-is
                       return (
-                        <p key={lineIdx} className="text-[13px] text-slate-800 leading-relaxed select-all">
+                        <p key={lineIdx} className="text-[13px] text-slate-800 dark:text-slate-200 leading-relaxed select-all">
                           {item.line}
                         </p>
                       );
@@ -470,7 +516,7 @@ function SectionCard({
                           )}
                         </button>
                         {/* Bullet content */}
-                        <p className={`flex-1 text-[13px] leading-relaxed select-all ${isUnchecked ? "line-through text-slate-400" : "text-slate-800"}`}>
+                        <p className={`flex-1 text-[13px] leading-relaxed select-all ${isUnchecked ? "line-through text-slate-400" : "text-slate-800 dark:text-slate-200"}`}>
                           {content}
                         </p>
                       </div>
@@ -493,14 +539,14 @@ function SectionCard({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Strengths */}
             {section.strengths.length > 0 && (
-              <div className="space-y-2 bg-emerald-50/40 p-3 rounded-xl border border-emerald-100">
-                <span className="text-xs font-black text-emerald-800 uppercase tracking-wider block">
+              <div className="space-y-2 bg-emerald-50/70 dark:bg-emerald-950/40 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
+                <span className="text-xs font-black text-emerald-900 dark:text-emerald-300 uppercase tracking-wider block">
                   STRENGTHS
                 </span>
                 <ul className="space-y-1.5">
                   {section.strengths.map((str, i) => (
-                    <li key={i} className="text-xs text-slate-800 font-semibold flex items-start gap-2">
-                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                    <li key={i} className="text-xs text-slate-800 dark:text-slate-200 font-semibold flex items-start gap-2">
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                       <span>{str}</span>
                     </li>
                   ))}
@@ -510,14 +556,14 @@ function SectionCard({
 
             {/* Recommendations */}
             {section.recommendations.length > 0 && (
-              <div className="space-y-2 bg-indigo-50/40 p-3 rounded-xl border border-indigo-100">
-                <span className="text-xs font-black text-indigo-800 uppercase tracking-wider block">
+              <div className="space-y-2 bg-blue-50/70 dark:bg-blue-950/40 p-3.5 rounded-xl border border-blue-200 dark:border-blue-800/60">
+                <span className="text-xs font-black text-blue-900 dark:text-blue-300 uppercase tracking-wider block">
                   RECOMMENDATIONS
                 </span>
                 <ul className="space-y-1.5">
                   {section.recommendations.map((rec, i) => (
-                    <li key={i} className="text-xs text-slate-800 font-semibold flex items-start gap-2">
-                      <AlertCircle className="h-3.5 w-3.5 text-indigo-600 shrink-0 mt-0.5" />
+                    <li key={i} className="text-xs text-slate-800 dark:text-slate-200 font-semibold flex items-start gap-2">
+                      <AlertCircle className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                       <span>{rec}</span>
                     </li>
                   ))}
@@ -528,13 +574,13 @@ function SectionCard({
 
           {/* Evidence Used Badges */}
           {section.evidence_used && section.evidence_used.length > 0 && (
-            <div className="pt-3 border-t border-slate-200">
-              <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider block mb-2">
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
+              <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block mb-2">
                 Evidence Reused from Resume
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {section.evidence_used.map((ev, i) => (
-                  <span key={i} className="text-[10px] bg-indigo-50 border border-indigo-200 text-indigo-800 font-bold px-2 py-0.5 rounded">
+                  <span key={i} className="text-[10px] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-bold px-2 py-0.5 rounded">
                     {ev}
                   </span>
                 ))}
@@ -554,12 +600,16 @@ function SectionCard({
                   onImproveClick(section.section_name, section.recommendations);
                 }
               }}
-              className="mt-2 w-full py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-900/40 text-white disabled:text-indigo-300 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/10 transition-all duration-300 select-none cursor-pointer disabled:cursor-not-allowed"
+              className={`mt-2 w-full py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2.5 shadow-md transition-all duration-200 select-none ${
+                inlineLoadingSections[section.section_name]
+                  ? "bg-slate-900 dark:bg-slate-950 text-white border border-slate-700 shadow-slate-900/30 cursor-wait"
+                  : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20 cursor-pointer"
+              }`}
             >
               {inlineLoadingSections[section.section_name] ? (
                 <>
-                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                  Generating AI Rewrite...
+                  <RefreshCw className="h-4 w-4 animate-spin text-cyan-400 shrink-0" />
+                  <span className="text-white text-xs font-black tracking-wide">Generating AI Rewrite...</span>
                 </>
               ) : (
                 <>

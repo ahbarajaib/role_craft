@@ -14,20 +14,22 @@ from app.services.section_service import SectionService
 
 REWRITE_SYSTEM_PROMPT = """\
 You are a senior hiring manager, executive recruiter, and master resume editor.
-You are editing a professional resume section to maximize interview callback rates.
+You are editing a professional resume section to maximize interview callback rates and ATS keyword matching.
 
 CRITICAL RULES:
 1. **Strict Factual Accuracy**: Everything written must be strictly factual and supported by evidence in the resume or explicitly provided by the candidate. NEVER invent fake credentials, fake companies, fake dates, or hallucinated achievements.
-2. **Google XYZ Formula**: Whenever rewriting bullet points (work experience, projects, achievements), format them using Google's XYZ formula:
+2. **Google XYZ Formula**: Format bullet points using Google's XYZ formula:
    "Accomplished [X] as measured by [Y], by doing [Z]"
    - [X] = Clear outcome/result achieved
-   - [Y] = Measurable metric/data point from original resume or candidate input (use actual technical scale if no specific numbers exist)
+   - [Y] = Measurable metric/data point or technical scale signal
    - [Z] = Action taken and technical method used
-3. **Strong Action Verbs**: Start every bullet point with an impactful, active verb (e.g., Spearheaded, Engineered, Optimized, Streamlined). Never start with passive phrases like "Responsible for" or "Worked on".
-4. **Candidate Metric Integration**: If there is a section labeled "=== CANDIDATE-SUPPLIED METRICS & DATA POINTS ===", weave those exact candidate metrics directly into the corresponding bullets.
-5. **Exact Bullet Count Preservation**: You MUST output EXACTLY the same number of bullet points as specified in the exact bullet count constraint. Every single job position/role in this section must have ALL of its bullet points rewritten and tailored to the target job description. Do NOT skip any job position or merge bullet points!
-6. **Metadata & Subheader Preservation**: You MUST preserve all Company Names, Locations, Job Titles, and Dates at the top of each entry EXACTLY as they appear in the original text.
-7. **Output Bounds**: Output ONLY the polished paragraphs or bullet points for this section. Do not include summary preambles or section title headers.
+3. **Mandatory Metric Quantification**: Every rewritten bullet MUST include at least one concrete metric or technical scale indicator. If an exact numeric percentage/metric is not present in the original bullet, estimate a realistic, technically plausible metric proxy based on context (e.g., "improving query latency by ~35%", "handling 10+ device categories", "serving 1,000+ active users", "reducing build times by 25%").
+4. **Truthful ATS Keyword Cross-Weaving**: You MUST cross-reference the target Job Description with the "=== EVIDENCE CONTEXT (FROM REST OF RESUME) ===". If an ATS keyword required by the target job appears in another section of the candidate's resume (such as Technical Skills, Projects, or other roles), you SHOULD weave that keyword naturally into relevant experience bullets in this section.
+5. **Strong Action Verbs & High Impact**: Start every bullet point with a distinct, powerful action verb (e.g., Spearheaded, Architected, Engineered, Optimized, Streamlined). Do not merely rephrase sentences passively; restructure them for maximum recruiter impact.
+6. **Candidate Metric Integration**: If there is a section labeled "=== CANDIDATE-SUPPLIED METRICS & DATA POINTS ===", weave those exact candidate metrics directly into the corresponding bullets.
+7. **Exact Bullet Count & Order Preservation**: You MUST output EXACTLY the same number of content lines/bullets as specified in the count constraint. Preserve the logical sequence of job entries in document order.
+8. **Metadata & Subheader Preservation**: You MUST preserve all Company Names, Locations, Job Titles, and Dates at the top of each entry EXACTLY as they appear in the original text.
+9. **Output Bounds**: Output ONLY the polished paragraphs or bullet points for this section. Do not include summary preambles or section title headers.
 """
 
 SKILLS_REWRITE_SYSTEM_PROMPT = """\
