@@ -432,6 +432,37 @@ class PatchService:
                 for kw in ["experience", "employment", "history", "work", "job", "career", "positions"]
             )
 
+            # --- SPECIAL CASE: "Professional Experiences" is a heading-only section ---
+            # Its actual content lives in sub-sections (individual Heading 2 job entries).
+            # We must collect ALL paragraphs from all sub-job-entry sections that immediately
+            # follow this section in the document (until a non-None-title known section is found).
+            if is_experience_sec and not body_paras:
+                # Find all sub-sections that follow the experience heading section
+                exp_sec_idx = sections.index(target_sec)
+                sub_body_para_indexes: list[int] = []
+                experience_keywords = ["experience", "employment", "history", "work", "job", "career", "positions"]
+                non_experience_normalized = ["summary", "skills", "education", "projects", "certifications", "awards", "publications", "languages", "interests", "references", "header"]
+                for sub_sec in sections[exp_sec_idx + 1:]:
+                    # Stop if we hit a clearly different top-level section
+                    sub_norm = (sub_sec.normalized_name or "").lower()
+                    if sub_norm in non_experience_normalized:
+                        break
+                    # Stop if title matches a known non-experience section name
+                    sub_title_l = sub_sec.title.lower()
+                    if any(k in sub_title_l for k in ["education", "skills", "project", "certification"]):
+                        break
+                    # Collect all paragraph indexes from this sub-section (including the heading)
+                    for idx in sub_sec.paragraph_indexes:
+                        if idx < len(doc.paragraphs):
+                            sub_body_para_indexes.append(idx)
+
+                if sub_body_para_indexes:
+                    body_paras = [doc.paragraphs[idx] for idx in sub_body_para_indexes]
+                    logger.info(
+                        "Experience section: expanded to sub-sections",
+                        total_paras=len(body_paras),
+                    )
+
             # Split the AI output into non-empty lines.
             # For experience sections: strip any metadata lines the AI may have echoed back
             # (job titles, company names, dates) — those are preserved from the original DOCX.
@@ -442,6 +473,10 @@ class PatchService:
             ]
 
             if not new_para_texts:
+                continue
+
+            if not body_paras:
+                logger.warning("No body paragraphs for section, skipping", section=rewrite_item.section)
                 continue
 
             # Select template for cloning new bullet paragraphs (used when AI adds more lines)

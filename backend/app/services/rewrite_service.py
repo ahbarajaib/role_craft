@@ -106,8 +106,34 @@ class RewriteService:
 
         # Extract target text
         original_text = "\n".join([p.text for p in target_sec.paragraphs])
+
+        # --- SPECIAL CASE: Experience section is heading-only (sub-job-entries are separate sections) ---
+        # Collect all sub-job-entry content so the AI gets the full experience to rewrite.
+        sec_lower_check = _normalize_title(section_name)
+        is_exp_sec = any(
+            kw in sec_lower_check
+            for kw in ["experience", "employment", "history", "work", "job", "career", "positions"]
+        )
+        if is_exp_sec and not original_text.strip():
+            exp_sec_idx = sections.index(target_sec)
+            non_experience_normalized = [
+                "summary", "skills", "education", "projects", "certifications",
+                "awards", "publications", "languages", "interests", "references", "header",
+            ]
+            sub_texts: list[str] = []
+            for sub_sec in sections[exp_sec_idx + 1:]:
+                sub_norm = (sub_sec.normalized_name or "").lower()
+                if sub_norm in non_experience_normalized:
+                    break
+                sub_title_l = sub_sec.title.lower()
+                if any(k in sub_title_l for k in ["education", "skills", "project", "certification"]):
+                    break
+                sub_texts.extend([p.text for p in sub_sec.paragraphs])
+            original_text = "\n".join(sub_texts)
+
         if not original_text.strip():
             raise BadRequestError(f"Section '{section_name}' contains no text to rewrite.")
+
 
         orig_lines = [l.strip() for l in original_text.split("\n") if l.strip()]
         orig_line_count = max(len(orig_lines), 1)
