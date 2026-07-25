@@ -1571,7 +1571,7 @@ export default function Home() {
   // 1. File Upload Mutation
   const uploadMutation = useMutation({
     mutationFn: uploadResume,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       console.log(
         "%c 📄 [RoleCraft Audit] File Upload Succeeded ",
         "background: #0284c7; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
@@ -1585,6 +1585,27 @@ export default function Home() {
       setDownloadUrl(null);
       setIsPatchingApplied(false);
       setSuccessNotification("Resume uploaded successfully.");
+
+      // Auto-save as base resume immediately (if the user is logged in)
+      if (token && file) {
+        try {
+          const resp = await fetch(`${API_BASE_URL}/api/v1/documents/set-base`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ document_id: data.document_id, filename: file.name }),
+          });
+          if (resp.ok) {
+            await refreshMe();
+            console.log("[RoleCraft] New resume auto-saved as base resume.");
+          }
+        } catch (e) {
+          // Non-blocking — upload still succeeded even if base-save fails
+          console.warn("[RoleCraft] Auto base-save failed silently:", e);
+        }
+      }
     },
     onError: (err: any) => {
       console.error("❌ [RoleCraft Audit] File Upload Failed:", err);
