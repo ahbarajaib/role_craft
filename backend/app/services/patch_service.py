@@ -403,23 +403,22 @@ class PatchService:
 
             # Special Case: Patching Candidate Job Title in Header Section
             if target_sec.normalized_name == "header" or norm_sec_name in ["header", "job title", "target role", "title"]:
-                header_paras = [doc.paragraphs[idx] for idx in target_sec.paragraph_indexes if idx < len(doc.paragraphs)]
-                if header_paras:
-                    # SAFETY: Only patch an existing role/title paragraph — NEVER touch the candidate name.
-                    role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance"]
-                    title_para = next(
-                        (p for p in header_paras if any(r in p.text.lower() for r in role_titles)),
-                        None,
+                # Inspect top 6 paragraphs of document (pre-summary header area) for existing job title
+                role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance"]
+                top_paras = doc.paragraphs[:min(6, len(doc.paragraphs))]
+                title_para = next(
+                    (p for i, p in enumerate(top_paras) if i > 0 and any(r in p.text.lower() for r in role_titles)),
+                    None,
+                )
+                if title_para:
+                    new_title_text = rewrite_item.rewritten_text.strip().split("\n")[0]
+                    _set_paragraph_text_preserve_fmt(title_para, new_title_text, default_font=doc_font)
+                    sections_updated += 1
+                else:
+                    logger.info(
+                        "Skipping header title patch: no existing role/title paragraph found in top area. "
+                        "Refusing to overwrite candidate name."
                     )
-                    if title_para:
-                        new_title_text = rewrite_item.rewritten_text.strip().split("\n")[0]
-                        _set_paragraph_text_preserve_fmt(title_para, new_title_text, default_font=doc_font)
-                        sections_updated += 1
-                    else:
-                        logger.info(
-                            "Skipping header title patch: no existing role/title paragraph found in header. "
-                            "Refusing to overwrite candidate name."
-                        )
                 continue
 
             # The first index is the section heading — we never touch its text.
