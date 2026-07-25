@@ -277,6 +277,7 @@ interface SectionCardProps {
   inlineLoadingSections?: Record<string, boolean>;
   triggerInlineRewrite?: (name: string, recs: string[]) => void;
   onBulletExclusionChange?: (sectionName: string, excludedIndexes: Set<number>) => void;
+  isPatchingApplied?: boolean;
 }
 
 function SectionCard({
@@ -292,6 +293,7 @@ function SectionCard({
   inlineLoadingSections = {},
   triggerInlineRewrite,
   onBulletExclusionChange,
+  isPatchingApplied = false,
 }: SectionCardProps) {
   // Per-bullet checkbox state: set of line indexes that are UNCHECKED (excluded)
   const [uncheckedBullets, setUncheckedBullets] = useState<Set<number>>(new Set());
@@ -369,9 +371,13 @@ function SectionCard({
             </span>
           )}
           {rewrittenText && (
-            <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-300 font-extrabold flex items-center gap-1">
-              <CheckCircle className="h-3 w-3 text-indigo-600" />
-              Rewrite Applied
+            <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-extrabold flex items-center gap-1 shadow-xs ${
+              isPatchingApplied
+                ? "bg-emerald-600 text-white border border-emerald-600"
+                : "bg-indigo-100 text-indigo-900 border border-indigo-300"
+            }`}>
+              <CheckCircle className="h-3 w-3 shrink-0" />
+              {isPatchingApplied ? "⚡ Applied to DOCX" : "Rewrite Tailored"}
             </span>
           )}
         </div>
@@ -638,7 +644,8 @@ function renderSectionCard(
   onImproveClick: (name: string, recs: string[]) => void,
   inlineLoadingSections: Record<string, boolean> = {},
   triggerInlineRewrite?: (name: string, recs: string[]) => void,
-  onBulletExclusionChange?: (sectionName: string, excludedIndexes: Set<number>) => void
+  onBulletExclusionChange?: (sectionName: string, excludedIndexes: Set<number>) => void,
+  isPatchingApplied?: boolean
 ) {
   return (
     <SectionCard
@@ -655,6 +662,7 @@ function renderSectionCard(
       inlineLoadingSections={inlineLoadingSections}
       triggerInlineRewrite={triggerInlineRewrite}
       onBulletExclusionChange={onBulletExclusionChange}
+      isPatchingApplied={isPatchingApplied}
     />
   );
 }
@@ -2926,7 +2934,8 @@ export default function Home() {
                                 handleImproveClick,
                                 inlineLoadingSections,
                                 triggerInlineRewrite,
-                                (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))
+                                (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded })),
+                                isPatchingApplied
                               )
                             )}
                           </div>
@@ -2953,7 +2962,8 @@ export default function Home() {
                                 handleImproveClick,
                                 inlineLoadingSections,
                                 triggerInlineRewrite,
-                                (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))
+                                (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded })),
+                                isPatchingApplied
                               )
                             )}
                           </div>
@@ -2980,7 +2990,8 @@ export default function Home() {
                                 handleImproveClick,
                                 inlineLoadingSections,
                                 triggerInlineRewrite,
-                                (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))
+                                (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded })),
+                                isPatchingApplied
                               )
                             )}
                           </div>
