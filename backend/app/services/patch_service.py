@@ -14,6 +14,7 @@ Formatting preservation guarantee
 """
 
 import copy
+import re
 import uuid
 from pathlib import Path
 from typing import Any
@@ -257,7 +258,6 @@ def _is_metadata_line(text: str, para=None) -> bool:
         if "," in t[colon_idx:]:
             return False
 
-    import re
     t_lower = t.lower()
     words = t_lower.split()
     first_word = words[0] if words else ""

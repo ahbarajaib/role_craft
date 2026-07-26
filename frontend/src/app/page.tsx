@@ -3812,8 +3812,9 @@ export default function Home() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <div className="flex items-center gap-2">
-                    {isPatchingApplied && downloadUrl ? (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Download buttons — shown after successful apply, alongside re-apply */}
+                    {isPatchingApplied && downloadUrl && (
                       <div className="flex items-center gap-1.5">
                         <a
                           href={`${API_BASE_URL}${downloadUrl}?filename=${encodeURIComponent(
@@ -3858,24 +3859,30 @@ export default function Home() {
                           <span>Preview</span>
                         </button>
                       </div>
-                    ) : (
-                      <button
-                        onClick={handleApplyRewrites}
-                        disabled={applyMutation.isPending}
-                        className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-50 text-slate-950 rounded-xl text-xs font-extrabold shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5"
-                      >
-                        {applyMutation.isPending ? (
-                          <>
-                            <div className="h-3 w-3 border-2 border-slate-950/20 border-t-slate-950 rounded-full animate-spin" />
-                            Applying...
-                          </>
-                        ) : (
-                          <>
-                            Apply to Resume
-                          </>
-                        )}
-                      </button>
                     )}
+
+                    {/* Apply to Resume — always shown when rewrites exist (with re-apply label after first apply) */}
+                    <button
+                      onClick={handleApplyRewrites}
+                      disabled={applyMutation.isPending}
+                      className={`px-4 py-2 ${isPatchingApplied ? 'bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 shadow-indigo-500/20' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-emerald-500/20'} disabled:opacity-50 text-white rounded-xl text-xs font-extrabold shadow-lg transition-all flex items-center gap-1.5`}
+                    >
+                      {applyMutation.isPending ? (
+                        <>
+                          <div className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Applying...
+                        </>
+                      ) : isPatchingApplied ? (
+                        <>
+                          <RefreshCw className="h-3 w-3" />
+                          Re-Apply Changes
+                        </>
+                      ) : (
+                        <>
+                          Apply to Resume
+                        </>
+                      )}
+                    </button>
                   </div>
 
                   <button
@@ -3898,6 +3905,7 @@ export default function Home() {
                   </button>
                 </div>
               </div>
+
 
             </div>
           </div>
