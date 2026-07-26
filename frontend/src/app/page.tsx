@@ -815,6 +815,36 @@ function cleanSectionTitle(title: string): string {
   return deduplicated.join(" ");
 }
 
+function removeSkillFromText(text: string, skill: string): string {
+  if (!text || !skill) return text;
+  const target = skill.trim();
+  if (!target) return text;
+
+  const escaped = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const patterns = [
+    new RegExp(`,\\s*${escaped}\\b`, 'gi'),
+    new RegExp(`\\b${escaped}\\s*,`, 'gi'),
+    new RegExp(`\\b${escaped}\\b`, 'gi'),
+    new RegExp(escaped, 'gi'),
+  ];
+
+  let current = text;
+  for (const pat of patterns) {
+    if (pat.test(current)) {
+      current = current.replace(pat, '');
+      break;
+    }
+  }
+
+  return current
+    .replace(/:\s*,/g, ': ')
+    .replace(/,\s*,/g, ',')
+    .replace(/,\s*$/gm, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+
 /**
  * Builds a smart resume filename matching the format:
  * [name] - [designation if exist] - [company if exist].docx
@@ -1737,6 +1767,48 @@ export default function Home() {
       setWeavingSingleKeyword(null);
     }
   };
+
+  const removeSkillFromRewrites = (skillName: string) => {
+    if (!skillName) return;
+    const cleanName = cleanKeywordName(skillName);
+
+    setRewrittenSections((prev) => {
+      const nextRewrites: Record<string, string> = { ...prev };
+      let updatedAny = false;
+
+      // Find skills section
+      const skillsSec = (analysisResult?.sections || []).find(
+        (s: any) => s.section_name.toLowerCase().includes("skill") || s.section_name.toLowerCase().includes("technical")
+      );
+      const skillsKey = skillsSec ? skillsSec.section_name.toLowerCase() : "technical skills";
+
+      // If skills section isn't in prev yet, populate from original section raw_text
+      if (!nextRewrites[skillsKey] && skillsSec) {
+        const origText = (skillsSec as any).raw_text || (skillsSec as any).linesArray?.join("\n") || "";
+        if (origText) {
+          nextRewrites[skillsKey] = origText;
+        }
+      }
+
+      for (const [secKey, secText] of Object.entries(nextRewrites)) {
+        if (!secText) continue;
+        let cleanedText = removeSkillFromText(secText, skillName);
+        if (cleanName && cleanName !== skillName) {
+          cleanedText = removeSkillFromText(cleanedText, cleanName);
+        }
+        if (cleanedText !== secText) {
+          updatedAny = true;
+          nextRewrites[secKey] = cleanedText;
+        }
+      }
+
+      if (updatedAny) {
+        setIsPatchingApplied(false);
+      }
+      return nextRewrites;
+    });
+  };
+
 
   // 1. File Upload Mutation
   const uploadMutation = useMutation({
@@ -2885,6 +2957,8 @@ export default function Home() {
                                       return next;
                                     });
                                   }
+                                  // Strip skill from rewritten text and activate "Re-Apply Changes"
+                                  removeSkillFromRewrites(skillName);
                                 }}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 hover:bg-rose-500/10 text-emerald-700 hover:text-rose-600 dark:text-emerald-300 border border-emerald-500/20 hover:border-rose-400/30 transition-all duration-150 cursor-pointer group"
                                 title={isWoven ? `Click to move '${skillName}' back to ${isOriginal ? "supported" : "missing"} keywords` : `Click to remove '${skillName}' from matched skills`}
