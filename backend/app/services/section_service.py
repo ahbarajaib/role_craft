@@ -69,10 +69,8 @@ class SectionService:
 
     def _resolve_path(self, document_id: str) -> Path:
         """Return the expected path; raise ``NotFoundError`` if absent."""
-        path = self._upload_dir / f"{document_id}{DOCX_EXTENSION}"
-        if not path.exists():
-            raise NotFoundError(f"Document '{document_id}' not found.")
-        return path
+        from app.utils.path_resolver import resolve_document_path
+        return resolve_document_path(self._upload_dir, document_id)
 
 
 # ── Schema conversion ─────────────────────────────────────────────────────────

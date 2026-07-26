@@ -355,16 +355,9 @@ class PatchService:
         )
 
         # 1. Resolve the file path.
-        #    Handles both regular UUID uploads and base/{user_id} paths.
+        from app.utils.path_resolver import resolve_document_path
         doc_id = request.document_id
-        if doc_id.startswith("base/"):
-            user_id = doc_id.split("/", 1)[1]
-            file_path = self._upload_dir / "base" / f"{user_id}.docx"
-        else:
-            file_path = self._upload_dir / f"{doc_id}.docx"
-
-        if not file_path.exists():
-            raise NotFoundError(f"Original resume document '{doc_id}' not found.")
+        file_path = resolve_document_path(self._upload_dir, doc_id)
 
         doc = docx.Document(file_path)
         doc_font = _detect_doc_font(doc)

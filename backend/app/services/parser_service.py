@@ -75,15 +75,9 @@ class ParserService:
     # ── Private helpers ───────────────────────────────────────────────────────
 
     def _resolve_path(self, document_id: str) -> Path:
-        """Return the expected filesystem path for a given document ID.
-
-        Raises ``NotFoundError`` if the file is absent so callers do not
-        need to handle ``FileNotFoundError`` themselves.
-        """
-        path = self._upload_dir / f"{document_id}{DOCX_EXTENSION}"
-        if not path.exists():
-            raise NotFoundError(f"Document '{document_id}' not found.")
-        return path
+        """Return the expected filesystem path for a given document ID."""
+        from app.utils.path_resolver import resolve_document_path
+        return resolve_document_path(self._upload_dir, document_id)
 
 
 def _to_schema(paragraphs: list[ParsedParagraph]) -> list[Paragraph]:

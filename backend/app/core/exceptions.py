@@ -81,11 +81,17 @@ class RateLimitError(AppError):
 # ── Exception handlers ────────────────────────────────────────────────────────
 
 
-def _error_response(status_code: int, detail: str) -> JSONResponse:
-    """Return a consistently structured JSON error body."""
+def _error_response(request: Request, status_code: int, detail: str) -> JSONResponse:
+    """Return a consistently structured JSON error body with CORS headers."""
+    origin = request.headers.get("origin", "*") if request else "*"
+    headers = {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Credentials": "true",
+    }
     return JSONResponse(
         status_code=status_code,
         content={"error": {"detail": detail, "status_code": status_code}},
+        headers=headers,
     )
 
 
@@ -94,14 +100,15 @@ async def _app_error_handler(request: Request, exc: AppError) -> JSONResponse:
         logger.error(f"Unhandled application error: {exc.detail} | path={request.url.path}", exc_info=exc)
     else:
         logger.warning(f"Application error: {exc.detail} | path={request.url.path}")
-    return _error_response(exc.status_code, exc.detail)
+    return _error_response(request, exc.status_code, exc.detail)
 
 
 async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.exception("Unhandled exception", path=request.url.path)
     return _error_response(
+        request,
         status.HTTP_500_INTERNAL_SERVER_ERROR,
-        "An internal server error occurred.",
+        f"An internal server error occurred: {str(exc)}",
     )
 
 

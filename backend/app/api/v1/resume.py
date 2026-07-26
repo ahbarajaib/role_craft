@@ -150,20 +150,18 @@ def download_patched_resume_pdf(
     """Stream the generated resume as a PDF file."""
     from app.services.pdf_service import PDFService
 
+    from app.utils.path_resolver import resolve_document_path
     upload_dir = Path(settings.UPLOAD_DIR)
 
     if download_id.startswith("base/"):
         user_id = download_id.split("/", 1)[1]
-        docx_path = upload_dir / "base" / f"{user_id}.docx"
+        docx_path = resolve_document_path(upload_dir, download_id)
         pdf_path = upload_dir / "base" / f"{user_id}.pdf"
     else:
         docx_path = upload_dir / "generated" / f"{download_id}.docx"
         if not docx_path.exists():
-            docx_path = upload_dir / f"{download_id}.docx"
+            docx_path = resolve_document_path(upload_dir, download_id)
         pdf_path = upload_dir / "generated" / f"{download_id}.pdf"
-
-    if not docx_path.exists():
-        raise NotFoundError(f"Source resume document '{download_id}' not found.")
 
     pdf_service = PDFService(upload_dir=upload_dir)
     pdf_service.convert_docx_to_pdf(docx_path, pdf_path)
