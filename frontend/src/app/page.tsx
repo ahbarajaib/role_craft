@@ -2834,13 +2834,23 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-4">
-                  {/* 🟢 Matched Skills — click to remove */}
+                  {/* 🟢 Matched Skills — click to un-weave (woven) or remove (original) */}
                   {(() => {
-                    const originalMatched = (analysisResult.top_strengths || []).map((s: any) =>
-                      typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
+                    const originalMatched = new Set(
+                      (analysisResult.top_strengths || []).map((s: any) =>
+                        (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
+                      )
+                    );
+                    const wovenMatchedLower = new Set(
+                      appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
                     );
                     const allMatched = Array.from(
-                      new Set([...originalMatched, ...appliedWovenKeywords.map((k) => cleanKeywordName(k))])
+                      new Set([
+                        ...(analysisResult.top_strengths || []).map((s: any) =>
+                          typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
+                        ),
+                        ...appliedWovenKeywords.map((k) => cleanKeywordName(k)),
+                      ])
                     ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
 
                     return (
@@ -2849,29 +2859,50 @@ export default function Home() {
                           🟢 Confirmed Matched Skills ({allMatched.length})
                         </span>
                         <div className="flex flex-wrap gap-1.5">
-                          {allMatched.map((skillName, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => {
-                                setManuallyRemovedSkills((prev) => {
-                                  const next = new Set(prev);
-                                  next.add(skillName.toLowerCase());
-                                  return next;
-                                });
-                              }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 hover:bg-rose-500/10 text-emerald-700 hover:text-rose-600 dark:text-emerald-300 border border-emerald-500/20 hover:border-rose-400/30 transition-all duration-150 cursor-pointer group"
-                              title={`Click to remove '${skillName}' from matched skills`}
-                            >
-                              <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 group-hover:hidden" />
-                              <X className="h-3 w-3 shrink-0 text-rose-500 hidden group-hover:block" />
-                              {skillName}
-                            </button>
-                          ))}
+                          {allMatched.map((skillName, idx) => {
+                            const skillLower = skillName.toLowerCase();
+                            // A woven chip came from appliedWovenKeywords (not an original strength, or was woven on top)
+                            const isWoven = wovenMatchedLower.has(skillLower);
+                            const isOriginal = originalMatched.has(skillLower);
+
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => {
+                                  if (isWoven) {
+                                    // Remove from appliedWovenKeywords → chip reappears in 🟡 or 🔴
+                                    setAppliedWovenKeywords((prev) => {
+                                      const next = prev.filter((k) => cleanKeywordName(k).toLowerCase() !== skillLower);
+                                      if (next.length === 0) setIsKeywordsWoven(false);
+                                      return next;
+                                    });
+                                  } else {
+                                    // Original strength — hide it completely
+                                    setManuallyRemovedSkills((prev) => {
+                                      const next = new Set(prev);
+                                      next.add(skillLower);
+                                      return next;
+                                    });
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 hover:bg-rose-500/10 text-emerald-700 hover:text-rose-600 dark:text-emerald-300 border border-emerald-500/20 hover:border-rose-400/30 transition-all duration-150 cursor-pointer group"
+                                title={isWoven ? `Click to move '${skillName}' back to ${isOriginal ? "supported" : "missing"} keywords` : `Click to remove '${skillName}' from matched skills`}
+                              >
+                                <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 group-hover:hidden" />
+                                <X className="h-3 w-3 shrink-0 text-rose-500 hidden group-hover:block" />
+                                {skillName}
+                                {isWoven && (
+                                  <span className="text-[9px] text-emerald-400/60 group-hover:hidden ml-0.5">woven</span>
+                                )}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     );
                   })()}
+
 
                   {/* 🟡 Supported Skills in Evidence — single click to promote to matched */}
                   {(() => {
