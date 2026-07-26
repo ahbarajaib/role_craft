@@ -38,8 +38,9 @@ class PDFService:
 
         pdf_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # 1. Try LibreOffice CLI if available on the system
-        soffice_bin = shutil.which("soffice") or shutil.which("libreoffice")
+        # 1. Try LibreOffice CLI if available on the system (including standard macOS app path)
+        mac_soffice = Path("/Applications/LibreOffice.app/Contents/MacOS/soffice")
+        soffice_bin = shutil.which("soffice") or shutil.which("libreoffice") or (str(mac_soffice) if mac_soffice.exists() else None)
         if soffice_bin:
             try:
                 cmd = [
@@ -77,6 +78,7 @@ class PDFService:
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
         from reportlab.lib.units import inch
+        from docx.oxml.ns import qn
 
         doc = docx.Document(docx_path)
         pdf_doc = SimpleDocTemplate(
@@ -89,6 +91,20 @@ class PDFService:
         )
 
         styles = getSampleStyleSheet()
+
+        # Helper to extract shading fill color from paragraph XML
+        def _get_p_shading_color(p) -> str | None:
+            try:
+                pPr = p._p.find(qn("w:pPr"))
+                if pPr is not None:
+                    shd = pPr.find(qn("w:shd"))
+                    if shd is not None:
+                        fill = shd.get(qn("w:fill"))
+                        if fill and fill != "auto":
+                            return f"#{fill}"
+            except Exception:
+                pass
+            return None
 
         # Custom styles matching resume DOCX font hierarchy & colors
         style_name = ParagraphStyle(
@@ -189,6 +205,7 @@ class PDFService:
                     continue
 
                 style_name_raw = p.style.name.lower() if p.style else ""
+                shading_hex = _get_p_shading_color(p)
 
                 # Format runs preserving bold/italic
                 html_runs = []
@@ -210,8 +227,8 @@ class PDFService:
                     continue
 
                 # 2. Subtitle / Target Title (Top 1-3 lines)
-                if idx in (1, 2) and "heading 1" in style_name_raw:
-                    if "@" in raw_text or "http" in raw_text or "|" in raw_text and len(raw_text) > 40:
+                if idx in (1, 2) and ("heading 1" in style_name_raw or idx == 1):
+                    if "@" in raw_text or "http" in raw_text or ("|" in raw_text and len(raw_text) > 40):
                         story.append(Paragraph(formatted_text, style_contact))
                     else:
                         story.append(Paragraph(formatted_text, style_subtitle))
@@ -223,19 +240,21 @@ class PDFService:
 
                 # 3. Section Banners (e.g. Professional Summary, Technical Skills, Professional Experiences)
                 is_banner = (
-                    raw_text in ["Professional Summary", "Technical Skills", "Professional Experiences", "Projects", "Education"]
+                    shading_hex is not None
+                    or raw_text in ["Professional Summary", "Technical Skills", "Professional Experiences", "Projects", "Education"]
                     or ("heading" in style_name_raw and len(raw_text) < 40 and not raw_text.startswith("•"))
                 )
 
                 if is_banner and len(raw_text) < 45:
-                    # Create full-width shaded section banner table
+                    # Use extracted XML shading color if available, or fall back to soft blue fill
+                    banner_color = colors.HexColor(shading_hex) if shading_hex else colors.HexColor("#93c5fd")
                     banner_p = Paragraph(f"<b>{_escape_xml(raw_text)}</b>", style_section_banner)
                     banner_table = Table(
                         [[banner_p]],
                         colWidths=[7.2 * inch],
                     )
                     banner_table.setStyle(TableStyle([
-                        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#93c5fd")),  # Soft blue banner fill
+                        ("BACKGROUND", (0, 0), (-1, -1), banner_color),
                         ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                         ("TOPPADDING", (0, 0), (-1, -1), 3),
