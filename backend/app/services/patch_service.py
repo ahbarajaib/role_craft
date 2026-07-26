@@ -145,11 +145,32 @@ def _set_paragraph_text_preserve_fmt(paragraph, new_text: str, default_font: str
                 r.font.name = target_font
         return
 
-    # Check if paragraph contains a category label prefix (e.g. "Backend & Systems: Engineered ...")
+    # Check if paragraph contains a category label prefix (e.g. "Backend & Systems: ...") 
     colon_idx = clean_text.find(":")
     if colon_idx > 0 and colon_idx < 50:
         label = clean_text[: colon_idx + 1]
         rest = clean_text[colon_idx + 1 :]
+
+        # Detect if the ORIGINAL Run 1 started with an inline bullet like ' • ' or ': •'
+        # This is used in skill category lines: "AI & LLM Engineering: • OpenAI API..."
+        # We must preserve that bullet prefix in the output even when AI drops it.
+        orig_inline_bullet = None
+        if len(runs) >= 2:
+            orig_run1_text = runs[1].text
+            for sym in ["• ", "• ", "\u2022 "]:
+                if orig_run1_text.lstrip().startswith(sym):
+                    orig_inline_bullet = sym
+                    break
+            # Also check if original run1 starts with just a bullet symbol alone
+            if not orig_inline_bullet:
+                stripped = orig_run1_text.lstrip()
+                if stripped.startswith("•") or stripped.startswith("\u2022"):
+                    orig_inline_bullet = "• "
+
+        # If AI's rest already has the bullet, don't add again
+        rest_stripped = rest.lstrip()
+        if orig_inline_bullet and not any(rest_stripped.startswith(s) for s in ["•", "\u2022", "-", "–"]):
+            rest = f" {orig_inline_bullet}{rest_stripped}"
 
         # Run 0: Category Label (e.g. "Backend & Systems:") -> ALWAYS BOLD
         _set_run_text(runs[0], label)
@@ -525,7 +546,20 @@ class PatchService:
                     ai_idx += 1
 
                 elif ai_idx < len(new_para_texts):
-                    # AI produced more lines than original paragraphs — clone appropriate template.
+                    # AI produced more lines than original paragraphs.
+                    # For EXPERIENCE sections: clone a new paragraph so extra bullets are preserved.
+                    # For NON-EXPERIENCE sections (Skills, Summary, Education etc.): STOP here.
+                    # Adding extra paragraphs in non-experience sections inserts rogue text between
+                    # document sections (e.g. a stray bold sentence between Skills and Experiences).
+                    if not is_experience_sec:
+                        logger.debug(
+                            "Non-experience section AI output has more lines than original paragraphs — "
+                            "skipping extra lines to preserve document layout.",
+                            section=rewrite_item.section,
+                            extra_lines=len(new_para_texts) - ai_idx,
+                        )
+                        break  # Stop processing — do not insert new paragraphs
+
                     ai_text = new_para_texts[ai_idx]
                     # Use overview template for prose lines (no leading bullet char), bullet template otherwise
                     bullet_chars = ["•", "-", "*", "–", "—", "▪"]
