@@ -185,13 +185,48 @@ class PDFService:
             spaceAfter=1.5,
         )
 
-        style_bullet = ParagraphStyle(
-            "ResumeBullet",
-            parent=style_body,
-            leftIndent=14,
-            firstLineIndent=-10,
-            spaceBefore=1.5,
-            spaceAfter=1.5,
+        def _is_docx_bullet(p, text: str) -> bool:
+            bullet_symbols = ["•", "-", "*", "–", "—", "▪", "▸", "\u2022"]
+            if any(text.startswith(s) for s in bullet_symbols):
+                return True
+            try:
+                pPr = p._p.get_or_add_pPr()
+                if pPr.find(qn("w:numPr")) is not None:
+                    return True
+                if p.style and ("list" in p.style.name.lower() or "bullet" in p.style.name.lower()):
+                    return True
+            except Exception:
+                pass
+            return False
+
+        KNOWN_MAIN_SECTIONS = {
+            "professional summary", "technical skills", "professional experiences",
+            "projects", "education", "certifications", "summary", "experience",
+            "skills", "work experience", "employment history"
+        }
+
+        # Helper to split job title and date (e.g., "Wordpress Developer Feb 2025 – Present")
+        date_pattern = re.compile(
+            r'(\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}|\b20\d{2})\s*[\u2013\u2014\-]\s*(Present|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}|\b20\d{2})',
+            re.IGNORECASE
+        )
+
+        style_job_left = ParagraphStyle(
+            "JobTitleLeft",
+            parent=styles["Normal"],
+            fontName="Helvetica-Bold",
+            fontSize=10,
+            leading=13,
+            textColor=colors.HexColor("#0f172a"),
+        )
+        style_job_right = ParagraphStyle(
+            "JobTitleRight",
+            parent=styles["Normal"],
+            fontName="Helvetica-Bold",
+            fontSize=10,
+            leading=13,
+            alignment=2,  # Right align
+            textColor=colors.HexColor("#0f172a"),
         )
 
         story = []
@@ -226,7 +261,7 @@ class PDFService:
                     story.append(Paragraph(formatted_text, style_name))
                     continue
 
-                # 2. Subtitle / Target Title (Top 1-3 lines)
+                # 2. Subtitle / Contact Info (Top 1-3 lines)
                 if idx in (1, 2) and ("heading 1" in style_name_raw or idx == 1):
                     if "@" in raw_text or "http" in raw_text or ("|" in raw_text and len(raw_text) > 40):
                         story.append(Paragraph(formatted_text, style_contact))
@@ -238,15 +273,23 @@ class PDFService:
                     story.append(Paragraph(formatted_text, style_contact))
                     continue
 
-                # 3. Section Banners (e.g. Professional Summary, Technical Skills, Professional Experiences)
-                is_banner = (
-                    shading_hex is not None
-                    or raw_text in ["Professional Summary", "Technical Skills", "Professional Experiences", "Projects", "Education"]
-                    or ("heading" in style_name_raw and len(raw_text) < 40 and not raw_text.startswith("•"))
+                # 3. Check BULLETS FIRST to prevent bullets from being misclassified as banners/headings
+                if _is_docx_bullet(p, raw_text):
+                    bullet_symbols = ["•", "-", "*", "–", "—", "▪", "▸", "\u2022"]
+                    clean_text = formatted_text
+                    bullet_match = next((s for s in bullet_symbols if raw_text.startswith(s)), None)
+                    if bullet_match:
+                        clean_text = formatted_text.lstrip(bullet_match + " ").strip()
+                    story.append(Paragraph(f"• &nbsp; {clean_text}", style_bullet))
+                    continue
+
+                # 4. Main Section Banners (Professional Summary, Technical Skills, Professional Experiences, etc.)
+                clean_lower = raw_text.lower().strip()
+                is_main_banner = clean_lower in KNOWN_MAIN_SECTIONS or (
+                    shading_hex is not None and len(raw_text) < 45 and not date_pattern.search(raw_text)
                 )
 
-                if is_banner and len(raw_text) < 45:
-                    # Use extracted XML shading color if available, or fall back to soft blue fill
+                if is_main_banner and len(raw_text) < 50:
                     banner_color = colors.HexColor(shading_hex) if shading_hex else colors.HexColor("#93c5fd")
                     banner_p = Paragraph(f"<b>{_escape_xml(raw_text)}</b>", style_section_banner)
                     banner_table = Table(
@@ -267,35 +310,44 @@ class PDFService:
                     story.append(Spacer(1, 4))
                     continue
 
-                # 4. Job Role Title Header Line (Heading 2 / Heading 3)
-                if "heading 2" in style_name_raw or "heading 3" in style_name_raw:
+                # 5. Job Role Titles with Dates (e.g. "Wordpress Developer Feb 2025 – Present")
+                match_date = date_pattern.search(raw_text)
+                if match_date or "heading 2" in style_name_raw or "heading 3" in style_name_raw:
+                    if match_date:
+                        date_start = match_date.start()
+                        role_part = raw_text[:date_start].strip()
+                        date_part = raw_text[date_start:].strip()
+
+                        if role_part:
+                            role_p = Paragraph(f"<b>{_escape_xml(role_part)}</b>", style_job_left)
+                            date_p = Paragraph(f"<b>{_escape_xml(date_part)}</b>", style_job_right)
+                            job_table = Table([[role_p, date_p]], colWidths=[5.0 * inch, 2.2 * inch])
+                            job_table.setStyle(TableStyle([
+                                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                                ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
+                            ]))
+                            story.append(job_table)
+                            continue
+
                     story.append(Paragraph(formatted_text, style_job_title))
                     continue
 
-                # 5. Company / Metadata Line
+                # 6. Company / Metadata Line
                 lower_line = raw_text.lower()
                 is_company = (
                     (raw_text.endswith(".") or "," in raw_text)
-                    and any(c in lower_line for c in ["fze", "llc", "ltd", "inc", "dubai", "bangalore", "india", "remote", "freelance"])
-                    and len(raw_text) < 80
+                    and any(c in lower_line for c in ["fze", "llc", "ltd", "inc", "dubai", "bangalore", "india", "remote", "freelance", "project"])
+                    and len(raw_text) < 90
                 )
                 if is_company:
                     story.append(Paragraph(formatted_text, style_company))
                     continue
 
-                # 6. Bullets vs Body
-                bullet_symbols = ["•", "-", "*", "–", "—", "▪", "▸"]
-                is_bullet = any(raw_text.startswith(s) for s in bullet_symbols)
-
-                if is_bullet:
-                    bullet_match = next((s for s in bullet_symbols if raw_text.startswith(s)), None)
-                    clean_text = formatted_text
-                    if bullet_match:
-                        # strip bullet symbol from start of formatted text
-                        clean_text = formatted_text.lstrip(bullet_match + " ").strip()
-                    story.append(Paragraph(f"• &nbsp; {clean_text}", style_bullet))
-                else:
-                    story.append(Paragraph(formatted_text, style_body))
+                # 7. Fallback Body Paragraph
+                story.append(Paragraph(formatted_text, style_body))
 
             if not story:
                 story.append(Paragraph("<b>Resume Document</b>", style_body))
