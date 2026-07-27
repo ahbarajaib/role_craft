@@ -125,3 +125,33 @@ class OpenAIProvider:
         )
 
         return parsed  # type: ignore[return-value]
+
+    def generate_text(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float = 0.4,
+    ) -> str:
+        """Call OpenAI API for free-form text generation."""
+        logger.debug("Calling OpenAI API for text generation", model=self._model)
+        try:
+            response = self._client.chat.completions.create(
+                model=self._model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=temperature,
+                timeout=self._timeout,
+            )
+            content = response.choices[0].message.content
+            if not content:
+                raise AIProviderError("The AI provider returned an empty text response.")
+            return content.strip()
+        except APITimeoutError as exc:
+            logger.error(f"OpenAI API request timed out: {exc}")
+            raise AIProviderError("The connection to the AI provider timed out. Please try again.") from exc
+        except APIError as exc:
+            logger.error(f"OpenAI API error: {exc}")
+            raise AIProviderError(f"OpenAI API error: {exc}") from exc
+
