@@ -1034,12 +1034,23 @@ export default function Home() {
       return;
     }
 
+    const originalMatched = (analysisResult?.top_strengths || []).map((s: any) =>
+      typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
+    );
+    const confirmedMatchedSkills = Array.from(
+      new Set([
+        ...originalMatched,
+        ...appliedWovenKeywords.map((k) => cleanKeywordName(k)),
+      ])
+    ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
+
     setIsGeneratingCoverLetter(true);
     try {
       const res = await generateCoverLetter({
         document_id: documentId,
         job_description_text: jobDescription,
         rewritten_sections: rewrittenSections,
+        confirmed_matched_skills: confirmedMatchedSkills,
       });
 
       setCoverLetterText(res.cover_letter_text);

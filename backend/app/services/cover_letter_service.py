@@ -93,6 +93,7 @@ class CoverLetterService:
             summary_text=summary_text,
             job_description_text=request.job_description_text[:3000],
             evidence_context=evidence_context[:3000],
+            confirmed_matched_skills=request.confirmed_matched_skills,
         )
 
         logger.info("Generating AI cover letter for document", document_id=request.document_id, candidate=candidate_name)

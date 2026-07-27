@@ -12,6 +12,9 @@ class CoverLetterRequest(BaseModel):
     rewritten_sections: dict[str, str] | None = Field(
         default=None, description="Active AI rewrites to align cover letter with tailored resume"
     )
+    confirmed_matched_skills: list[str] | None = Field(
+        default=None, description="Strict list of confirmed matched skills present in applied resume"
+    )
 
 
 class CoverLetterResponse(BaseModel):

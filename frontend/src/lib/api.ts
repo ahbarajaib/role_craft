@@ -189,6 +189,7 @@ export interface CoverLetterRequest {
   job_description_text: string;
   candidate_name?: string;
   rewritten_sections?: Record<string, string>;
+  confirmed_matched_skills?: string[];
 }
 
 export interface CoverLetterResponse {
