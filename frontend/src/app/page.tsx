@@ -38,7 +38,7 @@ import {
   ExternalLink,
   Briefcase
 } from "lucide-react";
-import { uploadResume, analyzeResume, rewriteSection, applyRewrites, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
+import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
@@ -1015,6 +1015,60 @@ export default function Home() {
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [metricPercentage, setMetricPercentage] = useState("");
   const [metricScale, setMetricScale] = useState("");
+
+  // ── Cover Letter State ───────────────────────────────────────────────────
+  const [coverLetterText, setCoverLetterText] = useState<string | null>(null);
+  const [coverLetterDownloadId, setCoverLetterDownloadId] = useState<string | null>(null);
+  const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
+  const [isUpdatingCoverLetter, setIsUpdatingCoverLetter] = useState(false);
+  const [isEditingCoverLetter, setIsEditingCoverLetter] = useState(false);
+
+  const handleGenerateCoverLetter = async () => {
+    if (!documentId || !jobDescription) return;
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
+    if (user && user.plan_type === "free" && user.credits <= 0) {
+      setIsSubscriptionModalOpen(true);
+      return;
+    }
+
+    setIsGeneratingCoverLetter(true);
+    try {
+      const res = await generateCoverLetter({
+        document_id: documentId,
+        job_description_text: jobDescription,
+        rewritten_sections: rewrittenSections,
+      });
+
+      setCoverLetterText(res.cover_letter_text);
+      setCoverLetterDownloadId(res.download_id);
+      setIsEditingCoverLetter(false);
+      setSuccessNotification("✨ Tailored cover letter generated successfully!");
+    } catch (err: any) {
+      console.error("Cover letter generation error:", err);
+      setError(err?.message || "Failed to generate cover letter.");
+    } finally {
+      setIsGeneratingCoverLetter(false);
+    }
+  };
+
+  const handleUpdateCoverLetterText = async (newText: string) => {
+    setCoverLetterText(newText);
+    if (!coverLetterDownloadId) return;
+
+    setIsUpdatingCoverLetter(true);
+    try {
+      await updateCoverLetter(coverLetterDownloadId, newText);
+      setSuccessNotification("Cover letter updated successfully!");
+    } catch (err: any) {
+      console.error("Cover letter update error:", err);
+    } finally {
+      setIsUpdatingCoverLetter(false);
+    }
+  };
+
 
   useEffect(() => {
     if (Object.keys(rewrittenSections).length > 0) {
@@ -3091,6 +3145,144 @@ export default function Home() {
                     );
                   })()}
                 </div>
+              </div>
+
+              {/* ✉️ Tailored Cover Letter Card */}
+              <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 space-y-4 shadow-xl">
+                <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
+                      <FileText className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        Tailored Cover Letter
+                        {coverLetterText && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
+                            Ready
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Generate a 3-paragraph executive cover letter tailored to the job description & your resume.
+                      </p>
+                    </div>
+                  </div>
+
+                  {!coverLetterText && (
+                    <button
+                      type="button"
+                      onClick={handleGenerateCoverLetter}
+                      disabled={isGeneratingCoverLetter}
+                      className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-600/20 disabled:opacity-50"
+                    >
+                      {isGeneratingCoverLetter ? (
+                        <>
+                          <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          Generating Cover Letter...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-3.5 w-3.5 text-purple-200 animate-pulse" />
+                          ✨ Generate Cover Letter (1-Click)
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Cover Letter Content Body */}
+                {coverLetterText ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-2 flex-wrap bg-slate-50 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+                      <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium">
+                        <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                        <span>Cover Letter tailored to job description</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingCoverLetter(!isEditingCoverLetter)}
+                          className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit className="h-3 w-3" />
+                          {isEditingCoverLetter ? "Done Editing" : "Edit Text"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isGeneratingCoverLetter}
+                          onClick={handleGenerateCoverLetter}
+                          className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                        >
+                          <RefreshCw className={`h-3 w-3 ${isGeneratingCoverLetter ? "animate-spin" : ""}`} />
+                          Regenerate
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Preview / Edit Area */}
+                    {isEditingCoverLetter ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={coverLetterText}
+                          onChange={(e) => setCoverLetterText(e.target.value)}
+                          rows={12}
+                          className="w-full p-3.5 rounded-xl border border-purple-300 dark:border-purple-800/60 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-purple-500/30 resize-y font-sans"
+                          placeholder="Edit your cover letter here..."
+                        />
+                        <button
+                          type="button"
+                          disabled={isUpdatingCoverLetter}
+                          onClick={() => handleUpdateCoverLetterText(coverLetterText)}
+                          className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        >
+                          {isUpdatingCoverLetter ? (
+                            <div className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <CheckCircle className="h-3.5 w-3.5" />
+                          )}
+                          Save Changes to Cover Letter
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-slate-800 dark:text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-sans space-y-2 shadow-inner">
+                        {coverLetterText}
+                      </div>
+                    )}
+
+                    {/* Download Buttons Bar */}
+                    {coverLetterDownloadId && (
+                      <div className="flex items-center justify-end flex-wrap gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mr-auto">
+                          Export Cover Letter:
+                        </span>
+                        <a
+                          href={`${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=docx`}
+                          download
+                          className="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          Download Cover Letter (.DOCX)
+                        </a>
+                        <a
+                          href={`${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=pdf`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          Download Cover Letter (.PDF)
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950/20 text-center space-y-2">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Click the button above to generate an executive 3-paragraph cover letter tailored to this role and your resume achievements.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Section Analysis Breakdown (Actionable cards shown at the top for maximum speed) */}

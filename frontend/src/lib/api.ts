@@ -183,3 +183,53 @@ export async function applyRewrites(
 
   return response.json();
 }
+
+export interface CoverLetterRequest {
+  document_id: string;
+  job_description_text: string;
+  candidate_name?: string;
+  rewritten_sections?: Record<string, string>;
+}
+
+export interface CoverLetterResponse {
+  download_id: string;
+  cover_letter_text: string;
+  candidate_name: string;
+  target_role: string;
+}
+
+export async function generateCoverLetter(
+  request: CoverLetterRequest
+): Promise<CoverLetterResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/resume/cover-letter`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || "Failed to generate cover letter");
+  }
+
+  return response.json();
+}
+
+export async function updateCoverLetter(
+  downloadId: string,
+  coverLetterText: string
+): Promise<{ status: string; message: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/resume/cover-letter/${downloadId}`, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify({ cover_letter_text: coverLetterText }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || "Failed to update cover letter");
+  }
+
+  return response.json();
+}
+

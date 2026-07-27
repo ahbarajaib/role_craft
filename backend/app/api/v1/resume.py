@@ -23,13 +23,15 @@ from app.services.cleanup import cleanup_old_files
 from app.core.config import Settings
 from app.core.exceptions import NotFoundError
 from app.dependencies.common import get_settings
-from app.dependencies.resume_analysis import get_resume_analysis_workflow, get_rewrite_service, get_patch_service
+from app.dependencies.resume_analysis import get_resume_analysis_workflow, get_rewrite_service, get_patch_service, get_cover_letter_service
 from app.schemas.resume_analysis import ResumeAnalysisRequest, ResumeAnalysisResult
 from app.schemas.rewrite import RewriteSectionRequest, RewriteSectionResponse
 from app.schemas.patch import ApplyRewriteRequest, ApplyRewriteResponse
+from app.schemas.cover_letter import CoverLetterRequest, CoverLetterResponse, UpdateCoverLetterRequest
 from app.services.resume_analysis_workflow import ResumeAnalysisWorkflow
 from app.services.rewrite_service import RewriteService
 from app.services.patch_service import PatchService
+from app.services.cover_letter_service import CoverLetterService
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models import User
@@ -180,4 +182,78 @@ def download_patched_resume_pdf(
         media_type="application/pdf",
         headers=headers,
     )
+
+
+# ── Cover Letter Endpoints ───────────────────────────────────────────────────
+
+
+@router.post(
+    "/cover-letter",
+    response_model=CoverLetterResponse,
+    summary="Generate a tailored cover letter using AI",
+    dependencies=[Depends(verify_premium_permission)],
+)
+def generate_cover_letter(
+    body: CoverLetterRequest,
+    service: Annotated[CoverLetterService, Depends(get_cover_letter_service)],
+) -> CoverLetterResponse:
+    """Generate a tailored 3-paragraph cover letter based on resume & job description."""
+    return service.generate_cover_letter(body)
+
+
+@router.put(
+    "/cover-letter/{download_id}",
+    summary="Update edited cover letter text before downloading",
+    dependencies=[Depends(verify_premium_permission)],
+)
+def update_cover_letter(
+    download_id: str,
+    body: UpdateCoverLetterRequest,
+    service: Annotated[CoverLetterService, Depends(get_cover_letter_service)],
+) -> dict[str, str]:
+    """Update cover letter text and rebuild DOCX."""
+    service.update_cover_letter_text(download_id, body.cover_letter_text)
+    return {"status": "ok", "message": "Cover letter updated successfully"}
+
+
+@router.get(
+    "/download/{download_id}/cover-letter",
+    summary="Download cover letter as DOCX or PDF",
+)
+def download_cover_letter(
+    download_id: str,
+    settings: Annotated[Settings, Depends(get_settings)],
+    format: str = "docx",
+    filename: str = "cover_letter.docx",
+) -> FileResponse:
+    """Download the generated cover letter file in DOCX or PDF format."""
+    upload_dir = Path(settings.UPLOAD_DIR)
+    docx_path = upload_dir / "generated" / f"{download_id}.docx"
+
+    if not docx_path.exists():
+        raise NotFoundError(f"Cover letter file for ID '{download_id}' not found.")
+
+    if format.lower() == "pdf":
+        from app.services.pdf_service import PDFService
+        pdf_path = upload_dir / "generated" / f"{download_id}.pdf"
+        pdf_service = PDFService(upload_dir=upload_dir)
+        pdf_service.convert_docx_to_pdf(docx_path, pdf_path)
+
+        safe_name = filename.rsplit(".", 1)[0] + ".pdf" if "." in filename else filename + ".pdf"
+        return FileResponse(
+            path=pdf_path,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'inline; filename="{safe_name}"',
+                "Access-Control-Allow-Origin": "*",
+            },
+        )
+
+    safe_name = filename if filename.endswith(".docx") else f"{filename.rsplit('.', 1)[0]}.docx"
+    return FileResponse(
+        path=docx_path,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        filename=safe_name,
+    )
+
 

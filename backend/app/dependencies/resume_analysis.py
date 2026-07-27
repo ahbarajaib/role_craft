@@ -55,6 +55,24 @@ def get_rewrite_service(
     )
 
 
+def get_cover_letter_service(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> CoverLetterService:
+    """Construct a ``CoverLetterService`` wired to current settings."""
+    from app.services.cover_letter_service import CoverLetterService
+
+    provider = OpenAIProvider(
+        api_key=settings.OPENAI_API_KEY,
+        model=settings.OPENAI_MODEL,
+        timeout=settings.OPENAI_TIMEOUT_SECONDS,
+    )
+    return CoverLetterService(
+        upload_dir=Path(settings.UPLOAD_DIR),
+        section_service=SectionService(upload_dir=Path(settings.UPLOAD_DIR)),
+        provider=provider,
+    )
+
+
 def get_resume_analysis_workflow(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> ResumeAnalysisWorkflow:
