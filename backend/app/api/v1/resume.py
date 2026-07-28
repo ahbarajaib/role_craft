@@ -18,7 +18,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.responses import FileResponse
 
-from loguru import logger
 from app.services.cleanup import cleanup_old_files
 
 from app.core.config import Settings
@@ -70,17 +69,24 @@ def analyze_resume(
 
     # Save to AnalysisHistory safely
     try:
-        try:
-            from app.services.section_service import SectionService
-            sec_service = SectionService(upload_dir=Path(settings.UPLOAD_DIR))
-            filename = sec_service._resolve_path(body.document_id).name
-        except Exception:
-            filename = "Resume.docx"
+        if body.document_id.startswith("base/") and getattr(user, "base_resume_filename", None):
+            filename = user.base_resume_filename
+        else:
+            try:
+                from app.services.section_service import SectionService
+                sec_service = SectionService(upload_dir=Path(settings.UPLOAD_DIR))
+                filename = sec_service._resolve_path(body.document_id).name
+            except Exception:
+                filename = "Resume.docx"
 
         target_role = getattr(result.overall_summary, "job_title", "Target Role") if result.overall_summary else "Target Role"
         target_company = getattr(result.overall_summary, "target_company", None) if result.overall_summary else None
         sections_need_improvement = len([s for s in (result.sections or []) if getattr(s, "review_status", None) == "improve"])
         total_sections = len(result.sections or [])
+
+        # Correct overall score calculation from overall_coverage_percentage
+        coverage_pct = getattr(result.overall_summary, "overall_coverage_percentage", 0.0) if result.overall_summary else 0.0
+        overall_score = int(round(coverage_pct))
 
         history_entry = AnalysisHistory(
             user_id=user.id,
@@ -88,7 +94,7 @@ def analyze_resume(
             filename=filename,
             target_role=target_role,
             target_company=target_company,
-            overall_score=result.overall_score,
+            overall_score=overall_score,
             sections_need_improvement=sections_need_improvement,
             total_sections=total_sections,
             analysis_result_json=result.model_dump_json(),
