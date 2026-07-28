@@ -287,11 +287,19 @@ export async function fetchAnalysisHistory(): Promise<HistoryResponse> {
 }
 
 export async function updateDailyTarget(dailyTarget: number): Promise<DailyTargetSummary> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/history/target`, {
-    method: "PATCH",
+  let response = await fetch(`${API_BASE_URL}/api/v1/history/target`, {
+    method: "PUT",
     headers: getHeaders(),
     body: JSON.stringify({ daily_target: dailyTarget }),
   });
+
+  if (!response.ok) {
+    response = await fetch(`${API_BASE_URL}/api/v1/history/target`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify({ daily_target: dailyTarget }),
+    });
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));

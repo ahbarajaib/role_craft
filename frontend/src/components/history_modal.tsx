@@ -69,6 +69,7 @@ export default function HistoryModal({
   const handleTargetChange = async (newTarget: number) => {
     if (!historyData) return;
     setIsUpdatingTarget(true);
+    setError(null);
     try {
       const updatedSummary = await updateDailyTarget(newTarget);
       setHistoryData({
@@ -80,6 +81,7 @@ export default function HistoryModal({
       });
     } catch (err: any) {
       console.error("Failed to update target:", err);
+      setError(err?.message || "Failed to update daily target. Please try again.");
     } finally {
       setIsUpdatingTarget(false);
     }

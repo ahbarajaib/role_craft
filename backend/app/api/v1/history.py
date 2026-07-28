@@ -90,28 +90,30 @@ def get_history(
 
 
 @router.patch("/target", response_model=DailyTargetSummary, summary="Update user daily application target goal")
+@router.put("/target", response_model=DailyTargetSummary, summary="Update user daily application target goal (PUT fallback)")
 def update_daily_target(
     body: UpdateDailyTargetRequest,
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> DailyTargetSummary:
     """Update current user's daily target application goal."""
-    current_user.daily_target = body.daily_target
+    target_val = max(1, body.daily_target)
+    current_user.daily_target = target_val
     db.add(current_user)
     db.commit()
 
-    # Recalculate today's summary
+    # Recalculate today's summary accurately
     stmt = select(AnalysisHistory).where(AnalysisHistory.user_id == current_user.id)
     records = db.scalars(stmt).all()
     today = date.today()
     today_completed = len([r for r in records if r.created_at.date() == today])
-    progress_percentage = min(100, int((today_completed / body.daily_target) * 100))
+    progress_percentage = min(100, int((today_completed / target_val) * 100))
 
     return DailyTargetSummary(
         today_completed=today_completed,
-        daily_target=body.daily_target,
+        daily_target=target_val,
         progress_percentage=progress_percentage,
-        goal_achieved=today_completed >= body.daily_target,
+        goal_achieved=today_completed >= target_val,
     )
 
 
