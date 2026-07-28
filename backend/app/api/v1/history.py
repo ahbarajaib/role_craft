@@ -58,8 +58,8 @@ def get_history(
     ]
 
     # 3. Calculate today's completed analyses count (UTC date comparison)
-    today = date.today()
-    today_records = [r for r in records if r.created_at.date() == today]
+    today_utc = datetime.utcnow().date()
+    today_records = [r for r in records if r.created_at.date() == today_utc]
     today_completed = len(today_records)
     daily_target = max(1, current_user.daily_target or 10)
     progress_percentage = min(100, int((today_completed / daily_target) * 100))
@@ -105,8 +105,8 @@ def update_daily_target(
     # Recalculate today's summary accurately
     stmt = select(AnalysisHistory).where(AnalysisHistory.user_id == current_user.id)
     records = db.scalars(stmt).all()
-    today = date.today()
-    today_completed = len([r for r in records if r.created_at.date() == today])
+    today_utc = datetime.utcnow().date()
+    today_completed = len([r for r in records if r.created_at.date() == today_utc])
     progress_percentage = min(100, int((today_completed / target_val) * 100))
 
     return DailyTargetSummary(
