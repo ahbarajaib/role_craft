@@ -18,6 +18,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.responses import FileResponse
 
+from loguru import logger
 from app.services.cleanup import cleanup_old_files
 
 from app.core.config import Settings
