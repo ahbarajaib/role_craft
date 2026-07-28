@@ -2171,68 +2171,32 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Navigation Bar Links */}
-        <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto py-1 text-xs font-bold text-slate-700">
-          <button
-            onClick={() => switchNavTab("landing")}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-              activeNavTab === "landing" ? "bg-emerald-600 text-white shadow-sm" : "hover:bg-slate-200/60 text-slate-700"
-            }`}
-          >
-            Overview
-          </button>
-          <a
-            href="#how-it-works"
-            onClick={() => switchNavTab("landing")}
-            className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
-          >
-            How It Works
-          </a>
-          <a
-            href="#features"
-            onClick={() => switchNavTab("landing")}
-            className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
-          >
-            Features
-          </a>
-          <a
-            href="#before-after"
-            onClick={() => switchNavTab("landing")}
-            className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap hidden sm:inline-block"
-          >
-            Before & After
-          </a>
-          <a
-            href="#pricing"
-            onClick={() => switchNavTab("landing")}
-            className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
-          >
-            Pricing
-          </a>
-          <a
-            href="#faq"
-            onClick={() => switchNavTab("landing")}
-            className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap hidden md:inline-block"
-          >
-            FAQ
-          </a>
-        </nav>
+        {/* Navigation Bar Links (Shown on landing page) */}
+        {activeNavTab === "landing" && (
+          <nav className="hidden lg:flex items-center gap-1 sm:gap-2 text-xs font-bold text-slate-700">
+            <a
+              href="#features"
+              className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
+            >
+              Features
+            </a>
+            <a
+              href="#pricing"
+              className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
+            >
+              Pricing
+            </a>
+            <a
+              href="#faq"
+              className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
+            >
+              FAQ
+            </a>
+          </nav>
+        )}
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
-          <button
-            type="button"
-            onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${
-              activeNavTab === "workspace"
-                ? "bg-slate-900 text-white ring-2 ring-emerald-500"
-                : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
-            }`}
-          >
-            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-            <span>{activeNavTab === "workspace" ? "← Back to Overview" : "⚡ Launch Workspace"}</span>
-          </button>
-
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-end md:self-auto">
           {/* History & Goals Button */}
           <button
             type="button"
@@ -2248,6 +2212,20 @@ export default function Home() {
           >
             <History className="h-3.5 w-3.5 text-indigo-500" />
             <span className="hidden sm:inline">History & Goals</span>
+          </button>
+
+          {/* Launch / Switch Workspace Button */}
+          <button
+            type="button"
+            onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${
+              activeNavTab === "workspace"
+                ? "bg-slate-900 text-white ring-2 ring-emerald-500"
+                : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+            <span>{activeNavTab === "workspace" ? "← Exit Workspace" : "⚡ Launch Workspace"}</span>
           </button>
 
           {user ? (
