@@ -186,6 +186,9 @@ export default function HistoryModal({
                     <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold">
                       Today: <span className="font-bold text-indigo-600 dark:text-indigo-400">{daily.today_completed}</span> / {daily.daily_target} jobs tailored ({daily.progress_percentage}%)
                     </p>
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      Resets daily at 00:00 UTC (5:30 AM IST)
+                    </p>
                   </div>
                 </div>
 
@@ -290,13 +293,17 @@ export default function HistoryModal({
           ) : (
             <div className="space-y-3">
               {filteredItems.map((item) => {
-                const dateStr = new Date(item.created_at).toLocaleDateString(undefined, {
+                const isoStr = item.created_at;
+                const formattedIso = isoStr && !isoStr.endsWith("Z") && !isoStr.includes("+") ? `${isoStr}Z` : isoStr;
+                const d = new Date(formattedIso);
+                const dateStr = `${d.toLocaleDateString(undefined, {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
+                })} at ${d.toLocaleTimeString(undefined, {
                   hour: "2-digit",
                   minute: "2-digit",
-                });
+                })}`;
 
                 return (
                   <div
