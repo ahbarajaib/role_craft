@@ -67,33 +67,36 @@ def analyze_resume(
     )
     deduct_analysis_credit(db, user)
 
-    # Save to AnalysisHistory
+    # Save to AnalysisHistory safely
     try:
-        from app.services.section_service import SectionService
-        sec_service = SectionService(upload_dir=Path(settings.UPLOAD_DIR))
-        filename = sec_service._resolve_path(body.document_id).name
-    except Exception:
-        filename = "Resume.docx"
+        try:
+            from app.services.section_service import SectionService
+            sec_service = SectionService(upload_dir=Path(settings.UPLOAD_DIR))
+            filename = sec_service._resolve_path(body.document_id).name
+        except Exception:
+            filename = "Resume.docx"
 
-    target_role = result.overall_summary.job_title if result.overall_summary else "Target Role"
-    target_company = result.overall_summary.target_company if result.overall_summary else None
-    sections_need_improvement = len([s for s in (result.sections or []) if s.review_status == "improve"])
-    total_sections = len(result.sections or [])
+        target_role = getattr(result.overall_summary, "job_title", "Target Role") if result.overall_summary else "Target Role"
+        target_company = getattr(result.overall_summary, "target_company", None) if result.overall_summary else None
+        sections_need_improvement = len([s for s in (result.sections or []) if getattr(s, "review_status", None) == "improve"])
+        total_sections = len(result.sections or [])
 
-    history_entry = AnalysisHistory(
-        user_id=user.id,
-        document_id=body.document_id,
-        filename=filename,
-        target_role=target_role,
-        target_company=target_company,
-        overall_score=result.overall_score,
-        sections_need_improvement=sections_need_improvement,
-        total_sections=total_sections,
-        analysis_result_json=result.model_dump_json(),
-        job_description_text=body.job_description_text,
-    )
-    db.add(history_entry)
-    db.commit()
+        history_entry = AnalysisHistory(
+            user_id=user.id,
+            document_id=body.document_id,
+            filename=filename,
+            target_role=target_role,
+            target_company=target_company,
+            overall_score=result.overall_score,
+            sections_need_improvement=sections_need_improvement,
+            total_sections=total_sections,
+            analysis_result_json=result.model_dump_json(),
+            job_description_text=body.job_description_text,
+        )
+        db.add(history_entry)
+        db.commit()
+    except Exception as hist_err:
+        logger.error(f"Failed to auto-save AnalysisHistory: {hist_err}")
 
     return result
 
