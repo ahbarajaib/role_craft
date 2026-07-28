@@ -273,7 +273,8 @@ export interface HistoryDetailResponse {
 }
 
 export async function fetchAnalysisHistory(): Promise<HistoryResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/history`, {
+  const tzOffset = new Date().getTimezoneOffset();
+  const response = await fetch(`${API_BASE_URL}/api/v1/history?tz_offset=${tzOffset}`, {
     method: "GET",
     headers: getHeaders(),
   });
@@ -287,14 +288,15 @@ export async function fetchAnalysisHistory(): Promise<HistoryResponse> {
 }
 
 export async function updateDailyTarget(dailyTarget: number): Promise<DailyTargetSummary> {
-  let response = await fetch(`${API_BASE_URL}/api/v1/history/target`, {
+  const tzOffset = new Date().getTimezoneOffset();
+  let response = await fetch(`${API_BASE_URL}/api/v1/history/target?tz_offset=${tzOffset}`, {
     method: "PUT",
     headers: getHeaders(),
     body: JSON.stringify({ daily_target: dailyTarget }),
   });
 
   if (!response.ok) {
-    response = await fetch(`${API_BASE_URL}/api/v1/history/target`, {
+    response = await fetch(`${API_BASE_URL}/api/v1/history/target?tz_offset=${tzOffset}`, {
       method: "PATCH",
       headers: getHeaders(),
       body: JSON.stringify({ daily_target: dailyTarget }),

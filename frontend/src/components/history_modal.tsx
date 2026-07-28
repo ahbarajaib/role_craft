@@ -187,7 +187,7 @@ export default function HistoryModal({
                       Today: <span className="font-bold text-indigo-600 dark:text-indigo-400">{daily.today_completed}</span> / {daily.daily_target} jobs tailored ({daily.progress_percentage}%)
                     </p>
                     <p className="text-[10px] text-slate-400 font-medium">
-                      Resets daily at 00:00 UTC (5:30 AM IST)
+                      Resets daily at 12:00 AM (midnight) local time
                     </p>
                   </div>
                 </div>

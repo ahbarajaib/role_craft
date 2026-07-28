@@ -26,10 +26,22 @@ from app.schemas.history import (
 router = APIRouter(prefix="/history", tags=["history"])
 
 
+def get_user_local_date(dt: datetime, tz_offset_minutes: int) -> date:
+    """Convert a UTC datetime to user's local date based on JS getTimezoneOffset() minutes.
+
+    JS getTimezoneOffset() returns (UTC - Local) in minutes:
+      - IST (UTC+5:30) returns -330  => Local = UTC - (-330m) = UTC + 5h30m
+      - EDT (UTC-4:00) returns +240  => Local = UTC - (+240m) = UTC - 4h00m
+    """
+    local_dt = dt - timedelta(minutes=tz_offset_minutes)
+    return local_dt.date()
+
+
 @router.get("", response_model=HistoryResponse, summary="Get resume analysis history and daily target summary")
 def get_history(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    tz_offset: int = Query(0, description="User local timezone offset in minutes from getTimezoneOffset()"),
 ) -> HistoryResponse:
     """Return all past history records and summary metrics for current user."""
     # 1. Fetch user's history ordered by created_at desc
@@ -57,9 +69,9 @@ def get_history(
         for r in records
     ]
 
-    # 3. Calculate today's completed analyses count (UTC date comparison)
-    today_utc = datetime.utcnow().date()
-    today_records = [r for r in records if r.created_at.date() == today_utc]
+    # 3. Calculate today's completed analyses count in user's local timezone (resets at local midnight)
+    today_local = get_user_local_date(datetime.utcnow(), tz_offset)
+    today_records = [r for r in records if get_user_local_date(r.created_at, tz_offset) == today_local]
     today_completed = len(today_records)
     daily_target = max(1, current_user.daily_target or 10)
     progress_percentage = min(100, int((today_completed / daily_target) * 100))
@@ -95,6 +107,7 @@ def update_daily_target(
     body: UpdateDailyTargetRequest,
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    tz_offset: int = Query(0, description="User local timezone offset in minutes from getTimezoneOffset()"),
 ) -> DailyTargetSummary:
     """Update current user's daily target application goal."""
     target_val = max(1, body.daily_target)
@@ -102,11 +115,11 @@ def update_daily_target(
     db.add(current_user)
     db.commit()
 
-    # Recalculate today's summary accurately
+    # Recalculate today's summary accurately in user's local timezone
     stmt = select(AnalysisHistory).where(AnalysisHistory.user_id == current_user.id)
     records = db.scalars(stmt).all()
-    today_utc = datetime.utcnow().date()
-    today_completed = len([r for r in records if r.created_at.date() == today_utc])
+    today_local = get_user_local_date(datetime.utcnow(), tz_offset)
+    today_completed = len([r for r in records if get_user_local_date(r.created_at, tz_offset) == today_local])
     progress_percentage = min(100, int((today_completed / target_val) * 100))
 
     return DailyTargetSummary(
