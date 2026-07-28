@@ -22,6 +22,7 @@ class User(Base):
     razorpay_customer_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     base_resume_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     base_resume_filename: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    daily_target: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 class IPLimit(Base):
@@ -30,3 +31,21 @@ class IPLimit(Base):
     ip_address: Mapped[str] = mapped_column(String, primary_key=True)
     request_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     last_request_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+class AnalysisHistory(Base):
+    __tablename__ = "analysis_history"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
+    document_id: Mapped[str] = mapped_column(String, nullable=False)
+    filename: Mapped[str] = mapped_column(String, nullable=False)
+    target_role: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    target_company: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    overall_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    sections_need_improvement: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    total_sections: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    download_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    analysis_result_json: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    job_description_text: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+

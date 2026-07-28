@@ -234,3 +234,99 @@ export async function updateCoverLetter(
   return response.json();
 }
 
+export interface AnalysisHistoryItem {
+  id: number;
+  document_id: string;
+  filename: string;
+  target_role: string | null;
+  target_company: string | null;
+  overall_score: number;
+  sections_need_improvement: number;
+  total_sections: number;
+  download_id: string | null;
+  created_at: string;
+}
+
+export interface DailyTargetSummary {
+  today_completed: number;
+  daily_target: number;
+  progress_percentage: number;
+  goal_achieved: boolean;
+}
+
+export interface HistorySummaryStats {
+  total_analyzed: number;
+  average_score: number;
+  latest_analysis_at: string | null;
+  daily_summary: DailyTargetSummary;
+}
+
+export interface HistoryResponse {
+  items: AnalysisHistoryItem[];
+  summary: HistorySummaryStats;
+}
+
+export interface HistoryDetailResponse {
+  item: AnalysisHistoryItem;
+  analysis_result: Record<string, any>;
+  job_description_text: string;
+}
+
+export async function fetchAnalysisHistory(): Promise<HistoryResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/history`, {
+    method: "GET",
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || "Failed to fetch analysis history");
+  }
+
+  return response.json();
+}
+
+export async function updateDailyTarget(dailyTarget: number): Promise<DailyTargetSummary> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/history/target`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify({ daily_target: dailyTarget }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || "Failed to update daily target");
+  }
+
+  return response.json();
+}
+
+export async function fetchHistoryDetail(historyId: number): Promise<HistoryDetailResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/history/${historyId}`, {
+    method: "GET",
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || "Failed to fetch history session");
+  }
+
+  return response.json();
+}
+
+export async function deleteHistoryItem(historyId: number): Promise<{ status: string; message: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/history/${historyId}`, {
+    method: "DELETE",
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || "Failed to delete history item");
+  }
+
+  return response.json();
+}
+
+

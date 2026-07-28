@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from app.models import Base
 
@@ -13,8 +13,16 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db() -> None:
-    """Ensure database tables are created."""
+    """Ensure database tables are created and migrate lightweight schema additions."""
     Base.metadata.create_all(bind=engine)
+    # Ensure daily_target column exists on users table for existing databases
+    with engine.connect() as conn:
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN daily_target INTEGER DEFAULT 10"))
+            conn.commit()
+        except Exception:
+            pass  # Column already exists
+
 
 def get_db():
     """FastAPI route dependency to provide database session."""

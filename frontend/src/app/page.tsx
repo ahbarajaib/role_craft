@@ -36,12 +36,14 @@ import {
   Globe,
   Link as LinkIcon,
   ExternalLink,
-  Briefcase
+  Briefcase,
+  History
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
+import HistoryModal from "@/components/history_modal";
 import BeforeAfterSlider from "@/components/before_after_slider";
 import FeaturesShowcase from "@/components/features_showcase";
 import TestimonialsSection from "@/components/testimonials_section";
@@ -1015,6 +1017,27 @@ export default function Home() {
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [metricPercentage, setMetricPercentage] = useState("");
   const [metricScale, setMetricScale] = useState("");
+
+  // ── History & Goals State ───────────────────────────────────────────────
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+
+  const handleRestoreSession = (
+    analysisResultData: any,
+    jobDescriptionText: string,
+    docId: string,
+    filenameStr: string
+  ) => {
+    setAnalysisResult(analysisResultData);
+    setJobDescription(jobDescriptionText);
+    setDocumentId(docId);
+    // Create synthetic file object for workspace header display
+    const synthetic = new File([], filenameStr, {
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    });
+    setFile(synthetic);
+    setActiveNavTab("workspace");
+    setSuccessNotification(`Loaded past session for "${filenameStr}" into workspace!`);
+  };
 
   // ── Cover Letter State ───────────────────────────────────────────────────
   const [coverLetterText, setCoverLetterText] = useState<string | null>(null);
@@ -2208,6 +2231,23 @@ export default function Home() {
           >
             <Sparkles className="h-3.5 w-3.5 text-amber-300" />
             <span>{activeNavTab === "workspace" ? "← Back to Overview" : "⚡ Launch Workspace"}</span>
+          </button>
+
+          {/* History & Goals Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!token) {
+                setShowAuthModal(true);
+              } else {
+                setIsHistoryModalOpen(true);
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-sm transition-all cursor-pointer"
+            title="View Application History & Daily Goals"
+          >
+            <History className="h-3.5 w-3.5 text-indigo-500" />
+            <span className="hidden sm:inline">History & Goals</span>
           </button>
 
           {user ? (
@@ -4419,6 +4459,13 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* History & Goals Modal */}
+      <HistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        onRestoreSession={handleRestoreSession}
+      />
     </div>
   );
 }

@@ -34,7 +34,7 @@ from app.services.patch_service import PatchService
 from app.services.cover_letter_service import CoverLetterService
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.models import User
+from app.models import User, AnalysisHistory
 from app.dependencies.limits import verify_analysis_permission, verify_premium_permission, deduct_analysis_credit
 
 router = APIRouter(prefix="/resume", tags=["resume"])
@@ -58,6 +58,7 @@ def analyze_resume(
     workflow: Annotated[ResumeAnalysisWorkflow, Depends(get_resume_analysis_workflow)],
     user: Annotated[User, Depends(verify_analysis_permission)],
     db: Annotated[Session, Depends(get_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
 ) -> ResumeAnalysisResult:
     """Delegate the full workflow to the workflow service."""
     result = workflow.run(
@@ -65,6 +66,35 @@ def analyze_resume(
         job_description_text=body.job_description_text,
     )
     deduct_analysis_credit(db, user)
+
+    # Save to AnalysisHistory
+    try:
+        from app.services.section_service import SectionService
+        sec_service = SectionService(upload_dir=Path(settings.UPLOAD_DIR))
+        filename = sec_service._resolve_path(body.document_id).name
+    except Exception:
+        filename = "Resume.docx"
+
+    target_role = result.overall_summary.job_title if result.overall_summary else "Target Role"
+    target_company = result.overall_summary.target_company if result.overall_summary else None
+    sections_need_improvement = len([s for s in (result.sections or []) if s.review_status == "improve"])
+    total_sections = len(result.sections or [])
+
+    history_entry = AnalysisHistory(
+        user_id=user.id,
+        document_id=body.document_id,
+        filename=filename,
+        target_role=target_role,
+        target_company=target_company,
+        overall_score=result.overall_score,
+        sections_need_improvement=sections_need_improvement,
+        total_sections=total_sections,
+        analysis_result_json=result.model_dump_json(),
+        job_description_text=body.job_description_text,
+    )
+    db.add(history_entry)
+    db.commit()
+
     return result
 
 
@@ -102,6 +132,7 @@ def apply_rewrites(
     service: Annotated[PatchService, Depends(get_patch_service)],
     background_tasks: BackgroundTasks,
     settings: Annotated[Settings, Depends(get_settings)],
+    db: Annotated[Session, Depends(get_db)],
 ) -> ApplyRewriteResponse:
     """Delegate patching operation to PatchService."""
     background_tasks.add_task(
@@ -109,7 +140,25 @@ def apply_rewrites(
         upload_dir=Path(settings.UPLOAD_DIR),
         max_age_hours=settings.GENERATED_CLEANUP_HOURS,
     )
-    return service.apply_rewrites(body)
+    res = service.apply_rewrites(body)
+
+    # Link download_id to the latest matching history record for this document_id
+    try:
+        from sqlalchemy import select
+        stmt = (
+            select(AnalysisHistory)
+            .where(AnalysisHistory.document_id == body.document_id)
+            .order_by(AnalysisHistory.created_at.desc())
+        )
+        hist = db.scalars(stmt).first()
+        if hist:
+            hist.download_id = res.download_id
+            db.add(hist)
+            db.commit()
+    except Exception:
+        pass
+
+    return res
 
 
 @router.get(
