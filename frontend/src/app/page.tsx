@@ -39,7 +39,7 @@ import {
   Briefcase,
   History
 } from "lucide-react";
-import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
+import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
@@ -2300,6 +2300,11 @@ export default function Home() {
           >
             <User className="h-3.5 w-3.5 text-indigo-500" />
             <span className="hidden sm:inline">Profile & Base Docs</span>
+            {user && (
+              <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] border border-indigo-500/20">
+                {calculateProfileCompletion(user).totalPercentage}%
+              </span>
+            )}
           </button>
           {/* History & Goals Button */}
           <button
@@ -2413,6 +2418,13 @@ export default function Home() {
                         <span className="text-slate-500 font-medium">Credits Available</span>
                         <span className="font-extrabold text-emerald-600">
                           {user.credits} Credits
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/40">
+                        <span className="text-slate-600 dark:text-slate-300 font-bold">Profile Completion</span>
+                        <span className="font-extrabold text-indigo-600 dark:text-indigo-400">
+                          {calculateProfileCompletion(user).totalPercentage}%
                         </span>
                       </div>
 

@@ -15,7 +15,7 @@ import {
   Sparkles,
   Info,
 } from "lucide-react";
-import { updateProfile, setBaseCoverLetter, deleteBaseCoverLetter, uploadResume } from "@/lib/api";
+import { updateProfile, setBaseCoverLetter, deleteBaseCoverLetter, uploadResume, calculateProfileCompletion } from "@/lib/api";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -43,6 +43,15 @@ export function ProfileModal({
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   if (!isOpen) return null;
+
+  // Calculate live profile completion score
+  const completion = calculateProfileCompletion({
+    ...user,
+    name,
+    phone_number: phoneNumber,
+    address,
+    linkedin_url: linkedinUrl,
+  });
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,6 +142,68 @@ export function ProfileModal({
 
         {/* Content Body */}
         <div className="p-6 space-y-6 overflow-y-auto flex-1 text-sm">
+          {/* Profile Completion Progress Card */}
+          <div className="p-4 rounded-2xl border border-indigo-500/30 dark:border-indigo-500/20 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-emerald-500/5 dark:from-indigo-950/20 dark:to-emerald-950/20 space-y-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-indigo-500 animate-pulse" />
+                <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                  Profile Completion Score
+                </span>
+              </div>
+              <span className={`px-2.5 py-0.5 rounded-full font-black text-xs border ${
+                completion.totalPercentage === 100
+                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                  : "bg-indigo-500/10 text-indigo-600 border-indigo-500/30"
+              }`}>
+                {completion.totalPercentage}% Complete
+              </span>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 rounded-full transition-all duration-500"
+                style={{ width: `${completion.totalPercentage}%` }}
+              />
+            </div>
+
+            {/* Breakdown List with Percentages */}
+            <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 space-y-1.5">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                Completion Breakdown by Item:
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs">
+                {completion.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`flex items-center justify-between p-2 rounded-xl border text-xs font-medium transition-all ${
+                      item.isComplete
+                        ? "bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-900 dark:text-emerald-300"
+                        : "bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/40 text-amber-800 dark:text-amber-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 truncate mr-2">
+                      {item.isComplete ? (
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                      ) : (
+                        <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0 animate-pulse" />
+                      )}
+                      <span className="truncate">{item.label}</span>
+                    </div>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold shrink-0 border ${
+                      item.isComplete
+                        ? "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border-emerald-200"
+                        : "bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 border-amber-200"
+                    }`}>
+                      {item.isComplete ? `+${item.weight}%` : `${item.weight}%`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {statusMsg && (
             <div
               className={`p-3.5 rounded-2xl text-xs font-medium border flex items-center gap-2 ${

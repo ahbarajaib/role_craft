@@ -386,4 +386,61 @@ export async function deleteHistoryItem(historyId: number): Promise<{ status: st
   return response.json();
 }
 
+export interface ProfileCompletionItem {
+  id: string;
+  label: string;
+  weight: number;
+  isComplete: boolean;
+}
+
+export function calculateProfileCompletion(user: any) {
+  const items: ProfileCompletionItem[] = [
+    {
+      id: "email",
+      label: "Email Address",
+      weight: 15,
+      isComplete: Boolean(user?.email && user.email.trim().length > 0),
+    },
+    {
+      id: "name",
+      label: "Full Name",
+      weight: 15,
+      isComplete: Boolean(user?.name && user.name.trim().length > 0),
+    },
+    {
+      id: "address",
+      label: "Location / Address",
+      weight: 15,
+      isComplete: Boolean(user?.address && user.address.trim().length > 0),
+    },
+    {
+      id: "phone",
+      label: "Phone Number",
+      weight: 15,
+      isComplete: Boolean(user?.phone_number && user.phone_number.trim().length > 0),
+    },
+    {
+      id: "linkedin",
+      label: "LinkedIn / Portfolio",
+      weight: 15,
+      isComplete: Boolean(user?.linkedin_url && user.linkedin_url.trim().length > 0),
+    },
+    {
+      id: "base_resume",
+      label: "Master Base Resume (.docx)",
+      weight: 15,
+      isComplete: Boolean(user?.base_resume_id),
+    },
+    {
+      id: "base_cover_letter",
+      label: "Base Cover Letter Template (.docx)",
+      weight: 10,
+      isComplete: Boolean(user?.base_cover_letter_id),
+    },
+  ];
+
+  const totalPercentage = items.reduce((acc, item) => acc + (item.isComplete ? item.weight : 0), 0);
+  return { items, totalPercentage };
+}
+
 
