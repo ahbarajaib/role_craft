@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install uv package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Install system dependencies (LibreOffice for PDF rendering + Playwright Chromium dependencies)
+# Install system dependencies (LibreOffice for PDF rendering + basic tools)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libreoffice-core \
     libreoffice-writer \
@@ -15,21 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     wget \
     gnupg \
-    libnss3 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    librandr2 \
-    libgbm1 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libasound2 \
-    && rm -rf /var/lib/apt/lists/* || true
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory inside container
 WORKDIR /app
@@ -37,9 +23,9 @@ WORKDIR /app
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
 
-# Install project dependencies using uv and download Playwright Chromium
+# Install project dependencies using uv and download Playwright Chromium with dependencies
 RUN uv sync --frozen --no-cache && \
-    uv run playwright install chromium || true
+    uv run playwright install --with-deps chromium
 
 # Copy application source code
 COPY app/ app/
