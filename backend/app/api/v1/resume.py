@@ -319,19 +319,16 @@ def download_cover_letter(
 def debug_libreoffice():
     import shutil
     import subprocess
+    import glob
     soffice_path = shutil.which("soffice") or shutil.which("libreoffice")
-    if not soffice_path:
-        return {"status": "not found"}
-    try:
-        res = subprocess.run([soffice_path, "--version"], capture_output=True, text=True, timeout=10)
-        return {
-            "status": "found",
-            "path": soffice_path,
-            "returncode": res.returncode,
-            "stdout": res.stdout,
-            "stderr": res.stderr
-        }
-    except Exception as e:
-        return {"status": "error", "error": str(e)}
+    
+    # Let's search common directories as well
+    search_paths = glob.glob("/usr/bin/*office*") + glob.glob("/usr/lib/libreoffice/program/*")
+    
+    return {
+        "status": "not found" if not soffice_path else "found",
+        "soffice_path": soffice_path,
+        "search_paths": search_paths,
+    }
 
 
