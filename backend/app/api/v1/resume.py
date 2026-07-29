@@ -322,13 +322,18 @@ def debug_libreoffice():
     soffice_path = shutil.which("soffice") or shutil.which("libreoffice")
     
     found_paths = []
-    for root, dirs, files in os.walk("/usr"):
+    # Search the entire root filesystem, skipping virtual mounts
+    for root, dirs, files in os.walk("/"):
+        # Skip virtual mounts to prevent hanging
+        if any(p in root for p in ["/proc", "/sys", "/dev", "/run", "/var/lib/docker"]):
+            dirs[:] = []
+            continue
         for f in files:
             if "soffice" in f or "libreoffice" in f:
                 found_paths.append(os.path.join(root, f))
-                if len(found_paths) >= 20:
+                if len(found_paths) >= 50:
                     break
-        if len(found_paths) >= 20:
+        if len(found_paths) >= 50:
             break
             
     return {
