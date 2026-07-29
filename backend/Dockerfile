@@ -6,7 +6,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Install system dependencies (LibreOffice for PDF rendering + Playwright Chromium dependencies)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libreoffice-nogui \
+    libreoffice-core \
     libreoffice-writer \
     fonts-liberation \
     curl \
