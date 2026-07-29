@@ -12,15 +12,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Deploy to VPS via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /opt/role_craft
-            git fetch origin main
-            git reset --hard origin/main
-            docker compose up -d --build --force-recreate
+      - name: Trigger VPS Deploy via Webhook
+        run: |
+          curl -X POST \
+            -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN || '1d2448ca44d83cc492294209344be2a6abef16fa' }}" \
+            -H "Content-Type: application/json" \
+            https://api.rolecraft.tech/deploy-webhook
+
 
