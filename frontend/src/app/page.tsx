@@ -1080,10 +1080,11 @@ export default function Home() {
 
     setIsGeneratingCoverLetter(true);
     try {
+      const effectiveTargetRole = customTargetRole || rewrittenSections["header"] || analysisResult?.overall_summary?.job_title || undefined;
       const res = await generateCoverLetter({
         document_id: documentId,
         job_description_text: jobDescription,
-        target_role: customTargetRole || undefined,
+        target_role: effectiveTargetRole,
         contact_info: contactInfoStr,
         rewritten_sections: rewrittenSections,
         confirmed_matched_skills: confirmedMatchedSkills,
@@ -1533,10 +1534,11 @@ export default function Home() {
           ].filter(Boolean);
           const contactInfoStr = contactInfoParts.length > 0 ? contactInfoParts.join(" | ") : undefined;
 
+          const effectiveTargetRole = newRewrites["header"] || customTargetRole || result.overall_summary?.job_title || undefined;
           const clRes = await generateCoverLetter({
             document_id: documentId,
             job_description_text: jobDescription,
-            target_role: customTargetRole || undefined,
+            target_role: effectiveTargetRole,
             contact_info: contactInfoStr,
             rewritten_sections: newRewrites,
             confirmed_matched_skills: updatedConfirmedMatchedSkills,
@@ -2043,6 +2045,7 @@ export default function Home() {
       setIsEditingCoverLetter(false);
       setAppliedWovenKeywords([]);
       setIsKeywordsWoven(false);
+      setCustomTargetRole(data.overall_summary?.job_title || "");
 
       // Refresh credits balance in header
       refreshMe().catch(() => { });
@@ -2176,6 +2179,7 @@ export default function Home() {
     setIsEditingCoverLetter(false);
     setAppliedWovenKeywords([]);
     setIsKeywordsWoven(false);
+    setCustomTargetRole("");
 
     if (!keepResume) {
       setFile(null);
