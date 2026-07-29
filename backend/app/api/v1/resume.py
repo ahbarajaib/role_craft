@@ -232,7 +232,7 @@ def download_patched_resume_pdf(
         safe_name = safe_name.rsplit(".", 1)[0] + ".pdf" if "." in safe_name else safe_name + ".pdf"
 
     headers = {
-        "Content-Disposition": f'inline; filename="{safe_name}"',
+        "Content-Disposition": f'attachment; filename="{safe_name}"',
         "Access-Control-Allow-Origin": "*",
     }
 
@@ -303,7 +303,7 @@ def download_cover_letter(
             path=pdf_path,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'inline; filename="{safe_name}"',
+                "Content-Disposition": f'attachment; filename="{safe_name}"',
                 "Access-Control-Allow-Origin": "*",
             },
         )

@@ -200,9 +200,13 @@ class PDFService:
             return False
 
         KNOWN_MAIN_SECTIONS = {
-            "professional summary", "technical skills", "professional experiences",
-            "projects", "education", "certifications", "summary", "experience",
-            "skills", "work experience", "employment history"
+            "professional summary", "summary", "profile", "executive summary", "about me",
+            "core technical skills", "technical skills", "skills & competencies", "skills", "technologies", "core competencies",
+            "professional experience", "professional experiences", "work experience", "experience", "employment history", "career progression", "career history",
+            "quantified achievements", "key achievements", "selected achievements", "achievements", "accomplishments", "highlights",
+            "selected projects", "projects", "featured projects", "personal projects", "key projects",
+            "education", "academic background", "education & credentials", "academic qualifications",
+            "certifications", "licenses & certifications", "certifications & training", "courses", "trainings"
         }
 
         # Helper to split job title and date (e.g., "Wordpress Developer Feb 2025 – Present")
@@ -283,29 +287,36 @@ class PDFService:
                     story.append(Paragraph(f"• &nbsp; {clean_text}", style_bullet))
                     continue
 
-                # 4. Main Section Banners (Professional Summary, Technical Skills, Professional Experiences, etc.)
+                # 4. Main Section Banners (Professional Summary, Core Technical Skills, Achievements, Education, etc.)
                 clean_lower = raw_text.lower().strip()
-                is_main_banner = clean_lower in KNOWN_MAIN_SECTIONS or (
-                    shading_hex is not None and len(raw_text) < 45 and not date_pattern.search(raw_text)
+                is_heading_style = "heading 1" in style_name_raw or "heading 2" in style_name_raw or "heading" in style_name_raw
+                is_all_caps = raw_text.isupper() and len(raw_text) > 3 and len(raw_text) < 45
+                is_known_banner = clean_lower in KNOWN_MAIN_SECTIONS or any(clean_lower.startswith(sec) for sec in KNOWN_MAIN_SECTIONS)
+
+                is_main_banner = (
+                    is_known_banner
+                    or (shading_hex is not None and len(raw_text) < 50 and not date_pattern.search(raw_text))
+                    or (is_all_caps and not date_pattern.search(raw_text))
+                    or (is_heading_style and len(raw_text) < 50 and not raw_text.endswith(".") and not date_pattern.search(raw_text))
                 )
 
-                if is_main_banner and len(raw_text) < 50:
-                    banner_color = colors.HexColor(shading_hex) if shading_hex else colors.HexColor("#93c5fd")
-                    banner_p = Paragraph(f"<b>{_escape_xml(raw_text)}</b>", style_section_banner)
+                if is_main_banner and len(raw_text) < 60:
+                    banner_color = colors.HexColor(shading_hex) if shading_hex else colors.HexColor("#e2e8f0")
+                    banner_p = Paragraph(f"<b>{_escape_xml(raw_text.upper())}</b>", style_section_banner)
                     banner_table = Table(
                         [[banner_p]],
                         colWidths=[7.2 * inch],
                     )
                     banner_table.setStyle(TableStyle([
                         ("BACKGROUND", (0, 0), (-1, -1), banner_color),
-                        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
                         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                         ("TOPPADDING", (0, 0), (-1, -1), 3),
                         ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-                        ("LEFTPADDING", (0, 0), (-1, -1), 4),
-                        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
                     ]))
-                    story.append(Spacer(1, 4))
+                    story.append(Spacer(1, 6))
                     story.append(banner_table)
                     story.append(Spacer(1, 4))
                     continue
