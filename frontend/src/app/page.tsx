@@ -1495,12 +1495,43 @@ export default function Home() {
         setAppliedWovenKeywords((prev) => Array.from(new Set([...prev, ...allMatrixKwsToMark])));
         setIsKeywordsWoven(true);
 
+        // ── Auto-generate Tailored Cover Letter in 1-Click ──
+        console.log("📝 [RoleCraft Audit] Auto-generating Tailored Cover Letter in 1-Click...");
+        setIsGeneratingCoverLetter(true);
+        try {
+          const originalMatched = (result.top_strengths || []).map((s: any) =>
+            typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
+          );
+          const updatedConfirmedMatchedSkills = Array.from(
+            new Set([
+              ...originalMatched,
+              ...allMatrixKwsToMark.map((k) => cleanKeywordName(k)),
+            ])
+          ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
+
+          const clRes = await generateCoverLetter({
+            document_id: documentId,
+            job_description_text: jobDescription,
+            rewritten_sections: newRewrites,
+            confirmed_matched_skills: updatedConfirmedMatchedSkills,
+          });
+
+          setCoverLetterText(clRes.cover_letter_text);
+          setCoverLetterDownloadId(clRes.download_id);
+          setIsEditingCoverLetter(false);
+          console.log("✨ [RoleCraft Audit] Auto-generated 1-Click Cover Letter:", clRes.download_id);
+        } catch (clErr) {
+          console.error("❌ [RoleCraft Audit] Auto Cover Letter Generation Failed:", clErr);
+        } finally {
+          setIsGeneratingCoverLetter(false);
+        }
+
         const parts: string[] = [];
         if (result.overall_summary?.job_title) parts.push("Target Role");
         if (sectionsToTailor.length > 0) parts.push(`${sectionsToTailor.length} section${sectionsToTailor.length > 1 ? "s" : ""}`);
         if (allMatrixKwsToMark.length > 0) parts.push(`${allMatrixKwsToMark.length} ATS keywords`);
 
-        setSuccessNotification(`⚡ Auto-Tailored: ${parts.join(", ")} applied to resume!`);
+        setSuccessNotification(`⚡ 1-Click Auto-Tailored: Full Resume & Cover Letter Generated! (${parts.join(", ")})`);
       }
     } catch (err: any) {
       console.error("❌ [RoleCraft Audit] Auto-tailor error:", err);
