@@ -83,11 +83,14 @@ class RateLimitError(AppError):
 
 def _error_response(request: Request, status_code: int, detail: str) -> JSONResponse:
     """Return a consistently structured JSON error body with CORS headers."""
-    origin = request.headers.get("origin", "*") if request else "*"
-    headers = {
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Credentials": "true",
-    }
+    origin = request.headers.get("origin") if request else None
+    headers: dict[str, str] = {}
+    if origin:
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+    else:
+        headers["Access-Control-Allow-Origin"] = "*"
+
     return JSONResponse(
         status_code=status_code,
         content={"error": {"detail": detail, "status_code": status_code}},

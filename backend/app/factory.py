@@ -85,9 +85,19 @@ def create_app() -> FastAPI:
     # Starlette applies middleware in reverse registration order, so the
     # last-added middleware is the outermost wrapper.  Register CORS first
     # so it is outermost (handles pre-flight before request ID is needed).
+    origins_list = list(settings.ALLOWED_ORIGINS) if isinstance(settings.ALLOWED_ORIGINS, list) else []
+    for default_origin in [
+        "https://rolecraft.tech",
+        "https://www.rolecraft.tech",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]:
+        if default_origin not in origins_list:
+            origins_list.append(default_origin)
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.ALLOWED_ORIGINS,
+        allow_origins=origins_list,
         allow_origin_regex=r"https://.*rolecraft\.tech.*",
         allow_credentials=True,
         allow_methods=["*"],
