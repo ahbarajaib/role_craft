@@ -315,4 +315,23 @@ def download_cover_letter(
         filename=safe_name,
     )
 
+@router.get("/debug/libreoffice")
+def debug_libreoffice():
+    import shutil
+    import subprocess
+    soffice_path = shutil.which("soffice") or shutil.which("libreoffice")
+    if not soffice_path:
+        return {"status": "not found"}
+    try:
+        res = subprocess.run([soffice_path, "--version"], capture_output=True, text=True, timeout=10)
+        return {
+            "status": "found",
+            "path": soffice_path,
+            "returncode": res.returncode,
+            "stdout": res.stdout,
+            "stderr": res.stderr
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
 
