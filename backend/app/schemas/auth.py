@@ -16,6 +16,9 @@ class GoogleLoginRequest(BaseModel):
 
 class ProfileUpdateRequest(BaseModel):
     name: Optional[str] = None
+    phone_number: Optional[str] = None
+    address: Optional[str] = None
+    linkedin_url: Optional[str] = None
 
 class UserResponse(BaseModel):
     id: int
@@ -27,6 +30,11 @@ class UserResponse(BaseModel):
     subscription_status: str
     base_resume_id: Optional[str] = None
     base_resume_filename: Optional[str] = None
+    base_cover_letter_id: Optional[str] = None
+    base_cover_letter_filename: Optional[str] = None
+    phone_number: Optional[str] = None
+    address: Optional[str] = None
+    linkedin_url: Optional[str] = None
     created_at: datetime
 
     class Config:

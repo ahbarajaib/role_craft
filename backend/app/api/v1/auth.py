@@ -137,9 +137,15 @@ def update_profile(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    """Update the authenticated user's profile (name)."""
+    """Update the authenticated user's profile information."""
     if req.name is not None:
         user.name = req.name.strip() or None
+    if req.phone_number is not None:
+        user.phone_number = req.phone_number.strip() or None
+    if req.address is not None:
+        user.address = req.address.strip() or None
+    if req.linkedin_url is not None:
+        user.linkedin_url = req.linkedin_url.strip() or None
     db.commit()
     db.refresh(user)
     return user

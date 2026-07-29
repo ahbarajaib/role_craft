@@ -13,6 +13,11 @@ export interface User {
   subscription_status: string;
   base_resume_id: string | null;
   base_resume_filename: string | null;
+  base_cover_letter_id?: string | null;
+  base_cover_letter_filename?: string | null;
+  phone_number?: string | null;
+  address?: string | null;
+  linkedin_url?: string | null;
   created_at: string;
 }
 //change 

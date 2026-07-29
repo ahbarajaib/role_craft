@@ -48,6 +48,7 @@ import BeforeAfterSlider from "@/components/before_after_slider";
 import FeaturesShowcase from "@/components/features_showcase";
 import TestimonialsSection from "@/components/testimonials_section";
 import FaqSection from "@/components/faq_section";
+import { ProfileModal } from "@/components/profile_modal";
 
 interface DiffToken {
   value: string;
@@ -1000,6 +1001,8 @@ export default function Home() {
   const [appliedWovenKeywords, setAppliedWovenKeywords] = useState<string[]>([]);
   const [isKeywordsWoven, setIsKeywordsWoven] = useState(false);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [customTargetRole, setCustomTargetRole] = useState<string>("");
 
   // ── Keyword Weave Modal state ──────────────────────────────────────────────
   const [isKeywordWeaveModalOpen, setIsKeywordWeaveModalOpen] = useState(false);
@@ -1067,17 +1070,30 @@ export default function Home() {
       ])
     ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
 
+    const contactInfoParts = [
+      user?.address,
+      user?.phone_number,
+      user?.email,
+      user?.linkedin_url,
+    ].filter(Boolean);
+    const contactInfoStr = contactInfoParts.length > 0 ? contactInfoParts.join(" | ") : undefined;
+
     setIsGeneratingCoverLetter(true);
     try {
       const res = await generateCoverLetter({
         document_id: documentId,
         job_description_text: jobDescription,
+        target_role: customTargetRole || undefined,
+        contact_info: contactInfoStr,
         rewritten_sections: rewrittenSections,
         confirmed_matched_skills: confirmedMatchedSkills,
       });
 
       setCoverLetterText(res.cover_letter_text);
       setCoverLetterDownloadId(res.download_id);
+      if (res.target_role) {
+        setCustomTargetRole(res.target_role);
+      }
       setIsEditingCoverLetter(false);
       setSuccessNotification("✨ Tailored cover letter generated successfully!");
     } catch (err: any) {
@@ -1509,15 +1525,28 @@ export default function Home() {
             ])
           ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
 
+          const contactInfoParts = [
+            user?.address,
+            user?.phone_number,
+            user?.email,
+            user?.linkedin_url,
+          ].filter(Boolean);
+          const contactInfoStr = contactInfoParts.length > 0 ? contactInfoParts.join(" | ") : undefined;
+
           const clRes = await generateCoverLetter({
             document_id: documentId,
             job_description_text: jobDescription,
+            target_role: customTargetRole || undefined,
+            contact_info: contactInfoStr,
             rewritten_sections: newRewrites,
             confirmed_matched_skills: updatedConfirmedMatchedSkills,
           });
 
           setCoverLetterText(clRes.cover_letter_text);
           setCoverLetterDownloadId(clRes.download_id);
+          if (clRes.target_role) {
+            setCustomTargetRole(clRes.target_role);
+          }
           setIsEditingCoverLetter(false);
           console.log("✨ [RoleCraft Audit] Auto-generated 1-Click Cover Letter:", clRes.download_id);
         } catch (clErr) {
@@ -2252,6 +2281,22 @@ export default function Home() {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-end md:self-auto">
+          {/* Profile & Base Docs Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!token) {
+                setShowAuthModal(true);
+              } else {
+                setIsProfileModalOpen(true);
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-sm transition-all cursor-pointer"
+            title="Manage Profile Contact Info & Base Master Templates"
+          >
+            <User className="h-3.5 w-3.5 text-indigo-500" />
+            <span className="hidden sm:inline">Profile & Base Docs</span>
+          </button>
           {/* History & Goals Button */}
           <button
             type="button"
@@ -2376,6 +2421,18 @@ export default function Home() {
                         </div>
                       )}
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        setIsProfileModalOpen(true);
+                      }}
+                      className="w-full py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                    >
+                      <User className="h-3.5 w-3.5" />
+                      Profile & Base Docs
+                    </button>
 
                     {/* Sign Out Button */}
                     <button
@@ -3295,6 +3352,43 @@ export default function Home() {
                           ✨ Generate Cover Letter (1-Click)
                         </>
                       )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Editable Target Designation & Contact Header Controls */}
+                <div className="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">
+                      Target Designation:
+                    </span>
+                    <input
+                      type="text"
+                      value={customTargetRole}
+                      onChange={(e) => setCustomTargetRole(e.target.value)}
+                      placeholder="e.g. Full Stack Developer"
+                      className="flex-1 min-w-[200px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                    />
+                    <button
+                      type="button"
+                      disabled={isGeneratingCoverLetter}
+                      onClick={handleGenerateCoverLetter}
+                      className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer disabled:opacity-50 shadow-sm"
+                    >
+                      Update Header
+                    </button>
+                  </div>
+                  {user && (user.address || user.phone_number || user.linkedin_url) ? (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                      <strong>Header Contact Line:</strong> {[user.address, user.phone_number, user.email, user.linkedin_url].filter(Boolean).join(" | ")}
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setIsProfileModalOpen(true)}
+                      className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                    >
+                      + Add Address, Phone & LinkedIn to Profile for Cover Letter Header
                     </button>
                   )}
                 </div>
@@ -4522,6 +4616,17 @@ export default function Home() {
         isOpen={isHistoryModalOpen}
         onClose={() => setIsHistoryModalOpen(false)}
         onRestoreSession={handleRestoreSession}
+      />
+
+      {/* Profile & Base Documents Modal */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={user}
+        token={token}
+        onProfileUpdated={() => {
+          refreshMe().catch(() => {});
+        }}
       />
     </div>
   );

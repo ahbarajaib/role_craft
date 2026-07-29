@@ -145,6 +145,61 @@ def set_base_resume(
     return BaseResumeResponse(document_id=stable_id, filename=body.filename)
 
 
+@router.post(
+    "/set-base-cover-letter",
+    response_model=BaseResumeResponse,
+    summary="Save a document as the user's base cover letter template",
+)
+def set_base_cover_letter(
+    body: SetBaseResumeRequest,
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> BaseResumeResponse:
+    """Copy the given document to the base cover letter store and update user record."""
+    upload_dir = Path(settings.UPLOAD_DIR)
+    src_path = upload_dir / f"{body.document_id}.docx"
+    if not src_path.exists():
+        raise NotFoundError(f"Document '{body.document_id}' not found.")
+
+    base_dir = upload_dir / "base"
+    base_dir.mkdir(parents=True, exist_ok=True)
+    dest_path = base_dir / f"{user.id}_cover_letter.docx"
+    shutil.copy2(src_path, dest_path)
+
+    stable_id = f"base/{user.id}_cover_letter"
+    user.base_cover_letter_id = stable_id
+    user.base_cover_letter_filename = body.filename
+    db.commit()
+    db.refresh(user)
+
+    return BaseResumeResponse(document_id=stable_id, filename=body.filename)
+
+
+@router.delete(
+    "/base-cover-letter",
+    summary="Delete the user's saved base cover letter template",
+)
+def delete_base_cover_letter(
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict[str, str]:
+    """Delete saved base cover letter template."""
+    upload_dir = Path(settings.UPLOAD_DIR)
+    dest_path = upload_dir / "base" / f"{user.id}_cover_letter.docx"
+    if dest_path.exists():
+        try:
+            dest_path.unlink()
+        except Exception:
+            pass
+
+    user.base_cover_letter_id = None
+    user.base_cover_letter_filename = None
+    db.commit()
+    return {"status": "ok", "message": "Base cover letter template removed."}
+
+
 @router.get(
     "/{document_id}/parse",
     response_model=DocumentParseResponse,

@@ -22,6 +22,11 @@ class User(Base):
     razorpay_customer_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     base_resume_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     base_resume_filename: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    base_cover_letter_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    base_cover_letter_filename: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    phone_number: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    address: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    linkedin_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     daily_target: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 

@@ -188,8 +188,55 @@ export interface CoverLetterRequest {
   document_id: string;
   job_description_text: string;
   candidate_name?: string;
+  target_role?: string;
+  contact_info?: string;
   rewritten_sections?: Record<string, string>;
   confirmed_matched_skills?: string[];
+}
+
+export interface ProfileUpdatePayload {
+  name?: string;
+  phone_number?: string;
+  address?: string;
+  linkedin_url?: string;
+}
+
+export async function updateProfile(payload: ProfileUpdatePayload): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/profile`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.error?.detail || "Failed to update profile");
+  }
+  return response.json();
+}
+
+export async function setBaseCoverLetter(documentId: string, filename: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/documents/set-base-cover-letter`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ document_id: documentId, filename }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.error?.detail || "Failed to save base cover letter");
+  }
+  return response.json();
+}
+
+export async function deleteBaseCoverLetter(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/documents/base-cover-letter`, {
+    method: "DELETE",
+    headers: getHeaders(),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.error?.detail || "Failed to remove base cover letter");
+  }
+  return response.json();
 }
 
 export interface CoverLetterResponse {

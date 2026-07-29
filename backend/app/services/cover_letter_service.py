@@ -75,16 +75,19 @@ class CoverLetterService:
 
         evidence_context = "\n\n".join(evidence_parts[:4])
 
-        # Target role from Job Description (first line or fallback)
-        jd_lines = [l.strip() for l in request.job_description_text.splitlines() if l.strip()]
-        target_role = "Target Position"
-        for line in jd_lines[:5]:
-            if "role:" in line.lower() or "title:" in line.lower() or "position:" in line.lower():
-                target_role = line.split(":", 1)[1].strip()
-                break
-            elif len(line) < 50 and not line.lower().startswith("about"):
-                target_role = line
-                break
+        # Target role cleaning & override
+        target_role = request.target_role or "Target Position"
+        if not request.target_role:
+            jd_lines = [l.strip() for l in request.job_description_text.splitlines() if l.strip()]
+            for line in jd_lines[:5]:
+                if "role:" in line.lower() or "title:" in line.lower() or "position:" in line.lower():
+                    target_role = line.split(":", 1)[1].strip()
+                    break
+                elif len(line) < 50 and not line.lower().startswith("about"):
+                    target_role = line
+                    break
+
+        target_role = self._clean_target_role(target_role)
 
         # 3. Build Prompt & Call AI Provider
         user_prompt = build_cover_letter_input(
@@ -120,6 +123,8 @@ class CoverLetterService:
             cover_letter_text=cover_letter_text,
             candidate_name=candidate_name,
             target_role=target_role,
+            contact_info=request.contact_info,
+            document_id=request.document_id,
         )
 
         return CoverLetterResponse(
@@ -140,15 +145,19 @@ class CoverLetterService:
         txt_cache_path.write_text(new_text.strip(), encoding="utf-8")
 
         # Rebuild DOCX with updated text
-        # Attempt to read candidate name and role from existing doc header
         docx_path = generated_dir / f"{download_id}.docx"
         candidate_name = "Candidate Name"
         target_role = "Target Position"
+        contact_info = None
         if docx_path.exists():
             try:
                 existing_doc = docx.Document(docx_path)
                 if len(existing_doc.paragraphs) > 0:
                     candidate_name = existing_doc.paragraphs[0].text.strip() or candidate_name
+                if len(existing_doc.paragraphs) > 1:
+                    target_role = existing_doc.paragraphs[1].text.strip() or target_role
+                if len(existing_doc.paragraphs) > 2:
+                    contact_info = existing_doc.paragraphs[2].text.strip()
             except Exception:
                 pass
 
@@ -157,7 +166,19 @@ class CoverLetterService:
             cover_letter_text=new_text.strip(),
             candidate_name=candidate_name,
             target_role=target_role,
+            contact_info=contact_info,
         )
+
+    def _clean_target_role(self, raw_role: str) -> str:
+        """Clean target role string removing junk like 'Company logo for,' or markdown."""
+        if not raw_role:
+            return "Target Position"
+        clean = raw_role.replace("Company logo for,", "").replace("Company logo for", "").replace("RE:", "").replace("Application for", "")
+        clean = re.sub(r'^[#*_\-\s]+', '', clean)
+        clean = clean.splitlines()[0].strip()
+        if len(clean) > 60:
+            clean = clean[:60].rsplit(" ", 1)[0]
+        return clean or "Target Position"
 
     def _build_cover_letter_docx(
         self,
@@ -165,41 +186,67 @@ class CoverLetterService:
         cover_letter_text: str,
         candidate_name: str,
         target_role: str,
+        contact_info: str | None = None,
+        document_id: str | None = None,
     ) -> Path:
-        """Create a styled, professional DOCX cover letter file."""
-        doc = docx.Document()
+        """Create an executive, styled DOCX cover letter file matching standard corporate design."""
+        # Check if user has a custom base cover letter template saved
+        base_template_path = None
+        if document_id and "/" in document_id:
+            user_id = document_id.split("/")[1].split("_")[0]
+            candidate_base_cl = self._upload_dir / "base" / f"{user_id}_cover_letter.docx"
+            if candidate_base_cl.exists():
+                base_template_path = candidate_base_cl
 
-        # Page Setup: Standard margins (0.8 inch)
+        if base_template_path and base_template_path.exists():
+            try:
+                doc = docx.Document(base_template_path)
+                # Clear template paragraphs
+                for p in list(doc.paragraphs):
+                    p._element.getparent().remove(p._element)
+            except Exception:
+                doc = docx.Document()
+        else:
+            doc = docx.Document()
+
+        # Page Setup: Standard executive margins (0.8 inch)
         for s in doc.sections:
             s.top_margin = Inches(0.8)
             s.bottom_margin = Inches(0.8)
             s.left_margin = Inches(0.85)
             s.right_margin = Inches(0.85)
 
-        # 1. Header: Candidate Name
+        # 1. Header: Candidate Name (Bold, Slate-900)
         p_name = doc.add_paragraph()
-        run_name = p_name.add_run(candidate_name)
+        run_name = p_name.add_run(candidate_name.upper())
         run_name.font.name = "Calibri"
-        run_name.font.size = Pt(20)
+        run_name.font.size = Pt(18)
         run_name.font.bold = True
-        run_name.font.color.rgb = RGBColor(0x1E, 0x29, 0x3B)  # Slate-800
+        run_name.font.color.rgb = RGBColor(0x0F, 0x17, 0x2A)  # Slate-900
         p_name.paragraph_format.space_after = Pt(2)
         p_name.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
 
-        # Subtitle / Divider
-        p_sub = doc.add_paragraph()
-        run_sub = p_sub.add_run("Application & Cover Letter")
-        run_sub.font.name = "Calibri"
-        run_sub.font.size = Pt(10)
-        run_sub.font.color.rgb = RGBColor(0x64, 0x74, 0x8B)  # Slate-500
-        p_sub.paragraph_format.space_after = Pt(14)
+        # 2. Target Designation / Role Subtitle
+        clean_role = self._clean_target_role(target_role)
+        p_role = doc.add_paragraph()
+        run_role = p_role.add_run(clean_role.title())
+        run_role.font.name = "Calibri"
+        run_role.font.size = Pt(11.5)
+        run_role.font.bold = True
+        run_role.font.color.rgb = RGBColor(0x47, 0x55, 0x69)  # Slate-600
+        p_role.paragraph_format.space_after = Pt(4)
 
-        # Horizontal accent line
-        p_line = doc.add_paragraph()
-        p_line.paragraph_format.space_after = Pt(16)
+        # 3. Contact Info Line (Address | Phone | Email | LinkedIn)
+        if contact_info and contact_info.strip():
+            p_contact = doc.add_paragraph()
+            run_contact = p_contact.add_run(contact_info.strip())
+            run_contact.font.name = "Calibri"
+            run_contact.font.size = Pt(9.5)
+            run_contact.font.color.rgb = RGBColor(0x64, 0x74, 0x8B)  # Slate-500
+            p_contact.paragraph_format.space_after = Pt(16)
 
-        # 2. Date & Recipient
-        today_str = datetime.date.today().strftime("%B %d, %Y")
+        # 4. Date & Recipient Block
+        today_str = datetime.date.today().strftime("%d %B %Y")
         p_date = doc.add_paragraph()
         r_date = p_date.add_run(today_str)
         r_date.font.name = "Calibri"
@@ -207,37 +254,30 @@ class CoverLetterService:
         r_date.font.color.rgb = RGBColor(0x33, 0x41, 0x55)
         p_date.paragraph_format.space_after = Pt(12)
 
-        # Subject line
-        p_subj = doc.add_paragraph()
-        r_subj = p_subj.add_run(f"RE: Application for {target_role}")
-        r_subj.font.name = "Calibri"
-        r_subj.font.size = Pt(11)
-        r_subj.font.bold = True
-        r_subj.font.color.rgb = RGBColor(0x0F, 0x17, 0x2A)
-        p_subj.paragraph_format.space_after = Pt(14)
-
-        # 3. Cover Letter Body Paragraphs
+        # 5. Cover Letter Body Paragraphs
         paragraphs = [p.strip() for p in cover_letter_text.splitlines() if p.strip()]
 
         for p_text in paragraphs:
             p = doc.add_paragraph()
             p.paragraph_format.space_after = Pt(10)
-            p.paragraph_format.line_spacing = 1.2
+            p.paragraph_format.line_spacing = 1.25
 
-            # Check if this line is salutation or signoff
+            # Check if line is salutation or signoff
             if p_text.lower().startswith("dear ") or p_text.lower().startswith("to the "):
                 run = p.add_run(p_text)
                 run.font.name = "Calibri"
                 run.font.size = Pt(11)
                 run.font.bold = True
                 run.font.color.rgb = RGBColor(0x1E, 0x29, 0x3B)
+                p.paragraph_format.space_before = Pt(8)
+                p.paragraph_format.space_after = Pt(10)
             elif p_text.lower().startswith("sincerely") or p_text.lower().startswith("best regards") or p_text.lower().startswith("warm regards"):
                 run = p.add_run(p_text)
                 run.font.name = "Calibri"
                 run.font.size = Pt(11)
                 run.font.italic = True
                 run.font.color.rgb = RGBColor(0x1E, 0x29, 0x3B)
-                p.paragraph_format.space_before = Pt(12)
+                p.paragraph_format.space_before = Pt(14)
                 p.paragraph_format.space_after = Pt(4)
             else:
                 run = p.add_run(p_text)
