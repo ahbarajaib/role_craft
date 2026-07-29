@@ -2285,26 +2285,28 @@ export default function Home() {
         {/* Action Controls */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-end md:self-auto">
           {/* Profile & Base Docs Button */}
-          <button
-            type="button"
-            onClick={() => {
-              if (!token) {
-                setShowAuthModal(true);
-              } else {
-                setIsProfileModalOpen(true);
-              }
-            }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-sm transition-all cursor-pointer"
-            title="Manage Profile Contact Info & Base Master Templates"
-          >
-            <User className="h-3.5 w-3.5 text-indigo-500" />
-            <span className="hidden sm:inline">Profile & Base Docs</span>
-            {user && calculateProfileCompletion(user).totalPercentage < 100 && (
-              <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] border border-indigo-500/20">
-                {calculateProfileCompletion(user).totalPercentage}%
-              </span>
-            )}
-          </button>
+          {(!user || calculateProfileCompletion(user).totalPercentage < 100) && (
+            <button
+              type="button"
+              onClick={() => {
+                if (!token) {
+                  setShowAuthModal(true);
+                } else {
+                  setIsProfileModalOpen(true);
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-sm transition-all cursor-pointer"
+              title="Manage Profile Contact Info & Base Master Templates"
+            >
+              <User className="h-3.5 w-3.5 text-indigo-500" />
+              <span className="hidden sm:inline">Profile & Base Docs</span>
+              {user && (
+                <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] border border-indigo-500/20">
+                  {calculateProfileCompletion(user).totalPercentage}%
+                </span>
+              )}
+            </button>
+          )}
           {/* History & Goals Button */}
           <button
             type="button"
@@ -4621,15 +4623,17 @@ export default function Home() {
       />
 
       {/* Profile & Base Documents Modal */}
-      <ProfileModal
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-        user={user}
-        token={token}
-        onProfileUpdated={() => {
-          refreshMe().catch(() => {});
-        }}
-      />
+      {isProfileModalOpen && (
+        <ProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          user={user}
+          token={token}
+          onProfileUpdated={() => {
+            refreshMe().catch(() => {});
+          }}
+        />
+      )}
     </div>
   );
 }

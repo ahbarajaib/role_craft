@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   User as UserIcon,
@@ -41,6 +41,15 @@ export function ProfileModal({
   const [isUploadingCl, setIsUploadingCl] = useState(false);
   const [isDeletingCl, setIsDeletingCl] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || "");
+      setPhoneNumber(user.phone_number || "");
+      setAddress(user.address || "");
+      setLinkedinUrl(user.linkedin_url || "");
+    }
+  }, [user]);
 
   if (!isOpen) return null;
 
