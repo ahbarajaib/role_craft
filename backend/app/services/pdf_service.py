@@ -81,6 +81,14 @@ class PDFService:
         from docx.oxml.ns import qn
 
         doc = docx.Document(docx_path)
+
+        # Check if document is a Cover Letter
+        is_cover_letter = "cover" in docx_path.name.lower() or any(
+            p.text.strip().lower().startswith("dear ") for p in doc.paragraphs
+        )
+        if is_cover_letter:
+            return self._render_cover_letter_pdf_reportlab(doc, pdf_path)
+
         pdf_doc = SimpleDocTemplate(
             str(pdf_path),
             pagesize=letter,
@@ -379,3 +387,145 @@ class PDFService:
 
             pdf_doc.build(story)
             return pdf_path
+
+    def _render_cover_letter_pdf_reportlab(self, doc: docx.Document, pdf_path: Path) -> Path:
+        """Render a cover letter DOCX into a high-fidelity, beautifully styled PDF matching executive DOCX formatting."""
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+        from reportlab.lib.units import inch
+
+        pdf_doc = SimpleDocTemplate(
+            str(pdf_path),
+            pagesize=letter,
+            leftMargin=0.85 * inch,
+            rightMargin=0.85 * inch,
+            topMargin=0.8 * inch,
+            bottomMargin=0.8 * inch,
+        )
+
+        styles = getSampleStyleSheet()
+
+        style_cl_name = ParagraphStyle(
+            "CLName",
+            parent=styles["Normal"],
+            fontName="Helvetica-Bold",
+            fontSize=18,
+            leading=22,
+            alignment=0,  # Left aligned
+            textColor=colors.HexColor("#0F172A"),
+            spaceAfter=2,
+        )
+
+        style_cl_role = ParagraphStyle(
+            "CLRole",
+            parent=styles["Normal"],
+            fontName="Helvetica-Bold",
+            fontSize=11.5,
+            leading=15,
+            alignment=0,  # Left aligned
+            textColor=colors.HexColor("#475569"),
+            spaceAfter=4,
+        )
+
+        style_cl_contact = ParagraphStyle(
+            "CLContact",
+            parent=styles["Normal"],
+            fontName="Helvetica",
+            fontSize=9.5,
+            leading=13,
+            alignment=0,  # Left aligned
+            textColor=colors.HexColor("#64748B"),
+            spaceAfter=16,
+        )
+
+        style_cl_date = ParagraphStyle(
+            "CLDate",
+            parent=styles["Normal"],
+            fontName="Helvetica",
+            fontSize=11,
+            leading=15,
+            alignment=0,
+            textColor=colors.HexColor("#334155"),
+            spaceAfter=12,
+        )
+
+        style_cl_salutation = ParagraphStyle(
+            "CLSalutation",
+            parent=styles["Normal"],
+            fontName="Helvetica-Bold",
+            fontSize=11,
+            leading=15,
+            alignment=0,
+            textColor=colors.HexColor("#1E293B"),
+            spaceBefore=8,
+            spaceAfter=10,
+        )
+
+        style_cl_body = ParagraphStyle(
+            "CLBody",
+            parent=styles["Normal"],
+            fontName="Helvetica",
+            fontSize=11,
+            leading=15,
+            alignment=0,
+            textColor=colors.HexColor("#334155"),
+            spaceAfter=10,
+        )
+
+        style_cl_signoff = ParagraphStyle(
+            "CLSignoff",
+            parent=styles["Normal"],
+            fontName="Helvetica-Oblique",
+            fontSize=11,
+            leading=15,
+            alignment=0,
+            textColor=colors.HexColor("#1E293B"),
+            spaceBefore=14,
+            spaceAfter=4,
+        )
+
+        story = []
+        non_empty_paras = [p for p in doc.paragraphs if p.text.strip()]
+
+        for idx, p in enumerate(non_empty_paras):
+            text = p.text.strip()
+            escaped_text = _escape_xml(text)
+
+            html_runs = []
+            for run in p.runs:
+                r_txt = _escape_xml(run.text)
+                if not r_txt:
+                    continue
+                if run.bold:
+                    r_txt = f"<b>{r_txt}</b>"
+                if run.italic:
+                    r_txt = f"<i>{r_txt}</i>"
+                html_runs.append(r_txt)
+            if html_runs:
+                escaped_text = "".join(html_runs)
+
+            lower_text = text.lower()
+
+            if idx == 0:
+                story.append(Paragraph(escaped_text, style_cl_name))
+            elif idx == 1 and not lower_text.startswith("dear ") and "@" not in lower_text:
+                story.append(Paragraph(escaped_text, style_cl_role))
+            elif (idx == 2 or idx == 1) and ("|" in lower_text or "@" in lower_text or "http" in lower_text or "linkedin" in lower_text):
+                story.append(Paragraph(escaped_text, style_cl_contact))
+            elif lower_text.startswith("dear ") or lower_text.startswith("to the "):
+                story.append(Paragraph(escaped_text, style_cl_salutation))
+            elif lower_text.startswith("sincerely") or lower_text.startswith("best regards") or lower_text.startswith("warm regards"):
+                story.append(Paragraph(escaped_text, style_cl_signoff))
+            elif any(month in lower_text for month in ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]) and len(text) < 25:
+                story.append(Paragraph(escaped_text, style_cl_date))
+            else:
+                story.append(Paragraph(escaped_text, style_cl_body))
+
+        if not story:
+            story.append(Paragraph("Cover Letter", style_cl_body))
+
+        pdf_doc.build(story)
+        logger.info("Successfully generated executive cover letter PDF via ReportLab", path=str(pdf_path))
+        return pdf_path

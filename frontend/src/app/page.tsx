@@ -3470,8 +3470,8 @@ export default function Home() {
                         </a>
                         <a
                           href={`${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=pdf`}
-                          target="_blank"
-                          rel="noreferrer"
+                          download
+                          onClick={() => setSuccessNotification("Downloading Cover Letter PDF...")}
                           className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer"
                         >
                           <Download className="h-3.5 w-3.5" />
