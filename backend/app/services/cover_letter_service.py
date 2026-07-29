@@ -5,6 +5,7 @@ documents, and manages updates to generated cover letters.
 """
 
 import datetime
+import re
 import uuid
 from pathlib import Path
 import docx
