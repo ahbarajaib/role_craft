@@ -293,13 +293,42 @@ def download_cover_letter(
     if not docx_path.exists():
         raise NotFoundError(f"Cover letter file for ID '{download_id}' not found.")
 
+    # Extract company name from the cached cover letter text
+    company_name = "Company"
+    txt_cache_path = upload_dir / "generated" / f"{download_id}_cover_letter.txt"
+    if txt_cache_path.exists():
+        try:
+            cl_text = txt_cache_path.read_text(encoding="utf-8")
+            import re
+            first_p = cl_text.split("\n\n")[0] if "\n\n" in cl_text else cl_text
+            patterns = [
+                r"(?:join|at|to|with)\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\s+as\s+an?\b",
+                r"opportunity\s+at\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\b",
+                r"position\s+at\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\b",
+                r"role\s+at\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\b",
+                r"team\s+at\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\b",
+                r"(?:join|at)\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,25}?)\s+because\s+your\b",
+            ]
+            for pattern in patterns:
+                match = re.search(pattern, first_p, re.IGNORECASE)
+                if match:
+                    comp = match.group(1).strip()
+                    comp = re.sub(r'\s+(?:as|the|because|to|for|is|an?)\s*$', '', comp, flags=re.IGNORECASE).strip()
+                    comp = comp.rstrip(".,;:")
+                    if comp:
+                        company_name = comp
+                        break
+        except Exception as e:
+            logger.error(f"Error extracting company name for download: {e}")
+
+    safe_name = f"cover - {company_name}.pdf" if format.lower() == "pdf" else f"cover - {company_name}.docx"
+
     if format.lower() == "pdf":
         from app.services.pdf_service import PDFService
         pdf_path = upload_dir / "generated" / f"{download_id}.pdf"
         pdf_service = PDFService(upload_dir=upload_dir)
         pdf_service.convert_docx_to_pdf(docx_path, pdf_path)
 
-        safe_name = filename.rsplit(".", 1)[0] + ".pdf" if "." in filename else filename + ".pdf"
         return FileResponse(
             path=pdf_path,
             media_type="application/pdf",
@@ -309,7 +338,6 @@ def download_cover_letter(
             },
         )
 
-    safe_name = filename if filename.endswith(".docx") else f"{filename.rsplit('.', 1)[0]}.docx"
     return FileResponse(
         path=docx_path,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
