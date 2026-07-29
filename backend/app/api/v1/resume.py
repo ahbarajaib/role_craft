@@ -318,17 +318,23 @@ def download_cover_letter(
 @router.get("/debug/libreoffice")
 def debug_libreoffice():
     import shutil
-    import subprocess
-    import glob
+    import os
     soffice_path = shutil.which("soffice") or shutil.which("libreoffice")
     
-    # Let's search common directories as well
-    search_paths = glob.glob("/usr/bin/*office*") + glob.glob("/usr/lib/libreoffice/program/*")
-    
+    found_paths = []
+    for root, dirs, files in os.walk("/usr"):
+        for f in files:
+            if "soffice" in f or "libreoffice" in f:
+                found_paths.append(os.path.join(root, f))
+                if len(found_paths) >= 20:
+                    break
+        if len(found_paths) >= 20:
+            break
+            
     return {
         "status": "not found" if not soffice_path else "found",
         "soffice_path": soffice_path,
-        "search_paths": search_paths,
+        "found_paths": found_paths,
     }
 
 
