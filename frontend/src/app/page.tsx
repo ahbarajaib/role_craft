@@ -2299,7 +2299,7 @@ export default function Home() {
           >
             <User className="h-3.5 w-3.5 text-indigo-500" />
             <span className="hidden sm:inline">Profile & Base Docs</span>
-            {user && (
+            {user && calculateProfileCompletion(user).totalPercentage < 100 && (
               <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] border border-indigo-500/20">
                 {calculateProfileCompletion(user).totalPercentage}%
               </span>
