@@ -203,7 +203,7 @@ export interface ProfileUpdatePayload {
 
 export async function updateProfile(payload: ProfileUpdatePayload): Promise<any> {
   const response = await fetch(`${API_BASE_URL}/api/v1/auth/profile`, {
-    method: "PATCH",
+    method: "PUT",
     headers: getHeaders(),
     body: JSON.stringify(payload),
   });

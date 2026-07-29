@@ -100,7 +100,7 @@ def create_app() -> FastAPI:
         allow_origins=origins_list,
         allow_origin_regex=r"https://.*rolecraft\.tech.*",
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
     app.add_middleware(RequestIDMiddleware)

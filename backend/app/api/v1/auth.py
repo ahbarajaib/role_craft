@@ -132,6 +132,7 @@ def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return user
 
 @router.patch("/profile", response_model=UserResponse)
+@router.put("/profile", response_model=UserResponse)
 def update_profile(
     req: ProfileUpdateRequest,
     db: Session = Depends(get_db),
