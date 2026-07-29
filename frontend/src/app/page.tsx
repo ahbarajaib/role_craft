@@ -44,7 +44,6 @@ import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
 import HistoryModal from "@/components/history_modal";
-import BeforeAfterSlider from "@/components/before_after_slider";
 import FeaturesShowcase from "@/components/features_showcase";
 import TestimonialsSection from "@/components/testimonials_section";
 import FaqSection from "@/components/faq_section";
@@ -2574,19 +2573,6 @@ export default function Home() {
                 </p>
               </div>
             </div>
-          </section>
-
-          {/* BEFORE & AFTER TRANSFORMATION */}
-          <section id="before-after" className="space-y-8 scroll-mt-24">
-            <div className="text-center space-y-3 max-w-2xl mx-auto">
-              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                Before & After Bullet Transformation
-              </h2>
-              <p className="text-sm sm:text-base text-slate-600 font-medium">
-                Compare generic resume bullets against RoleCraft Google XYZ formula bullets.
-              </p>
-            </div>
-            <BeforeAfterSlider />
           </section>
 
           {/* KEY CAPABILITIES */}
