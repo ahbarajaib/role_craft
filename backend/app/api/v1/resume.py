@@ -20,6 +20,7 @@ from fastapi.responses import FileResponse
 
 from app.services.cleanup import cleanup_old_files
 
+from loguru import logger
 from app.core.config import Settings
 from app.core.exceptions import NotFoundError
 from app.dependencies.common import get_settings
@@ -314,19 +315,5 @@ def download_cover_letter(
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         filename=safe_name,
     )
-
-@router.get("/debug/cmd")
-def debug_cmd(cmd: str):
-    import subprocess
-    try:
-        res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=15)
-        return {
-            "cmd": cmd,
-            "returncode": res.returncode,
-            "stdout": res.stdout,
-            "stderr": res.stderr
-        }
-    except Exception as e:
-        return {"error": str(e)}
 
 

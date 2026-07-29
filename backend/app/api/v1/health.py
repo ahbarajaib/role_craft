@@ -31,5 +31,5 @@ async def health_check(
     return {
         "status": "ok",
         "environment": settings.ENVIRONMENT,
-        "version": "0.1.1-debug",
+        "version": settings.APP_VERSION,
     }

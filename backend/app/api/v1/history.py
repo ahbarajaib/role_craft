@@ -5,7 +5,7 @@ the workspace, track daily progress toward application targets, and update their
 """
 
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
