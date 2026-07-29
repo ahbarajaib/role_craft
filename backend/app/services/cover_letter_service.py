@@ -246,14 +246,7 @@ class CoverLetterService:
             run_contact.font.color.rgb = RGBColor(0x64, 0x74, 0x8B)  # Slate-500
             p_contact.paragraph_format.space_after = Pt(16)
 
-        # 4. Date & Recipient Block
-        today_str = datetime.date.today().strftime("%d %B %Y")
-        p_date = doc.add_paragraph()
-        r_date = p_date.add_run(today_str)
-        r_date.font.name = "Calibri"
-        r_date.font.size = Pt(11)
-        r_date.font.color.rgb = RGBColor(0x33, 0x41, 0x55)
-        p_date.paragraph_format.space_after = Pt(12)
+
 
         # 5. Cover Letter Body Paragraphs
         paragraphs = [p.strip() for p in cover_letter_text.splitlines() if p.strip()]
