@@ -14,9 +14,15 @@ jobs:
 
       - name: Trigger VPS Deploy via Webhook
         run: |
-          curl -X POST \
+          curl -4 -sS -X POST \
+            --connect-timeout 10 \
+            --max-time 30 \
+            --retry 5 \
+            --retry-delay 2 \
+            --retry-all-errors \
             -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN || '1d2448ca44d83cc492294209344be2a6abef16fa' }}" \
             -H "Content-Type: application/json" \
             https://api.rolecraft.tech/deploy-webhook
+
 
 
