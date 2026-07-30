@@ -612,17 +612,22 @@ function SectionCard({
             )}
           </div>
 
-          {/* Evidence Used Badges */}
-          {section.evidence_used && section.evidence_used.length > 0 && (
-            <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
-              <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block mb-2">
-                Evidence Reused from Resume
-              </span>
-              <div className="flex flex-wrap gap-1.5">
+          {/* Current Original Resume Text Preview */}
+          {section.evidence_used && section.evidence_used.length > 0 && !rewrittenText && (
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-1">
+                <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
+                  📄 Current Original Resume Content
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium italic">
+                  (Text extracted from your uploaded resume)
+                </span>
+              </div>
+              <div className="space-y-1.5 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 font-medium">
                 {section.evidence_used.map((ev, i) => (
-                  <span key={i} className="text-[10px] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-bold px-2 py-0.5 rounded">
+                  <p key={i} className="leading-relaxed border-b border-slate-200/60 dark:border-slate-800/60 last:border-b-0 pb-1.5 last:pb-0 select-all">
                     {ev}
-                  </span>
+                  </p>
                 ))}
               </div>
             </div>
