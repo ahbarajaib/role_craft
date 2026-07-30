@@ -256,6 +256,12 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 - [x] Side-by-side iterative AI rewriting modal with visual word-diff highlight and undo tracking.
 - [x] python-docx in-place document patch and download endpoints.
 - [x] Production Hardening: Consistent error handling, structured logging with bound request correlation, automated background file cleanup, schema-level input validation, and user failure retry button flows.
+- [x] Authentication (JWT-based credentials + Google Login flow).
+- [x] SQLite database + SQLAlchemy integration to persist user context and analysis history.
+- [x] Dynamic Daily Target Goal & Progress Tracking in headers.
+- [x] Profile Modal contact info management and base resume/cover letter template tracking.
+- [x] High-fidelity PDF document rendering via headless LibreOffice compiler.
+- [x] Secure Webhook Redeployment System (immune to SSH action connection timeouts).
 
 ## Features Intentionally Postponed
 - **PostgreSQL**: Kept as a future database option for production scale.
@@ -265,13 +271,14 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 
 ## Remaining Roadmap
 
-### Phase 5 - Authentication & Rate Limits (In Progress)
-- [/] Authentication (JWT-based standard credentials + Google Login verification flow)
-- [/] Local SQLite database & SQLAlchemy ORM
-- [/] Credit caps & IP rate limits (10 starting credits, 1 guest analysis per day limit)
+### Phase 5 - Authentication, Persistence & Webhook CD (Completed)
+- [x] Authentication (JWT-based standard credentials + Google Login verification flow)
+- [x] Local SQLite database & SQLAlchemy ORM
+- [x] Credit caps & IP rate limits (10 starting credits, 1 guest analysis per day limit)
+- [x] Webhook-based secure redeployment automation
+- [x] Docker + Docker Compose setups
 - [ ] PostgreSQL integration
 - [ ] Redis + Background jobs (Celery/RQ for long-running AI queries)
-- [x] Docker + Docker Compose setups
 
 ---
 

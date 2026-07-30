@@ -110,21 +110,34 @@ sudo apt install nginx certbot python3-certbot-nginx -y
 ---
 ## Just a comment
 
-## 5. Setting up CI/CD to VPS (GitHub Actions)
+## 5. Setting up CI/CD to VPS (Secure Webhook Redeployment)
 
-We have configured a GitHub Actions pipeline in `.github/workflows/deploy.yml` that automates VPS updates on pushes.
+To bypass standard SSH rate-limiting blocks and connection timeouts on public cloud subnets (like GitHub Actions runners), we use a secure local webhook deployment listener on the VPS host.
 
-### Steps to enable:
-1. Generate an SSH Key pair on your local system or VPS:
+### How it works:
+1. A lightweight Python webhook script listens locally on port `9000` (`/opt/role_craft/deploy_webhook.py`).
+2. Nginx maps secure incoming requests at `https://api.rolecraft.tech/deploy-webhook` to the local port `9000`.
+3. The script is registered as a persistent systemd service `rolecraft-deploy.service` on the host.
+4. When a push to `main` occurs, the GitHub Action (`.github/workflows/deploy.yml`) calls the HTTPS endpoint securely using `curl` with a custom token header (`X-Deploy-Token`), triggering an in-background build.
+
+### Steps to configure:
+1. Create the deploy script on the VPS host at `/opt/role_craft/deploy_webhook.py`.
+2. Register and start the systemd unit `/etc/systemd/system/rolecraft-deploy.service`:
    ```bash
-   ssh-keygen -t rsa -b 4096 -f id_rsa_deploy
+   systemctl daemon-reload
+   systemctl enable rolecraft-deploy --now
    ```
-2. Add the public key (`id_rsa_deploy.pub`) to the target VPS's authorized keys:
-   ```bash
-   cat id_rsa_deploy.pub >> ~/.ssh/authorized_keys
+3. Update the Nginx proxy site configuration on the VPS to include:
+   ```nginx
+   location /deploy-webhook {
+       proxy_pass http://127.0.0.1:9000;
+       proxy_set_header Host $host;
+       proxy_set_header X-Real-IP $remote_addr;
+       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header X-Forwarded-Proto $scheme;
+   }
    ```
-3. Navigate to your GitHub Repository → **Settings** → **Secrets and variables** → **Actions** → **New repository secret** and add:
-   * `SSH_PRIVATE_KEY`: Paste the full contents of the private key `id_rsa_deploy`.
-   * `SSH_HOST`: The IP address of your VPS.
-   * `SSH_USER`: The SSH username (e.g., `root` or `ubuntu`).
+4. Reload Nginx (`systemctl reload nginx`).
+5. (Optional) Set `DEPLOY_TOKEN` as an Action secret on GitHub to override the default token.
+
 
