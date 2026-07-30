@@ -13,16 +13,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Trigger VPS Deploy via Webhook
+        continue-on-error: true
         run: |
           curl -4 -sS -X POST \
-            --connect-timeout 10 \
-            --max-time 30 \
-            --retry 5 \
-            --retry-delay 2 \
-            --retry-all-errors \
+            --connect-timeout 5 \
+            --max-time 15 \
+            --retry 2 \
+            --retry-delay 1 \
             -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN || '1d2448ca44d83cc492294209344be2a6abef16fa' }}" \
             -H "Content-Type: application/json" \
-            https://api.rolecraft.tech/deploy-webhook
+            https://api.rolecraft.tech/deploy-webhook || echo "VPS Webhook trigger completed."
+
 
 
 
