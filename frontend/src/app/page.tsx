@@ -1367,42 +1367,9 @@ export default function Home() {
         sectionsToTailor.unshift(summarySection);
       }
 
-      // ── Collect ALL ATS keywords to weave (missing + supported from evidence) ──
-      const wovenLower = new Set(appliedWovenKeywords.map((k) => k.toLowerCase().trim()));
-      const supportedNames = new Set(
-        (result.top_improvements || [])
-          .filter((imp: any) => imp.evidence_reused && imp.evidence_reused.trim())
-          .map((imp: any) => cleanKeywordName(imp.name).toLowerCase())
-      );
-
-      const supportedKws: string[] = (result.top_improvements || [])
-        .filter((imp: any) => imp.evidence_reused && imp.evidence_reused.trim())
-        .flatMap((imp: any) => extractStrictKeywordsFromRaw(imp.name))
-        .filter((kw: string) => isActualATSKeyword(kw) && !wovenLower.has(kw.toLowerCase().trim()));
-
-      const missingFromSections = (result.sections || []).flatMap((s: any) => s.missing_keywords || []);
-      const missingFromImps = (result.top_improvements || []).map((imp: any) => imp.name);
-      const missingKws: string[] = Array.from(
-        new Set(
-          [...missingFromSections, ...missingFromImps]
-            .flatMap((k: string) => extractStrictKeywordsFromRaw(k))
-            .map((k: string) => cleanKeywordName(k))
-        )
-      ).filter(
-        (k) => k && isActualATSKeyword(k) && !supportedNames.has(k.toLowerCase()) && !wovenLower.has(k.toLowerCase().trim())
-      );
-
-      const allKeywordsToWeave = Array.from(new Set([...supportedKws, ...missingKws]));
-
-      // Find the Skills section
-      const skillsSection = (result.sections || []).find(
-        (s: any) => s.section_name.toLowerCase().includes("skill") || s.section_name.toLowerCase().includes("technical")
-      );
-
       console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToTailor.map((s: any) => s.section_name));
-      console.log("🏷️ [RoleCraft Audit] ATS Keywords to weave:", allKeywordsToWeave);
 
-      if (sectionsToTailor.length === 0 && !result.overall_summary?.job_title && allKeywordsToWeave.length === 0) {
+      if (sectionsToTailor.length === 0 && !result.overall_summary?.job_title) {
         setSuccessNotification("Your resume is already highly optimized for this role!");
         setIsAutoTailoring(false);
         return;
@@ -1415,51 +1382,23 @@ export default function Home() {
         newRewrites["header"] = result.overall_summary.job_title;
       }
 
-      // 2. Rewrite all sections that need improvement + Skills with ATS keywords woven in
-      await Promise.all([
-        // Rewrite improve-status sections
-        ...sectionsToTailor.map(async (sec: any) => {
-          // If this is the Skills section and we have keywords to weave, merge recommendations
-          const isSkillsSec = skillsSection && sec.section_name.toLowerCase() === skillsSection.section_name.toLowerCase();
-          const extraRecs = isSkillsSec && allKeywordsToWeave.length > 0
-            ? [`Weave naturally these essential missing ATS keywords: ${allKeywordsToWeave.join(", ")}`]
-            : [];
+      // 2. Rewrite improve-status sections using their section gap recommendations
+      await Promise.all(
+        sectionsToTailor.map(async (sec: any) => {
           try {
             const res = await rewriteSection({
               document_id: documentId,
               section_name: sec.section_name,
               job_description_text: jobDescription,
-              recommendations: [...(sec.recommendations || []), ...extraRecs],
+              recommendations: sec.recommendations || [],
             });
             console.log(`✨ [RoleCraft Audit] Auto-Tailored section "${sec.section_name}":`, res.rewritten_text);
             newRewrites[sec.section_name.toLowerCase()] = res.rewritten_text;
           } catch (err) {
             console.error(`❌ [RoleCraft Audit] Failed auto rewrite for ${sec.section_name}:`, err);
           }
-        }),
-        // If Skills section was NOT in sectionsToImprove but we still have keywords to weave
-        ...(skillsSection && !sectionsToTailor.some((s: any) => s.section_name.toLowerCase() === skillsSection.section_name.toLowerCase()) && allKeywordsToWeave.length > 0
-          ? [
-              (async () => {
-                try {
-                  const res = await rewriteSection({
-                    document_id: documentId,
-                    section_name: skillsSection.section_name,
-                    job_description_text: jobDescription,
-                    recommendations: [
-                      ...(skillsSection.recommendations || []),
-                      `Weave naturally these essential missing ATS keywords: ${allKeywordsToWeave.join(", ")}`,
-                    ],
-                  });
-                  console.log(`✨ [RoleCraft Audit] ATS Keywords woven into "${skillsSection.section_name}":`, res.rewritten_text);
-                  newRewrites[skillsSection.section_name.toLowerCase()] = res.rewritten_text;
-                } catch (err) {
-                  console.error(`❌ [RoleCraft Audit] Failed ATS keyword weave for ${skillsSection.section_name}:`, err);
-                }
-              })(),
-            ]
-          : []),
-      ]);
+        })
+      );
 
       if (Object.keys(newRewrites).length > 0) {
         setRewrittenSections(newRewrites);
@@ -1487,49 +1426,6 @@ export default function Home() {
         setDownloadUrl(applyRes.download_url);
         setIsPatchingApplied(true);
 
-        // ── Mark ALL ATS matrix keywords as woven so chips move to 🟢 Confirmed ──
-        // Compute exact keyword strings using the SAME logic the matrix display uses,
-        // so the wovenLower Set matches precisely what each chip checks.
-        const currentWovenLower = new Set(appliedWovenKeywords.map((k) => k.toLowerCase().trim()));
-
-        // Collect 🟡 Supported keywords (exact item.name from matrix display)
-        const matrixSupportedKws: string[] = (result.top_improvements || [])
-          .filter((imp: any) => imp.evidence_reused && imp.evidence_reused.trim())
-          .flatMap((imp: any) => extractStrictKeywordsFromRaw(imp.name))
-          .filter((kw: string) => isActualATSKeyword(kw) && !currentWovenLower.has(kw.toLowerCase().trim()));
-
-        // Collect 🔴 Missing keywords (exact k from matrix display)
-        const matrixSupportedNamesSet = new Set(
-          (result.top_improvements || [])
-            .filter((imp: any) => imp.evidence_reused && imp.evidence_reused.trim())
-            .map((imp: any) => cleanKeywordName(imp.name).toLowerCase())
-        );
-        const rawMissing = [
-          ...(result.sections || []).flatMap((s: any) => s.missing_keywords || []),
-          ...(result.top_improvements || []).map((imp: any) => imp.name),
-        ];
-        const matrixMissingKws: string[] = Array.from(
-          new Set(
-            rawMissing
-              .flatMap((k: string) => extractStrictKeywordsFromRaw(k))
-              .map((k: string) => cleanKeywordName(k))
-          )
-        ).filter(
-          (k) =>
-            k &&
-            isActualATSKeyword(k) &&
-            !matrixSupportedNamesSet.has(k.toLowerCase()) &&
-            !currentWovenLower.has(k.toLowerCase().trim())
-        );
-
-        const allMatrixKwsToMark = Array.from(new Set([...matrixSupportedKws, ...matrixMissingKws]));
-
-        console.log("🏷️ [RoleCraft Audit] Marking these matrix keywords as woven:", allMatrixKwsToMark);
-
-        // Always mark woven and update the matrix — even if empty (clears stale state)
-        setAppliedWovenKeywords((prev) => Array.from(new Set([...prev, ...allMatrixKwsToMark])));
-        setIsKeywordsWoven(true);
-
         // ── Auto-generate Tailored Cover Letter in 1-Click ──
         console.log("📝 [RoleCraft Audit] Auto-generating Tailored Cover Letter in 1-Click...");
         setIsGeneratingCoverLetter(true);
@@ -1540,7 +1436,7 @@ export default function Home() {
           const updatedConfirmedMatchedSkills = Array.from(
             new Set([
               ...originalMatched,
-              ...allMatrixKwsToMark.map((k) => cleanKeywordName(k)),
+              ...appliedWovenKeywords.map((k) => cleanKeywordName(k)),
             ])
           ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
 
@@ -1578,7 +1474,6 @@ export default function Home() {
         const parts: string[] = [];
         if (result.overall_summary?.job_title) parts.push("Target Role");
         if (sectionsToTailor.length > 0) parts.push(`${sectionsToTailor.length} section${sectionsToTailor.length > 1 ? "s" : ""}`);
-        if (allMatrixKwsToMark.length > 0) parts.push(`${allMatrixKwsToMark.length} ATS keywords`);
 
         setSuccessNotification(`⚡ 1-Click Auto-Tailored: Full Resume & Cover Letter Generated! (${parts.join(", ")})`);
       }
