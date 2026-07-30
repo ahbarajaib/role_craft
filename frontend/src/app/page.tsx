@@ -397,17 +397,18 @@ function SectionCard({
             "{section.reason}"
           </p>
 
-          {/* Rewritten Preview Text with per-bullet checkboxes */}
+          {/* Rewritten Preview Text with Side-by-Side Comparison */}
           {rewrittenText && (
-            <div className="bg-indigo-50/70 p-4 rounded-xl border border-indigo-200 space-y-2 animate-fade-in-up">
-              <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="space-y-3 animate-fade-in-up">
+              {/* Header Action Bar */}
+              <div className="flex items-center justify-between flex-wrap gap-2 bg-indigo-50/70 dark:bg-indigo-950/40 p-3 rounded-xl border border-indigo-200 dark:border-indigo-800/60">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider block">
-                    Rewritten Section Preview
+                  <span className="text-[11px] font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-wider block">
+                    ⚡ AI Section Rewrite Comparison
                   </span>
                   {hasBullets && (
-                    <span className="text-[9px] font-semibold text-indigo-600 bg-indigo-100 border border-indigo-200 px-1.5 py-0.5 rounded-md">
-                      ✓ Uncheck bullets to exclude from resume
+                    <span className="text-[9px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 px-1.5 py-0.5 rounded-md">
+                      ✓ Uncheck bullets to exclude
                     </span>
                   )}
                 </div>
@@ -418,7 +419,7 @@ function SectionCard({
                         e.stopPropagation();
                         onUndoLastRewrite(section.section_name);
                       }}
-                      className="flex items-center gap-1 text-[10px] text-amber-700 hover:text-amber-800 font-extrabold px-2.5 py-1 border border-amber-300 rounded-lg bg-amber-100 hover:bg-amber-200 transition-all duration-300 select-none cursor-pointer"
+                      className="flex items-center gap-1 text-[10px] text-amber-700 dark:text-amber-300 font-extrabold px-2.5 py-1 border border-amber-300 dark:border-amber-700 rounded-lg bg-amber-100 dark:bg-amber-950/80 hover:bg-amber-200 transition-all duration-300 select-none cursor-pointer"
                     >
                       <RotateCcw className="h-2.5 w-2.5" />
                       Undo
@@ -429,7 +430,7 @@ function SectionCard({
                       e.stopPropagation();
                       onRevert(section.section_name);
                     }}
-                    className="flex items-center gap-1 text-[10px] text-rose-700 hover:text-rose-800 font-extrabold px-2.5 py-1 border border-rose-300 rounded-lg bg-rose-100 hover:bg-rose-200 transition-all duration-300 select-none cursor-pointer"
+                    className="flex items-center gap-1 text-[10px] text-rose-700 dark:text-rose-300 font-extrabold px-2.5 py-1 border border-rose-300 dark:border-rose-700 rounded-lg bg-rose-100 dark:bg-rose-950/80 hover:bg-rose-200 transition-all duration-300 select-none cursor-pointer"
                   >
                     <X className="h-2.5 w-2.5" />
                     Revert
@@ -443,7 +444,7 @@ function SectionCard({
                         onImproveClick(section.section_name, section.recommendations);
                       }
                     }}
-                    className="flex items-center gap-1 text-[10px] text-indigo-700 hover:text-indigo-800 font-extrabold px-2.5 py-1 border border-indigo-300 rounded-lg bg-indigo-100 hover:bg-indigo-200 transition-all duration-300 select-none cursor-pointer"
+                    className="flex items-center gap-1 text-[10px] text-indigo-700 dark:text-indigo-300 font-extrabold px-2.5 py-1 border border-indigo-300 dark:border-indigo-700 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 hover:bg-indigo-200 transition-all duration-300 select-none cursor-pointer"
                   >
                     <Sparkles className="h-2.5 w-2.5 animate-pulse" />
                     Regenerate AI
@@ -453,7 +454,7 @@ function SectionCard({
                       e.stopPropagation();
                       onImproveClick(section.section_name, section.recommendations);
                     }}
-                    className="flex items-center gap-1 text-[10px] text-slate-800 hover:text-slate-900 font-extrabold px-2.5 py-1 border border-slate-300 rounded-lg bg-slate-100 hover:bg-slate-200 transition-all duration-300 select-none cursor-pointer"
+                    className="flex items-center gap-1 text-[10px] text-slate-800 dark:text-slate-200 font-extrabold px-2.5 py-1 border border-slate-300 dark:border-slate-700 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 transition-all duration-300 select-none cursor-pointer"
                   >
                     <Edit className="h-2.5 w-2.5" />
                     Manual Edit
@@ -461,86 +462,117 @@ function SectionCard({
                 </div>
               </div>
 
-              {/* Bullet list with checkboxes, or plain text */}
-              <div className="pt-1 space-y-1.5">
-                {hasBullets ? (
-                  parsedBullets.map((item, lineIdx) => {
-                    const isUnchecked = uncheckedBullets.has(lineIdx);
-                    const bulletSymbols = ["•", "-", "*", "–", "—", "▪", "▸"];
-                    const bulletMatch = bulletSymbols.find((s) => item.line.startsWith(s));
-                    const content = bulletMatch ? item.line.substring(bulletMatch.length).trim() : item.line;
-
-                    if (item.isHeader) {
-                      return (
-                        <div key={lineIdx} className="font-extrabold text-slate-900 dark:text-white text-xs pt-3 pb-1 flex items-center justify-between border-b border-indigo-200 dark:border-indigo-800/80 mt-2">
-                          <span className="flex items-center gap-1.5 text-indigo-950 dark:text-indigo-200">
-                            <Briefcase className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
-                            {item.line}
-                          </span>
-                        </div>
-                      );
-                    }
-
-                    if (item.isCompany) {
-                      return (
-                        <div key={lineIdx} className="font-semibold text-emerald-700 dark:text-emerald-400 text-[11px] italic mb-1.5 pl-5">
-                          {item.line}
-                        </div>
-                      );
-                    }
-
-                    if (!item.isBullet) {
-                      // Non-bullet lines (headers, categories, summaries) — show as-is
-                      return (
-                        <p key={lineIdx} className="text-[13px] text-slate-800 dark:text-slate-200 leading-relaxed select-all">
-                          {item.line}
+              {/* Side-by-side Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Left Column: Original Resume Text */}
+                <div className="bg-rose-50/60 dark:bg-rose-950/30 p-4 rounded-xl border border-rose-200/80 dark:border-rose-900/50 space-y-2 flex flex-col">
+                  <div className="flex items-center justify-between border-b border-rose-200 dark:border-rose-900/50 pb-2">
+                    <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-rose-500 inline-block" />
+                      Original Resume Text
+                    </span>
+                  </div>
+                  <div className="pt-1 space-y-2 flex-1 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                    {section.evidence_used && section.evidence_used.length > 0 ? (
+                      section.evidence_used.map((evText, evIdx) => (
+                        <p key={evIdx} className="bg-white/90 dark:bg-slate-900/80 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/30 text-[12px] text-slate-800 dark:text-slate-200 select-all">
+                          {evText}
                         </p>
-                      );
-                    }
+                      ))
+                    ) : (
+                      <p className="text-slate-500 dark:text-slate-400 italic p-2">Original text not found in analysis cache.</p>
+                    )}
+                  </div>
+                </div>
 
-                    return (
-                      <div
-                        key={lineIdx}
-                        className={`flex items-start gap-2.5 group rounded-lg px-2 py-1 transition-all duration-150 ${isUnchecked ? "opacity-40 bg-slate-100/60" : "hover:bg-indigo-50/60"}`}
-                      >
-                        {/* Checkbox */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleBulletToggle(lineIdx);
-                          }}
-                          className={`mt-0.5 shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-all duration-150 cursor-pointer ${
-                            isUnchecked
-                              ? "border-slate-300 bg-white"
-                              : "border-indigo-500 bg-indigo-500"
-                          }`}
-                          title={isUnchecked ? "Click to include in resume" : "Click to exclude from resume"}
-                        >
-                          {!isUnchecked && (
-                            <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 10" fill="none">
-                              <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          )}
-                        </button>
-                        {/* Bullet content */}
-                        <p className={`flex-1 text-[13px] leading-relaxed select-all ${isUnchecked ? "line-through text-slate-400" : "text-slate-800 dark:text-slate-200"}`}>
-                          {content}
-                        </p>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <FormattedSectionText text={rewrittenText} />
-                )}
+                {/* Right Column: AI Tailored Rewritten Text */}
+                <div className="bg-emerald-50/60 dark:bg-emerald-950/30 p-4 rounded-xl border border-emerald-200/80 dark:border-emerald-900/50 space-y-2 flex flex-col">
+                  <div className="flex items-center justify-between border-b border-emerald-200 dark:border-emerald-900/50 pb-2">
+                    <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                      AI Tailored & Rewritten Text
+                    </span>
+                  </div>
+
+                  {/* Bullet list with checkboxes, or plain text */}
+                  <div className="pt-1 space-y-1.5 flex-1">
+                    {hasBullets ? (
+                      parsedBullets.map((item, lineIdx) => {
+                        const isUnchecked = uncheckedBullets.has(lineIdx);
+                        const bulletSymbols = ["•", "-", "*", "–", "—", "▪", "▸"];
+                        const bulletMatch = bulletSymbols.find((s) => item.line.startsWith(s));
+                        const content = bulletMatch ? item.line.substring(bulletMatch.length).trim() : item.line;
+
+                        if (item.isHeader) {
+                          return (
+                            <div key={lineIdx} className="font-extrabold text-slate-900 dark:text-white text-xs pt-2 pb-1 flex items-center justify-between border-b border-emerald-200 dark:border-emerald-800/80 mt-1">
+                              <span className="flex items-center gap-1.5 text-emerald-950 dark:text-emerald-200">
+                                <Briefcase className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                {item.line}
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        if (item.isCompany) {
+                          return (
+                            <div key={lineIdx} className="font-semibold text-emerald-700 dark:text-emerald-400 text-[11px] italic mb-1.5 pl-5">
+                              {item.line}
+                            </div>
+                          );
+                        }
+
+                        if (!item.isBullet) {
+                          return (
+                            <p key={lineIdx} className="text-[12px] text-slate-800 dark:text-slate-200 leading-relaxed select-all">
+                              {item.line}
+                            </p>
+                          );
+                        }
+
+                        return (
+                          <div
+                            key={lineIdx}
+                            className={`flex items-start gap-2.5 group rounded-lg px-2 py-1 transition-all duration-150 ${isUnchecked ? "opacity-40 bg-slate-100/60" : "hover:bg-emerald-100/40"}`}
+                          >
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleBulletToggle(lineIdx);
+                              }}
+                              className={`mt-0.5 shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-all duration-150 cursor-pointer ${
+                                isUnchecked
+                                  ? "border-slate-300 bg-white"
+                                  : "border-emerald-500 bg-emerald-500"
+                              }`}
+                              title={isUnchecked ? "Click to include in resume" : "Click to exclude from resume"}
+                            >
+                              {!isUnchecked && (
+                                <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 10" fill="none">
+                                  <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              )}
+                            </button>
+                            <p className={`flex-1 text-[12px] leading-relaxed select-all ${isUnchecked ? "line-through text-slate-400" : "text-slate-800 dark:text-slate-200 font-medium"}`}>
+                              {content}
+                            </p>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <FormattedSectionText text={rewrittenText} />
+                    )}
+                  </div>
+
+                  {uncheckedBullets.size > 0 && (
+                    <p className="text-[10px] text-amber-600 font-semibold mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      {uncheckedBullets.size} bullet{uncheckedBullets.size > 1 ? "s" : ""} will be excluded from the applied resume
+                    </p>
+                  )}
+                </div>
               </div>
-
-              {uncheckedBullets.size > 0 && (
-                <p className="text-[10px] text-amber-600 font-semibold mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3 shrink-0" />
-                  {uncheckedBullets.size} bullet{uncheckedBullets.size > 1 ? "s" : ""} will be excluded from the applied resume
-                </p>
-              )}
             </div>
           )}
 
