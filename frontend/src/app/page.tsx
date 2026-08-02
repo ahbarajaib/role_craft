@@ -37,7 +37,8 @@ import {
   Link as LinkIcon,
   ExternalLink,
   Briefcase,
-  History
+  History,
+  Plus
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
@@ -2916,47 +2917,52 @@ export default function Home() {
           ) : (
             <div className="space-y-6">
               {/* ⚡ 1-Click Auto-Tailor Hero Banner */}
-              <div className="bg-gradient-to-r from-emerald-950/60 via-indigo-950/60 to-purple-950/60 border border-emerald-500/40 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl animate-fade-in">
-                <div className="flex items-center gap-3.5">
-                  <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
-                    <Sparkles className="h-5 w-5 animate-pulse" />
+              <div className="relative overflow-hidden rounded-2xl p-5.5 border border-indigo-500/30 dark:border-indigo-500/30 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-950 text-white shadow-2xl backdrop-blur-xl animate-fade-in border-t-white/10">
+                <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -left-12 -top-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                
+                <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-400 via-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0 ring-1 ring-white/20">
+                      <Sparkles className="h-6 w-6 animate-pulse text-amber-200" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-extrabold text-white flex items-center gap-2 tracking-tight">
+                        ⚡ 1-Click Full Resume Auto-Tailor
+                      </h4>
+                      <p className="text-xs text-slate-300 mt-0.5 max-w-md leading-relaxed">
+                        Automatically rewrite weak sections, weave missing ATS keywords, & add Google XYZ impact metrics in one click.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                      ⚡ 1-Click Full Resume Auto-Tailor
-                    </h4>
-                    <p className="text-xs text-slate-300 mt-0.5">
-                      Automatically rewrite all weak sections with ATS keywords & Google XYZ metrics in one click.
-                    </p>
-                  </div>
-                </div>
 
-                <button
-                  type="button"
-                  onClick={handleAutoTailor}
-                  disabled={isAutoTailoring}
-                  className="px-6 py-3.5 rounded-xl font-bold text-xs bg-gradient-to-r from-emerald-500 via-indigo-600 to-purple-600 hover:from-emerald-400 hover:to-purple-500 text-white shadow-lg shadow-indigo-600/30 transition-all duration-300 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0"
-                >
-                  {isAutoTailoring ? (
-                    <>
-                      <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      ⚡ Auto-Tailoring Resume...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4" />
-                      ⚡ Auto-Tailor Full Resume (1-Click)
-                    </>
-                  )}
-                </button>
+                  <button
+                    type="button"
+                    onClick={handleAutoTailor}
+                    disabled={isAutoTailoring}
+                    className="px-6 py-3.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20"
+                  >
+                    {isAutoTailoring ? (
+                      <>
+                        <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        ⚡ Auto-Tailoring Resume...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 text-amber-200" />
+                        ⚡ Auto-Tailor Full Resume (1-Click)
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Summary Dashboard Card */}
-              <div className="glass-panel rounded-2xl p-6 border-indigo-500/35 dark:border-indigo-500/20 bg-gradient-to-r from-white/95 to-indigo-500/5 dark:from-slate-900/50 dark:to-indigo-950/10">
+              <div className="glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-r from-white/90 via-indigo-500/5 to-white/90 dark:from-slate-900/90 dark:via-indigo-950/20 dark:to-slate-900/90 shadow-xl">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 dark:border-indigo-500/30">
+                      <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 dark:border-indigo-500/30 uppercase tracking-wider">
                         Target Role Detected
                       </span>
                     </div>
@@ -2969,7 +2975,7 @@ export default function Home() {
 
                         return (
                           <>
-                            <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                               {displayTitle}
                             </h3>
                             {canApply && (
@@ -2983,10 +2989,10 @@ export default function Home() {
                                   setIsPatchingApplied(false);
                                   setSuccessNotification(`Applied target job title: "${rawJobTitle}"`);
                                 }}
-                                className={`px-3.5 py-1.5 text-xs font-black rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${
+                                className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${
                                   rewrittenSections["header"] === rawJobTitle
                                     ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
-                                    : "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-600 shadow-emerald-600/20 hover:scale-105"
+                                    : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white border-emerald-500/30 shadow-emerald-500/20 hover:scale-105"
                                 }`}
                                 title="Apply this target job title to your resume header"
                               >
@@ -3001,7 +3007,7 @@ export default function Home() {
                   </div>
 
                   {/* Overall Score Circle */}
-                  <div className="flex items-center gap-4 bg-white/80 dark:bg-slate-950/50 p-4.5 rounded-xl border border-slate-200 dark:border-slate-800/80 shadow-md">
+                  <div className="flex items-center gap-4 bg-white/90 dark:bg-slate-950/70 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-md">
                     <div className="relative flex items-center justify-center">
                       {/* SVG Gauge */}
                       <svg className="w-20 h-20 transform -rotate-90">
@@ -3012,7 +3018,7 @@ export default function Home() {
                           stroke="currentColor"
                           strokeWidth="6"
                           fill="transparent"
-                          className="text-slate-200 dark:text-slate-850"
+                          className="text-slate-200 dark:text-slate-800"
                         />
                         <circle
                           cx="40"
@@ -3026,14 +3032,14 @@ export default function Home() {
                           className="text-indigo-500 transition-all duration-1000"
                         />
                       </svg>
-                      <span className="absolute text-base font-black text-slate-850 dark:text-white">
+                      <span className="absolute text-base font-black text-slate-900 dark:text-white">
                         {currentScore}%
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Overall Fit</p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">
-                        {sectionsStillNeedingImprovement} of {totalNeeded} sections need improvement
+                      <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Overall Fit</p>
+                      <p className="text-xs font-medium text-slate-600 dark:text-slate-300 mt-0.5">
+                        <span className="font-bold text-indigo-600 dark:text-indigo-400">{sectionsStillNeedingImprovement} of {totalNeeded}</span> sections need improvement
                       </p>
                     </div>
                   </div>
@@ -3041,17 +3047,17 @@ export default function Home() {
               </div>
 
               {/* Interactive ATS Skill & Keyword Matrix Card */}
-              <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 space-y-4 shadow-xl">
-                <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20 shrink-0">
+              <div className="glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 space-y-4 shadow-xl">
+                <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200/80 dark:border-slate-800/80 pb-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500/15 via-purple-500/15 to-indigo-600/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20 shrink-0 shadow-sm">
                       <Layers className="h-4.5 w-4.5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">
                         ATS Skill & Keyword Matrix
                       </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                         Match overview & 1-click keyword insertion.
                       </p>
                     </div>
@@ -3061,10 +3067,10 @@ export default function Home() {
                     type="button"
                     onClick={openKeywordWeaveModal}
                     disabled={isWeavingKeywords}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-md border ${
                       isKeywordsWoven
-                        ? "bg-emerald-600/90 hover:bg-emerald-600 text-white border border-emerald-400/30 shadow-md shadow-emerald-600/30"
-                        : "bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white shadow-md shadow-emerald-600/20"
+                        ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/30 shadow-emerald-600/25"
+                        : "bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white border-white/20 shadow-indigo-500/20 hover:scale-[1.02] active:scale-[0.98]"
                     }`}
                   >
                     {isWeavingKeywords ? (
@@ -3079,7 +3085,7 @@ export default function Home() {
                       </>
                     ) : (
                       <>
-                        <Sparkles className="h-3.5 w-3.5 text-emerald-200 animate-pulse" />
+                        <Sparkles className="h-3.5 w-3.5 text-amber-200 animate-pulse" />
                         ⚡ Auto-Weave All Keywords (1-Click)
                       </>
                     )}
@@ -3107,14 +3113,16 @@ export default function Home() {
                     ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
 
                     return (
-                      <div className="space-y-1.5">
-                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
-                          🟢 Confirmed Matched Skills ({allMatched.length})
-                        </span>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                            Confirmed Matched Skills ({allMatched.length})
+                          </span>
+                        </div>
                         <div className="flex flex-wrap gap-1.5">
                           {allMatched.map((skillName, idx) => {
                             const skillLower = skillName.toLowerCase();
-                            // A woven chip came from appliedWovenKeywords (not an original strength, or was woven on top)
                             const isWoven = wovenMatchedLower.has(skillLower);
                             const isOriginal = originalMatched.has(skillLower);
 
@@ -3124,31 +3132,30 @@ export default function Home() {
                                 type="button"
                                 onClick={() => {
                                   if (isWoven) {
-                                    // Remove from appliedWovenKeywords → chip reappears in 🟡 or 🔴
                                     setAppliedWovenKeywords((prev) => {
                                       const next = prev.filter((k) => cleanKeywordName(k).toLowerCase() !== skillLower);
                                       if (next.length === 0) setIsKeywordsWoven(false);
                                       return next;
                                     });
                                   } else {
-                                    // Original strength — hide it completely
                                     setManuallyRemovedSkills((prev) => {
                                       const next = new Set(prev);
                                       next.add(skillLower);
                                       return next;
                                     });
                                   }
-                                  // Strip skill from rewritten text and activate "Re-Apply Changes"
                                   removeSkillFromRewrites(skillName);
                                 }}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 hover:bg-rose-500/10 text-emerald-700 hover:text-rose-600 dark:text-emerald-300 border border-emerald-500/20 hover:border-rose-400/30 transition-all duration-150 cursor-pointer group"
+                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-emerald-500/10 hover:bg-rose-500/10 text-emerald-700 hover:text-rose-600 dark:text-emerald-300 dark:hover:text-rose-400 border border-emerald-500/25 hover:border-rose-400/30 transition-all duration-150 cursor-pointer group shadow-xs"
                                 title={isWoven ? `Click to move '${skillName}' back to ${isOriginal ? "supported" : "missing"} keywords` : `Click to remove '${skillName}' from matched skills`}
                               >
                                 <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 group-hover:hidden" />
                                 <X className="h-3 w-3 shrink-0 text-rose-500 hidden group-hover:block" />
                                 {skillName}
                                 {isWoven && (
-                                  <span className="text-[9px] text-emerald-400/60 group-hover:hidden ml-0.5">woven</span>
+                                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 font-extrabold uppercase">
+                                    Woven
+                                  </span>
                                 )}
                               </button>
                             );
@@ -3158,53 +3165,53 @@ export default function Home() {
                     );
                   })()}
 
-
-                  {/* 🟡 Supported Skills in Evidence — single click to promote to matched */}
+                  {/* 🟡 Supported in Evidence — click to weave into skills section */}
                   {(() => {
-                    const wovenLower = new Set(appliedWovenKeywords.map((k) => k.toLowerCase().trim()));
-                    const supported = (analysisResult.top_improvements || [])
-                      .filter((imp) => imp.evidence_reused && imp.evidence_reused.trim())
-                      .flatMap((imp) => {
-                        const kws = extractStrictKeywordsFromRaw(imp.name);
-                        return kws.map((kw) => ({
-                          name: kw,
-                          section: imp.section,
-                          evidence: imp.evidence_reused,
-                        }));
-                      })
-                      .filter(
-                        (item) =>
-                          isActualATSKeyword(item.name) &&
-                          !wovenLower.has(item.name.toLowerCase().trim()) &&
-                          !manuallyRemovedSkills.has(item.name.toLowerCase())
-                      );
+                    const evidenceKeywords = (analysisResult.sections || [])
+                      .flatMap((s: any) => s.evidence_used || [])
+                      .map((e: string) => cleanKeywordName(e))
+                      .filter(Boolean);
 
-                    if (supported.length === 0) return null;
+                    const matchedLower = new Set(
+                      (analysisResult.top_strengths || []).map((s: any) =>
+                        (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
+                      )
+                    );
+
+                    const appliedWovenLower = new Set(
+                      appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
+                    );
+
+                    const unMatchedEvidence = Array.from(new Set(evidenceKeywords)).filter(
+                      (kw) => !matchedLower.has(kw.toLowerCase()) && !appliedWovenLower.has(kw.toLowerCase())
+                    );
+
+                    if (unMatchedEvidence.length === 0) return null;
 
                     return (
-                      <div className="space-y-1.5">
-                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-                          🟡 Supported in Evidence (Click to surface)
-                        </span>
+                      <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-amber-500" />
+                          <span className="text-[11px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                            Supported in Evidence (Click to Weave into Skills)
+                          </span>
+                        </div>
                         <div className="flex flex-wrap gap-1.5">
-                          {supported.map((item, idx) => (
+                          {unMatchedEvidence.map((kw, idx) => (
                             <button
                               key={idx}
                               type="button"
-                              disabled={weavingSingleKeyword === item.name}
-                              onClick={() => handleQuickWeaveKeyword(item.name)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/10 hover:bg-emerald-500/15 text-amber-700 hover:text-emerald-700 dark:text-amber-300 border border-amber-500/30 hover:border-emerald-400/40 transition-all duration-150 cursor-pointer group disabled:opacity-50"
-                              title={`Click to add '${item.name}' to matched skills`}
+                              onClick={() => handleQuickWeaveKeyword(kw)}
+                              disabled={weavingSingleKeyword === kw}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/25 transition-all duration-150 cursor-pointer shadow-xs hover:scale-105 active:scale-95"
+                              title={`Click to weave '${kw}' into Technical Skills section`}
                             >
-                              {weavingSingleKeyword === item.name ? (
+                              {weavingSingleKeyword === kw ? (
                                 <div className="h-3 w-3 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin shrink-0" />
                               ) : (
-                                <>
-                                  <Sparkles className="h-3 w-3 shrink-0 text-amber-500 group-hover:hidden transition-all" />
-                                  <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 hidden group-hover:block transition-all" />
-                                </>
+                                <Sparkles className="h-3 w-3 shrink-0 text-amber-500" />
                               )}
-                              {item.name}
+                              {kw}
                             </button>
                           ))}
                         </div>
@@ -3212,57 +3219,51 @@ export default function Home() {
                     );
                   })()}
 
-                  {/* 🔴 Missing Keywords / Gaps — single click to promote to matched */}
+                  {/* 🔴 Missing ATS Keywords — click to weave into skills section */}
                   {(() => {
-                    const wovenLower = new Set(appliedWovenKeywords.map((k) => k.toLowerCase().trim()));
-                    const supportedNames = new Set(
-                      (analysisResult.top_improvements || [])
-                        .filter((imp) => imp.evidence_reused && imp.evidence_reused.trim())
-                        .map((imp) => cleanKeywordName(imp.name).toLowerCase())
-                    );
+                    const allMissing = (analysisResult.sections || [])
+                      .flatMap((s: any) => s.missing_keywords || [])
+                      .map((k: string) => cleanKeywordName(k))
+                      .filter(Boolean);
 
-                    const missingFromSections = (analysisResult.sections || []).flatMap((s) => s.missing_keywords || []);
-                    const missingFromImps = (analysisResult.top_improvements || []).map((imp) => imp.name);
-
-                    const allMissing = Array.from(
-                      new Set(
-                        [...missingFromSections, ...missingFromImps]
-                          .flatMap((k) => extractStrictKeywordsFromRaw(k))
-                          .map((k) => cleanKeywordName(k))
+                    const matchedLower = new Set(
+                      (analysisResult.top_strengths || []).map((s: any) =>
+                        (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
                       )
-                    ).filter(
-                      (k) =>
-                        k &&
-                        isActualATSKeyword(k) &&
-                        !supportedNames.has(k.toLowerCase()) &&
-                        !wovenLower.has(k.toLowerCase().trim()) &&
-                        !manuallyRemovedSkills.has(k.toLowerCase())
                     );
 
-                    if (allMissing.length === 0) return null;
+                    const appliedWovenLower = new Set(
+                      appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
+                    );
+
+                    const trulyMissing = Array.from(new Set(allMissing)).filter(
+                      (kw) => !matchedLower.has(kw.toLowerCase()) && !appliedWovenLower.has(kw.toLowerCase())
+                    );
+
+                    if (trulyMissing.length === 0) return null;
 
                     return (
-                      <div className="space-y-1.5">
-                        <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">
-                          🔴 Missing ATS Keywords (Click to weave)
-                        </span>
+                      <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-rose-500" />
+                          <span className="text-[11px] font-extrabold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
+                            Missing ATS Keywords (Click to Weave into Skills)
+                          </span>
+                        </div>
                         <div className="flex flex-wrap gap-1.5">
-                          {allMissing.map((kw, idx) => (
+                          {trulyMissing.map((kw, idx) => (
                             <button
                               key={idx}
                               type="button"
-                              disabled={weavingSingleKeyword === kw}
                               onClick={() => handleQuickWeaveKeyword(kw)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/10 hover:bg-emerald-500/15 text-rose-700 hover:text-emerald-700 dark:text-rose-300 border border-rose-500/30 hover:border-emerald-400/40 transition-all duration-150 cursor-pointer group disabled:opacity-50"
-                              title={`Click to add '${kw}' to matched skills`}
+                              disabled={weavingSingleKeyword === kw}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-600 text-indigo-700 dark:text-indigo-300 hover:text-white border border-indigo-200 dark:border-indigo-800 transition-all duration-200 cursor-pointer shadow-xs hover:scale-105 active:scale-95 group"
+                              title={`Click to weave missing keyword '${kw}' into Technical Skills section`}
                             >
                               {weavingSingleKeyword === kw ? (
-                                <div className="h-3 w-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin shrink-0" />
+                                <div className="h-3 w-3 border-2 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin shrink-0" />
                               ) : (
-                                <>
-                                  <span className="font-bold text-rose-500 group-hover:hidden transition-all">+</span>
-                                  <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 hidden group-hover:block transition-all" />
-                                </>
+                                <Plus className="h-3 w-3 shrink-0 text-indigo-500 group-hover:text-white" />
                               )}
                               {kw}
                             </button>
@@ -4307,14 +4308,14 @@ export default function Home() {
       {/* Floating Sticky Action Dock */}
       {Object.keys(rewrittenSections).length > 0 && isBottomBarVisible && (
         <>
-          <div className="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-6 z-40 sm:max-w-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl shadow-2xl text-slate-800 dark:text-white animate-fade-in-up transition-all duration-300">
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] sm:w-auto max-w-2xl bg-slate-900/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-800/90 border-t-slate-700/60 p-4 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-white animate-fade-in-up transition-all duration-300">
             <div className="w-full mx-auto space-y-3">
 
               {/* Expandable Drawer for Accepted Improvements */}
               {isCartOpen && !isPatchingApplied && (
-                <div className="border-b border-slate-800 pb-3 space-y-2 animate-fade-in-up">
+                <div className="border-b border-slate-800/80 pb-3 space-y-2 animate-fade-in-up">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+                    <span className="text-[11px] font-extrabold text-indigo-400 uppercase tracking-wider">
                       Accepted Improvements
                     </span>
                     <button
@@ -4325,7 +4326,7 @@ export default function Home() {
                         setIsPatchingApplied(false);
                         setIsCartOpen(false);
                       }}
-                      className="text-[10px] text-rose-455 hover:text-rose-400 font-bold transition-colors select-none cursor-pointer"
+                      className="text-[11px] text-rose-400 hover:text-rose-300 font-extrabold transition-colors select-none cursor-pointer"
                     >
                       Clear All
                     </button>
@@ -4338,14 +4339,14 @@ export default function Home() {
                       const displayName = originalSection?.section_name || secKey;
 
                       return (
-                        <div key={secKey} className="flex items-center gap-1.5 text-xs bg-slate-950/60 border border-slate-850/40 px-2.5 py-1 rounded-lg">
-                          <span className="text-slate-200 font-semibold truncate capitalize max-w-[140px]">
+                        <div key={secKey} className="flex items-center gap-1.5 text-xs bg-slate-950/80 border border-slate-800/80 px-3 py-1 rounded-xl">
+                          <span className="text-slate-200 font-bold truncate capitalize max-w-[140px]">
                             {displayName}
                           </span>
                           <button
                             type="button"
                             onClick={() => handleRevert(displayName)}
-                            className="text-slate-500 hover:text-rose-455 p-0.5 transition-colors rounded hover:bg-slate-900 cursor-pointer"
+                            className="text-slate-400 hover:text-rose-400 p-0.5 transition-colors rounded hover:bg-slate-900 cursor-pointer"
                             title="Revert this section"
                           >
                             <X className="h-3 w-3" />
@@ -4359,23 +4360,23 @@ export default function Home() {
 
               {/* Main Footer Row */}
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${isPatchingApplied ? 'bg-emerald-500/20 text-emerald-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
-                    {isPatchingApplied ? <CheckCircle className="h-4 w-4" /> : <Sparkles className="h-4 w-4 animate-pulse" />}
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 border ${isPatchingApplied ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30'}`}>
+                    {isPatchingApplied ? <CheckCircle className="h-4.5 w-4.5" /> : <Sparkles className="h-4.5 w-4.5 animate-pulse text-amber-200" />}
                   </div>
                   <div className="min-w-0">
-                    <span className="text-xs font-bold text-white block truncate">
-                      {isPatchingApplied ? "✅ Resume Updated" : `${Object.keys(rewrittenSections).length} improvement${Object.keys(rewrittenSections).length > 1 ? 's' : ''} ready`}
+                    <span className="text-xs font-black text-white block truncate">
+                      {isPatchingApplied ? "✅ Resume Tailored & Ready" : `${Object.keys(rewrittenSections).length} improvement${Object.keys(rewrittenSections).length > 1 ? 's' : ''} ready`}
                     </span>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] text-slate-400 truncate hidden xs:inline">
-                        {isPatchingApplied ? "Applied to file" : "Ready to apply"}
+                        {isPatchingApplied ? "Preserved formatting" : "Ready to apply"}
                       </span>
                       {!isPatchingApplied && (
                         <button
                           type="button"
                           onClick={() => setIsCartOpen(!isCartOpen)}
-                          className="text-[10px] text-indigo-400 hover:text-indigo-350 underline font-semibold select-none cursor-pointer shrink-0"
+                          className="text-[10px] text-indigo-400 hover:text-indigo-300 underline font-bold select-none cursor-pointer shrink-0"
                         >
                           {isCartOpen ? "Hide" : "Details"}
                         </button>
@@ -4388,7 +4389,7 @@ export default function Home() {
                   <div className="flex items-center gap-2 flex-wrap">
                     {/* Download buttons — shown after successful apply, alongside re-apply */}
                     {isPatchingApplied && downloadUrl && (
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
                         <a
                           href={`${API_BASE_URL}${downloadUrl}?filename=${encodeURIComponent(
                             buildResumeFilename(
@@ -4400,7 +4401,7 @@ export default function Home() {
                           )}`}
                           download
                           onClick={() => setSuccessNotification("Downloading updated DOCX...")}
-                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1"
+                          className="px-4 py-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-white rounded-xl text-xs font-extrabold shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-1.5 hover:scale-105 active:scale-95 border border-emerald-400/30"
                         >
                           <FileText className="h-3.5 w-3.5" />
                           <span>DOCX</span>
@@ -4417,18 +4418,18 @@ export default function Home() {
                           )}`}
                           download
                           onClick={() => setSuccessNotification("Downloading PDF...")}
-                          className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1"
+                          className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1.5 hover:scale-105 active:scale-95"
                         >
-                          <Download className="h-3.5 w-3.5" />
+                          <Download className="h-3.5 w-3.5 text-slate-300" />
                           <span>PDF</span>
                         </a>
 
                         <button
                           type="button"
                           onClick={() => setIsPdfPreviewOpen(true)}
-                          className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1 cursor-pointer"
+                          className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
                         >
-                          <FileText className="h-3.5 w-3.5" />
+                          <FileText className="h-3.5 w-3.5 text-indigo-400" />
                           <span>Preview</span>
                         </button>
                       </div>
@@ -4438,47 +4439,47 @@ export default function Home() {
                     <button
                       onClick={handleApplyRewrites}
                       disabled={applyMutation.isPending}
-                      className={`px-4 py-2 ${isPatchingApplied ? 'bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 shadow-indigo-500/20' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-emerald-500/20'} disabled:opacity-50 text-white rounded-xl text-xs font-extrabold shadow-lg transition-all flex items-center gap-1.5`}
+                      className={`px-5 py-2.5 ${isPatchingApplied ? 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white' : 'bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white border border-white/20 shadow-xl shadow-emerald-500/25 hover:scale-105 active:scale-95'} disabled:opacity-50 text-white rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer`}
                     >
                       {applyMutation.isPending ? (
                         <>
-                          <div className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                           Applying...
                         </>
                       ) : isPatchingApplied ? (
                         <>
-                          <RefreshCw className="h-3 w-3" />
+                          <RefreshCw className="h-3.5 w-3.5 text-indigo-400" />
                           Re-Apply Changes
                         </>
                       ) : (
                         <>
+                          <Sparkles className="h-3.5 w-3.5 text-amber-200 animate-pulse" />
                           Apply to Resume
                         </>
                       )}
                     </button>
-                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isPatchingApplied) {
-                        setRewrittenSections({});
-                        setPreviousRewrittenSections({});
-                        setIsPatchingApplied(false);
-                        setDownloadUrl(null);
-                        setDownloadId(null);
-                      }
-                      setIsBottomBarVisible(false);
-                      setIsCartOpen(false);
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer select-none shrink-0"
-                    title={isPatchingApplied ? "Clear and start new tailoring pass" : "Dismiss bar"}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isPatchingApplied) {
+                          setRewrittenSections({});
+                          setPreviousRewrittenSections({});
+                          setIsPatchingApplied(false);
+                          setDownloadUrl(null);
+                          setDownloadId(null);
+                        }
+                        setIsBottomBarVisible(false);
+                        setIsCartOpen(false);
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer select-none shrink-0"
+                      title={isPatchingApplied ? "Clear and start new tailoring pass" : "Dismiss bar"}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
-
 
             </div>
           </div>
