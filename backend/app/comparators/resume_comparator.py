@@ -59,7 +59,7 @@ from app.schemas.section import SectionItem
 
 # Minimum proportion of content words in a skill phrase that must appear
 # in the resume for the skill to be considered matched.
-_SKILL_MATCH_THRESHOLD = 0.5
+_SKILL_MATCH_THRESHOLD = 0.6
 
 # Minimum word length to include in skill phrase decomposition.
 _MIN_WORD_LENGTH = 3
@@ -102,13 +102,17 @@ def compare_resume(
         job_description.required_skills, full_resume_text
     )
 
-    overall_coverage = _coverage_percentage(
-        matched_count=len(keyword_matches) + len(tech_matches) + len(skill_matches),
-        total_count=(
-            len(job_description.keywords)
-            + len(job_description.technologies)
-            + len(job_description.required_skills)
-        ),
+    # Weighted overall coverage:
+    #   Required Skills = 50% (core "must-have" requirements)
+    #   Technologies     = 30% (concrete tools ATS systems scan for)
+    #   Keywords         = 20% (useful context but often generic)
+    overall_coverage = _weighted_coverage(
+        skill_matched=len(skill_matches),
+        skill_total=len(job_description.required_skills),
+        tech_matched=len(tech_matches),
+        tech_total=len(job_description.technologies),
+        keyword_matched=len(keyword_matches),
+        keyword_total=len(job_description.keywords),
     )
 
     return ComparisonResult(
@@ -278,9 +282,58 @@ def _content_sections(sections: list[SectionItem]) -> list[SectionItem]:
 def _coverage_percentage(matched_count: int, total_count: int) -> float:
     """Return the percentage of total signals that were matched.
 
+    Used for per-section coverage (keywords + technologies only).
     Returns 0.0 when total_count is zero to avoid division by zero.
     Result is rounded to one decimal place.
     """
     if total_count == 0:
         return 0.0
     return round(matched_count / total_count * 100, 1)
+
+
+# ── Weighted scoring weights ──────────────────────────────────────────────────
+_WEIGHT_SKILLS = 0.50
+_WEIGHT_TECH = 0.30
+_WEIGHT_KEYWORDS = 0.20
+
+
+def _weighted_coverage(
+    skill_matched: int,
+    skill_total: int,
+    tech_matched: int,
+    tech_total: int,
+    keyword_matched: int,
+    keyword_total: int,
+) -> float:
+    """Return a weighted overall coverage percentage.
+
+    Each signal category contributes a fixed share of the total score:
+        Required Skills  → 50%
+        Technologies      → 30%
+        Keywords          → 20%
+
+    If a category has zero items in the JD, its weight is redistributed
+    proportionally among the remaining categories so that an absent
+    category doesn't penalize or inflate the score.
+
+    Result is rounded to one decimal place.
+    """
+    components: list[tuple[float, int, int]] = []
+    if skill_total > 0:
+        components.append((_WEIGHT_SKILLS, skill_matched, skill_total))
+    if tech_total > 0:
+        components.append((_WEIGHT_TECH, tech_matched, tech_total))
+    if keyword_total > 0:
+        components.append((_WEIGHT_KEYWORDS, keyword_matched, keyword_total))
+
+    if not components:
+        return 0.0
+
+    # Redistribute weights so they sum to 1.0 even when some categories
+    # are empty (e.g. a JD with no explicit required_skills).
+    total_weight = sum(w for w, _, _ in components)
+    score = sum(
+        (w / total_weight) * (matched / total)
+        for w, matched, total in components
+    )
+    return round(score * 100, 1)

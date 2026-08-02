@@ -1209,21 +1209,20 @@ export default function Home() {
            Object.keys(rewrittenSections).some((rk) => s.section_name.toLowerCase().includes(rk) || rk.includes(s.section_name.toLowerCase()))
   ).length;
 
-  // Track total accepted rewrites count across all sections (including header/summary/skills)
-  const totalAcceptedRewrites = Object.keys(rewrittenSections).length;
 
   // Track if keyword weaving has been applied
   const wovenBoost = (isKeywordsWoven || appliedWovenKeywords.length > 0) ? 1 : 0;
 
-  // Target count of tasks to achieve 100% fit (sections needing improvement + keyword weaving)
-  const totalTargets = Math.max(1, totalNeeded + (appliedWovenKeywords.length || analysisResult?.top_improvements?.length ? 1 : 0));
-  const completedTargets = Math.min(totalTargets, Math.max(improvedCount, totalAcceptedRewrites) + wovenBoost);
-
   const initialScore = analysisResult?.overall_summary?.overall_coverage_percentage || 0;
 
-  // Calculate dynamic progress from initialScore up to 100%
+  // Honest, bounded score boosts:
+  //   Each rewritten section adds +3% (max +15%)
+  //   Keyword weaving adds +5%
+  //   Hard cap at 95% — no resume perfectly matches every JD requirement
+  const rewriteBoost = Math.min(15, Math.max(improvedCount, Object.keys(rewrittenSections).length) * 3);
+  const keywordBoost = wovenBoost * 5;
   const currentScore = analysisResult
-    ? Math.min(100, Math.round(initialScore + (100 - initialScore) * (completedTargets / totalTargets)))
+    ? Math.min(95, Math.round(initialScore + rewriteBoost + keywordBoost))
     : 0;
 
   const sectionsStillNeedingImprovement = Math.max(0, totalNeeded - improvedCount);
