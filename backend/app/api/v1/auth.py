@@ -24,11 +24,24 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/signup", response_model=AuthResponse)
 def signup(req: UserSignupRequest, db: Session = Depends(get_db)):
-    """Register a new email and password user with starting credits."""
+    """Register or link password credentials for an email address."""
     email_clean = req.email.strip().lower()
     existing_user = db.query(User).filter(User.email == email_clean).first()
+    
     if existing_user:
-        raise BadRequestError("Email address is already registered.")
+        if existing_user.password_hash is not None:
+            raise BadRequestError("Email address is already registered. Please sign in.")
+        
+        # Link password to existing Google-created user account
+        existing_user.password_hash = hash_password(req.password)
+        existing_user.provider = "both"
+        if req.name and req.name.strip() and not existing_user.name:
+            existing_user.name = req.name.strip()
+        db.commit()
+        db.refresh(existing_user)
+
+        token = create_access_token({"sub": existing_user.email})
+        return AuthResponse(access_token=token, user=existing_user)
 
     new_user = User(
         email=email_clean,
@@ -46,15 +59,15 @@ def signup(req: UserSignupRequest, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=AuthResponse)
 def login(req: UserLoginRequest, db: Session = Depends(get_db)):
-    """Authenticate email and password credentials gracefully without triggering 401 console logs."""
+    """Authenticate email and password credentials seamlessly."""
     email_clean = req.email.strip().lower()
     user = db.query(User).filter(User.email == email_clean).first()
     if not user:
         return AuthResponse(error_message="No account found with this email address. Please check your spelling or sign up.")
 
-    if not user.password_hash or user.provider == "google":
+    if not user.password_hash:
         return AuthResponse(
-            error_message="This account was created using Google Sign-In and has no password. Please click 'Continue with Google'."
+            error_message="This account was created using Google Sign-In and does not have a password set. Please click 'Continue with Google', or click 'Sign Up' to set a password for this email."
         )
 
     if not verify_password(req.password, user.password_hash):
@@ -65,7 +78,7 @@ def login(req: UserLoginRequest, db: Session = Depends(get_db)):
 
 @router.post("/google", response_model=AuthResponse)
 def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
-    """Verify Google client credential token and authenticate."""
+    """Verify Google client credential token and authenticate seamlessly."""
     # Bypassing validation in sandbox/development environment for easy mock smoke-testing
     if settings.ENVIRONMENT != "production" and req.credential == "mock-google-token":
         email = "mockuser@rolecraft.tech"
@@ -105,10 +118,15 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(user)
     else:
-        # Link Google ID if registered via credentials originally
+        # Link Google ID if missing
         if not user.google_id:
             user.google_id = google_id
+        # Update provider tag to "both" if user has both Google ID & password
+        if user.password_hash:
+            user.provider = "both"
+        else:
             user.provider = "google"
+
         # Populate name from Google if not already set
         if not user.name and google_name:
             user.name = google_name
