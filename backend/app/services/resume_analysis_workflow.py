@@ -115,8 +115,6 @@ class ResumeAnalysisWorkflow:
         date_kws = ["present", "201", "202", "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
         processed_section_ids = set()
 
-        for s_review in unified_result.sections:
-            # Skip the general experiences card in standard loop (we replicate it below)
         def _get_section_evidence(sec: DetectedSection) -> list[str]:
             lines = [p.text.strip() for p in sec.paragraphs if p.text and p.text.strip()]
             if lines:
