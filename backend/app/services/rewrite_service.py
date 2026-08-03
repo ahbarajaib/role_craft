@@ -24,7 +24,7 @@ CRITICAL RULES:
    - [Y] = Measurable metric/data point or technical scale signal
    - [Z] = Action taken and technical method used
 3. **Mandatory Metric Quantification**: Every rewritten bullet MUST include at least one concrete metric or technical scale indicator. If an exact numeric percentage/metric is not present in the original bullet, estimate a realistic, technically plausible metric proxy based on context (e.g., "improving query latency by ~35%", "handling 10+ device categories", "serving 1,000+ active users", "reducing build times by 25%").
-4. **Truthful ATS Keyword Cross-Weaving**: You MUST cross-reference the target Job Description with the "=== EVIDENCE CONTEXT (FROM REST OF RESUME) ===". If an ATS keyword required by the target job appears in another section of the candidate's resume (such as Technical Skills, Projects, or other roles), you SHOULD weave that keyword naturally into relevant experience bullets in this section.
+4. **Evidence-Gated ATS Keyword Weaving**: Cross-reference the target Job Description with the "=== EVIDENCE CONTEXT (FROM REST OF RESUME) ===". You MAY weave a JD keyword into a bullet ONLY IF it already appears somewhere in the candidate's evidence context (other sections of their resume). NEVER introduce a technology, framework, language, or tool that does not appear anywhere in the candidate's evidence context, even if the JD demands it. Resume fraud is strictly prohibited.
 5. **Strong Action Verbs & High Impact**: Start every bullet point with a distinct, powerful action verb (e.g., Spearheaded, Architected, Engineered, Optimized, Streamlined). Do not merely rephrase sentences passively; restructure them for maximum recruiter impact.
 6. **Candidate Metric Integration**: If there is a section labeled "=== CANDIDATE-SUPPLIED METRICS & DATA POINTS ===", weave those exact candidate metrics directly into the corresponding bullets.
 7. **Exact Bullet Count & Order Preservation**: You MUST output EXACTLY the same number of content lines/bullets as specified in the count constraint. Preserve the logical sequence of job entries in document order.
@@ -43,8 +43,12 @@ CRITICAL SKILLS SECTION RULES:
    "Frontend: React.js, Next.js, Redux Toolkit, Tailwind CSS, JavaScript (ES6+), HTML5, CSS3, TypeScript"
    "Backend & Systems: Node.js, Express.js, REST APIs, WebSockets, JWT Authentication, Async Workflows, API Integration"
 2. **NO Sentences or Action Verbs**: DO NOT write full sentences, achievement paragraphs, or action verbs (e.g. NEVER write "Developed scalable applications using...", "Engineered robust backend solutions using...").
-3. **Preserve & Weave Keywords**: Retain all existing skills from the original text and weave the missing ATS keywords naturally into their appropriate category lists.
-4. **Output Bounds**: Output ONLY the category skill lines. Do not include preambles or header titles.
+3. **Evidence-Gated Keyword Weaving — STRICT**: You MAY only add a skill or technology to the skills list if it EXPLICITLY appears in the candidate's own resume evidence (the "=== EVIDENCE CONTEXT ===" section below). If a keyword appears in the Target Job Description but does NOT appear anywhere in the candidate's evidence context or original skills text, you MUST NOT add it. This is non-negotiable.
+   - ✅ ALLOWED: Moving/promoting a skill from evidence context into the skills list (e.g. the candidate used "Docker" in a project but it is not in the skills list yet).
+   - ❌ FORBIDDEN: Adding any technology, language, framework, cloud service, or tool that does not appear in the evidence context or original skills text, even if the job description demands it.
+4. **NEVER Invent Skills**: Do NOT add C#, ASP.NET, Azure, Java, Kubernetes, Go, Rust, Ruby, or ANY other technology/framework/language unless it explicitly appears in the candidate's evidence context. Adding invented skills is resume fraud and is strictly prohibited.
+5. **Preserve All Existing Skills**: Every skill listed in the original text MUST remain in the output. Do NOT remove, rename, or omit any existing skill category or item.
+6. **Output Bounds**: Output ONLY the category skill lines. Do not include preambles or header titles.
 """
 
 SUMMARY_REWRITE_SYSTEM_PROMPT = """\
