@@ -1846,6 +1846,57 @@ export default function Home() {
     });
   };
 
+  // ── Direct single-click Apply Target Job Title (patches DOCX immediately) ──────
+  const [isApplyingTitle, setIsApplyingTitle] = useState(false);
+
+  const handleApplyTargetTitle = async (titleToApply: string) => {
+    if (!documentId) return;
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
+    if (user && user.plan_type === "free" && user.credits <= 0) {
+      setIsSubscriptionModalOpen(true);
+      return;
+    }
+
+    setIsApplyingTitle(true);
+    const updatedRewrites = {
+      ...rewrittenSections,
+      header: titleToApply,
+    };
+    setRewrittenSections(updatedRewrites);
+
+    const acceptedItems = Object.entries(updatedRewrites).map(([secKey, text]) => {
+      const origSec = (analysisResult?.sections || []).find(
+        (s: any) => s.section_name.toLowerCase() === secKey.toLowerCase()
+      );
+      const excluded = excludedBullets[origSec?.section_name || secKey] || excludedBullets[secKey];
+      const filteredText = excluded && excluded.size > 0
+        ? filterBulletsByChecked(text, excluded)
+        : text;
+      return {
+        section: origSec ? origSec.section_name : (secKey === "header" ? "header" : secKey),
+        rewritten_text: filteredText,
+      };
+    });
+
+    console.log("💾 [RoleCraft Audit] Submitting Direct Title Patch Payload:", acceptedItems);
+
+    try {
+      const res = await applyMutation.mutateAsync({
+        document_id: documentId,
+        accepted_rewrites: acceptedItems,
+      });
+      setSuccessNotification(`Target title "${titleToApply}" applied directly to resume!`);
+      setIsPatchingApplied(true);
+    } catch (err: any) {
+      console.error("❌ [RoleCraft Audit] Direct title patch failed:", err);
+    } finally {
+      setIsApplyingTitle(false);
+    }
+  };
+
   // ── Quick single-click keyword weave (weaves into section & patches docx) ────────
   const [weavingSingleKeyword, setWeavingSingleKeyword] = useState<string | null>(null);
 
@@ -3036,23 +3087,31 @@ export default function Home() {
                             {canApply && (
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setRewrittenSections((prev) => ({
-                                    ...prev,
-                                    header: rawJobTitle,
-                                  }));
-                                  setIsPatchingApplied(false);
-                                  setSuccessNotification(`Applied target job title: "${rawJobTitle}"`);
-                                }}
+                                onClick={() => handleApplyTargetTitle(rawJobTitle)}
+                                disabled={isApplyingTitle || applyMutation.isPending}
                                 className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${
-                                  rewrittenSections["header"] === rawJobTitle
+                                  rewrittenSections["header"] === rawJobTitle && isPatchingApplied
                                     ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
                                     : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white border-emerald-500/30 shadow-emerald-500/20 hover:scale-105"
                                 }`}
-                                title="Apply this target job title to your resume header"
+                                title="Apply this target job title directly to your resume header and DOCX file"
                               >
-                                <CheckCircle className="h-3.5 w-3.5 text-white shrink-0" />
-                                <span>{rewrittenSections["header"] === rawJobTitle ? "Title Applied" : "Apply Job Title"}</span>
+                                {isApplyingTitle ? (
+                                  <>
+                                    <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin shrink-0" />
+                                    <span>Applying Title...</span>
+                                  </>
+                                ) : rewrittenSections["header"] === rawJobTitle && isPatchingApplied ? (
+                                  <>
+                                    <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                                    <span>Title Applied & Saved</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="h-3.5 w-3.5 text-white shrink-0" />
+                                    <span>Apply Job Title</span>
+                                  </>
+                                )}
                               </button>
                             )}
                           </>
