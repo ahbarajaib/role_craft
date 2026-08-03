@@ -117,6 +117,19 @@ class ResumeAnalysisWorkflow:
 
         for s_review in unified_result.sections:
             # Skip the general experiences card in standard loop (we replicate it below)
+        def _get_section_evidence(sec: DetectedSection) -> list[str]:
+            lines = [p.text.strip() for p in sec.paragraphs if p.text and p.text.strip()]
+            if lines:
+                return lines
+            norm_t = " ".join(sec.title.lower().split())
+            for target in sections:
+                if " ".join(target.title.lower().split()) == norm_t:
+                    fallback = [p.text.strip() for p in target.paragraphs if p.text and p.text.strip()]
+                    if fallback:
+                        return fallback
+            return [sec.title]
+
+        for s_review in unified_result.sections:
             if s_review == exp_review:
                 continue
 
@@ -141,7 +154,7 @@ class ResumeAnalysisWorkflow:
                     priority=s_review.priority,
                     reason=s_review.reason,
                     recommendations=s_review.recommendations,
-                    evidence_used=[p.text.strip() for p in section_item.paragraphs if p.text and p.text.strip()],
+                    evidence_used=_get_section_evidence(section_item),
                     missing_keywords=[],
                     strengths=s_review.strengths,
                     coverage_percentage=section_comparison.coverage_percentage,
@@ -167,7 +180,7 @@ class ResumeAnalysisWorkflow:
                                 priority=exp_review.priority,
                                 reason=exp_review.reason,
                                 recommendations=exp_review.recommendations,
-                                evidence_used=[p.text.strip() for p in s.paragraphs if p.text and p.text.strip()],
+                                evidence_used=_get_section_evidence(s),
                                 missing_keywords=[],
                                 strengths=exp_review.strengths,
                                 coverage_percentage=section_comparison.coverage_percentage,
@@ -184,7 +197,7 @@ class ResumeAnalysisWorkflow:
                                 priority=Priority.HIGH,
                                 reason="Tailor role achievements and technical metrics to match target job requirements.",
                                 recommendations=["Align technical bullet points with required skills in target job description."],
-                                evidence_used=[p.text.strip() for p in s.paragraphs if p.text and p.text.strip()],
+                                evidence_used=_get_section_evidence(s),
                                 missing_keywords=[],
                                 strengths=["Chronological employment history preserved."],
                                 coverage_percentage=section_comparison.coverage_percentage,
@@ -206,7 +219,7 @@ class ResumeAnalysisWorkflow:
                         priority=Priority.LOW,
                         reason="Section is high quality and aligns well with the profile.",
                         recommendations=[],
-                        evidence_used=[p.text.strip() for p in s.paragraphs if p.text and p.text.strip()],
+                        evidence_used=_get_section_evidence(s),
                         missing_keywords=[],
                         strengths=["Clear representation of candidate profile."],
                         coverage_percentage=section_comparison.coverage_percentage,

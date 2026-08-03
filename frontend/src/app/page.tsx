@@ -22,6 +22,7 @@ import {
   Code,
   ClipboardList,
   ChevronDown,
+  ChevronUp,
   RefreshCw,
   Edit,
   RotateCcw,
@@ -347,6 +348,10 @@ function SectionCard({
   const parsedBullets = rewrittenText ? parseBulletsFromText(rewrittenText) : [];
   const hasBullets = parsedBullets.some((b) => b.isBullet);
 
+  const originalTextRaw = section.evidence_used && section.evidence_used.length > 0 ? section.evidence_used.join("\n") : "";
+  const parsedOriginalBullets = originalTextRaw ? parseBulletsFromText(originalTextRaw) : [];
+  const hasOriginalBullets = parsedOriginalBullets.some((b) => b.isBullet);
+
   return (
     <div
       key={`${section.section_name}-${idx}`}
@@ -358,45 +363,43 @@ function SectionCard({
         className="flex flex-wrap items-center justify-between gap-4 p-5 cursor-pointer select-none"
       >
         <div className="flex items-center gap-3">
-          <span className="text-base font-black capitalize text-slate-900">
-            {section.section_name}
-          </span>
-          <span className={`text-xs px-2.5 py-0.5 rounded-full border font-bold ${badgeStyles[section.review_status]}`}>
+          <span
+            className={`px-2.5 py-1 text-[11px] font-black rounded-lg border uppercase tracking-wider ${badgeStyles[section.review_status]}`}
+          >
             {section.review_status === "improve"
-              ? "🟡 Improve"
+              ? "Needs Improvement"
               : section.review_status === "keep"
-                ? "🟢 Keep"
-                : "⚪ Reduce Emphasis"}
+              ? "Good As Is"
+              : "Reduce Emphasis"}
           </span>
-          {section.review_status === "improve" && (
-            <span className={`text-xs px-2.5 py-0.5 rounded-full border font-extrabold uppercase ${priorityStyles[section.priority]}`}>
-              {section.priority} priority
-            </span>
-          )}
-          {rewrittenText && (
-            <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-extrabold flex items-center gap-1 shadow-xs ${
-              isPatchingApplied
-                ? "bg-emerald-600 text-white border border-emerald-600"
-                : "bg-indigo-100 text-indigo-900 border border-indigo-300"
-            }`}>
-              <CheckCircle className="h-3 w-3 shrink-0" />
-              {isPatchingApplied ? "⚡ Applied to DOCX" : "Rewrite Tailored"}
-            </span>
-          )}
+          <h3 className="font-black text-slate-900 dark:text-white text-base md:text-lg flex items-center gap-2">
+            {section.section_name}
+            {rewrittenText && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/90 border border-emerald-300 dark:border-emerald-700 px-2 py-0.5 rounded-full animate-fade-in-up">
+                <Sparkles className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" />
+                Tailored
+              </span>
+            )}
+          </h3>
         </div>
 
-        <div className="flex items-center gap-2">
-          <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${isExpanded ? "transform rotate-180" : ""}`} />
+        <div className="flex items-center gap-3">
+          <span
+            className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md border uppercase tracking-wider ${priorityStyles[section.priority]}`}
+          >
+            {section.priority} Priority
+          </span>
+          {isExpanded ? (
+            <ChevronUp className="h-5 w-5 text-slate-400" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-slate-400" />
+          )}
         </div>
       </div>
 
-      {/* Collapsible Details */}
+      {/* Expanded Content */}
       {isExpanded && (
-        <div className="px-5 pb-5 border-t border-slate-200 dark:border-slate-800/80 pt-4 space-y-4 animate-fade-in-up">
-          {/* AI Reason Summary */}
-          <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed italic font-medium bg-slate-100/60 p-3 rounded-xl border border-slate-200/80">
-            "{section.reason}"
-          </p>
+        <div className="px-5 pb-5 pt-1 space-y-4 border-t border-slate-100 dark:border-slate-800/60">
 
           {/* Rewritten Preview Text with Side-by-Side Comparison */}
           {rewrittenText && (
@@ -470,18 +473,68 @@ function SectionCard({
                   <div className="flex items-center justify-between border-b border-rose-200 dark:border-rose-900/50 pb-2">
                     <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-rose-500 inline-block" />
-                      Original Resume Text
+                      Original Resume Text (Before)
                     </span>
                   </div>
                   <div className="pt-1 space-y-2 flex-1 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                    {section.evidence_used && section.evidence_used.length > 0 ? (
-                      section.evidence_used.map((evText, evIdx) => (
-                        <p key={evIdx} className="bg-white/90 dark:bg-slate-900/80 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/30 text-[12px] text-slate-800 dark:text-slate-200 select-all">
-                          {evText}
-                        </p>
-                      ))
+                    {originalTextRaw ? (
+                      hasOriginalBullets ? (
+                        parsedOriginalBullets.map((item, origIdx) => {
+                          const bulletSymbols = ["•", "-", "*", "–", "—", "▪", "▸"];
+                          const bulletMatch = bulletSymbols.find((s) => item.line.startsWith(s));
+                          const content = bulletMatch ? item.line.substring(bulletMatch.length).trim() : item.line;
+
+                          if (item.isHeader) {
+                            return (
+                              <div key={origIdx} className="font-extrabold text-slate-900 dark:text-white text-xs pt-2 pb-1 flex items-center justify-between border-b border-rose-200 dark:border-rose-800/80 mt-1">
+                                <span className="flex items-center gap-1.5 text-rose-950 dark:text-rose-200">
+                                  <Briefcase className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                                  {item.line}
+                                </span>
+                              </div>
+                            );
+                          }
+
+                          if (item.isCompany) {
+                            return (
+                              <div key={origIdx} className="font-semibold text-rose-700 dark:text-rose-400 text-[11px] italic mb-1.5 pl-5">
+                                {item.line}
+                              </div>
+                            );
+                          }
+
+                          if (!item.isBullet) {
+                            return (
+                              <p key={origIdx} className="bg-white/90 dark:bg-slate-900/80 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/30 text-[12px] text-slate-800 dark:text-slate-200 leading-relaxed select-all">
+                                {item.line}
+                              </p>
+                            );
+                          }
+
+                          return (
+                            <div
+                              key={origIdx}
+                              className="flex items-start gap-2.5 rounded-lg px-2.5 py-1.5 bg-white/90 dark:bg-slate-900/80 border border-rose-100 dark:border-rose-900/30 shadow-xs"
+                            >
+                              <span className="mt-1 shrink-0 h-2 w-2 rounded-full bg-rose-400 dark:bg-rose-500" />
+                              <p className="flex-1 text-[12px] leading-relaxed text-slate-800 dark:text-slate-200 font-medium select-all">
+                                {content}
+                              </p>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        section.evidence_used.map((evText, evIdx) => (
+                          <p key={evIdx} className="bg-white/90 dark:bg-slate-900/80 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/30 text-[12px] text-slate-800 dark:text-slate-200 select-all">
+                            {evText}
+                          </p>
+                        ))
+                      )
                     ) : (
-                      <p className="text-slate-500 dark:text-slate-400 italic p-2">Original text not found in analysis cache.</p>
+                      <div className="p-3 bg-white/90 dark:bg-slate-900/80 rounded-lg border border-rose-200 dark:border-rose-900/40 text-[12px] text-slate-700 dark:text-slate-300 font-medium">
+                        <p className="font-bold text-rose-900 dark:text-rose-200 mb-1">{section.section_name}</p>
+                        <p className="text-[11px] text-slate-500 italic">Original section content recorded from document.</p>
+                      </div>
                     )}
                   </div>
                 </div>
