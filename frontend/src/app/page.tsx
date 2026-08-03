@@ -50,6 +50,7 @@ import FeaturesShowcase from "@/components/features_showcase";
 import TestimonialsSection from "@/components/testimonials_section";
 import FaqSection from "@/components/faq_section";
 import { ProfileModal } from "@/components/profile_modal";
+import { WordLogoIcon, PdfLogoIcon } from "@/components/file_format_icons";
 
 interface DiffToken {
   value: string;
@@ -2859,7 +2860,7 @@ export default function Home() {
                   <div className="flex items-center justify-between p-3.5 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden gap-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="h-9 w-9 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shrink-0">
-                        <FileText className="h-4.5 w-4.5 text-indigo-500 dark:text-indigo-400" />
+                        <WordLogoIcon className="h-5 w-5 shrink-0 shadow-sm" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" title={file.name}>
@@ -3542,16 +3543,16 @@ export default function Home() {
                           download
                           className="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer"
                         >
-                          <Download className="h-3.5 w-3.5" />
+                          <WordLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
                           Download Cover Letter (.DOCX)
                         </a>
                         <a
                           href={`${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=pdf`}
                           download
                           onClick={() => setSuccessNotification("Downloading Cover Letter PDF...")}
-                          className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer"
+                          className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer border border-slate-700/60"
                         >
-                          <Download className="h-3.5 w-3.5" />
+                          <PdfLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
                           Download Cover Letter (.PDF)
                         </a>
                       </div>
@@ -4519,8 +4520,8 @@ export default function Home() {
                           onClick={() => setSuccessNotification("Downloading updated DOCX...")}
                           className="px-4 py-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-white rounded-xl text-xs font-extrabold shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-1.5 hover:scale-105 active:scale-95 border border-emerald-400/30"
                         >
-                          <FileText className="h-3.5 w-3.5" />
-                          <span>DOCX</span>
+                          <WordLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
+                          <span>Download DOCX</span>
                         </a>
 
                         <a
@@ -4536,8 +4537,8 @@ export default function Home() {
                           onClick={() => setSuccessNotification("Downloading PDF...")}
                           className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1.5 hover:scale-105 active:scale-95"
                         >
-                          <Download className="h-3.5 w-3.5 text-slate-300" />
-                          <span>PDF</span>
+                          <PdfLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
+                          <span>Download PDF</span>
                         </a>
 
                         <button
@@ -4545,8 +4546,8 @@ export default function Home() {
                           onClick={() => setIsPdfPreviewOpen(true)}
                           className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
                         >
-                          <FileText className="h-3.5 w-3.5 text-indigo-400" />
-                          <span>Preview</span>
+                          <PdfLogoIcon className="h-4 w-4 shrink-0 opacity-80" />
+                          <span>Preview PDF</span>
                         </button>
                       </div>
                     )}
@@ -4632,7 +4633,7 @@ export default function Home() {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
               <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                <PdfLogoIcon className="h-5 w-5 shrink-0" />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">Live PDF Preview</h3>
               </div>
               <div className="flex items-center gap-3">
@@ -4641,9 +4642,9 @@ export default function Home() {
                     buildResumeFilename(jobDescription, user?.name, analysisResult?.overall_summary?.job_title, file?.name).replace(/\.docx$/i, ".pdf")
                   )}`}
                   download
-                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
                 >
-                  <Download className="h-3.5 w-3.5" /> Download PDF
+                  <PdfLogoIcon className="h-4 w-4 shrink-0" /> Download PDF
                 </a>
                 <button
                   onClick={() => setIsPdfPreviewOpen(false)}
@@ -4667,9 +4668,9 @@ export default function Home() {
                   <a
                     href={`${API_BASE_URL}/api/v1/resume/download/${downloadId || documentId}/pdf`}
                     download
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2"
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
                   >
-                    <Download className="h-4 w-4" /> Download PDF File
+                    <PdfLogoIcon className="h-4 w-4 shrink-0" /> Download PDF File
                   </a>
                 </div>
               ) : pdfBlobUrl ? (

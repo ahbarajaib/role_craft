@@ -16,6 +16,8 @@ import {
   Info,
 } from "lucide-react";
 import { updateProfile, setBaseCoverLetter, deleteBaseCoverLetter, uploadResume, calculateProfileCompletion } from "@/lib/api";
+import { WordLogoIcon } from "@/components/file_format_icons";
+
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -333,7 +335,8 @@ export function ProfileModal({
               {/* Base Resume Storage Card */}
               <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <WordLogoIcon className="h-4 w-4 shrink-0" />
                     Master Base Resume (.docx)
                   </span>
                   {user?.base_resume_id ? (
@@ -348,8 +351,9 @@ export function ProfileModal({
                 </div>
 
                 {user?.base_resume_filename ? (
-                  <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs truncate text-slate-700 dark:text-slate-300">
-                    📄 {user.base_resume_filename}
+                  <div className="flex items-center gap-2 p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs truncate text-slate-700 dark:text-slate-300">
+                    <WordLogoIcon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{user.base_resume_filename}</span>
                   </div>
                 ) : (
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -361,8 +365,9 @@ export function ProfileModal({
               {/* Base Cover Letter Storage Card */}
               <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    Base Cover Letter Template (.docx)
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <WordLogoIcon className="h-4 w-4 shrink-0" />
+                    Base Cover Letter (.docx)
                   </span>
                   {user?.base_cover_letter_id ? (
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px] flex items-center gap-1">
@@ -377,7 +382,10 @@ export function ProfileModal({
 
                 {user?.base_cover_letter_filename ? (
                   <div className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs truncate text-slate-700 dark:text-slate-300">
-                    <span className="truncate">📄 {user.base_cover_letter_filename}</span>
+                    <div className="flex items-center gap-2 truncate">
+                      <WordLogoIcon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{user.base_cover_letter_filename}</span>
+                    </div>
                     <button
                       type="button"
                       onClick={handleDeleteBaseCoverLetter}
@@ -395,7 +403,7 @@ export function ProfileModal({
                 )}
 
                 <label className="flex items-center justify-center gap-1.5 w-full py-2 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-indigo-600 dark:text-indigo-400 transition-all cursor-pointer shadow-sm">
-                  <UploadCloud className="h-3.5 w-3.5" />
+                  <WordLogoIcon className="h-4 w-4 shrink-0" />
                   <span>{isUploadingCl ? "Uploading..." : "Upload Cover Letter Template (.docx)"}</span>
                   <input
                     type="file"

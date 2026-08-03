@@ -25,6 +25,7 @@ import {
   AnalysisHistoryItem,
   API_BASE_URL,
 } from "@/lib/api";
+import { WordLogoIcon, PdfLogoIcon } from "@/components/file_format_icons";
 
 interface HistoryModalProps {
   isOpen: boolean;
@@ -374,19 +375,21 @@ export default function HistoryModal({
                             <a
                               href={`${API_BASE_URL}/api/v1/resume/download/${item.download_id}`}
                               download
-                              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
-                              title="Download DOCX"
+                              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-1 shadow-sm"
+                              title="Download DOCX File"
                             >
-                              <Download className="h-3.5 w-3.5" />
+                              <WordLogoIcon className="h-3.5 w-3.5" />
+                              <span className="text-[10px] font-bold">DOCX</span>
                             </a>
                             <a
                               href={`${API_BASE_URL}/api/v1/resume/download/${item.download_id}/pdf`}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
-                              title="Download PDF"
+                              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-1 shadow-sm"
+                              title="Download PDF File"
                             >
-                              <ExternalLink className="h-3.5 w-3.5" />
+                              <PdfLogoIcon className="h-3.5 w-3.5" />
+                              <span className="text-[10px] font-bold">PDF</span>
                             </a>
                           </>
                         )}
