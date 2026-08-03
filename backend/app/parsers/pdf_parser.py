@@ -131,8 +131,52 @@ def parse_pdf(content: bytes) -> ParsedPdfResult:
 # ── Column-aware text extraction ──────────────────────────────────────────────
 
 
+def _find_vertical_gutter(words: list[dict], page_width: float) -> float | None:
+    """Detect if a page has a true vertical whitespace gap (gutter) between two text columns.
+
+    Returns the X midpoint of the gutter if found, or None if the page is single-column.
+    """
+    if not words:
+        return None
+
+    # Check for a vertical gap in the middle region [30% .. 70% width]
+    start_x = page_width * 0.30
+    end_x = page_width * 0.70
+
+    # Collect all (x0, x1) horizontal intervals of words
+    word_intervals = [(w["x0"], w["x1"]) for w in words]
+
+    best_gutter_x = None
+    max_gap_width = 0.0
+
+    curr_x = start_x
+    gap_start = None
+
+    while curr_x <= end_x:
+        is_blocked = any(x0 <= curr_x <= x1 for x0, x1 in word_intervals)
+        if not is_blocked:
+            if gap_start is None:
+                gap_start = curr_x
+        else:
+            if gap_start is not None:
+                gap_w = curr_x - gap_start
+                if gap_w >= 18 and gap_w > max_gap_width:
+                    max_gap_width = gap_w
+                    best_gutter_x = gap_start + gap_w / 2
+                gap_start = None
+        curr_x += 2
+
+    if gap_start is not None:
+        gap_w = end_x - gap_start
+        if gap_w >= 18 and gap_w > max_gap_width:
+            max_gap_width = gap_w
+            best_gutter_x = gap_start + gap_w / 2
+
+    return best_gutter_x
+
+
 def _extract_lines_column_aware(pdf) -> list[str]:
-    """Extract lines from all pages, handling two-column layouts."""
+    """Extract lines from all pages, preserving full lines without slicing."""
     all_lines: list[str] = []
 
     for page in pdf.pages:
@@ -142,27 +186,18 @@ def _extract_lines_column_aware(pdf) -> list[str]:
         if not words:
             continue
 
-        # Detect two-column layout: check if there are words significantly
-        # clustered both in the left quarter and right quarter of the page.
-        left_words = [w for w in words if w["x0"] < width * 0.45]
-        right_words = [w for w in words if w["x0"] > width * 0.55]
+        gutter_x = _find_vertical_gutter(words, width)
 
-        is_two_column = (
-            len(left_words) > 5
-            and len(right_words) > 5
-            and len(right_words) / max(len(left_words), 1) > 0.25
-        )
-
-        if is_two_column:
-            # Extract left column then right column separately
-            left_crop = page.crop((0, 0, width * 0.50, page.height))
-            right_crop = page.crop((width * 0.50, 0, width, page.height))
+        if gutter_x is not None:
+            # Genuine 2-column page: crop along the actual whitespace gutter
+            left_crop = page.crop((0, 0, gutter_x, page.height))
+            right_crop = page.crop((gutter_x, 0, width, page.height))
             left_text = left_crop.extract_text(x_tolerance=3, y_tolerance=3) or ""
             right_text = right_crop.extract_text(x_tolerance=3, y_tolerance=3) or ""
             all_lines.extend(left_text.splitlines())
             all_lines.extend(right_text.splitlines())
         else:
-            # Single column — use full page text
+            # Single-column page (or standard layout): extract full text naturally
             page_text = page.extract_text(x_tolerance=3, y_tolerance=3) or ""
             all_lines.extend(page_text.splitlines())
 
@@ -239,7 +274,6 @@ def _looks_like_name(text: str) -> bool:
 
 def _parse_lines(lines: list[str]) -> ParsedPdfResult:
     """Convert a flat list of text lines into structured ParsedPdfResult."""
-    # Strip empty lines
     cleaned: list[str] = [ln.strip() for ln in lines if ln.strip()]
 
     # ── Header extraction (name + contact) ───────────────────────────────────
@@ -247,8 +281,8 @@ def _parse_lines(lines: list[str]) -> ParsedPdfResult:
     contact_parts: list[str] = []
     header_end_idx = 0
 
-    # Scan first 15 lines for name and contact info
-    for i, ln in enumerate(cleaned[:15]):
+    # Scan top lines strictly for candidate name and actual contact details
+    for i, ln in enumerate(cleaned[:10]):
         if not candidate_name and _looks_like_name(ln):
             candidate_name = ln
             header_end_idx = i + 1
@@ -256,11 +290,11 @@ def _parse_lines(lines: list[str]) -> ParsedPdfResult:
         if candidate_name and _is_contact_line(ln) and not _is_section_heading(ln):
             contact_parts.append(ln)
             header_end_idx = i + 1
-        elif candidate_name and not _is_section_heading(ln) and len(ln) < 80:
-            contact_parts.append(ln)
-            header_end_idx = i + 1
+        elif candidate_name:
+            # First non-contact line after name → stop header processing immediately!
+            break
 
-    # If name not found in first 15 lines, use first non-empty line
+    # Fallback for name
     if not candidate_name:
         for ln in cleaned[:5]:
             if ln:
@@ -303,3 +337,4 @@ def _parse_lines(lines: list[str]) -> ParsedPdfResult:
         sections=sections,
         raw_text=raw_text,
     )
+
