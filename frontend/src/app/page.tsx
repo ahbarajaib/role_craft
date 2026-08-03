@@ -3218,12 +3218,14 @@ export default function Home() {
                     );
                   })()}
 
-                  {/* 🟡 Supported in Evidence — click to weave into skills section */}
+                  {/* 🟡 Supported in Evidence — per-section matched strengths (click to weave into skills) */}
                   {(() => {
+                    // Use s.strengths (short keyword/skill strings from AI per-section analysis)
+                    // NOT s.evidence_used (which contains full paragraph text for the diff UI)
                     const evidenceKeywords = (analysisResult.sections || [])
-                      .flatMap((s: any) => s.evidence_used || [])
+                      .flatMap((s: any) => s.strengths || [])
                       .map((e: string) => cleanKeywordName(e))
-                      .filter(Boolean);
+                      .filter((kw: string) => kw.length > 0 && kw.length <= 60); // max 60 chars = real keyword, not a sentence
 
                     const matchedLower = new Set(
                       (analysisResult.top_strengths || []).map((s: any) =>
@@ -3236,7 +3238,7 @@ export default function Home() {
                     );
 
                     const unMatchedEvidence = Array.from(new Set(evidenceKeywords)).filter(
-                      (kw) => !matchedLower.has(kw.toLowerCase()) && !appliedWovenLower.has(kw.toLowerCase())
+                      (kw: string) => !matchedLower.has(kw.toLowerCase()) && !appliedWovenLower.has(kw.toLowerCase())
                     );
 
                     if (unMatchedEvidence.length === 0) return null;
@@ -3250,7 +3252,7 @@ export default function Home() {
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                          {unMatchedEvidence.map((kw, idx) => (
+                          {unMatchedEvidence.map((kw: string, idx: number) => (
                             <button
                               key={idx}
                               type="button"
