@@ -175,10 +175,11 @@ class CoverLetterService:
         if not raw_role:
             return "Target Position"
         clean = raw_role.replace("Company logo for,", "").replace("Company logo for", "").replace("RE:", "").replace("Application for", "")
-        clean = re.sub(r'^[#*_\-\s]+', '', clean)
-        clean = clean.splitlines()[0].strip()
+        lines = clean.splitlines()
+        clean = lines[0].strip() if lines else "Target Position"
         if len(clean) > 60:
-            clean = clean[:60].rsplit(" ", 1)[0]
+            parts = clean[:60].rsplit(" ", 1)
+            clean = parts[0] if parts else clean[:60]
         return clean or "Target Position"
 
     def _build_cover_letter_docx(

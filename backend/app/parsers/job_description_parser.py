@@ -398,7 +398,8 @@ def _extract_experience(text: str) -> str:
     if match:
         start = max(0, match.start() - 10)
         end = min(len(text), match.end() + 40)
-        return text[start:end].strip().splitlines()[0].strip()
+        lines = text[start:end].strip().splitlines()
+        return lines[0].strip() if lines else ""
     return ""
 
 

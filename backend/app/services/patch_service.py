@@ -415,6 +415,17 @@ class PatchService:
             if not target_sec.paragraph_indexes:
                 continue
 
+            # Check that paragraph_indexes[0] is within bounds of doc.paragraphs
+            first_idx = target_sec.paragraph_indexes[0]
+            if first_idx >= len(doc.paragraphs):
+                logger.warning(
+                    "Skipping section rewrite: paragraph index out of range",
+                    section=rewrite_item.section,
+                    index=first_idx,
+                    total_paras=len(doc.paragraphs),
+                )
+                continue
+
             # Special Case: Patching Candidate Job Title in Header Section
             if target_sec.normalized_name == "header" or norm_sec_name in ["header", "job title", "target role", "title"]:
                 # Inspect top 6 paragraphs of document (pre-summary header area) for existing job title
@@ -425,9 +436,11 @@ class PatchService:
                     None,
                 )
                 if title_para:
-                    new_title_text = rewrite_item.rewritten_text.strip().split("\n")[0]
-                    _set_paragraph_text_preserve_fmt(title_para, new_title_text, default_font=doc_font)
-                    sections_updated += 1
+                    lines = (rewrite_item.rewritten_text or "").strip().split("\n")
+                    new_title_text = lines[0] if lines else ""
+                    if new_title_text:
+                        _set_paragraph_text_preserve_fmt(title_para, new_title_text, default_font=doc_font)
+                        sections_updated += 1
                 else:
                     logger.info(
                         "Skipping header title patch: no existing role/title paragraph found in top area. "
@@ -436,7 +449,7 @@ class PatchService:
                 continue
 
             # The first index is the section heading — we never touch its text.
-            heading_para = doc.paragraphs[target_sec.paragraph_indexes[0]]
+            heading_para = doc.paragraphs[first_idx]
             body_paras = [doc.paragraphs[idx] for idx in target_sec.paragraph_indexes[1:] if idx < len(doc.paragraphs)]
 
             # Check if this section is an Experience section or individual job entry sub-section
@@ -488,7 +501,7 @@ class PatchService:
             # (job titles, company names, dates) — those are preserved from the original DOCX.
             new_para_texts = [
                 line.strip()
-                for line in rewrite_item.rewritten_text.split("\n")
+                for line in (rewrite_item.rewritten_text or "").split("\n")
                 if line.strip() and (not is_experience_sec or not _is_metadata_line(line.strip()))
             ]
 
