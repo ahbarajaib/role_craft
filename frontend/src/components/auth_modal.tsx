@@ -146,6 +146,27 @@ export default function AuthModal() {
 
         {/* Main Authentication Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Full Name field (Sign Up mode only) */}
+          {authMode === "signup" && (
+            <div className="space-y-1.5 animate-fade-in-up">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+                Full Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Mohammed Ahbar"
+                  className="w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Email Address field */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
               Email Address
@@ -164,6 +185,7 @@ export default function AuthModal() {
             </div>
           </div>
 
+          {/* Password field */}
           {authMode !== "forgot" && (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -199,25 +221,7 @@ export default function AuthModal() {
             </div>
           )}
 
-          {authMode === "signup" && (
-            <div className="space-y-1.5 animate-fade-in-up">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Mohammed Ahbar"
-                  className="w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
-                  disabled={isSubmitting}
-                />
-              </div>
-            </div>
-          )}
-
+          {/* Confirm Password field (Sign Up mode only) */}
           {authMode === "signup" && (
             <div className="space-y-1.5 animate-fade-in-up">
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
@@ -241,7 +245,7 @@ export default function AuthModal() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed border border-white/20"
           >
             {isSubmitting ? (
               <RefreshCw className="h-4 w-4 animate-spin" />
