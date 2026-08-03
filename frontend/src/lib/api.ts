@@ -88,23 +88,6 @@ export async function uploadResume(file: File): Promise<DocumentUploadResponse> 
   return response.json();
 }
 
-export async function uploadPdfResume(file: File): Promise<DocumentUploadResponse> {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const response = await fetch(`${API_BASE_URL}/api/v1/documents/upload-pdf`, {
-    method: "POST",
-    headers: getHeaders(null),
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData?.error?.detail || "Failed to process PDF resume");
-  }
-
-  return response.json();
-}
 
 
 

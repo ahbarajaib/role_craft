@@ -16,7 +16,6 @@ from fastapi import Depends
 from app.core.config import Settings
 from app.dependencies.common import get_settings
 from app.services.document_service import DocumentService
-from app.services.pdf_upload_service import PdfUploadService
 
 
 def get_document_service(
@@ -36,14 +35,4 @@ def get_document_service(
         allowed_mime_types=settings.ALLOWED_MIME_TYPES,
     )
 
-
-def get_pdf_upload_service(
-    settings: Annotated[Settings, Depends(get_settings)],
-) -> PdfUploadService:
-    """Construct a ``PdfUploadService`` from current application settings."""
-    upload_dir = Path(settings.UPLOAD_DIR)
-    return PdfUploadService(
-        upload_dir=upload_dir,
-        max_size_bytes=settings.MAX_UPLOAD_SIZE_BYTES,
-    )
 

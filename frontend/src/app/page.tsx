@@ -41,7 +41,7 @@ import {
   History,
   Plus
 } from "lucide-react";
-import { uploadResume, uploadPdfResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
+import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
@@ -1965,13 +1965,8 @@ export default function Home() {
 
   // 1. File Upload Mutation
   const uploadMutation = useMutation({
-    mutationFn: async (selectedFile: File) => {
-      if (selectedFile.name.toLowerCase().endsWith(".pdf")) {
-        return uploadPdfResume(selectedFile);
-      }
-      return uploadResume(selectedFile);
-    },
-    onSuccess: async (data, variables) => {
+    mutationFn: uploadResume,
+    onSuccess: async (data) => {
       console.log(
         "%c 📄 [RoleCraft Audit] File Upload Succeeded ",
         "background: #0284c7; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
@@ -1984,16 +1979,10 @@ export default function Home() {
       setDownloadId(null);
       setDownloadUrl(null);
       setIsPatchingApplied(false);
-      
-      const isPdf = variables.name.toLowerCase().endsWith(".pdf");
-      if (isPdf) {
-        setSuccessNotification("PDF converted successfully to an ATS-optimized resume!");
-      } else {
-        setSuccessNotification("Resume uploaded successfully.");
-      }
+      setSuccessNotification("Resume uploaded successfully.");
 
       // Auto-save as base resume immediately (if the user is logged in)
-      if (token && variables) {
+      if (token && file) {
         try {
           const resp = await fetch(`${API_BASE_URL}/api/v1/documents/set-base`, {
             method: "POST",
@@ -2001,7 +1990,7 @@ export default function Home() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ document_id: data.document_id, filename: variables.name }),
+            body: JSON.stringify({ document_id: data.document_id, filename: file.name }),
           });
           if (resp.ok) {
             await refreshMe();
@@ -2015,7 +2004,7 @@ export default function Home() {
     },
     onError: (err: any) => {
       console.error("❌ [RoleCraft Audit] File Upload Failed:", err);
-      setError(err?.message || "File upload failed. Only .docx or .pdf files are accepted.");
+      setError(err?.message || "File upload failed. Only .docx files up to 5MB are accepted.");
       setFile(null);
     }
   });
@@ -2090,43 +2079,32 @@ export default function Home() {
     }
   });
 
-  const processSelectedFile = (selectedFile: File) => {
-    const nameLower = selectedFile.name.toLowerCase();
-    const isDocx = nameLower.endsWith(".docx");
-    const isPdf = nameLower.endsWith(".pdf");
-
-    if (!isDocx && !isPdf) {
-      setError("Only Word (.docx) and PDF (.pdf) files are supported.");
-      return;
-    }
-
-    const maxSize = isPdf ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
-    if (selectedFile.size > maxSize) {
-      setError(`File size exceeds limit (${isPdf ? "10MB for PDF" : "5MB for DOCX"}).`);
-      return;
-    }
-
-    setFile(selectedFile);
-    setDocumentId(null);
-    setAnalysisResult(null);
-    setError(null);
-    setRewrittenSections({});
-    setPreviousRewrittenSections({});
-    setDownloadId(null);
-    setDownloadUrl(null);
-    setIsPatchingApplied(false);
-    setCoverLetterText(null);
-    setCoverLetterDownloadId(null);
-    setIsEditingCoverLetter(false);
-    setAppliedWovenKeywords([]);
-    setIsKeywordsWoven(false);
-    uploadMutation.mutate(selectedFile);
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      processSelectedFile(selectedFile);
+      if (!selectedFile.name.endsWith(".docx")) {
+        setError("Only Word (.docx) files are supported.");
+        return;
+      }
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        setError("File size exceeds 5MB limit.");
+        return;
+      }
+      setFile(selectedFile);
+      setDocumentId(null);
+      setAnalysisResult(null);
+      setError(null);
+      setRewrittenSections({});
+      setPreviousRewrittenSections({});
+      setDownloadId(null);
+      setDownloadUrl(null);
+      setIsPatchingApplied(false);
+      setCoverLetterText(null);
+      setCoverLetterDownloadId(null);
+      setIsEditingCoverLetter(false);
+      setAppliedWovenKeywords([]);
+      setIsKeywordsWoven(false);
+      uploadMutation.mutate(selectedFile);
     }
   };
 
@@ -2138,9 +2116,27 @@ export default function Home() {
     e.preventDefault();
     const droppedFile = e.dataTransfer.files?.[0];
     if (droppedFile) {
-      processSelectedFile(droppedFile);
+      if (!droppedFile.name.endsWith(".docx")) {
+        setError("Only Word (.docx) files are supported.");
+        return;
+      }
+      if (droppedFile.size > 5 * 1024 * 1024) {
+        setError("File size exceeds 5MB limit.");
+        return;
+      }
+      setFile(droppedFile);
+      setDocumentId(null);
+      setAnalysisResult(null);
+      setError(null);
+      setRewrittenSections({});
+      setPreviousRewrittenSections({});
+      setDownloadId(null);
+      setDownloadUrl(null);
+      setIsPatchingApplied(false);
+      uploadMutation.mutate(droppedFile);
     }
   };
+
 
 
   useEffect(() => {
@@ -2784,7 +2780,7 @@ export default function Home() {
             {/* Resume Upload Box */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
-                Upload Resume (.docx or .pdf)
+                Upload Resume (DOCX only)
               </label>
 
               {!file ? (
@@ -2795,7 +2791,7 @@ export default function Home() {
                 >
                   <input
                     type="file"
-                    accept=".docx,.pdf"
+                    accept=".docx"
                     onChange={handleFileChange}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
@@ -2804,7 +2800,7 @@ export default function Home() {
                     Drag & drop or click to upload
                   </p>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                    Word (.docx) or PDF (.pdf) documents
+                    Word documents (.docx) up to 5MB
                   </p>
                 </div>
               ) : (
@@ -2819,9 +2815,7 @@ export default function Home() {
                           {file.name}
                         </p>
                         {file.size > 0 ? (
-                          <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                            {(file.size / 1024).toFixed(1)} KB {file.name.toLowerCase().endsWith(".pdf") && "• PDF Converted to ATS Resume"}
-                          </p>
+                          <p className="text-[11px] text-slate-400 dark:text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
                         ) : (
                           <p className="text-[11px] text-indigo-500 dark:text-indigo-400 font-medium">
                             Base Resume
@@ -2833,7 +2827,7 @@ export default function Home() {
                       {isUploading ? (
                         <span className="text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5 font-medium">
                           <span className="h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-500 animate-ping" />
-                          {file.name.toLowerCase().endsWith(".pdf") ? "Converting PDF..." : "Uploading..."}
+                          Uploading...
                         </span>
                       ) : documentId ? (
                         <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
@@ -2851,21 +2845,11 @@ export default function Home() {
                       </button>
                     </div>
                   </div>
-
-                  {file.name.toLowerCase().endsWith(".pdf") && (
-                    <div className="p-2.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-start gap-2 text-xs text-indigo-700 dark:text-indigo-300">
-                      <Info className="h-4 w-4 text-indigo-500 shrink-0 mt-0.5" />
-                      <span>
-                        <strong>PDF converted:</strong> Your PDF text has been extracted and converted to a clean ATS-optimized resume format. All tailoring features work as normal.
-                      </span>
-                    </div>
-                  )}
-
                   {/* Use different resume option */}
                   <label className="flex items-center gap-2 cursor-pointer group">
                     <input
                       type="file"
-                      accept=".docx,.pdf"
+                      accept=".docx"
                       onChange={handleFileChange}
                       className="hidden"
                     />
