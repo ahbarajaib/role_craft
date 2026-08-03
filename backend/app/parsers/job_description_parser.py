@@ -55,8 +55,8 @@ _SECTION_PATTERNS: list[tuple[str, str]] = [
     (r"key responsibilities", "responsibilities"),
     (r"job duties", "responsibilities"),
     (r"duties", "responsibilities"),
-    (r"what we.re looking for", "responsibilities"),
     # Required skills
+    (r"what we.re looking for", "required_skills"),
     (r"requirements?$", "required_skills"),
     (r"required skills?", "required_skills"),
     (r"qualifications?", "required_skills"),
@@ -251,13 +251,22 @@ def _clean_list(lines: list[str]) -> list[str]:
 def _extract_title(preamble: list[str], lines: list[str] | None = None) -> str:
     """Return the most likely job title from the preamble or full lines.
 
-    Skips generic header phrases like 'Full job description', 'About the role', etc.
+    Skips generic header phrases and scraper noise (e.g. 'Company logo for...', 'Over 100 people applied').
     """
     generic_headers = {
         "full job description", "job description", "about the role", "overview",
         "job summary", "description", "about us", "position overview", "role summary",
-        "job title", "details", "role details", "careers", "position description", "about the position"
+        "job title", "details", "role details", "careers", "position description", "about the position",
+        "about the job", "role details", "job search faster"
     }
+
+    noise_regex = re.compile(
+        r"(company logo for|logo for|^logo\b|\breposted\b|over \d+ people|promoted by|responses managed|"
+        r"cancel anytime|reactivate premium|messagingyou are on|navigating to|followers|members who share|"
+        r"show match details|people you can reach out to|meet the hiring team|job search faster|about the company|"
+        r"software development|employees)",
+        re.IGNORECASE
+    )
 
     all_lines = preamble + (lines or [])
 
@@ -265,34 +274,38 @@ def _extract_title(preamble: list[str], lines: list[str] | None = None) -> str:
     for line in all_lines:
         t = line.strip()
         lower = t.lower().rstrip(":").strip()
-        if not t:
+        if not t or noise_regex.search(lower):
             continue
         if lower.startswith("title:") or lower.startswith("job title:") or lower.startswith("role:"):
             colon_idx = t.find(":")
             val = t[colon_idx + 1:].strip()
-            if val and val.lower() not in generic_headers:
+            if val and val.lower() not in generic_headers and not noise_regex.search(val):
                 return val
 
-    # 2. Check preamble lines, skipping generic headers
-    role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "administrator", "executive"]
+    # 2. Prioritize finding a short line (<= 80 chars) that contains a recognised role keyword
+    role_titles = [
+        "developer", "engineer", "architect", "manager", "lead", "designer",
+        "consultant", "analyst", "specialist", "administrator", "executive",
+        "fullstack", "backend", "frontend", "devops", "sre", "scientist",
+        "director", "head", "vp", "associate", "intern", "product"
+    ]
 
+    for line in all_lines[:15]:
+        t = line.strip()
+        lower = t.lower().rstrip(":").strip()
+        if not t or lower in generic_headers or lower.startswith("http") or noise_regex.search(lower):
+            continue
+        if len(t) <= 80 and any(r in lower for r in role_titles):
+            return t
+
+    # 3. Fallback: check preamble lines, skipping generic headers and noise
     for line in preamble:
         t = line.strip()
         lower = t.lower().rstrip(":").strip()
-        if not t or lower in generic_headers or lower.startswith("http"):
+        if not t or lower in generic_headers or lower.startswith("http") or noise_regex.search(lower):
             continue
         if len(t) <= 60:
             return t
-
-    # 3. Fallback: find first short line containing a role title
-    if lines:
-        for line in lines:
-            t = line.strip()
-            lower = t.lower().rstrip(":").strip()
-            if not t or lower in generic_headers or lower.startswith("http"):
-                continue
-            if len(t) <= 60 and any(r in lower for r in role_titles):
-                return t
 
     return "Target Role"
 
@@ -300,11 +313,16 @@ def _extract_title(preamble: list[str], lines: list[str] | None = None) -> str:
 def _extract_company(preamble: list[str], text: str) -> str:
     """Return the company name if it can be identified.
 
-    Looks for an explicit "Company: <Name>" label first, then the common
-    "<Title> at <Company>" pattern in the preamble only (restricting the
-    search to the first few lines avoids false positives from body text
-    such as "Experience with Rust or Go").
+    Looks for explicit "Company: <Name>" label, "Company logo for, <Name>",
+    or "<Title> at <Company>" in preamble.
     """
+    # Check "Company logo for, <Name>" pattern common in LinkedIn pastes
+    logo_match = re.search(r"company logo for,?\s*([A-Za-z0-9 &.'-]+)", text, re.IGNORECASE)
+    if logo_match:
+        cand = logo_match.group(1).strip().rstrip(".,")
+        if cand and len(cand) <= 40:
+            return cand
+
     company_explicit = re.search(
         r"company\s*[:–-]\s*(.+)", text, re.IGNORECASE
     )
@@ -313,7 +331,7 @@ def _extract_company(preamble: list[str], text: str) -> str:
 
     # Only look for the "<Title> at <Company>" pattern in the preamble
     # (first 3 non-empty lines) to avoid body-text false positives.
-    preamble_text = " ".join(preamble[:3])
+    preamble_text = " ".join(preamble[:5])
     at_pattern = re.search(r"\bat\s+([A-Z][A-Za-z0-9 &.'-]{2,30})(?=[\s,.]|$)", preamble_text)
     if at_pattern:
         candidate = at_pattern.group(1).strip()
