@@ -40,7 +40,7 @@ from app.core.database import get_db
 from app.core.exceptions import NotFoundError
 from app.dependencies.auth import get_current_user
 from app.dependencies.common import get_settings
-from app.dependencies.document import get_document_service
+from app.dependencies.document import get_document_service, get_pdf_upload_service
 from app.dependencies.parser import get_parser_service
 from app.dependencies.section import get_section_service
 from app.models import User
@@ -49,6 +49,7 @@ from app.schemas.parser import DocumentParseResponse
 from app.schemas.section import DocumentSectionsResponse
 from app.services.cleanup import cleanup_old_files
 from app.services.document_service import DocumentService
+from app.services.pdf_upload_service import PdfUploadService
 from app.services.parser_service import ParserService
 from app.services.section_service import SectionService
 
@@ -89,6 +90,33 @@ async def upload_document(
         max_age_hours=settings.GENERATED_CLEANUP_HOURS,
     )
     return await service.save_upload(file)
+
+
+@router.post(
+    "/upload-pdf",
+    response_model=DocumentUploadResponse,
+    status_code=201,
+    summary="Upload a PDF resume (converted to ATS-optimized DOCX)",
+    description=(
+        "Accepts a single .pdf file. Extracts text content, detects sections, "
+        "generates a clean ATS-optimized DOCX document, saves it in the upload store, "
+        "and returns metadata matching the standard upload response."
+    ),
+)
+async def upload_pdf_document(
+    file: UploadFile,
+    service: Annotated[PdfUploadService, Depends(get_pdf_upload_service)],
+    background_tasks: BackgroundTasks,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> DocumentUploadResponse:
+    """Receive a PDF upload, convert it to an ATS-optimized DOCX, and persist it."""
+    background_tasks.add_task(
+        cleanup_old_files,
+        upload_dir=Path(settings.UPLOAD_DIR),
+        max_age_hours=settings.GENERATED_CLEANUP_HOURS,
+    )
+    return await service.save_pdf_upload(file)
+
 
 
 @router.get(
