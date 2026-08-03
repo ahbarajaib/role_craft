@@ -34,10 +34,44 @@ from app.schemas.patch import ApplyRewriteRequest, ApplyRewriteResponse
 # Low-level XML helpers
 # ---------------------------------------------------------------------------
 
+def _build_flat_paragraph_list(doc) -> list:
+    """Build a flat list of ALL paragraphs matching the parser's index scheme.
+
+    ``docx_parser.py`` iterates ``document.element.body`` children, flattening
+    both standalone ``<w:p>`` paragraphs AND paragraphs inside ``<w:tbl>`` table
+    cells into one combined list.  The ``paragraph_indexes`` stored by the section
+    detector reference positions in THIS combined list.
+
+    ``doc.paragraphs`` (python-docx built-in) only returns top-level body
+    ``<w:p>`` elements and does NOT include table-cell paragraphs, so using it
+    to look up a stored index will resolve to the WRONG paragraph whenever the
+    resume contains any table structure.
+
+    This helper replicates the exact same traversal order so that
+    ``all_paras[idx]`` is always the correct paragraph object.
+    """
+    import docx.text.paragraph as _dp
+    from docx.table import Table as _Table
+
+    result: list = []
+    body = doc.element.body
+    for child in body:
+        tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+        if tag == "p":
+            result.append(_dp.Paragraph(child, doc))
+        elif tag == "tbl":
+            tbl = _Table(child, doc)
+            for row in tbl.rows:
+                for cell in row.cells:
+                    for para in cell.paragraphs:
+                        result.append(para)
+    return result
+
+
 def _detect_doc_font(doc) -> str | None:
     """Detect dominant font name across all runs in document."""
     fonts = []
-    for p in doc.paragraphs:
+    for p in _build_flat_paragraph_list(doc):
         for r in p.runs:
             if r.font and r.font.name:
                 fonts.append(r.font.name)
@@ -383,6 +417,13 @@ class PatchService:
         doc = docx.Document(file_path)
         doc_font = _detect_doc_font(doc)
 
+        # Build a flat paragraph list that mirrors the parser's traversal order.
+        # This is CRITICAL: paragraph_indexes from the section detector reference
+        # positions in this combined (body + table-cell) flat list. Using
+        # doc.paragraphs[idx] would silently resolve to the wrong paragraph for
+        # any resume template that uses tables (two-column layouts, sidebars, etc.).
+        all_paras = _build_flat_paragraph_list(doc)
+
         # 2. Detect sections using the existing SectionService.
         sections_response = self._sections.detect_document_sections(doc_id)
         sections = sections_response.sections
@@ -415,14 +456,14 @@ class PatchService:
             if not target_sec.paragraph_indexes:
                 continue
 
-            # Check that paragraph_indexes[0] is within bounds of doc.paragraphs
+            # Check that paragraph_indexes[0] is within bounds of all_paras
             first_idx = target_sec.paragraph_indexes[0]
-            if first_idx >= len(doc.paragraphs):
+            if first_idx >= len(all_paras):
                 logger.warning(
                     "Skipping section rewrite: paragraph index out of range",
                     section=rewrite_item.section,
                     index=first_idx,
-                    total_paras=len(doc.paragraphs),
+                    total_paras=len(all_paras),
                 )
                 continue
 
@@ -430,7 +471,7 @@ class PatchService:
             if target_sec.normalized_name == "header" or norm_sec_name in ["header", "job title", "target role", "title"]:
                 # Inspect top 6 paragraphs of document (pre-summary header area) for existing job title
                 role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance"]
-                top_paras = doc.paragraphs[:min(6, len(doc.paragraphs))]
+                top_paras = all_paras[:min(6, len(all_paras))]
                 title_para = next(
                     (p for i, p in enumerate(top_paras) if i > 0 and any(r in p.text.lower() for r in role_titles)),
                     None,
@@ -449,8 +490,8 @@ class PatchService:
                 continue
 
             # The first index is the section heading — we never touch its text.
-            heading_para = doc.paragraphs[first_idx]
-            body_paras = [doc.paragraphs[idx] for idx in target_sec.paragraph_indexes[1:] if idx < len(doc.paragraphs)]
+            heading_para = all_paras[first_idx]
+            body_paras = [all_paras[idx] for idx in target_sec.paragraph_indexes[1:] if idx < len(all_paras)]
 
             # Check if this section is an Experience section or individual job entry sub-section
             # (where role/company/date metadata headers exist)
@@ -486,11 +527,11 @@ class PatchService:
                         break
                     # Collect all paragraph indexes from this sub-section (including the heading)
                     for idx in sub_sec.paragraph_indexes:
-                        if idx < len(doc.paragraphs):
+                        if idx < len(all_paras):
                             sub_body_para_indexes.append(idx)
 
                 if sub_body_para_indexes:
-                    body_paras = [doc.paragraphs[idx] for idx in sub_body_para_indexes]
+                    body_paras = [all_paras[idx] for idx in sub_body_para_indexes]
                     logger.info(
                         "Experience section: expanded to sub-sections",
                         total_paras=len(body_paras),
