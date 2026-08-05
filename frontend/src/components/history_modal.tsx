@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Calendar,
 } from "lucide-react";
 import {
   fetchAnalysisHistory,
@@ -57,6 +58,9 @@ export default function HistoryModal({
 
   // Advanced Filtering, Sorting & Pagination States
   const [timeframeFilter, setTimeframeFilter] = useState<TimeframeFilter>("all");
+  const [dayOffset, setDayOffset] = useState(0); // 0 = Today, -1 = Yesterday, -2 = 2 days ago...
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = This Week, -1 = Last Week, -2 = 2 weeks ago...
+
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [currentPage, setCurrentPage] = useState(1);
   const [showChart, setShowChart] = useState(true);
@@ -85,7 +89,7 @@ export default function HistoryModal({
   // Reset page to 1 when filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, timeframeFilter, sortBy]);
+  }, [searchQuery, timeframeFilter, sortBy, dayOffset, weekOffset]);
 
   if (!isOpen) return null;
 
@@ -148,31 +152,96 @@ export default function HistoryModal({
     return new Date(formatted);
   };
 
-  // 1. Timeframe Filter
+  // Calculate Display Label for Day Stepper
+  const dayStepperInfo = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + dayOffset);
+    const dateStr = d.toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    let label = dateStr;
+    if (dayOffset === 0) label = `Today (${dateStr})`;
+    else if (dayOffset === -1) label = `Yesterday (${dateStr})`;
+    else if (dayOffset === 1) label = `Tomorrow (${dateStr})`;
+
+    return { label, date: d };
+  }, [dayOffset]);
+
+  // Calculate Display Label for Week Stepper
+  const weekStepperInfo = useMemo(() => {
+    const end = new Date();
+    end.setDate(end.getDate() + weekOffset * 7);
+    const start = new Date(end);
+    start.setDate(start.getDate() - 6);
+
+    const startStr = start.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const endStr = end.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+    let title = `${startStr} - ${endStr}`;
+    if (weekOffset === 0) title = `This Week (${startStr} - ${endStr})`;
+    else if (weekOffset === -1) title = `Last Week (${startStr} - ${endStr})`;
+    else if (weekOffset < -1) title = `${Math.abs(weekOffset)} Weeks Ago (${startStr} - ${endStr})`;
+
+    return { title, start, end };
+  }, [weekOffset]);
+
+  // 1. Timeframe Filter with Day & Week Steppers
   const timeframeFilteredItems = useMemo(() => {
     const allItems = historyData?.items || [];
     if (timeframeFilter === "all") return allItems;
 
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (timeframeFilter === "day") {
+      const targetYear = dayStepperInfo.date.getFullYear();
+      const targetMonth = dayStepperInfo.date.getMonth();
+      const targetDay = dayStepperInfo.date.getDate();
 
-    return allItems.filter((item) => {
-      const itemDate = parseItemDate(item.created_at);
+      return allItems.filter((item) => {
+        const itemDate = parseItemDate(item.created_at);
+        return (
+          itemDate.getFullYear() === targetYear &&
+          itemDate.getMonth() === targetMonth &&
+          itemDate.getDate() === targetDay
+        );
+      });
+    }
 
-      if (timeframeFilter === "day") {
-        return itemDate >= todayStart;
-      } else if (timeframeFilter === "week") {
-        const weekAgo = new Date(todayStart);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return itemDate >= weekAgo;
-      } else if (timeframeFilter === "month") {
-        const monthAgo = new Date(todayStart);
-        monthAgo.setDate(monthAgo.getDate() - 30);
-        return itemDate >= monthAgo;
-      }
-      return true;
-    });
-  }, [historyData?.items, timeframeFilter]);
+    if (timeframeFilter === "week") {
+      const startMs = new Date(
+        weekStepperInfo.start.getFullYear(),
+        weekStepperInfo.start.getMonth(),
+        weekStepperInfo.start.getDate()
+      ).getTime();
+
+      const endMs = new Date(
+        weekStepperInfo.end.getFullYear(),
+        weekStepperInfo.end.getMonth(),
+        weekStepperInfo.end.getDate(),
+        23,
+        59,
+        59,
+        999
+      ).getTime();
+
+      return allItems.filter((item) => {
+        const itemTime = parseItemDate(item.created_at).getTime();
+        return itemTime >= startMs && itemTime <= endMs;
+      });
+    }
+
+    if (timeframeFilter === "month") {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const monthAgo = new Date(todayStart);
+      monthAgo.setDate(monthAgo.getDate() - 30);
+      return allItems.filter((item) => parseItemDate(item.created_at) >= monthAgo);
+    }
+
+    return allItems;
+  }, [historyData?.items, timeframeFilter, dayStepperInfo, weekStepperInfo]);
 
   // 2. Search Filter
   const searchFilteredItems = useMemo(() => {
@@ -217,7 +286,7 @@ export default function HistoryModal({
   // 5. 7-Day Activity Bar Chart Data Calculation
   const activity7Days = useMemo(() => {
     const allItems = historyData?.items || [];
-    const days: { label: string; dateStr: string; count: number; avgScore: number }[] = [];
+    const days: { label: string; dateStr: string; count: number; avgScore: number; dayOffset: number }[] = [];
     const now = new Date();
 
     for (let i = 6; i >= 0; i--) {
@@ -255,6 +324,7 @@ export default function HistoryModal({
         dateStr: `${year}-${month + 1}-${day}`,
         count: dayItems.length,
         avgScore,
+        dayOffset: -i,
       });
     }
 
@@ -372,14 +442,14 @@ export default function HistoryModal({
             </div>
           )}
 
-          {/* 📊 7-Day Activity & Match Score Analytics Bar Chart */}
+          {/* 📊 7-Day Activity & Match Score Analytics Bar Chart (Clickable Day Bars) */}
           {showChart && historyData && (
             <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 space-y-4 shadow-sm">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <BarChart2 className="h-4 w-4 text-indigo-500" />
                   <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                    7-Day Tailoring Activity & Match Score Trends
+                    7-Day Tailoring Activity & Match Trends (Click Bar to Filter Date)
                   </h3>
                 </div>
                 <div className="flex items-center gap-4 text-xs">
@@ -397,12 +467,23 @@ export default function HistoryModal({
                 <div className="grid grid-cols-7 gap-2 items-end h-32 px-2 border-b border-slate-200 dark:border-slate-800">
                   {activity7Days.days.map((day, idx) => {
                     const barHeightPercent = day.count > 0 ? Math.max(20, Math.round((day.count / activity7Days.maxCount) * 100)) : 8;
+                    const isSelectedDay = timeframeFilter === "day" && dayOffset === day.dayOffset;
 
                     return (
-                      <div key={idx} className="flex flex-col items-center h-full justify-end group relative">
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setTimeframeFilter("day");
+                          setDayOffset(day.dayOffset);
+                        }}
+                        className={`flex flex-col items-center h-full justify-end group relative cursor-pointer outline-none rounded-xl transition-all p-1 ${
+                          isSelectedDay ? "ring-2 ring-indigo-500 bg-indigo-500/10" : ""
+                        }`}
+                      >
                         {/* Tooltip on Hover */}
                         <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 dark:bg-slate-800 text-white text-[10px] font-bold py-1 px-2 rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-20">
-                          {day.count} tailored {day.avgScore > 0 ? `(${day.avgScore}% avg match)` : ""}
+                          {day.label}: {day.count} tailored {day.avgScore > 0 ? `(${day.avgScore}% avg)` : ""}
                         </div>
 
                         {/* Top Score Badge */}
@@ -415,13 +496,15 @@ export default function HistoryModal({
                         {/* Bar Graphic */}
                         <div
                           className={`w-full max-w-[36px] rounded-t-xl transition-all duration-300 ${
-                            day.count > 0
+                            isSelectedDay
+                              ? "bg-gradient-to-t from-emerald-600 via-teal-500 to-indigo-500 shadow-lg scale-105"
+                              : day.count > 0
                               ? "bg-gradient-to-t from-indigo-600 via-indigo-500 to-purple-500 group-hover:from-indigo-500 group-hover:to-emerald-400 shadow-md"
                               : "bg-slate-200/60 dark:bg-slate-800/50"
                           }`}
                           style={{ height: `${barHeightPercent}%` }}
                         />
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -430,7 +513,11 @@ export default function HistoryModal({
                 <div className="grid grid-cols-7 gap-2 text-center pt-2">
                   {activity7Days.days.map((day, idx) => (
                     <div key={idx} className="space-y-0.5">
-                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block truncate">
+                      <span className={`text-[11px] font-bold block truncate ${
+                        timeframeFilter === "day" && dayOffset === day.dayOffset
+                          ? "text-indigo-600 dark:text-indigo-400 font-extrabold"
+                          : "text-slate-700 dark:text-slate-300"
+                      }`}>
                         {day.label}
                       </span>
                       {day.avgScore > 0 ? (
@@ -493,8 +580,8 @@ export default function HistoryModal({
                 {(
                   [
                     { id: "all", label: "All History" },
-                    { id: "day", label: "Today" },
-                    { id: "week", label: "This Week" },
+                    { id: "day", label: "By Day" },
+                    { id: "week", label: "By Week" },
                     { id: "month", label: "This Month" },
                   ] as const
                 ).map((tab) => (
@@ -553,6 +640,82 @@ export default function HistoryModal({
                 </button>
               </div>
             </div>
+
+            {/* 🗓️ Interactive Day Stepper Navigation Bar */}
+            {timeframeFilter === "day" && (
+              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/80 text-xs shadow-xs animate-in fade-in duration-150">
+                <button
+                  type="button"
+                  onClick={() => setDayOffset((prev) => prev - 1)}
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                >
+                  <ChevronLeft className="h-4 w-4 text-indigo-500" />
+                  <span>Prev Day</span>
+                </button>
+
+                <div className="text-center font-black text-indigo-900 dark:text-indigo-300 flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-indigo-500" />
+                  <span>{dayStepperInfo.label}</span>
+                  {dayOffset !== 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setDayOffset(0)}
+                      className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-500 transition-all cursor-pointer ml-1 shadow-xs"
+                    >
+                      Reset to Today
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  disabled={dayOffset >= 0}
+                  onClick={() => setDayOffset((prev) => Math.min(0, prev + 1))}
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <span>Next Day</span>
+                  <ChevronRight className="h-4 w-4 text-indigo-500" />
+                </button>
+              </div>
+            )}
+
+            {/* 🗓️ Interactive Week Stepper Navigation Bar */}
+            {timeframeFilter === "week" && (
+              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/80 text-xs shadow-xs animate-in fade-in duration-150">
+                <button
+                  type="button"
+                  onClick={() => setWeekOffset((prev) => prev - 1)}
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                >
+                  <ChevronLeft className="h-4 w-4 text-purple-500" />
+                  <span>Prev Week</span>
+                </button>
+
+                <div className="text-center font-black text-purple-900 dark:text-purple-300 flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-purple-500" />
+                  <span>{weekStepperInfo.title}</span>
+                  {weekOffset !== 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setWeekOffset(0)}
+                      className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-600 text-white font-bold hover:bg-purple-500 transition-all cursor-pointer ml-1 shadow-xs"
+                    >
+                      Reset to This Week
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  disabled={weekOffset >= 0}
+                  onClick={() => setWeekOffset((prev) => Math.min(0, prev + 1))}
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <span>Next Week</span>
+                  <ChevronRight className="h-4 w-4 text-purple-500" />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* History Items List */}
@@ -566,11 +729,17 @@ export default function HistoryModal({
               <History className="h-8 w-8 text-slate-400 mx-auto opacity-50" />
               <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                 {searchQuery || timeframeFilter !== "all"
-                  ? "No history entries match your selected filters."
+                  ? `No history entries found for ${
+                      timeframeFilter === "day"
+                        ? dayStepperInfo.label
+                        : timeframeFilter === "week"
+                        ? weekStepperInfo.title
+                        : "your selected filter"
+                    }.`
                   : "No resume analysis history found yet."}
               </p>
               <p className="text-[11px] text-slate-400">
-                Analyze a job description with your resume to start tracking your application history!
+                Use the &lt; / &gt; buttons to switch dates or view All History!
               </p>
             </div>
           ) : (
