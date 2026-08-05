@@ -39,7 +39,9 @@ import {
   ExternalLink,
   Briefcase,
   History,
-  Plus
+  Plus,
+  Copy,
+  Check
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
@@ -1158,6 +1160,17 @@ export default function Home() {
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
   const [isUpdatingCoverLetter, setIsUpdatingCoverLetter] = useState(false);
   const [isEditingCoverLetter, setIsEditingCoverLetter] = useState(false);
+  const [isCoverLetterCopied, setIsCoverLetterCopied] = useState(false);
+
+  const handleCopyCoverLetterText = () => {
+    if (!coverLetterText) return;
+    navigator.clipboard.writeText(coverLetterText);
+    setIsCoverLetterCopied(true);
+    setSuccessNotification("📋 Entire Cover Letter text copied to clipboard!");
+    setTimeout(() => {
+      setIsCoverLetterCopied(false);
+    }, 2500);
+  };
 
   const handleGenerateCoverLetter = async () => {
     if (!documentId || !jobDescription) return;
@@ -3494,6 +3507,28 @@ export default function Home() {
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
+                          onClick={handleCopyCoverLetterText}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border ${
+                            isCoverLetterCopied
+                              ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                              : "bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 border-purple-500/20"
+                          }`}
+                          title="Copy full cover letter text content"
+                        >
+                          {isCoverLetterCopied ? (
+                            <>
+                              <Check className="h-3 w-3 text-emerald-500" />
+                              <span>Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3 w-3 text-purple-500" />
+                              <span>Copy Text</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => setIsEditingCoverLetter(!isEditingCoverLetter)}
                           className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all flex items-center gap-1 cursor-pointer"
                         >
@@ -3548,6 +3583,28 @@ export default function Home() {
                         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mr-auto">
                           Export Cover Letter:
                         </span>
+                        <button
+                          type="button"
+                          onClick={handleCopyCoverLetterText}
+                          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                            isCoverLetterCopied
+                              ? "bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20"
+                              : "bg-purple-600 hover:bg-purple-500 text-white border-purple-500/40 shadow-md shadow-purple-600/20 hover:scale-105 active:scale-95"
+                          }`}
+                          title="Copy text content of cover letter"
+                        >
+                          {isCoverLetterCopied ? (
+                            <>
+                              <Check className="h-4 w-4 shrink-0" />
+                              <span>Copied Text!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-4 w-4 shrink-0" />
+                              <span>Copy Text Content</span>
+                            </>
+                          )}
+                        </button>
                         <a
                           href={`${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=docx`}
                           download
