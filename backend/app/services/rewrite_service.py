@@ -5,12 +5,86 @@ Enforces strict truthfulness guidelines, ensuring no credentials or skills
 are invented unless explicitly supported by evidence elsewhere in the document.
 """
 
+import re
 from loguru import logger
 
 from app.ai.provider import OpenAIProvider
 from app.core.exceptions import BadRequestError
+from app.parsers.job_description_parser import _KNOWN_TECHNOLOGIES
 from app.schemas.rewrite import RewriteSectionResponse
 from app.services.section_service import SectionService
+
+
+def get_unsupported_jd_technologies(
+    all_evidence_text: str,
+    job_description_text: str,
+) -> set[str]:
+    """Identify technology/skill terms in the JD that DO NOT exist anywhere in the candidate's original resume/evidence."""
+    evidence_lower = all_evidence_text.lower()
+    jd_lower = job_description_text.lower()
+
+    unsupported = set()
+    for tech in _KNOWN_TECHNOLOGIES:
+        tech_lower = tech.lower()
+        if tech_lower in ("c#", "c++", ".net"):
+            pattern = r"(?<![a-zA-Z0-9])" + re.escape(tech_lower) + r"(?![a-zA-Z0-9])"
+        else:
+            pattern = r"\b" + re.escape(tech_lower) + r"\b"
+
+        if re.search(pattern, jd_lower, re.IGNORECASE):
+            if not re.search(pattern, evidence_lower, re.IGNORECASE):
+                unsupported.add(tech)
+
+    return unsupported
+
+
+def sanitize_unsupported_skills_from_text(
+    rewritten_text: str,
+    unsupported_techs: set[str],
+) -> tuple[str, list[str]]:
+    """Clean rewritten text by removing any unsupported technology/skill terms."""
+    if not unsupported_techs or not rewritten_text.strip():
+        return rewritten_text, []
+
+    stripped_terms: list[str] = []
+    lines = rewritten_text.split("\n")
+    cleaned_lines: list[str] = []
+
+    sorted_techs = sorted(list(unsupported_techs), key=lambda x: len(x), reverse=True)
+
+    for line in lines:
+        line_clean = line
+        line_has_category = ":" in line and len(line.split(":", 1)[0]) < 35
+
+        for tech in sorted_techs:
+            tech_lower = tech.lower()
+            if tech_lower in ("c#", "c++", ".net"):
+                pattern = r"(?<![a-zA-Z0-9])" + re.escape(tech_lower) + r"(?![a-zA-Z0-9])"
+            else:
+                pattern = r"\b" + re.escape(tech_lower) + r"\b"
+
+            if re.search(pattern, line_clean, re.IGNORECASE):
+                stripped_terms.append(tech)
+
+                if line_has_category:
+                    cat, skills_str = line_clean.split(":", 1)
+                    skills = [s.strip() for s in skills_str.split(",") if s.strip()]
+                    filtered_skills = [
+                        s for s in skills
+                        if not re.search(pattern, s, re.IGNORECASE)
+                    ]
+                    line_clean = f"{cat}: {', '.join(filtered_skills)}"
+                else:
+                    line_clean = re.sub(rf"\b(and|or|,)\s+{pattern}\b", "", line_clean, flags=re.IGNORECASE)
+                    line_clean = re.sub(rf"\b{pattern}\s+(and|or|,)\b", "", line_clean, flags=re.IGNORECASE)
+                    line_clean = re.sub(pattern, "", line_clean, flags=re.IGNORECASE)
+                    line_clean = re.sub(r"\s+", " ", line_clean).replace(" ,", ",").replace("..", ".").strip()
+
+        cleaned_lines.append(line_clean)
+
+    final_text = "\n".join(cleaned_lines)
+    return final_text, list(set(stripped_terms))
+
 
 REWRITE_SYSTEM_PROMPT = """\
 You are a senior hiring manager, executive recruiter, and master resume editor.
@@ -181,11 +255,33 @@ class RewriteService:
             evidence_parts.extend([p.text for p in s.paragraphs])
         evidence_context = "\n".join(evidence_parts)
 
-        # 4. Formulate instructions and input
+        # 4. Identify unsupported JD technologies (present in JD but absent from candidate's evidence)
+        all_evidence_text = original_text + "\n" + evidence_context
+        unsupported_jd_techs = get_unsupported_jd_technologies(
+            all_evidence_text=all_evidence_text,
+            job_description_text=job_description_text,
+        )
+
+        # Sanitize recommendations passed to LLM
+        sanitized_recs: list[str] = []
+        for rec in recommendations:
+            r_clean = rec
+            for tech in unsupported_jd_techs:
+                if tech.lower() in ("c#", "c++", ".net"):
+                    pat = r"(?<![a-zA-Z0-9])" + re.escape(tech.lower()) + r"(?![a-zA-Z0-9])"
+                else:
+                    pat = r"\b" + re.escape(tech.lower()) + r"\b"
+                r_clean = re.sub(rf"\b(add|highlight|include|weave)\s+{pat}\b", "", r_clean, flags=re.IGNORECASE)
+                r_clean = re.sub(pat, "", r_clean, flags=re.IGNORECASE)
+            r_clean = " ".join(r_clean.split()).strip()
+            if len(r_clean) > 8:
+                sanitized_recs.append(r_clean)
+
+        # 5. Formulate instructions and input
         input_parts = [
             f"=== TARGET JOB DESCRIPTION ===\n{job_description_text.strip()}",
             f"=== RECRUITER RECOMMENDATIONS FOR THIS SECTION ===\n"
-            f"{' / '.join(recommendations) if recommendations else 'Improve overall impact.'}",
+            f"{' / '.join(sanitized_recs) if sanitized_recs else 'Improve overall impact using Google XYZ formula.'}",
         ]
         if not is_skills_section:
             from app.services.patch_service import _is_metadata_line, _is_bullet_paragraph, _is_overview_paragraph
@@ -195,8 +291,6 @@ class RewriteService:
             non_meta_lines = [l for l in orig_lines if not _is_metadata_line(l)]
 
             # Try to detect if there is a non-bullet overview paragraph at the top of each role
-            # by inspecting the raw text lines (we cannot call _is_overview_paragraph without a para object,
-            # so we approximate: a non-bullet line that starts with an action verb or is a long sentence)
             import re as _re
             from app.services.patch_service import ACTION_VERBS as _AV
             _action_starts = tuple(_AV)
@@ -253,12 +347,25 @@ class RewriteService:
 
         input_text = "\n\n".join(input_parts)
 
-        # 5. Execute Structured LLM call
+        # 6. Execute Structured LLM call
         result = self._provider.parse_response(
             instructions=system_prompt,
             input_text=input_text,
             response_format=RewriteSectionResponse,
         )
+
+        # Python Shield: Sanitize any unsupported JD skills hallucinated by LLM
+        sanitized_rewritten_text, stripped_terms = sanitize_unsupported_skills_from_text(
+            result.rewritten_text,
+            unsupported_jd_techs,
+        )
+        if stripped_terms:
+            logger.warning(
+                "🛡️ [RoleCraft Shield] Stripped hallucinated JD skills from rewritten text",
+                section=section_name,
+                stripped=stripped_terms,
+            )
+            result.rewritten_text = sanitized_rewritten_text
 
         # Verify returned original text in the Pydantic response matches
         result.original_text = original_text

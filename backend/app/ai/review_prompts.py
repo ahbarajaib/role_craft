@@ -28,6 +28,7 @@ Strict Principles:
    - `keep`: High-quality match.
    - `reduce_emphasis`: Older experience (>5-8 years old) or secondary details that should be condensed to keep the resume concise.
 6. **Exact Section Name Matching**: Each `section_name` in your output MUST exactly match one of the section headers provided under === CANDIDATE RESUME === in square brackets. Do not duplicate recommendations across multiple roles.
+7. **Strict Evidence-Gated Recommendations**: NEVER recommend adding, highlighting, or introducing a skill, language, framework, or technology in any section recommendation if that skill does NOT exist anywhere in the candidate's resume under === CANDIDATE RESUME ===. Recommend ONLY keywords/skills supported by candidate resume evidence.
 """
 
 
