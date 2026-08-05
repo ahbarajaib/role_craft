@@ -1621,7 +1621,8 @@ export default function Home() {
     });
 
     setKeywordsForWeaveModal(deduped);
-    setSelectedKeywordsToWeave(new Set(deduped.map((k) => k.kw)));
+    // Pre-select ONLY Supported (Yellow/Green) keywords by default, excluding Red (JD-only) skills
+    setSelectedKeywordsToWeave(new Set(supportedKws.map((k) => k.kw)));
     setIsKeywordWeaveModalOpen(true);
   };
 
@@ -1642,17 +1643,26 @@ export default function Home() {
 
       const targetSections = skillsSection ? [skillsSection] : (analysisResult.sections || []).slice(0, 1);
 
-      // Use provided keyword list (from modal) or compute all missing
+      // Use provided keyword list (from modal) or compute supported evidence keywords ONLY (exclude Red JD-only skills)
       let missingKeywords: string[];
       if (keywordsToWeave && keywordsToWeave.length > 0) {
         missingKeywords = keywordsToWeave;
       } else {
-        const allRawKeywords = [
-          ...(analysisResult.sections || []).flatMap((s) => s.missing_keywords || []),
-          ...(analysisResult.top_improvements || []).map((imp) => imp.name),
-        ];
-        missingKeywords = Array.from(
-          new Set(allRawKeywords.flatMap((k) => extractStrictKeywordsFromRaw(k)))
+        const evidenceKeywords = (analysisResult.sections || [])
+          .flatMap((s: any) => s.strengths || [])
+          .map((e: string) => cleanKeywordName(e))
+          .filter((kw: string) => kw.length > 0 && kw.length <= 60);
+
+        const matchedLower = new Set(
+          (analysisResult.top_strengths || []).map((s: any) =>
+            (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
+          )
+        );
+
+        const wovenLower = new Set(appliedWovenKeywords.map((k) => k.toLowerCase().trim()));
+
+        missingKeywords = Array.from(new Set(evidenceKeywords)).filter(
+          (kw: string) => !matchedLower.has(kw.toLowerCase()) && !wovenLower.has(kw.toLowerCase())
         );
       }
 
@@ -3362,9 +3372,9 @@ export default function Home() {
                     return (
                       <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
                         <div className="flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full bg-rose-500" />
+                          <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
                           <span className="text-[11px] font-extrabold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
-                            Missing ATS Keywords (Click to Weave into Skills)
+                            Missing ATS Keywords (Only in Job Description - Click to Manually Weave)
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
@@ -3374,13 +3384,13 @@ export default function Home() {
                               type="button"
                               onClick={() => handleQuickWeaveKeyword(kw)}
                               disabled={weavingSingleKeyword === kw}
-                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-600 text-indigo-700 dark:text-indigo-300 hover:text-white border border-indigo-200 dark:border-indigo-800 transition-all duration-200 cursor-pointer shadow-xs hover:scale-105 active:scale-95 group"
-                              title={`Click to weave missing keyword '${kw}' into Technical Skills section`}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-500/30 transition-all duration-150 cursor-pointer shadow-xs hover:scale-105 active:scale-95 group"
+                              title={`Click to manually weave missing JD keyword '${kw}' into Technical Skills section`}
                             >
                               {weavingSingleKeyword === kw ? (
-                                <div className="h-3 w-3 border-2 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin shrink-0" />
+                                <div className="h-3 w-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin shrink-0" />
                               ) : (
-                                <Plus className="h-3 w-3 shrink-0 text-indigo-500 group-hover:text-white" />
+                                <Plus className="h-3 w-3 shrink-0 text-rose-500 group-hover:scale-110" />
                               )}
                               {kw}
                             </button>

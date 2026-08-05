@@ -262,11 +262,29 @@ class RewriteService:
             job_description_text=job_description_text,
         )
 
+        # Allow explicitly requested manual single keyword weaves (e.g. user clicked a Red badge manually)
+        manually_requested_kws: set[str] = set()
+        for r_item in recommendations + ([user_instructions] if user_instructions else []):
+            if r_item and "weave" in r_item.lower():
+                if ":" in r_item:
+                    kw_part = r_item.split(":", 1)[1].strip()
+                    for item in kw_part.split(","):
+                        if item.strip():
+                            manually_requested_kws.add(item.strip().lower())
+
+        effective_unsupported_techs = {
+            t for t in unsupported_jd_techs
+            if t.lower() not in manually_requested_kws
+        }
+
         # Sanitize recommendations passed to LLM
         sanitized_recs: list[str] = []
         for rec in recommendations:
             r_clean = rec
-            for tech in unsupported_jd_techs:
+            if "weave" in r_clean.lower() and ":" in r_clean:
+                sanitized_recs.append(r_clean)
+                continue
+            for tech in effective_unsupported_techs:
                 if tech.lower() in ("c#", "c++", ".net"):
                     pat = r"(?<![a-zA-Z0-9])" + re.escape(tech.lower()) + r"(?![a-zA-Z0-9])"
                 else:
@@ -357,7 +375,7 @@ class RewriteService:
         # Python Shield: Sanitize any unsupported JD skills hallucinated by LLM
         sanitized_rewritten_text, stripped_terms = sanitize_unsupported_skills_from_text(
             result.rewritten_text,
-            unsupported_jd_techs,
+            effective_unsupported_techs,
         )
         if stripped_terms:
             logger.warning(
