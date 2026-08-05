@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   X,
   History,
@@ -9,12 +9,13 @@ import {
   Search,
   CheckCircle,
   FileText,
-  Download,
   Trash2,
-  ExternalLink,
   RefreshCw,
   Sparkles,
-  ChevronDown,
+  BarChart2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
 } from "lucide-react";
 import {
   fetchAnalysisHistory,
@@ -30,8 +31,16 @@ import { WordLogoIcon, PdfLogoIcon } from "@/components/file_format_icons";
 interface HistoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onRestoreSession: (analysisResult: any, jobDescriptionText: string, documentId: string, filename: string) => void;
+  onRestoreSession: (
+    analysisResult: any,
+    jobDescriptionText: string,
+    documentId: string,
+    filename: string
+  ) => void;
 }
+
+type TimeframeFilter = "all" | "day" | "week" | "month";
+type SortOption = "newest" | "oldest" | "score_high" | "score_low" | "role_az";
 
 export default function HistoryModal({
   isOpen,
@@ -45,6 +54,13 @@ export default function HistoryModal({
   const [isUpdatingTarget, setIsUpdatingTarget] = useState(false);
   const [loadingItemId, setLoadingItemId] = useState<number | null>(null);
   const [deletingItemId, setDeletingItemId] = useState<number | null>(null);
+
+  // Advanced Filtering, Sorting & Pagination States
+  const [timeframeFilter, setTimeframeFilter] = useState<TimeframeFilter>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showChart, setShowChart] = useState(true);
+  const itemsPerPage = 6;
 
   const loadHistory = async () => {
     setIsLoading(true);
@@ -62,8 +78,14 @@ export default function HistoryModal({
   useEffect(() => {
     if (isOpen) {
       loadHistory();
+      setCurrentPage(1);
     }
   }, [isOpen]);
+
+  // Reset page to 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, timeframeFilter, sortBy]);
 
   if (!isOpen) return null;
 
@@ -119,59 +141,186 @@ export default function HistoryModal({
     }
   };
 
-  const filteredItems = (historyData?.items || []).filter((item) => {
+  // Helper to parse ISO date string safely
+  const parseItemDate = (isoStr?: string) => {
+    if (!isoStr) return new Date();
+    const formatted = !isoStr.endsWith("Z") && !isoStr.includes("+") ? `${isoStr}Z` : isoStr;
+    return new Date(formatted);
+  };
+
+  // 1. Timeframe Filter
+  const timeframeFilteredItems = useMemo(() => {
+    const allItems = historyData?.items || [];
+    if (timeframeFilter === "all") return allItems;
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    return allItems.filter((item) => {
+      const itemDate = parseItemDate(item.created_at);
+
+      if (timeframeFilter === "day") {
+        return itemDate >= todayStart;
+      } else if (timeframeFilter === "week") {
+        const weekAgo = new Date(todayStart);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return itemDate >= weekAgo;
+      } else if (timeframeFilter === "month") {
+        const monthAgo = new Date(todayStart);
+        monthAgo.setDate(monthAgo.getDate() - 30);
+        return itemDate >= monthAgo;
+      }
+      return true;
+    });
+  }, [historyData?.items, timeframeFilter]);
+
+  // 2. Search Filter
+  const searchFilteredItems = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return true;
-    return (
-      (item.target_role && item.target_role.toLowerCase().includes(q)) ||
-      (item.target_company && item.target_company.toLowerCase().includes(q)) ||
-      (item.filename && item.filename.toLowerCase().includes(q))
-    );
-  });
+    if (!q) return timeframeFilteredItems;
+    return timeframeFilteredItems.filter((item) => {
+      return (
+        (item.target_role && item.target_role.toLowerCase().includes(q)) ||
+        (item.target_company && item.target_company.toLowerCase().includes(q)) ||
+        (item.filename && item.filename.toLowerCase().includes(q))
+      );
+    });
+  }, [timeframeFilteredItems, searchQuery]);
+
+  // 3. Sorting
+  const sortedItems = useMemo(() => {
+    const itemsCopy = [...searchFilteredItems];
+    itemsCopy.sort((a, b) => {
+      if (sortBy === "newest") {
+        return parseItemDate(b.created_at).getTime() - parseItemDate(a.created_at).getTime();
+      } else if (sortBy === "oldest") {
+        return parseItemDate(a.created_at).getTime() - parseItemDate(b.created_at).getTime();
+      } else if (sortBy === "score_high") {
+        return (b.overall_score || 0) - (a.overall_score || 0);
+      } else if (sortBy === "score_low") {
+        return (a.overall_score || 0) - (b.overall_score || 0);
+      } else if (sortBy === "role_az") {
+        return (a.target_role || "").localeCompare(b.target_role || "");
+      }
+      return 0;
+    });
+    return itemsCopy;
+  }, [searchFilteredItems, sortBy]);
+
+  // 4. Pagination Calculation
+  const totalPages = Math.max(1, Math.ceil(sortedItems.length / itemsPerPage));
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return sortedItems.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedItems, currentPage, itemsPerPage]);
+
+  // 5. 7-Day Activity Bar Chart Data Calculation
+  const activity7Days = useMemo(() => {
+    const allItems = historyData?.items || [];
+    const days: { label: string; dateStr: string; count: number; avgScore: number }[] = [];
+    const now = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const day = d.getDate();
+
+      const dayItems = allItems.filter((item) => {
+        const itemDate = parseItemDate(item.created_at);
+        return (
+          itemDate.getFullYear() === year &&
+          itemDate.getMonth() === month &&
+          itemDate.getDate() === day
+        );
+      });
+
+      const label =
+        i === 0
+          ? "Today"
+          : i === 1
+          ? "Yesterday"
+          : d.toLocaleDateString(undefined, { weekday: "short" });
+
+      const avgScore =
+        dayItems.length > 0
+          ? Math.round(
+              dayItems.reduce((sum, item) => sum + (item.overall_score || 0), 0) / dayItems.length
+            )
+          : 0;
+
+      days.push({
+        label,
+        dateStr: `${year}-${month + 1}-${day}`,
+        count: dayItems.length,
+        avgScore,
+      });
+    }
+
+    const maxCount = Math.max(...days.map((d) => d.count), 1);
+    return { days, maxCount };
+  }, [historyData?.items]);
 
   const daily = historyData?.summary?.daily_summary;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-md p-3 sm:p-5 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-5xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20 shrink-0">
+            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
               <History className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                Resume Tailoring History & Goals
+                Resume Tailoring Analytics & History
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Track your daily application goals and reload past analysis sessions in 1-click.
+                Track daily goals, view 7-day activity trends, and reload past sessions in 1-click.
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-8 w-8 rounded-full bg-slate-200/60 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all cursor-pointer"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowChart(!showChart)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer ${
+                showChart
+                  ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
+              }`}
+              title="Toggle Analytics Chart"
+            >
+              <BarChart2 className="h-4 w-4" />
+              <span className="hidden xs:inline">{showChart ? "Hide Chart" : "Show Chart"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-8 w-8 rounded-full bg-slate-200/60 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
           {error && (
             <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-600 dark:text-rose-400 font-medium">
               {error}
             </div>
           )}
 
-          {/* 🎯 Daily Application Target Tracker Card */}
+          {/* 🎯 Daily Application Target Tracker & Goal Progress */}
           {daily && (
-            <div className="glass-panel p-5 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/80 via-purple-50/40 to-white dark:from-indigo-950/40 dark:via-purple-950/20 dark:to-slate-900 space-y-3.5 shadow-md">
+            <div className="glass-panel p-4 sm:p-5 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white dark:from-indigo-950/40 dark:via-purple-950/20 dark:to-slate-900 space-y-3.5 shadow-md">
               <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/20 shrink-0">
                     <Target className="h-5 w-5" />
                   </div>
@@ -179,7 +328,7 @@ export default function HistoryModal({
                     <h3 className="text-xs font-black uppercase tracking-wider text-indigo-900 dark:text-indigo-300 flex items-center gap-2">
                       Daily Application Target
                       {daily.goal_achieved && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500 text-white font-bold flex items-center gap-1">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500 text-white font-bold flex items-center gap-1 shadow-xs">
                           <Trophy className="h-3 w-3" /> Goal Accomplished!
                         </span>
                       )}
@@ -195,12 +344,12 @@ export default function HistoryModal({
 
                 {/* Target Selector Dropdown */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Set Target:</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Target:</span>
                   <select
                     value={daily.daily_target}
                     disabled={isUpdatingTarget}
                     onChange={(e) => handleTargetChange(Number(e.target.value))}
-                    className="px-3 py-1.5 rounded-xl border border-indigo-300 dark:border-indigo-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl border border-indigo-300 dark:border-indigo-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-xs"
                   >
                     {[5, 10, 15, 20, 25, 30, 40, 50].map((num) => (
                       <option key={num} value={num}>
@@ -223,9 +372,84 @@ export default function HistoryModal({
             </div>
           )}
 
-          {/* Aggregate Stats Header Row */}
+          {/* 📊 7-Day Activity & Match Score Analytics Bar Chart */}
+          {showChart && historyData && (
+            <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <BarChart2 className="h-4 w-4 text-indigo-500" />
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    7-Day Tailoring Activity & Match Score Trends
+                  </h3>
+                </div>
+                <div className="flex items-center gap-4 text-xs">
+                  <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-semibold">
+                    <span className="h-2.5 w-2.5 rounded bg-indigo-500 inline-block" /> Tailored Resumes
+                  </span>
+                  <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-semibold">
+                    <span className="h-2.5 w-2.5 rounded bg-emerald-500 inline-block" /> Avg Match %
+                  </span>
+                </div>
+              </div>
+
+              {/* Responsive SVG Bar Chart */}
+              <div className="pt-2 pb-1">
+                <div className="grid grid-cols-7 gap-2 items-end h-32 px-2 border-b border-slate-200 dark:border-slate-800">
+                  {activity7Days.days.map((day, idx) => {
+                    const barHeightPercent = day.count > 0 ? Math.max(20, Math.round((day.count / activity7Days.maxCount) * 100)) : 8;
+
+                    return (
+                      <div key={idx} className="flex flex-col items-center h-full justify-end group relative">
+                        {/* Tooltip on Hover */}
+                        <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 dark:bg-slate-800 text-white text-[10px] font-bold py-1 px-2 rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-20">
+                          {day.count} tailored {day.avgScore > 0 ? `(${day.avgScore}% avg match)` : ""}
+                        </div>
+
+                        {/* Top Score Badge */}
+                        {day.count > 0 && (
+                          <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 mb-1 group-hover:scale-110 transition-transform">
+                            {day.count}
+                          </span>
+                        )}
+
+                        {/* Bar Graphic */}
+                        <div
+                          className={`w-full max-w-[36px] rounded-t-xl transition-all duration-300 ${
+                            day.count > 0
+                              ? "bg-gradient-to-t from-indigo-600 via-indigo-500 to-purple-500 group-hover:from-indigo-500 group-hover:to-emerald-400 shadow-md"
+                              : "bg-slate-200/60 dark:bg-slate-800/50"
+                          }`}
+                          style={{ height: `${barHeightPercent}%` }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Day Labels Row */}
+                <div className="grid grid-cols-7 gap-2 text-center pt-2">
+                  {activity7Days.days.map((day, idx) => (
+                    <div key={idx} className="space-y-0.5">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block truncate">
+                        {day.label}
+                      </span>
+                      {day.avgScore > 0 ? (
+                        <span className="text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400 block">
+                          {day.avgScore}%
+                        </span>
+                      ) : (
+                        <span className="text-[9px] text-slate-400 block">-</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Aggregate Stats Summary Row */}
           {historyData?.summary && (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="p-3.5 rounded-2xl bg-slate-100/70 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-center">
                 <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                   Total Tailored
@@ -250,29 +474,85 @@ export default function HistoryModal({
                   {historyData.summary.daily_summary.today_completed}
                 </span>
               </div>
+              <div className="p-3.5 rounded-2xl bg-slate-100/70 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-center">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                  Shown Items
+                </span>
+                <span className="text-lg font-black text-purple-600 dark:text-purple-400">
+                  {sortedItems.length}
+                </span>
+              </div>
             </div>
           )}
 
-          {/* Search & Filter Bar */}
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search by job title, company, or file name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+          {/* 🔍 Search, Timeframe Tabs & Sorting Toolbar */}
+          <div className="space-y-3 pt-1">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              {/* Timeframe Filter Tabs */}
+              <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs shrink-0 overflow-x-auto">
+                {(
+                  [
+                    { id: "all", label: "All History" },
+                    { id: "day", label: "Today" },
+                    { id: "week", label: "This Week" },
+                    { id: "month", label: "This Month" },
+                  ] as const
+                ).map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setTimeframeFilter(tab.id)}
+                    className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      timeframeFilter === tab.id
+                        ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/80 dark:border-slate-700"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Sorting & Search Inputs */}
+              <div className="flex items-center gap-2 flex-1">
+                {/* Search Bar */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search role, company, or file..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
+                  />
+                </div>
+
+                {/* Sort Dropdown */}
+                <div className="relative shrink-0">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-xs"
+                  >
+                    <option value="newest">📅 Newest First</option>
+                    <option value="oldest">📅 Oldest First</option>
+                    <option value="score_high">🏆 Highest Score</option>
+                    <option value="score_low">📉 Lowest Score</option>
+                    <option value="role_az">🔤 Job Title (A-Z)</option>
+                  </select>
+                </div>
+
+                {/* Refresh Button */}
+                <button
+                  type="button"
+                  onClick={loadHistory}
+                  className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all cursor-pointer shadow-xs shrink-0"
+                  title="Refresh history"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+                </button>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={loadHistory}
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all cursor-pointer"
-              title="Refresh history"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-            </button>
           </div>
 
           {/* History Items List */}
@@ -281,22 +561,22 @@ export default function HistoryModal({
               <div className="h-6 w-6 border-2 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin mx-auto" />
               <p className="text-xs text-slate-500">Loading analysis history...</p>
             </div>
-          ) : filteredItems.length === 0 ? (
+          ) : paginatedItems.length === 0 ? (
             <div className="p-12 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950/20 space-y-2">
               <History className="h-8 w-8 text-slate-400 mx-auto opacity-50" />
               <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                {searchQuery ? "No history entries match your search." : "No resume analysis history found yet."}
+                {searchQuery || timeframeFilter !== "all"
+                  ? "No history entries match your selected filters."
+                  : "No resume analysis history found yet."}
               </p>
               <p className="text-[11px] text-slate-400">
                 Analyze a job description with your resume to start tracking your application history!
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredItems.map((item) => {
-                const isoStr = item.created_at;
-                const formattedIso = isoStr && !isoStr.endsWith("Z") && !isoStr.includes("+") ? `${isoStr}Z` : isoStr;
-                const d = new Date(formattedIso);
+            <div className="space-y-4">
+              {paginatedItems.map((item) => {
+                const d = parseItemDate(item.created_at);
                 const dateStr = `${d.toLocaleDateString(undefined, {
                   month: "short",
                   day: "numeric",
@@ -322,12 +602,13 @@ export default function HistoryModal({
                               {item.target_company}
                             </span>
                           )}
-                          <span className="text-[10px] text-slate-400 font-medium">
+                          <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                            <Clock className="h-3 w-3 shrink-0" />
                             {dateStr}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                          <FileText className="h-3 w-3 shrink-0" />
+                          <FileText className="h-3 w-3 shrink-0 text-slate-400" />
                           <span>{item.filename}</span>
                         </p>
                       </div>
@@ -375,7 +656,7 @@ export default function HistoryModal({
                             <a
                               href={`${API_BASE_URL}/api/v1/resume/download/${item.download_id}`}
                               download
-                              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-1 shadow-sm"
+                              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-1 shadow-xs"
                               title="Download DOCX File"
                             >
                               <WordLogoIcon className="h-3.5 w-3.5" />
@@ -385,7 +666,7 @@ export default function HistoryModal({
                               href={`${API_BASE_URL}/api/v1/resume/download/${item.download_id}/pdf`}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-1 shadow-sm"
+                              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-1 shadow-xs"
                               title="Download PDF File"
                             >
                               <PdfLogoIcon className="h-3.5 w-3.5" />
@@ -409,6 +690,52 @@ export default function HistoryModal({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* 📄 Pagination Bar */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 flex-wrap gap-2 text-xs">
+              <span className="text-slate-500 dark:text-slate-400 font-semibold">
+                Page {currentPage} of {totalPages} ({sortedItems.length} total entries)
+              </span>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer"
+                >
+                  <ChevronLeft className="h-4 w-4" /> Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setCurrentPage(p)}
+                      className={`h-7 w-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        currentPage === p
+                          ? "bg-indigo-600 text-white shadow-sm"
+                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer"
+                >
+                  Next <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           )}
         </div>
