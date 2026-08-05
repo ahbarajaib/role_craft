@@ -4432,185 +4432,172 @@ export default function Home() {
         </div>
       )}
 
-      {/* Floating Sticky Action Dock */}
+      {/* Floating Sticky Action Dock — Compact Bottom-Right Floating Bar */}
       {Object.keys(rewrittenSections).length > 0 && isBottomBarVisible && (
-        <>
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] sm:w-auto max-w-2xl bg-slate-900/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-800/90 border-t-slate-700/60 p-4 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-white animate-fade-in-up transition-all duration-300">
-            <div className="w-full mx-auto space-y-3">
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-950/90 backdrop-blur-2xl border border-slate-800/90 p-2 px-3 rounded-2xl shadow-2xl text-white animate-fade-in-up transition-all duration-300 max-w-[95vw] sm:max-w-none">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Expandable Drawer Toggle if not yet patched */}
+            {!isPatchingApplied && (
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(!isCartOpen)}
+                className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-slate-300 transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <Sparkles className="h-3 w-3 text-amber-200" />
+                <span>{Object.keys(rewrittenSections).length} Ready</span>
+                <span className="text-[9px] text-indigo-400 underline ml-0.5">
+                  {isCartOpen ? "Hide" : "Details"}
+                </span>
+              </button>
+            )}
 
-              {/* Expandable Drawer for Accepted Improvements */}
-              {isCartOpen && !isPatchingApplied && (
-                <div className="border-b border-slate-800/80 pb-3 space-y-2 animate-fade-in-up">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-extrabold text-indigo-400 uppercase tracking-wider">
-                      Accepted Improvements
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRewrittenSections({});
-                        setPreviousRewrittenSections({});
-                        setIsPatchingApplied(false);
-                        setIsCartOpen(false);
-                      }}
-                      className="text-[11px] text-rose-400 hover:text-rose-300 font-extrabold transition-colors select-none cursor-pointer"
-                    >
-                      Clear All
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1">
-                    {Object.keys(rewrittenSections).map((secKey) => {
-                      const originalSection = (analysisResult?.sections || []).find(
-                        (s) => s.section_name.toLowerCase() === secKey
-                      );
-                      const displayName = originalSection?.section_name || secKey;
+            {/* Download buttons — shown after successful apply */}
+            {isPatchingApplied && downloadUrl && (
+              <>
+                <a
+                  href={`${API_BASE_URL}${downloadUrl}?filename=${encodeURIComponent(
+                    buildResumeFilename(
+                      jobDescription,
+                      user?.name,
+                      analysisResult?.overall_summary?.job_title,
+                      file?.name
+                    )
+                  )}`}
+                  download
+                  onClick={() => setSuccessNotification("Downloading updated DOCX...")}
+                  className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-white rounded-xl text-xs font-extrabold shadow-md shadow-emerald-500/20 transition-all flex items-center gap-1.5 hover:scale-105 active:scale-95 border border-emerald-400/30"
+                >
+                  <WordLogoIcon className="h-3.5 w-3.5 shrink-0" />
+                  <span>Download DOCX</span>
+                </a>
 
-                      return (
-                        <div key={secKey} className="flex items-center gap-1.5 text-xs bg-slate-950/80 border border-slate-800/80 px-3 py-1 rounded-xl">
-                          <span className="text-slate-200 font-bold truncate capitalize max-w-[140px]">
-                            {displayName}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleRevert(displayName)}
-                            className="text-slate-400 hover:text-rose-400 p-0.5 transition-colors rounded hover:bg-slate-900 cursor-pointer"
-                            title="Revert this section"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                <a
+                  href={`${API_BASE_URL}${downloadUrl}/pdf?filename=${encodeURIComponent(
+                    buildResumeFilename(
+                      jobDescription,
+                      user?.name,
+                      analysisResult?.overall_summary?.job_title,
+                      file?.name
+                    ).replace(/\.docx$/i, ".pdf")
+                  )}`}
+                  download
+                  onClick={() => setSuccessNotification("Downloading PDF...")}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 hover:scale-105 active:scale-95"
+                >
+                  <PdfLogoIcon className="h-3.5 w-3.5 shrink-0" />
+                  <span>Download PDF</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setIsPdfPreviewOpen(true)}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
+                >
+                  <PdfLogoIcon className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                  <span>Preview PDF</span>
+                </button>
+              </>
+            )}
+
+            {/* Apply / Re-Apply Button */}
+            <button
+              onClick={handleApplyRewrites}
+              disabled={applyMutation.isPending}
+              className={`px-3.5 py-1.5 ${
+                isPatchingApplied
+                  ? "bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold"
+                  : "bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white border border-white/20 shadow-md shadow-emerald-500/20 text-xs font-black hover:scale-105 active:scale-95"
+              } disabled:opacity-50 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer`}
+            >
+              {applyMutation.isPending ? (
+                <>
+                  <div className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Applying...</span>
+                </>
+              ) : isPatchingApplied ? (
+                <>
+                  <RefreshCw className="h-3 w-3 text-indigo-400" />
+                  <span>Re-Apply</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3 w-3 text-amber-200 animate-pulse" />
+                  <span>Apply to Resume</span>
+                </>
               )}
+            </button>
 
-              {/* Main Footer Row */}
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 border ${isPatchingApplied ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30'}`}>
-                    {isPatchingApplied ? <CheckCircle className="h-4.5 w-4.5" /> : <Sparkles className="h-4.5 w-4.5 animate-pulse text-amber-200" />}
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-xs font-black text-white block truncate">
-                      {isPatchingApplied ? "✅ Resume Tailored & Ready" : `${Object.keys(rewrittenSections).length} improvement${Object.keys(rewrittenSections).length > 1 ? 's' : ''} ready`}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-slate-400 truncate hidden xs:inline">
-                        {isPatchingApplied ? "Preserved formatting" : "Ready to apply"}
-                      </span>
-                      {!isPatchingApplied && (
-                        <button
-                          type="button"
-                          onClick={() => setIsCartOpen(!isCartOpen)}
-                          className="text-[10px] text-indigo-400 hover:text-indigo-300 underline font-bold select-none cursor-pointer shrink-0"
-                        >
-                          {isCartOpen ? "Hide" : "Details"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {/* Download buttons — shown after successful apply, alongside re-apply */}
-                    {isPatchingApplied && downloadUrl && (
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={`${API_BASE_URL}${downloadUrl}?filename=${encodeURIComponent(
-                            buildResumeFilename(
-                              jobDescription,
-                              user?.name,
-                              analysisResult?.overall_summary?.job_title,
-                              file?.name
-                            )
-                          )}`}
-                          download
-                          onClick={() => setSuccessNotification("Downloading updated DOCX...")}
-                          className="px-4 py-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-white rounded-xl text-xs font-extrabold shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-1.5 hover:scale-105 active:scale-95 border border-emerald-400/30"
-                        >
-                          <WordLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
-                          <span>Download DOCX</span>
-                        </a>
-
-                        <a
-                          href={`${API_BASE_URL}${downloadUrl}/pdf?filename=${encodeURIComponent(
-                            buildResumeFilename(
-                              jobDescription,
-                              user?.name,
-                              analysisResult?.overall_summary?.job_title,
-                              file?.name
-                            ).replace(/\.docx$/i, ".pdf")
-                          )}`}
-                          download
-                          onClick={() => setSuccessNotification("Downloading PDF...")}
-                          className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1.5 hover:scale-105 active:scale-95"
-                        >
-                          <PdfLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
-                          <span>Download PDF</span>
-                        </a>
-
-                        <button
-                          type="button"
-                          onClick={() => setIsPdfPreviewOpen(true)}
-                          className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
-                        >
-                          <PdfLogoIcon className="h-4 w-4 shrink-0 opacity-80" />
-                          <span>Preview PDF</span>
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Apply to Resume — always shown when rewrites exist (with re-apply label after first apply) */}
-                    <button
-                      onClick={handleApplyRewrites}
-                      disabled={applyMutation.isPending}
-                      className={`px-5 py-2.5 ${isPatchingApplied ? 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white' : 'bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white border border-white/20 shadow-xl shadow-emerald-500/25 hover:scale-105 active:scale-95'} disabled:opacity-50 text-white rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer`}
-                    >
-                      {applyMutation.isPending ? (
-                        <>
-                          <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Applying...
-                        </>
-                      ) : isPatchingApplied ? (
-                        <>
-                          <RefreshCw className="h-3.5 w-3.5 text-indigo-400" />
-                          Re-Apply Changes
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-3.5 w-3.5 text-amber-200 animate-pulse" />
-                          Apply to Resume
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (isPatchingApplied) {
-                          setRewrittenSections({});
-                          setPreviousRewrittenSections({});
-                          setIsPatchingApplied(false);
-                          setDownloadUrl(null);
-                          setDownloadId(null);
-                        }
-                        setIsBottomBarVisible(false);
-                        setIsCartOpen(false);
-                      }}
-                      className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer select-none shrink-0"
-                      title={isPatchingApplied ? "Clear and start new tailoring pass" : "Dismiss bar"}
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-            </div>
+            {/* Dismiss Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isPatchingApplied) {
+                  setRewrittenSections({});
+                  setPreviousRewrittenSections({});
+                  setIsPatchingApplied(false);
+                  setDownloadUrl(null);
+                  setDownloadId(null);
+                }
+                setIsBottomBarVisible(false);
+                setIsCartOpen(false);
+              }}
+              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer select-none shrink-0"
+              title={isPatchingApplied ? "Clear and dismiss bar" : "Dismiss bar"}
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
-        </>
+
+          {/* Expandable Details Drawer inside floating dock */}
+          {isCartOpen && !isPatchingApplied && (
+            <div className="mt-2 pt-2 border-t border-slate-800/80 space-y-2 animate-fade-in-up">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider">
+                  Accepted Improvements
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRewrittenSections({});
+                    setPreviousRewrittenSections({});
+                    setIsPatchingApplied(false);
+                    setIsCartOpen(false);
+                  }}
+                  className="text-[10px] text-rose-400 hover:text-rose-300 font-extrabold transition-colors select-none cursor-pointer"
+                >
+                  Clear All
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5 max-h-[100px] overflow-y-auto pr-1">
+                {Object.keys(rewrittenSections).map((secKey) => {
+                  const originalSection = (analysisResult?.sections || []).find(
+                    (s) => s.section_name.toLowerCase() === secKey
+                  );
+                  const displayName = originalSection?.section_name || secKey;
+
+                  return (
+                    <div
+                      key={secKey}
+                      className="flex items-center gap-1 text-[11px] bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-lg"
+                    >
+                      <span className="text-slate-200 font-bold truncate capitalize max-w-[120px]">
+                        {displayName}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRevert(displayName)}
+                        className="text-slate-400 hover:text-rose-400 p-0.5 transition-colors rounded hover:bg-slate-800 cursor-pointer"
+                        title="Revert this section"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Floating Success Notification Toast */}
