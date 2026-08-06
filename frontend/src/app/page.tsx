@@ -1461,15 +1461,24 @@ export default function Home() {
         (s) => s.review_status === "improve"
       );
 
-      // Ensure Professional Summary section is included in 1-Click Auto-Tailor
-      const summarySection = (result.sections || []).find(
-        (s) => s.section_name.toLowerCase().includes("summary") || s.section_name.toLowerCase().includes("profile")
-      );
-      
+      // Ensure Experience, Summary, and Skills sections are ALWAYS included in 1-Click Auto-Tailor
       const sectionsToTailor = [...sectionsToImprove];
-      if (summarySection && !sectionsToTailor.some(s => s.section_name.toLowerCase() === summarySection.section_name.toLowerCase())) {
-        sectionsToTailor.unshift(summarySection);
-      }
+
+      (result.sections || []).forEach((sec: any) => {
+        const nameLower = sec.section_name.toLowerCase();
+        const isCoreSec =
+          nameLower.includes("experience") ||
+          nameLower.includes("employment") ||
+          nameLower.includes("work") ||
+          nameLower.includes("summary") ||
+          nameLower.includes("profile") ||
+          nameLower.includes("skill") ||
+          nameLower.includes("competenc");
+
+        if (isCoreSec && !sectionsToTailor.some((s: any) => s.section_name.toLowerCase() === nameLower)) {
+          sectionsToTailor.push(sec);
+        }
+      });
 
       console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToTailor.map((s: any) => s.section_name));
 

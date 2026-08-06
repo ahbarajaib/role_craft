@@ -209,7 +209,7 @@ class ResumeAnalysisWorkflow:
                         reviewed_sections.append(
                             ReviewedSection(
                                 section_name=s.title,
-                                review_status=exp_review.review_status,
+                                review_status=ReviewStatus.IMPROVE if exp_review.review_status != ReviewStatus.KEEP else ReviewStatus.KEEP,
                                 rewrite_worthwhile=exp_review.rewrite_worthwhile,
                                 priority=exp_review.priority,
                                 reason=exp_review.reason,
