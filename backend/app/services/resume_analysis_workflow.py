@@ -107,6 +107,16 @@ class ResumeAnalysisWorkflow:
             ):
                 continue
 
+            # Skip container headings that have no body content of their own (only the title line)
+            # because their actual content lives in the sub-sections (job entries / project entries) that follow them!
+            body_text_paras = [
+                p.text.strip() for p in s.paragraphs
+                if p.text.strip().lower() != s.title.strip().lower()
+            ]
+            if not body_text_paras and norm in ["experience", "projects", "certifications", "awards"]:
+                logger.info(f"Skipping container heading section from AI review: '{s.title}'")
+                continue
+
             sections_to_analyze.append(s)
 
         unified_result = self._review.review_resume(
