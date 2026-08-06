@@ -406,6 +406,14 @@ def _is_heading(para: ParsedParagraph, raw_para=None) -> bool:
     if first_w in ACTION_VERBS and len(words) > 3:
         return False
 
+    # Category skill / data list lines ("Frontend: React.js, Next.js", "Databases: MongoDB")
+    # are regular content lines, NEVER section headings unless style is an explicit Word Heading style.
+    if ":" in t and not _has_heading_style(para.style_name):
+        prefix, rest = t.split(":", 1)
+        rest_clean = rest.strip()
+        if len(prefix.strip()) < 35 and ("," in rest_clean or len(rest_clean.split()) >= 2):
+            return False
+
     if _has_heading_style(para.style_name):
         return True
     if _is_known_section(para.text):
