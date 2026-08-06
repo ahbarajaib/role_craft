@@ -100,6 +100,17 @@ SECTION_NAME_MAP: dict[str, str] = {
     "frameworks": "skills",
     "platforms": "skills",
     "databases": "skills",
+    "technical skills & software": "skills",
+    "technical skills and software": "skills",
+    "skills & software": "skills",
+    "skills and software": "skills",
+    "core competencies & tools": "skills",
+    "key competencies": "skills",
+    "additional information": "additional",
+    "additional details": "additional",
+    "other information": "additional",
+    "personal details": "additional",
+    "declarations": "additional",
     # ─── Experience ──────────────────────────────────────────────────────────
     "experience": "experience",
     "experiences": "experience",
@@ -348,8 +359,28 @@ def _is_known_section(text: str) -> bool:
 
 
 def _normalize(text: str) -> str | None:
-    """Return the canonical section name, or None for unknown headings."""
-    return SECTION_NAME_MAP.get(_normalise_text(text))
+    """Return the canonical section name, or fallback to intelligent keyword matching."""
+    norm = _normalise_text(text)
+    if norm in SECTION_NAME_MAP:
+        return SECTION_NAME_MAP[norm]
+
+    # Intelligent fallback keyword matching for unlisted title variants
+    if any(k in norm for k in ["skill", "competenc", "software", "proficiency", "tool", "expertise"]):
+        return "skills"
+    if any(k in norm for k in ["experience", "employment", "work history", "career history", "roles"]):
+        return "experience"
+    if any(k in norm for k in ["summary", "profile", "about", "objective", "bio", "overview"]):
+        return "summary"
+    if any(k in norm for k in ["education", "academic", "degree", "qualification"]):
+        return "education"
+    if any(k in norm for k in ["project", "portfolio"]):
+        return "projects"
+    if any(k in norm for k in ["certificat", "license", "course"]):
+        return "certifications"
+    if any(k in norm for k in ["additional", "other info", "personal info"]):
+        return "additional"
+
+    return None
 
 
 def _normalise_text(text: str) -> str:

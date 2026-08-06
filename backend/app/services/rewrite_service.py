@@ -108,21 +108,18 @@ CRITICAL RULES:
 
 SKILLS_REWRITE_SYSTEM_PROMPT = """\
 You are a senior executive recruiter and master ATS resume editor.
-You are rewriting the TECHNICAL SKILLS / PROFICIENCIES section of a professional resume.
+You are rewriting the SKILLS / CORE COMPETENCIES section of a professional resume across any domain or industry.
 
 CRITICAL SKILLS SECTION RULES:
-1. **Strict Category List Format**: Technical skills MUST be output strictly as concise, category-based lists.
-   Format: "Category Name: Skill1, Skill2, Skill3, Skill4"
-   Examples:
-   "Frontend: React.js, Next.js, Redux Toolkit, Tailwind CSS, JavaScript (ES6+), HTML5, CSS3, TypeScript"
-   "Backend & Systems: Node.js, Express.js, REST APIs, WebSockets, JWT Authentication, Async Workflows, API Integration"
-2. **NO Sentences or Action Verbs**: DO NOT write full sentences, achievement paragraphs, or action verbs (e.g. NEVER write "Developed scalable applications using...", "Engineered robust backend solutions using...").
+1. **Preserve Candidate's Formatting Style**:
+   - If the original section uses category lists ("Category Name: Skill1, Skill2"), preserve category list format.
+   - If the original section uses bullet dividers ("Skill1 • Skill2 • Skill3"), preserve bullet divider format.
+   - If the original section uses standard bullet lines ("• Skill1"), preserve standard bullet list format.
+2. **NO Sentences or Action Verbs**: DO NOT write full sentences, achievement paragraphs, or action verbs.
 3. **Evidence-Gated Keyword Weaving — STRICT**: You MAY only add a skill or technology to the skills list if it EXPLICITLY appears in the candidate's own resume evidence (the "=== EVIDENCE CONTEXT ===" section below). If a keyword appears in the Target Job Description but does NOT appear anywhere in the candidate's evidence context or original skills text, you MUST NOT add it. This is non-negotiable.
-   - ✅ ALLOWED: Moving/promoting a skill from evidence context into the skills list (e.g. the candidate used "Docker" in a project but it is not in the skills list yet).
-   - ❌ FORBIDDEN: Adding any technology, language, framework, cloud service, or tool that does not appear in the evidence context or original skills text, even if the job description demands it.
-4. **NEVER Invent Skills**: Do NOT add C#, ASP.NET, Azure, Java, Kubernetes, Go, Rust, Ruby, or ANY other technology/framework/language unless it explicitly appears in the candidate's evidence context. Adding invented skills is resume fraud and is strictly prohibited.
-5. **Preserve All Existing Skills**: Every skill listed in the original text MUST remain in the output. Do NOT remove, rename, or omit any existing skill category or item.
-6. **Output Bounds**: Output ONLY the category skill lines. Do not include preambles or header titles.
+4. **NEVER Invent Skills**: Do NOT add skills, tools, or technologies unless they explicitly appear in the candidate's evidence context or original text. Adding invented skills is resume fraud and is strictly prohibited.
+5. **Preserve All Existing Skills**: Every skill listed in the original text MUST remain in the output. Do NOT remove, rename, or omit any existing skill item.
+6. **Output Bounds**: Output ONLY the skill lines. Do not include preambles or header titles.
 """
 
 SUMMARY_REWRITE_SYSTEM_PROMPT = """\

@@ -334,7 +334,9 @@ def _is_metadata_line(text: str, para=None) -> bool:
         "technologies", "labs", "studio", "agency", "software", "systems", "global",
         "services", "holdings", "enterprises", "ventures", "partners", "consulting",
         "international", "group", "ltd.", "inc.", "corp.", "pvt ltd", "pvt. ltd.",
-        "llc.", "fze.",
+        "llc.", "fze.", "lines", "trading", "bakers", "restaurant", "store", "est",
+        "establishment", "logistics", "shipping", "freight", "transport", "hotel",
+        "hospital", "bank", "financial", "media", "retail", "industries",
     ]
     has_company = any(re.search(r'\b' + re.escape(s) + r'\b', t_lower) for s in company_suffixes)
 
@@ -342,6 +344,8 @@ def _is_metadata_line(text: str, para=None) -> bool:
         "dubai", "uae", "usa", "uk", "india", "bangalore", "bhatkal", "remote", "london",
         "new york", "san francisco", "singapore", "toronto", "sydney", "berlin", "paris",
         "california", "texas", "seattle", "austin", "chicago", "boston", "amsterdam",
+        "muscat", "oman", "saudi", "qatar", "kuwait", "bahrain", "abu dhabi", "sharjah",
+        "riyadh", "jeddah", "dammam", "middle east", "mumbai", "delhi", "chennai", "hyderabad",
     ]
     has_location = any(re.search(r'\b' + re.escape(loc) + r'\b', t_lower) for loc in locations)
 
@@ -350,6 +354,9 @@ def _is_metadata_line(text: str, para=None) -> bool:
         "consultant", "analyst", "administrator", "specialist", "intern",
         "freelance", "executive", "director", "officer", "head", "founder",
         "co-founder", "cto", "ceo", "vp", "programmer", "associate",
+        "advisor", "representative", "coordinator", "supervisor", "agent",
+        "accountant", "clerk", "operator", "assistant", "technician", "logistics",
+        "customs", "sales", "support", "customer service",
     ]
     has_role = any(re.search(r'\b' + re.escape(r) + r'\b', t_lower) for r in role_titles)
 

@@ -121,6 +121,16 @@ _KNOWN_TECHNOLOGIES: list[str] = [
     # Other common tools
     "Pydantic", "SQLAlchemy", "Alembic", "pytest", "Webpack", "Vite",
     "Datadog", "Sentry", "Prometheus", "Grafana",
+    # Office & Productivity
+    "Microsoft Excel", "Excel", "Microsoft Word", "Word", "Microsoft PowerPoint", "PowerPoint",
+    "Microsoft Outlook", "Outlook", "MS Office", "Microsoft Office", "Google Sheets", "Google Docs",
+    # Enterprise, CRM & ERP
+    "CRM", "ERP", "SAP", "Oracle", "Salesforce", "HubSpot", "QuickBooks", "Zoho", "Zendesk",
+    "Power BI", "Tableau", "Workday", "Asana", "Jira", "Trello", "Slack", "Teams", "Notion",
+    # Logistics, Customs & Trade
+    "Bayan", "Bayan eCustoms", "eTaslim", "Customs Clearance", "Bills of Lading", "Cargo Release Orders",
+    "CROs", "Freight Forwarding", "Supply Chain", "Logistics", "Import/Export", "Customs Declarations",
+    "Customs Compliance", "Invoicing",
 ]
 
 # Pre-compile tech patterns once for performance.
