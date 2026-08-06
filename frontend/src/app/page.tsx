@@ -3361,10 +3361,15 @@ export default function Home() {
 
                   {/* 🔴 Missing ATS Keywords — click to weave into skills section */}
                   {(() => {
-                    const allMissing = (analysisResult.sections || [])
-                      .flatMap((s: any) => s.missing_keywords || [])
+                    const missingFromSections = (analysisResult.sections || []).flatMap((s: any) => s.missing_keywords || []);
+                    const missingFromImps = (analysisResult.top_improvements || [])
+                      .filter((imp: any) => !imp.evidence_reused || !imp.evidence_reused.trim())
+                      .map((imp: any) => imp.name || "");
+
+                    const allMissing = [...missingFromSections, ...missingFromImps]
+                      .flatMap((k: string) => extractStrictKeywordsFromRaw(k))
                       .map((k: string) => cleanKeywordName(k))
-                      .filter(Boolean);
+                      .filter((k: string) => k.length > 0 && k.length <= 60);
 
                     const matchedLower = new Set(
                       (analysisResult.top_strengths || []).map((s: any) =>
@@ -3372,12 +3377,21 @@ export default function Home() {
                       )
                     );
 
+                    const supportedLower = new Set(
+                      (analysisResult.sections || [])
+                        .flatMap((s: any) => s.strengths || [])
+                        .map((e: string) => cleanKeywordName(e).toLowerCase())
+                    );
+
                     const appliedWovenLower = new Set(
                       appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
                     );
 
                     const trulyMissing = Array.from(new Set(allMissing)).filter(
-                      (kw) => !matchedLower.has(kw.toLowerCase()) && !appliedWovenLower.has(kw.toLowerCase())
+                      (kw) =>
+                        !matchedLower.has(kw.toLowerCase()) &&
+                        !supportedLower.has(kw.toLowerCase()) &&
+                        !appliedWovenLower.has(kw.toLowerCase())
                     );
 
                     if (trulyMissing.length === 0) return null;
