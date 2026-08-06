@@ -120,9 +120,25 @@ You are rewriting the SKILLS / CORE COMPETENCIES section of a professional resum
 CRITICAL SKILLS SECTION RULES:
 1. **Category Skill Format ONLY**: Output ONLY concise category skill lines matching the candidate's original structure (e.g. `Category Name: Skill 1, Skill 2, Skill 3`).
 2. **STRICTLY NO Sentences, NO Metrics, NO Action Verbs**: Do NOT write full sentences, achievement paragraphs, metrics, percentages, or action verbs under any circumstances. Every line MUST be a list of skill names ONLY.
-3. **Preserve Original Categories**: You MUST preserve the exact category lines from the original text (e.g., AI & LLM Engineering, Frontend, Backend & Systems, Databases, Tools & Platforms, Cloud & DevOps). Output EXACTLY one line per category line in the original text.
+3. **Preserve ALL Category Lines**: You MUST preserve every single original category line from the candidate's text (e.g., AI & LLM Engineering, Frontend, Backend & Systems, Databases, Tools & Platforms, Cloud & DevOps). Output EXACTLY one line per category line in the original text. Do NOT omit or merge any category.
 4. **Evidence-Gated Keyword Weaving — STRICT**: You MAY only add a skill or technology to the skills list if it EXPLICITLY appears in the candidate's own resume evidence (the "=== EVIDENCE CONTEXT ===" section below). If a keyword appears in the Target Job Description but does NOT appear anywhere in the candidate's evidence context or original skills text, you MUST NOT add it.
-5. **Preserve All Existing Skills**: Every skill listed in the original text MUST remain in the output. Do NOT remove, rename, or omit any existing skill item.
+5. **Preserve All Existing Skills**: Every skill listed in the original text MUST remain in the output. Simply append newly matched evidence keywords to their appropriate category line.
+
+FEW-SHOT EXAMPLES:
+
+Original:
+Frontend: React.js, Next.js, Redux Toolkit, Tailwind CSS
+Backend & Systems: Node.js, Express.js, Python, REST APIs
+
+Recommendation: Add NestJS and Redis to backend technologies.
+
+CORRECT OUTPUT:
+Frontend: React.js, Next.js, Redux Toolkit, Tailwind CSS
+Backend & Systems: Node.js, Express.js, Python, REST APIs, NestJS, Redis
+
+FORBIDDEN WRONG OUTPUT (NEVER DO THIS):
+Backend & Systems: Developed robust server-side applications with Node.js, Express.js, and Python, implementing REST APIs and FastAPI for seamless API integration, achieving a 40% improvement in data retrieval speeds.
+
 6. **Output Bounds**: Output ONLY the skill lines. Do not include preambles or header titles.
 """
 

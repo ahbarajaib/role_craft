@@ -646,7 +646,10 @@ class PatchService:
 
                 else:
                     # Original had more paragraphs than AI rewrites.
-                    # Preserve all remaining original paragraphs UNTOUCHED — never erase content.
+                    # For non-experience sections (Skills, Summary), clear extra unused paragraphs
+                    # to prevent stale old text from previous runs surviving.
+                    if not is_experience_sec:
+                        _set_paragraph_text_preserve_fmt(body_paras[orig_idx], "", default_font=doc_font)
                     orig_idx += 1
 
             sections_updated += 1
