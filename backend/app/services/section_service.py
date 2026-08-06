@@ -32,9 +32,6 @@ from app.schemas.section import DocumentSectionsResponse, SectionItem, SectionPa
 DOCX_EXTENSION = ".docx"
 
 
-_DOCUMENT_SECTIONS_CACHE: dict[str, DocumentSectionsResponse] = {}
-
-
 class SectionService:
     """Parses a DOCX and returns its detected section structure.
 
@@ -49,36 +46,24 @@ class SectionService:
     def detect_document_sections(self, document_id: str) -> DocumentSectionsResponse:
         """Run the full parse → detect → schema pipeline for a document.
 
-        Uses in-memory caching keyed by ``document_id`` so subsequent requests
-        (e.g., testing multiple job descriptions against the same resume) run
-        instantly without re-reading the filesystem.
+        Raises ``NotFoundError`` when the document ID does not correspond
+        to a file in the upload directory.
         """
-        if document_id in _DOCUMENT_SECTIONS_CACHE:
-            logger.debug(
-                "⚡ Section Service cache hit",
-                document_id=document_id,
-            )
-            return _DOCUMENT_SECTIONS_CACHE[document_id]
-
         path = self._resolve_path(document_id)
         paragraphs = parse_docx(path)
         sections = detect_sections(paragraphs)
 
-        response = DocumentSectionsResponse(
+        logger.info(
+            "Sections detected",
+            document_id=document_id,
+            section_count=len(sections),
+        )
+
+        return DocumentSectionsResponse(
             document_id=document_id,
             section_count=len(sections),
             sections=_to_schema(sections),
         )
-
-        _DOCUMENT_SECTIONS_CACHE[document_id] = response
-
-        logger.info(
-            "Sections detected and cached",
-            document_id=document_id,
-            section_count=len(sections),
-        )
-
-        return response
 
     # ── Private helpers ───────────────────────────────────────────────────────
 
@@ -102,12 +87,7 @@ def _to_schema(sections: list[DetectedSection]) -> list[SectionItem]:
             normalized_name=s.normalized_name,
             paragraph_indexes=s.paragraph_indexes,
             paragraphs=[
-                SectionParagraph(
-                    index=p.index,
-                    text=p.text,
-                    style_name=p.style_name,
-                    is_bold=getattr(p, "is_bold", False),
-                )
+                SectionParagraph(index=p.index, text=p.text, style_name=p.style_name)
                 for p in s.paragraphs
             ],
         )

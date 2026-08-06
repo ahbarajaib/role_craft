@@ -154,14 +154,6 @@ def _set_paragraph_text_preserve_fmt(paragraph, new_text: str, default_font: str
         t_clean = clean_text.strip()
         if not any(t_clean.startswith(s) for s in bullet_symbols):
             clean_text = f"{orig_bullet_symbol} {t_clean}"
-    elif not has_num_pr:
-        # Conditional Auto-Normalizer: For unformatted plain-text lines in experience sections that start
-        # with an action verb, auto-inject a clean bullet symbol ("• ") so unformatted lines render properly.
-        t_clean = clean_text.strip()
-        words = t_clean.split()
-        first_w = words[0].lower() if words else ""
-        if first_w in ACTION_VERBS and not any(t_clean.startswith(s) for s in bullet_symbols):
-            clean_text = f"• {t_clean}"
 
     # Extract target font name from existing runs or document default font
     target_font = None
@@ -495,7 +487,7 @@ class PatchService:
             # Special Case: Patching Candidate Job Title in Header Section
             if target_sec.normalized_name == "header" or norm_sec_name in ["header", "job title", "target role", "title"]:
                 # Inspect top 6 paragraphs of document (pre-summary header area) for existing job title
-                role_titles = list(UNIVERSAL_ROLE_TITLES)
+                role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance"]
                 top_paras = all_paras[:min(6, len(all_paras))]
                 title_para = next(
                     (p for i, p in enumerate(top_paras) if i > 0 and any(r in p.text.lower() for r in role_titles)),
