@@ -118,13 +118,10 @@ You are a senior executive recruiter and master ATS resume editor.
 You are rewriting the SKILLS / CORE COMPETENCIES section of a professional resume across any domain or industry.
 
 CRITICAL SKILLS SECTION RULES:
-1. **Preserve Candidate's Formatting Style**:
-   - If the original section uses category lists ("Category Name: Skill1, Skill2"), preserve category list format.
-   - If the original section uses bullet dividers ("Skill1 • Skill2 • Skill3"), preserve bullet divider format.
-   - If the original section uses standard bullet lines ("• Skill1"), preserve standard bullet list format.
-2. **NO Sentences or Action Verbs**: DO NOT write full sentences, achievement paragraphs, or action verbs.
-3. **Evidence-Gated Keyword Weaving — STRICT**: You MAY only add a skill or technology to the skills list if it EXPLICITLY appears in the candidate's own resume evidence (the "=== EVIDENCE CONTEXT ===" section below). If a keyword appears in the Target Job Description but does NOT appear anywhere in the candidate's evidence context or original skills text, you MUST NOT add it. This is non-negotiable.
-4. **NEVER Invent Skills**: Do NOT add skills, tools, or technologies unless they explicitly appear in the candidate's evidence context or original text. Adding invented skills is resume fraud and is strictly prohibited.
+1. **Category Skill Format ONLY**: Output ONLY concise category skill lines matching the candidate's original structure (e.g. `Category Name: Skill 1, Skill 2, Skill 3`).
+2. **STRICTLY NO Sentences, NO Metrics, NO Action Verbs**: Do NOT write full sentences, achievement paragraphs, metrics, percentages, or action verbs under any circumstances. Every line MUST be a list of skill names ONLY.
+3. **Preserve Original Categories**: You MUST preserve the exact category lines from the original text (e.g., AI & LLM Engineering, Frontend, Backend & Systems, Databases, Tools & Platforms, Cloud & DevOps). Output EXACTLY one line per category line in the original text.
+4. **Evidence-Gated Keyword Weaving — STRICT**: You MAY only add a skill or technology to the skills list if it EXPLICITLY appears in the candidate's own resume evidence (the "=== EVIDENCE CONTEXT ===" section below). If a keyword appears in the Target Job Description but does NOT appear anywhere in the candidate's evidence context or original skills text, you MUST NOT add it.
 5. **Preserve All Existing Skills**: Every skill listed in the original text MUST remain in the output. Do NOT remove, rename, or omit any existing skill item.
 6. **Output Bounds**: Output ONLY the skill lines. Do not include preambles or header titles.
 """
@@ -391,7 +388,7 @@ class RewriteService:
             response_format=RewriteSectionResponse,
         )
 
-        # Python Shield: Sanitize any unsupported JD skills hallucinated by LLM
+        # Python Shield 1: Sanitize any unsupported JD skills hallucinated by LLM
         sanitized_rewritten_text, stripped_terms = sanitize_unsupported_skills_from_text(
             result.rewritten_text,
             effective_unsupported_techs,
@@ -403,6 +400,30 @@ class RewriteService:
                 stripped=stripped_terms,
             )
             result.rewritten_text = sanitized_rewritten_text
+
+        # Python Shield 2: Deduplicate identical lines and filter full sentences from Skills section
+        lines = [l.strip() for l in result.rewritten_text.split("\n") if l.strip()]
+        seen_lines = set()
+        cleaned_output_lines = []
+
+        for line in lines:
+            if is_skills_section and any(
+                action_kw in line.lower()
+                for action_kw in ["engineered ", "developed ", "managed ", "utilized ", "achieving ", "improving ", "spearheaded "]
+            ):
+                logger.warning(
+                    "🛡️ [RoleCraft Shield] Stripped achievement sentence from Skills section",
+                    section=section_name,
+                    sentence=line[:60],
+                )
+                continue
+            norm_key = re.sub(r"[^a-zA-Z0-9]", "", line.lower())
+            if norm_key and norm_key not in seen_lines:
+                seen_lines.add(norm_key)
+                cleaned_output_lines.append(line)
+
+        if cleaned_output_lines:
+            result.rewritten_text = "\n".join(cleaned_output_lines)
 
         # Verify returned original text in the Pydantic response matches
         result.original_text = original_text
