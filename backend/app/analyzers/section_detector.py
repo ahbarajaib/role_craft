@@ -344,20 +344,7 @@ def detect_sections(paragraphs: list[ParsedParagraph]) -> list[DetectedSection]:
     current: DetectedSection | None = None
 
     for para in paragraphs:
-        is_hd = _is_heading(para)
-
-        # If currently inside a container section (Experience, Education, Projects, Certifications),
-        # sub-headings (job titles, degrees, project names) that are not canonical top-level
-        # section names (like EDUCATION, SKILLS, EXPERIENCE, etc.) should remain inside the parent section.
-        if current and (
-            current.normalized_name in ["experience", "education", "projects", "certifications"]
-            or any(kw in current.title.lower() for kw in ["experience", "employment", "history", "work record", "education", "academic", "project", "certification"])
-        ):
-            norm = _normalize(para.text)
-            if is_hd and norm is None and not _is_known_section(para.text):
-                is_hd = False
-
-        if is_hd:
+        if _is_heading(para):
             # Commit the previous section before starting a new one.
             if current is not None:
                 sections.append(current)
@@ -400,21 +387,40 @@ def _is_heading(para: ParsedParagraph, raw_para=None) -> bool:
        text is short (<= 60 chars).  Covers the most popular real-world
        resume templates that use Bold Normal instead of Heading styles.
     """
+    # Bullet points or list items are NEVER section headings
+    if getattr(para, "is_bullet", False):
+        return False
+
+    t = para.text.strip()
+    if not t:
+        return False
+
+    bullet_chars = ("•", "-", "*", "–", "—", "▪", "▸", "·", "►", "✓", "✔", "→")
+    if any(t.startswith(c) for c in bullet_chars):
+        return False
+
+    # Lines starting with an action verb with >3 words are achievement bullet sentences, not headings
+    from app.services.patch_service import ACTION_VERBS
+    words = t.split()
+    first_w = words[0].lower() if words else ""
+    if first_w in ACTION_VERBS and len(words) > 3:
+        return False
+
     if _has_heading_style(para.style_name):
         return True
     if _is_known_section(para.text):
         return True
+
     # Heuristic: short ALL-CAPS line that is not a bullet
-    t = para.text.strip()
     if (
         len(t) <= 55
-        and not t.startswith(("•", "-", "*", "–", "▪", "▸"))
         and not any(ch.isdigit() for ch in t[:3])  # doesn't start with a date/number
         and t == t.upper()
         and len(t.split()) <= 6
         and len(t) >= 3
     ):
         return True
+
     # Signal 4: Bold-Normal paragraph — style is not a Heading style but all
     # runs are bold and text is short.  This is the most popular heading style
     # in real-world resume templates (Bold Normal, not Heading 1/2/3).
@@ -423,13 +429,22 @@ def _is_heading(para: ParsedParagraph, raw_para=None) -> bool:
         and not _has_heading_style(para.style_name)
         and len(t) <= 60
         and len(t) >= 2
-        and not t.startswith(("•", "-", "*", "–", "▪", "▸"))
         and not any(ch.isdigit() for ch in t[:3])
         and len(t.split()) <= 7
         # Must look like a title phrase (not a bullet sentence)
         and not t.endswith((".", ";"))
     ):
         return True
+
+    # Signal 5: Job entry / position sub-heading (contains role title keyword or date pattern)
+    import re as _re
+    from app.constants.resume_keywords import UNIVERSAL_ROLE_TITLES
+    t_lower = t.lower()
+    has_role = any(_re.search(r"\b" + _re.escape(r) + r"\b", t_lower) for r in UNIVERSAL_ROLE_TITLES)
+    has_date = bool(_re.search(r"\b(19|20)\d{2}\b", t_lower)) or "present" in t_lower
+    if (has_role or has_date) and len(t) <= 95 and not t.endswith((".", ";")):
+        return True
+
     return False
 
 

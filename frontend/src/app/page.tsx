@@ -1529,57 +1529,59 @@ export default function Home() {
         setDownloadId(applyRes.download_id);
         setDownloadUrl(applyRes.download_url);
         setIsPatchingApplied(true);
-
-        // ── Auto-generate Tailored Cover Letter in 1-Click ──
-        console.log("📝 [RoleCraft Audit] Auto-generating Tailored Cover Letter in 1-Click...");
-        setIsGeneratingCoverLetter(true);
-        try {
-          const originalMatched = (result.top_strengths || []).map((s: any) =>
-            typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
-          );
-          const updatedConfirmedMatchedSkills = Array.from(
-            new Set([
-              ...originalMatched,
-              ...appliedWovenKeywords.map((k) => cleanKeywordName(k)),
-            ])
-          ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
-
-          const contactInfoParts = [
-            user?.address,
-            user?.phone_number,
-            user?.email,
-            user?.linkedin_url,
-          ].filter(Boolean);
-          const contactInfoStr = contactInfoParts.length > 0 ? contactInfoParts.join(" | ") : undefined;
-
-          const effectiveTargetRole = newRewrites["header"] || customTargetRole || result.overall_summary?.job_title || undefined;
-          const clRes = await generateCoverLetter({
-            document_id: documentId,
-            job_description_text: jobDescription,
-            target_role: effectiveTargetRole,
-            contact_info: contactInfoStr,
-            rewritten_sections: newRewrites,
-            confirmed_matched_skills: updatedConfirmedMatchedSkills,
-          });
-
-          setCoverLetterText(clRes.cover_letter_text);
-          setCoverLetterDownloadId(clRes.download_id);
-          if (clRes.target_role) {
-            setCustomTargetRole(clRes.target_role);
-          }
-          setIsEditingCoverLetter(false);
-          console.log("✨ [RoleCraft Audit] Auto-generated 1-Click Cover Letter:", clRes.download_id);
-        } catch (clErr) {
-          console.error("❌ [RoleCraft Audit] Auto Cover Letter Generation Failed:", clErr);
-        } finally {
-          setIsGeneratingCoverLetter(false);
-        }
+        setIsAutoTailoring(false);
 
         const parts: string[] = [];
         if (result.overall_summary?.job_title) parts.push("Target Role");
         if (sectionsToTailor.length > 0) parts.push(`${sectionsToTailor.length} section${sectionsToTailor.length > 1 ? "s" : ""}`);
+        setSuccessNotification(`⚡ 1-Click Auto-Tailored: Resume Ready! (${parts.join(", ")})`);
 
-        setSuccessNotification(`⚡ 1-Click Auto-Tailored: Full Resume & Cover Letter Generated! (${parts.join(", ")})`);
+        // ── Auto-generate Tailored Cover Letter asynchronously in background ──
+        console.log("📝 [RoleCraft Audit] Auto-generating Tailored Cover Letter in background...");
+        setIsGeneratingCoverLetter(true);
+        (async () => {
+          try {
+            const originalMatched = (result.top_strengths || []).map((s: any) =>
+              typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
+            );
+            const updatedConfirmedMatchedSkills = Array.from(
+              new Set([
+                ...originalMatched,
+                ...appliedWovenKeywords.map((k) => cleanKeywordName(k)),
+              ])
+            ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
+
+            const contactInfoParts = [
+              user?.address,
+              user?.phone_number,
+              user?.email,
+              user?.linkedin_url,
+            ].filter(Boolean);
+            const contactInfoStr = contactInfoParts.length > 0 ? contactInfoParts.join(" | ") : undefined;
+
+            const effectiveTargetRole = newRewrites["header"] || customTargetRole || result.overall_summary?.job_title || undefined;
+            const clRes = await generateCoverLetter({
+              document_id: documentId,
+              job_description_text: jobDescription,
+              target_role: effectiveTargetRole,
+              contact_info: contactInfoStr,
+              rewritten_sections: newRewrites,
+              confirmed_matched_skills: updatedConfirmedMatchedSkills,
+            });
+
+            setCoverLetterText(clRes.cover_letter_text);
+            setCoverLetterDownloadId(clRes.download_id);
+            if (clRes.target_role) {
+              setCustomTargetRole(clRes.target_role);
+            }
+            setIsEditingCoverLetter(false);
+            console.log("✨ [RoleCraft Audit] Background Cover Letter Generated:", clRes.download_id);
+          } catch (clErr) {
+            console.error("❌ [RoleCraft Audit] Auto Cover Letter Generation Failed:", clErr);
+          } finally {
+            setIsGeneratingCoverLetter(false);
+          }
+        })();
       }
     } catch (err: any) {
       console.error("❌ [RoleCraft Audit] Auto-tailor error:", err);

@@ -40,6 +40,7 @@ class ParsedParagraph:
     text: str
     style_name: str
     is_bold: bool = False  # True when ALL runs in the paragraph are bold
+    is_bullet: bool = False  # True when paragraph is a list item or has bullet XML/symbol
 
 
 def parse_docx(path: Path) -> list[ParsedParagraph]:
@@ -68,8 +69,6 @@ def parse_docx(path: Path) -> list[ParsedParagraph]:
     # python-docx exposes document.element.body which contains <w:p> and <w:tbl>
     # elements in document order. We iterate them directly to preserve ordering.
     all_paragraphs: list[docx.text.paragraph.Paragraph] = []
-
-    from docx.oxml.ns import qn as _qn
 
     body = document.element.body
     for child in body:
@@ -102,6 +101,7 @@ def _extract_paragraphs(
     preserves the exact location information needed by a future patching
     milestone that must know which paragraph to modify.
     """
+    from docx.oxml.ns import qn as _qn
     result: list[ParsedParagraph] = []
 
     for index, para in enumerate(raw_paragraphs):
@@ -114,12 +114,27 @@ def _extract_paragraphs(
         runs = para.runs
         is_bold = bool(runs) and all(r.bold is True for r in runs)
 
+        # Detect whether paragraph is a list/bullet item
+        is_num_pr = False
+        try:
+            pPr = para._p.get_or_add_pPr()
+            is_num_pr = pPr.find(_qn("w:numPr")) is not None
+        except Exception:
+            pass
+
+        style_lower = (para.style.name if para.style else "").lower()
+        is_list_style = "list" in style_lower or "bullet" in style_lower
+        bullet_chars = ("•", "-", "*", "–", "—", "▪", "▸", "·", "►", "✓", "✔", "→")
+        has_bullet_char = any(text.startswith(c) for c in bullet_chars)
+        is_bullet = is_num_pr or is_list_style or has_bullet_char
+
         result.append(
             ParsedParagraph(
                 index=index,
                 text=text,
                 style_name=para.style.name if para.style else "Normal",
                 is_bold=is_bold,
+                is_bullet=is_bullet,
             )
         )
 
