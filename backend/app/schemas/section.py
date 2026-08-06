@@ -13,6 +13,7 @@ class SectionParagraph(BaseModel):
     index: int = Field(description="Original document position of this paragraph.")
     text: str = Field(description="Plain text content.")
     style_name: str = Field(description="Word paragraph style name.")
+    is_bold: bool = Field(default=False, description="True when all runs in the paragraph are bold.")
 
 
 class SectionItem(BaseModel):

@@ -142,3 +142,19 @@ EXPERIENCE_SECTION_KEYWORDS: list[str] = [
     "experience", "employment", "history", "work", "job",
     "career", "positions", "roles", "assignments", "appointments",
 ]
+
+
+# ── Structural Role Enum ───────────────────────────────────────────────────────
+
+from enum import Enum
+
+
+class StructuralRole(str, Enum):
+    """Semantic structural role of a paragraph in a document."""
+
+    SECTION_HEADER = "section_header"
+    JOB_TITLE_META = "job_title_meta"
+    JOB_BULLET = "job_bullet"
+    PROSE_SUMMARY = "prose_summary"
+    SKILL_CHIP = "skill_chip"
+
