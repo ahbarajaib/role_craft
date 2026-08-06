@@ -7,6 +7,11 @@ and running a unified recruiter-centric review on the full document.
 
 from loguru import logger
 
+from app.constants.resume_keywords import (
+    UNIVERSAL_ROLE_TITLES,
+    PRESERVE_VERBATIM_SECTIONS,
+    EXPERIENCE_SECTION_KEYWORDS,
+)
 from app.schemas.analysis import Priority
 from app.schemas.comparison import ComparisonResult, SectionComparison
 from app.schemas.resume_analysis import (
@@ -66,19 +71,32 @@ class ResumeAnalysisWorkflow:
         # Step 4 – Unified Recruiter Review
         logger.info("Running unified recruiter-centric resume review")
         
-        # Filter sections to only analyze major content sections, excluding Education, headers, and contact details
+        # Filter sections to only analyze major content sections, excluding
+        # Education, header, contact details, and preserve-verbatim sections.
         sections_to_analyze = []
         for s in sections:
-            if s.normalized_name in ["header", "education"]:
-                continue
-            
+            norm = (s.normalized_name or "").lower()
             title_lower = s.title.lower().strip()
-            # Skip sections that are education, academic background, contact details, links, or technology listings
+
+            # Always skip header and education
+            if norm in ["header", "education"]:
+                continue
+
+            # Skip preserve-verbatim sections (languages, interests, additional info etc.)
+            if norm in PRESERVE_VERBATIM_SECTIONS:
+                continue
+
+            # Skip title-level education variants
             if (
                 "education" in title_lower
                 or "academic" in title_lower
                 or "qualification" in title_lower
-                or title_lower.startswith("technologies:")
+            ):
+                continue
+
+            # Skip inline contact/technology labels
+            if (
+                title_lower.startswith("technologies:")
                 or title_lower.startswith("tech:")
                 or title_lower.startswith("tech stack:")
                 or title_lower.startswith("+")
@@ -88,6 +106,7 @@ class ResumeAnalysisWorkflow:
                 or "github.com" in title_lower
             ):
                 continue
+
             sections_to_analyze.append(s)
 
         unified_result = self._review.review_resume(
@@ -113,6 +132,22 @@ class ResumeAnalysisWorkflow:
         )
 
         date_kws = ["present", "201", "202", "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+
+        # Build universal role title set for sub-section detection (lower-cased)
+        _role_kw_set = set(UNIVERSAL_ROLE_TITLES)
+
+        def _is_experience_sub_section(sec) -> bool:
+            """Return True if this section looks like a job-entry sub-heading."""
+            import re as _re
+            t = sec.title.lower()
+            return (
+                any(kw in t for kw in EXPERIENCE_SECTION_KEYWORDS)
+                or any(rk in t for rk in _role_kw_set)
+                or _re.search(r"\b(19|20)\d{2}\b", t) is not None
+                or "present" in t
+                or any(dk in t for dk in date_kws)
+            )
+
         processed_section_ids = set()
 
         def _get_section_evidence(sec: DetectedSection) -> list[str]:
@@ -161,10 +196,9 @@ class ResumeAnalysisWorkflow:
                 )
             )
 
-        # Map experience review to ALL experience role entries so every job position is tailored to the JD
+        # Map experience review to ALL experience role entries (universal role detection)
         for s in sections_to_analyze:
-            title_lower = s.title.lower()
-            if any(kw in title_lower for kw in date_kws):
+            if _is_experience_sub_section(s):
                 if s.title not in processed_section_ids:
                     processed_section_ids.add(s.title)
                     section_comparison = _find_comparison(s, comparison_by_name)

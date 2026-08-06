@@ -127,10 +127,48 @@ _KNOWN_TECHNOLOGIES: list[str] = [
     # Enterprise, CRM & ERP
     "CRM", "ERP", "SAP", "Oracle", "Salesforce", "HubSpot", "QuickBooks", "Zoho", "Zendesk",
     "Power BI", "Tableau", "Workday", "Asana", "Jira", "Trello", "Slack", "Teams", "Notion",
-    # Logistics, Customs & Trade
-    "Bayan", "Bayan eCustoms", "eTaslim", "Customs Clearance", "Bills of Lading", "Cargo Release Orders",
-    "CROs", "Freight Forwarding", "Supply Chain", "Logistics", "Import/Export", "Customs Declarations",
-    "Customs Compliance", "Invoicing",
+    # ── Logistics, Customs & Trade ──────────────────────────────────────────
+    "Bayan", "Bayan eCustoms", "eTaslim", "Customs Clearance", "Bills of Lading",
+    "Cargo Release Orders", "CROs", "Freight Forwarding", "Supply Chain", "Logistics",
+    "Import/Export", "Customs Declarations", "Customs Compliance", "Invoicing",
+    "Incoterms", "HS Code", "Letter of Credit", "LC", "BOL", "WMS",
+    # ── Healthcare / Medical ─────────────────────────────────────────────────
+    "EMR", "EHR", "HIPAA", "Epic", "Cerner", "Meditech", "HL7", "FHIR",
+    "ICD-10", "CPT", "Medical Coding", "Clinical Documentation", "Patient Care",
+    "PACS", "LIMS", "Pharmacy", "PIS",
+    # ── Finance / Accounting ─────────────────────────────────────────────────
+    "Tally", "Tally ERP", "QuickBooks", "GAAP", "IFRS", "Bloomberg",
+    "Reuters", "P&L", "Balance Sheet", "Cash Flow", "Financial Statements",
+    "Financial Modeling", "Variance Analysis", "FP&A", "Budgeting",
+    "Cost Analysis", "Audit", "Internal Audit", "Risk Management",
+    "Treasury", "AML", "KYC", "FactSet", "Capital IQ", "Bloomberg Terminal",
+    # ── Marketing / Digital ──────────────────────────────────────────────────
+    "Google Analytics", "GA4", "Google Ads", "Meta Ads", "Facebook Ads",
+    "SEMrush", "Ahrefs", "Moz", "Mailchimp", "Klaviyo", "Marketo",
+    "HubSpot Marketing", "Pardot", "A/B Testing", "Conversion Rate Optimization",
+    "CRO", "SEO", "SEM", "PPC", "Email Marketing", "Content Marketing",
+    "Social Media Marketing", "Instagram", "LinkedIn Marketing",
+    "Hootsuite", "Buffer", "Sprout Social", "Canva", "Adobe Creative Suite",
+    "Adobe Photoshop", "Adobe Illustrator", "Adobe InDesign", "Figma",
+    # ── HR / Talent / People ─────────────────────────────────────────────────
+    "HRMS", "HRIS", "SAP SuccessFactors", "BambooHR", "Greenhouse",
+    "Lever", "Workday HCM", "ADP", "Paylocity", "Kronos", "iCIMS",
+    "Applicant Tracking System", "ATS", "Performance Management",
+    "Succession Planning", "Compensation & Benefits", "Onboarding",
+    # ── Legal ────────────────────────────────────────────────────────────────
+    "LexisNexis", "Westlaw", "Due Diligence", "Contract Review",
+    "Regulatory Compliance", "Litigation", "Legal Research",
+    "Case Management", "CLM", "Contract Lifecycle Management",
+    # ── Construction / Engineering (non-software) ────────────────────────────
+    "AutoCAD", "Revit", "BIM", "PMP", "Primavera P6", "MS Project",
+    "AUTOCAD", "Autodesk", "Civil 3D", "STAAD", "ETABS", "SAP2000",
+    "QGIS", "ArcGIS",
+    # ── Education / eLearning ────────────────────────────────────────────────
+    "Canvas", "Blackboard", "Moodle", "Google Classroom", "LMS",
+    "Articulate Storyline", "Lectora",
+    # ── Customer Service / Support ───────────────────────────────────────────
+    "Zendesk", "Freshdesk", "Intercom", "ServiceNow", "Salesforce Service Cloud",
+    "Zoho Desk", "Freshservice",
 ]
 
 # Pre-compile tech patterns once for performance.
@@ -427,6 +465,50 @@ def _extract_technologies(text: str) -> list[str]:
 
 # ── Keyword extraction ────────────────────────────────────────────────────────
 
+# Domain-specific soft skills and multi-word phrases matched across ALL industries.
+# These supplement frequency-based keyword extraction for non-tech resumes.
+_KNOWN_SOFT_SKILLS: list[str] = [
+    # Universal professional skills
+    "Communication", "Leadership", "Teamwork", "Problem Solving",
+    "Critical Thinking", "Time Management", "Attention to Detail",
+    "Analytical Skills", "Decision Making", "Conflict Resolution",
+    "Stakeholder Management", "Project Management", "Change Management",
+    "Strategic Planning", "Cross-functional", "Interpersonal Skills",
+    "Negotiation", "Presentation Skills", "Written Communication",
+    "Verbal Communication", "Adaptability", "Multitasking",
+    # Sales & Business
+    "Customer Relationship", "Client Management", "Business Development",
+    "Pipeline Management", "Cold Calling", "Account Management",
+    "Revenue Growth", "Sales Strategy", "Market Analysis",
+    "Competitive Analysis", "B2B", "B2C",
+    # Finance & Accounting
+    "Financial Analysis", "Budget Management", "Cost Reduction",
+    "Profit & Loss", "Revenue Forecasting", "Cash Flow Management",
+    "Tax Compliance", "Financial Reporting", "Credit Analysis",
+    # Logistics & Operations
+    "Customs Clearance", "Freight Management", "Inventory Control",
+    "Demand Planning", "Vendor Management", "Supplier Relations",
+    "Warehouse Management", "Fleet Management", "Route Optimization",
+    # HR
+    "Talent Acquisition", "Employee Relations", "Workforce Planning",
+    "Performance Appraisal", "Training & Development", "Culture Building",
+    # Healthcare
+    "Patient Care", "Clinical Documentation", "Medical Records",
+    "Healthcare Compliance", "Patient Safety", "Electronic Health Records",
+    # Marketing
+    "Brand Management", "Content Strategy", "Digital Marketing",
+    "Campaign Management", "Lead Generation", "Customer Acquisition",
+    "Market Research", "Social Media Management",
+    # Education
+    "Curriculum Development", "Classroom Management", "Student Engagement",
+]
+
+# Pre-compile soft skill patterns once.
+_SOFT_SKILL_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(rf"\b{re.escape(skill)}\b", re.IGNORECASE), skill)
+    for skill in _KNOWN_SOFT_SKILLS
+]
+
 # Common English stop-words to exclude from keywords.
 _STOP_WORDS: frozenset[str] = frozenset({
     "the", "and", "for", "with", "that", "this", "from", "will", "have",
@@ -443,17 +525,28 @@ _STOP_WORDS: frozenset[str] = frozenset({
 
 
 def _extract_keywords(text: str) -> list[str]:
-    """Return high-frequency technical nouns from the text.
+    """Return high-frequency technical nouns and domain soft-skill phrases from the text.
 
-    Words must be longer than 4 characters, not in the stop-word list,
-    and appear at least twice.  Results are ordered by frequency
-    descending then alphabetically, capped at 20.
+    Two passes:
+    1. Frequency-based: words > 4 chars, not stop-words, appear >= 2 times.
+    2. Soft-skill allow-list: multi-word domain phrases explicitly present in the text.
+
+    Results are merged, deduplicated, and capped at 30.
     """
+    # Pass 1: frequency-based single words
     words = re.findall(r"\b[a-zA-Z][a-zA-Z0-9+#.-]{3,}\b", text)
     normalised = [w.lower() for w in words if w.lower() not in _STOP_WORDS]
     counts = Counter(normalised)
-    # Keep only words that appear more than once
     frequent = [(word, count) for word, count in counts.items() if count > 1]
-    # Sort by frequency desc, then alpha asc for determinism
     frequent.sort(key=lambda x: (-x[1], x[0]))
-    return [word for word, _ in frequent[:20]]
+    freq_keywords = [word for word, _ in frequent[:20]]
+
+    # Pass 2: soft-skill / multi-word domain phrase matching
+    soft_found: list[str] = []
+    seen_lower: set[str] = set(k.lower() for k in freq_keywords)
+    for pattern, canonical in _SOFT_SKILL_PATTERNS:
+        if pattern.search(text) and canonical.lower() not in seen_lower:
+            soft_found.append(canonical)
+            seen_lower.add(canonical.lower())
+
+    return (freq_keywords + soft_found)[:30]

@@ -9,6 +9,13 @@ import re
 from loguru import logger
 
 from app.ai.provider import OpenAIProvider
+from app.constants.resume_keywords import (
+    UNIVERSAL_ROLE_TITLES,
+    PRESERVE_VERBATIM_SECTIONS,
+    SKILLS_SECTION_KEYWORDS,
+    SUMMARY_SECTION_KEYWORDS,
+    EXPERIENCE_SECTION_KEYWORDS,
+)
 from app.core.exceptions import BadRequestError
 from app.parsers.job_description_parser import _KNOWN_TECHNOLOGIES
 from app.schemas.rewrite import RewriteSectionResponse
@@ -188,11 +195,10 @@ class RewriteService:
         # Collect all sub-job-entry content so the AI gets the full experience to rewrite.
         import re
         sec_lower_check = _normalize_title(section_name)
-        role_kws = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance"]
         is_exp_sec = (
             target_sec.normalized_name == "experience"
-            or any(kw in sec_lower_check for kw in ["experience", "employment", "history", "work", "job", "career", "positions"])
-            or any(rk in sec_lower_check for rk in role_kws)
+            or any(kw in sec_lower_check for kw in EXPERIENCE_SECTION_KEYWORDS)
+            or any(rk in sec_lower_check for rk in UNIVERSAL_ROLE_TITLES)
             or re.search(r"\b(19|20)\d{2}\b", sec_lower_check) is not None
             or "present" in sec_lower_check
         )
@@ -222,6 +228,7 @@ class RewriteService:
 
         # Determine section type and prompt selection
         sec_lower = section_name.lower()
+        norm_sec = (target_sec.normalized_name or "").lower()
 
         # Preserve Education content untouched
         if any(k in sec_lower for k in ["education", "academic", "qualification", "degree"]):
@@ -233,8 +240,23 @@ class RewriteService:
                 changes=[],
             )
 
-        is_skills_section = any(k in sec_lower for k in ["skill", "technologies", "proficiencies", "tech stack"])
-        is_summary_section = any(k in sec_lower for k in ["summary", "profile", "about", "objective", "bio"])
+        # Preserve Additional/verbatim sections untouched (languages, interests, declarations etc.)
+        if norm_sec in PRESERVE_VERBATIM_SECTIONS or any(
+            k in sec_lower for k in [
+                "additional", "languages", "interests", "hobbies",
+                "declaration", "driving license", "references",
+            ]
+        ):
+            return RewriteSectionResponse(
+                section=section_name,
+                original_text=original_text,
+                rewritten_text=original_text,
+                reasoning="This section contains personal or factual data that must not be altered.",
+                changes=[],
+            )
+
+        is_skills_section = any(k in sec_lower for k in SKILLS_SECTION_KEYWORDS)
+        is_summary_section = any(k in sec_lower for k in SUMMARY_SECTION_KEYWORDS)
 
         if is_skills_section:
             system_prompt = SKILLS_REWRITE_SYSTEM_PROMPT

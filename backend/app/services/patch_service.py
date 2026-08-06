@@ -28,6 +28,10 @@ from loguru import logger
 from app.core.exceptions import NotFoundError
 from app.services.section_service import SectionService
 from app.schemas.patch import ApplyRewriteRequest, ApplyRewriteResponse
+from app.constants.resume_keywords import (
+    UNIVERSAL_ROLE_TITLES,
+    EXPERIENCE_SECTION_KEYWORDS,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -349,14 +353,12 @@ def _is_metadata_line(text: str, para=None) -> bool:
     ]
     has_location = any(re.search(r'\b' + re.escape(loc) + r'\b', t_lower) for loc in locations)
 
-    role_titles = [
-        "developer", "engineer", "architect", "manager", "lead", "designer",
-        "consultant", "analyst", "administrator", "specialist", "intern",
-        "freelance", "executive", "director", "officer", "head", "founder",
-        "co-founder", "cto", "ceo", "vp", "programmer", "associate",
-        "advisor", "representative", "coordinator", "supervisor", "agent",
-        "accountant", "clerk", "operator", "assistant", "technician", "logistics",
-        "customs", "sales", "support", "customer service",
+    role_titles = list(UNIVERSAL_ROLE_TITLES) + [
+        # Extra short single-word titles not in the universal list
+        "doctor", "nurse", "chef", "teacher", "pilot", "driver",
+        "baker", "plumber", "mechanic", "electrician", "carpenter",
+        "secretary", "receptionist", "attendant", "steward", "captain",
+        "auditor", "estimator", "drafter", "draftsman", "radiologist",
     ]
     has_role = any(re.search(r'\b' + re.escape(r) + r'\b', t_lower) for r in role_titles)
 
@@ -373,8 +375,16 @@ def _is_metadata_line(text: str, para=None) -> bool:
     if is_achievement_sentence:
         return False
 
-    # Short non-action-verb line without terminal punctuation → header / company name
-    if len(t) < 85 and not t.endswith("."):
+    # Rule 2 tightened: only treat as metadata if it has NO bullet prefix AND NO action verb.
+    # This prevents short bullet content from being falsely protected.
+    has_bullet_prefix = any(t.startswith(s) for s in ["•", "-", "*", "–", "—", "▪", "▸"])
+    has_action_verb = first_word in ACTION_VERBS
+    if (
+        len(t) < 85
+        and not t.endswith(".")
+        and not has_bullet_prefix
+        and not has_action_verb
+    ):
         return True
 
     return False
@@ -504,11 +514,10 @@ class PatchService:
             # (where role/company/date metadata headers exist)
             title_l = target_sec.title.lower()
             norm_l = (target_sec.normalized_name or "").lower()
-            role_kws = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance"]
             is_experience_sec = (
                 norm_l == "experience"
-                or any(kw in title_l or kw in norm_l for kw in ["experience", "employment", "history", "work", "job", "career", "positions"])
-                or any(rk in title_l for rk in role_kws)
+                or any(kw in title_l or kw in norm_l for kw in EXPERIENCE_SECTION_KEYWORDS)
+                or any(rk in title_l for rk in UNIVERSAL_ROLE_TITLES)
                 or re.search(r"\b(19|20)\d{2}\b", title_l) is not None
                 or "present" in title_l
             )

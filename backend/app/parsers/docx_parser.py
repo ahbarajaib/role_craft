@@ -34,15 +34,12 @@ from loguru import logger
 
 @dataclass(frozen=True)
 class ParsedParagraph:
-    """Immutable representation of a single DOCX paragraph.
-
-    Frozen so that callers cannot accidentally mutate parser output after
-    the fact, which would make debugging very difficult.
-    """
+    """Immutable representation of a single DOCX paragraph."""
 
     index: int
     text: str
     style_name: str
+    is_bold: bool = False  # True when ALL runs in the paragraph are bold
 
 
 def parse_docx(path: Path) -> list[ParsedParagraph]:
@@ -112,11 +109,17 @@ def _extract_paragraphs(
         if not text:
             # Skip whitespace-only paragraphs – they add no semantic value.
             continue
+
+        # Detect whether all runs in this paragraph are bold.
+        runs = para.runs
+        is_bold = bool(runs) and all(r.bold is True for r in runs)
+
         result.append(
             ParsedParagraph(
                 index=index,
                 text=text,
                 style_name=para.style.name if para.style else "Normal",
+                is_bold=is_bold,
             )
         )
 

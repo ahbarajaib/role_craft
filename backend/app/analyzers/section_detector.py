@@ -13,7 +13,7 @@ Like the parser, it is intentionally pure:
 
 Detection Strategy
 ------------------
-A paragraph is treated as a section heading when *either* condition is met:
+A paragraph is treated as a section heading when *any* condition is met:
 
   1. Style signal — the Word paragraph style name contains the word
      "heading" (case-insensitive).  This catches paragraphs explicitly
@@ -24,16 +24,22 @@ A paragraph is treated as a section heading when *either* condition is met:
      where headings are written in bold Normal style rather than a real
      Heading style.
 
-Using both signals rather than either alone makes the detector robust
-against the two most common formatting conventions found in real resumes.
+  3. ALL-CAPS signal — short (≤ 55 char) all-uppercase line not starting
+     with a bullet symbol.  Common in logistics, finance, and legal CVs.
 
-Unknown headings (style matches but text is not in the known map) are kept
-as custom sections with ``normalized_name = None`` rather than being
-discarded, so no content is ever silently lost.
+  4. Bold-Normal signal — short (≤ 60 char) paragraph whose style is
+     not a Heading style but ALL runs are bold.  Covers the majority of
+     modern resume templates that style headings as bold Normal text
+     rather than using Word's built-in Heading styles.
 
-Pre-heading paragraphs (before any heading is encountered) are collected
-into a special "header" section that typically contains the candidate's
-name and contact details.
+Using all four signals makes the detector robust against every major
+formatting convention found in real-world resumes across all industries.
+
+Unknown headings are kept as custom sections with ``normalized_name = None``
+rather than being discarded, so no content is ever silently lost.
+
+Pre-heading paragraphs (name, contact) are collected into a synthetic
+``header`` section.
 """
 
 from dataclasses import dataclass, field
@@ -224,6 +230,63 @@ SECTION_NAME_MAP: dict[str, str] = {
     "hobbies": "interests",
     "hobbies & interests": "interests",
     "personal interests": "interests",
+    # ─── Additional Information ───────────────────────────────────────────────
+    "additional information": "additional",
+    "additional details": "additional",
+    "other information": "additional",
+    "personal details": "additional",
+    "personal information": "additional",
+    "declarations": "additional",
+    "driving license": "additional",
+    "declaration": "additional",
+    # ─── Key Achievements / Accomplishments ───────────────────────────────────
+    "key achievements": "awards",
+    "achievements": "awards",
+    "accomplishments": "awards",
+    "career highlights": "awards",
+    "key highlights": "awards",
+    "notable achievements": "awards",
+    # ─── Skills (extra variants) ──────────────────────────────────────────────
+    "technical skills & software": "skills",
+    "technical skills and software": "skills",
+    "skills & software": "skills",
+    "skills and software": "skills",
+    "core competencies & tools": "skills",
+    "core competencies and tools": "skills",
+    "key competencies": "skills",
+    "areas of expertise": "skills",
+    "technical expertise": "skills",
+    "capabilities": "skills",
+    "it skills": "skills",
+    "computer skills": "skills",
+    # ─── Summary (extra variants) ─────────────────────────────────────────────
+    "personal statement": "summary",
+    "professional background": "summary",
+    "candidate profile": "summary",
+    "executive profile": "summary",
+    "value proposition": "summary",
+    # ─── Experience (extra variants) ─────────────────────────────────────────
+    "professional history": "experience",
+    "relevant work experience": "experience",
+    "work achievements": "experience",
+    "work record": "experience",
+    "employment record": "experience",
+    # ─── Projects (extra variants) ───────────────────────────────────────────
+    "key projects": "projects",
+    "notable projects": "projects",
+    "project highlights": "projects",
+    "major projects": "projects",
+    # ─── Certifications (extra variants) ─────────────────────────────────────
+    "professional training": "certifications",
+    "training & development": "certifications",
+    "training and development": "certifications",
+    "short courses": "certifications",
+    # ─── Education (extra variants) ──────────────────────────────────────────
+    "academic qualifications": "education",
+    "educational qualifications": "education",
+    "educational background": "education",
+    "academic credentials": "education",
+    "degrees & diplomas": "education",
 }
 
 # Canonical name for the implicit header section that precedes all headings.
@@ -313,15 +376,16 @@ def detect_sections(paragraphs: list[ParsedParagraph]) -> list[DetectedSection]:
 # ── Private helpers ───────────────────────────────────────────────────────────
 
 
-def _is_heading(para: ParsedParagraph) -> bool:
+def _is_heading(para: ParsedParagraph, raw_para=None) -> bool:
     """Return True when the paragraph should be treated as a section heading.
 
     Signals used (any one is sufficient):
     1. Word Heading style (Heading 1/2/3 etc.)
     2. Text exactly matches a known section name in SECTION_NAME_MAP.
-    3. Text is short (<= 50 chars), ALL UPPERCASE, with no bullet prefix.
-    4. Text is short (<= 50 chars), is a title-case or full-caps short phrase,
-       and does not end with typical sentence punctuation (period/colon).
+    3. Text is short (<= 55 chars), ALL UPPERCASE, with no bullet prefix.
+    4. Bold-Normal: style is not a Heading style but all runs are bold and
+       text is short (<= 60 chars).  Covers the most popular real-world
+       resume templates that use Bold Normal instead of Heading styles.
     """
     if _has_heading_style(para.style_name):
         return True
@@ -336,6 +400,21 @@ def _is_heading(para: ParsedParagraph) -> bool:
         and t == t.upper()
         and len(t.split()) <= 6
         and len(t) >= 3
+    ):
+        return True
+    # Signal 4: Bold-Normal paragraph — style is not a Heading style but all
+    # runs are bold and text is short.  This is the most popular heading style
+    # in real-world resume templates (Bold Normal, not Heading 1/2/3).
+    if (
+        para.is_bold
+        and not _has_heading_style(para.style_name)
+        and len(t) <= 60
+        and len(t) >= 2
+        and not t.startswith(("•", "-", "*", "–", "▪", "▸"))
+        and not any(ch.isdigit() for ch in t[:3])
+        and len(t.split()) <= 7
+        # Must look like a title phrase (not a bullet sentence)
+        and not t.endswith((".", ";"))
     ):
         return True
     return False
