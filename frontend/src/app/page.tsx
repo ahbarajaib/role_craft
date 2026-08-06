@@ -1056,9 +1056,9 @@ export default function Home() {
     setActiveNavTab(tab);
     if (typeof window !== "undefined") {
       if (tab === "workspace") {
-        window.history.pushState(null, "", "#workspace");
+        window.history.pushState(null, "", "/workspace");
       } else {
-        window.history.pushState(null, "", window.location.pathname === "/workspace" ? "/" : window.location.pathname);
+        window.history.pushState(null, "", "/");
       }
     }
   };
@@ -1066,8 +1066,13 @@ export default function Home() {
   useEffect(() => {
     const syncTab = () => {
       if (typeof window !== "undefined") {
-        if (window.location.hash === "#workspace" || window.location.pathname.startsWith("/workspace")) {
+        if (window.location.pathname.startsWith("/workspace") || window.location.hash === "#workspace") {
           setActiveNavTab("workspace");
+          if (window.location.hash === "#workspace") {
+            window.history.replaceState(null, "", "/workspace");
+          }
+        } else {
+          setActiveNavTab("landing");
         }
       }
     };
