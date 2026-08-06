@@ -8,8 +8,8 @@ AI-powered resume optimization platform. Upload a DOCX resume, provide a job des
 
 ## Project Status
 
-> **Milestone 15 – High-Converting SaaS Landing Page & Multi-Section Application (Complete)**
-> RoleCraft has been transformed into a full-featured SaaS marketing platform and resume optimizer workspace. Includes interactive Before & After bullet transformation sliders, ATS keyword weaver, Google XYZ formula engine, 100% low-level OpenXML formatting preservation, updated credit tiers (50 Free / 200 Pro / 400 Elite), light mode design system, and Razorpay subscription checkout.
+> **Milestone 16 – Universal Resume Support (Complete)**
+> RoleCraft now works with any professional resume — not just software engineering. All 7 pipeline layers updated with universal role title coverage (260 titles), 4-signal heading detection (including Bold-Normal templates), multi-domain JD technology extraction (Healthcare, Finance, Marketing, HR, Legal, Construction), two-pass soft skill keyword extraction, and a shared constants module that eliminates duplication across services. Full backward compatibility maintained for all existing workflows.
 
 ---
 
@@ -36,7 +36,9 @@ resume_ai/
 │       │   ├── logging.py      Loguru setup
 │       │   └── exceptions.py   Custom exceptions + handlers
 │       ├── analyzers/
-│       │   └── section_detector.py         Rule-based section grouper
+│       │   └── section_detector.py         Rule-based section grouper (4-signal heading detection)
+│       ├── constants/
+│       │   └── resume_keywords.py          Shared constants (260 role titles, 75 soft skills, section keywords)
 │       ├── comparators/
 │       │   └── resume_comparator.py        Deterministic resume vs JD comparator
 │       ├── ai/
@@ -52,7 +54,7 @@ resume_ai/
 │       │       ├── analysis.py                 POST /analyze
 │       │       ├── comparison.py               POST /compare
 │       │       ├── review.py                   POST /review-section
-│       │       └── resume.py                   POST /resume/analyze
+│       │       └── resume.py                   POST /resume/analyze, POST /resume/apply, GET /resume/download/{id}
 │       ├── middleware/
 │       │   └── request_id.py           X-Request-ID middleware
 │       ├── dependencies/
@@ -64,8 +66,8 @@ resume_ai/
 │       │   ├── review.py               ReviewService factory
 │       │   └── resume_analysis.py      ResumeAnalysisWorkflow factory
 │       ├── parsers/
-│       │   ├── docx_parser.py          Pure DOCX reader (python-docx)
-│       │   └── job_description_parser.py  Rule-based JD text parser
+│       │   ├── docx_parser.py          Pure DOCX reader — extracts paragraphs + bold-run detection
+│       │   └── job_description_parser.py  Multi-domain JD parser (tech + soft skill extraction)
 │       ├── schemas/
 │       │   ├── document.py                 Upload response model
 │       │   ├── parser.py                   Parse response models
@@ -83,7 +85,9 @@ resume_ai/
 │           ├── analysis_service.py         Resume vs JD gap analysis (AI)
 │           ├── comparison_service.py       Resume vs JD comparison (deterministic)
 │           ├── review_service.py           Single-section AI review
-│           └── resume_analysis_workflow.py Orchestrates the full analysis pipeline
+│           ├── resume_analysis_workflow.py Orchestrates the full analysis pipeline
+│           ├── rewrite_service.py          AI section rewrite (universal section routing)
+│           └── patch_service.py            DOCX in-place text patching (OpenXML, formatting-safe)
 │
 └── README.md           This file
 ```
@@ -153,6 +157,8 @@ The API will be available at **http://localhost:8000**.
 | `POST` | `/api/v1/compare` | Compare resume against a job description (deterministic) |
 | `POST` | `/api/v1/review-section` | AI review of a single resume section |
 | `POST` | `/api/v1/resume/analyze` | Full resume analysis workflow (primary endpoint) |
+| `POST` | `/api/v1/resume/apply` | Apply accepted rewrites to original DOCX |
+| `GET` | `/api/v1/resume/download/{download_id}` | Stream the generated patched DOCX |
 | `GET` | `/docs` | Swagger UI (development only) |
 | `GET` | `/redoc` | ReDoc (development only) |
 

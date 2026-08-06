@@ -69,16 +69,18 @@ backend/
     ├── middleware/
     │   └── request_id.py       X-Request-ID generator middleware
     ├── analyzers/
-    │   └── section_detector.py Semantic resume section detector (rule-based)
+    │   └── section_detector.py Semantic resume section detector (4-signal: Heading style, SECTION_NAME_MAP, ALL-CAPS, Bold-Normal)
     ├── comparators/
     │   └── resume_comparator.py Deterministic keyword/tech/skill matcher
+    ├── constants/
+    │   └── resume_keywords.py  Shared keyword constants (260 role titles, 75 soft skills, section routing)
     ├── ai/
     │   ├── provider.py         OpenAI Responses API client wrapper
     │   ├── prompts.py          Prompt builder for /analyze
     │   └── review_prompts.py   Prompt builder for /review-section
     ├── parsers/
-    │   ├── docx_parser.py      Word document paragraph extractor
-    │   └── job_description_parser.py Rule-based job description parser
+    │   ├── docx_parser.py      Word document paragraph extractor (includes is_bold run detection)
+    │   └── job_description_parser.py Rule-based JD parser (multi-domain technologies + two-pass soft skill keyword extraction)
     ├── schemas/
     │   ├── document.py         Upload lifecycle models
     │   ├── parser.py           Paragraph extraction models
@@ -96,7 +98,9 @@ backend/
     │   ├── analysis_service.py AI resume analysis orchestration
     │   ├── comparison_service.py Deterministic comparison orchestration
     │   ├── review_service.py   AI section review orchestration
-    │   └── resume_analysis_workflow.py Unified end-to-end analyzer workflow
+    │   ├── resume_analysis_workflow.py Unified end-to-end analyzer workflow
+    │   ├── rewrite_service.py  AI section rewrite (universal section type routing)
+    │   └── patch_service.py    DOCX in-place text patching (OpenXML, formatting-safe)
     ├── dependencies/
     │   ├── common.py           Common settings / request ID dependencies
     │   ├── document.py         DocumentService DI factory
@@ -239,8 +243,9 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 2. **In-Memory Statelessness**: The API does not have a database. Documents are saved as local files in `backend/uploads/` identified by a UUID. Data coordinates on HTTP requests.
 3. **Curated Technology Allow-List**: JD parser uses a regex-matching list of known technologies (Languages, Frameworks, Databases) to achieve maximum accuracy without complex vector search.
 4. **Majority-Vote Skill Matching**: Skill phrases are decomposed and filtered of stop-words (e.g. `experience`, `proficiency`). A skill is considered "matched" if at least 50% of its technical content words are present in the resume.
-5. **Parallel Section Reviews**: Section reviews are processed concurrently using a `ThreadPoolExecutor` instead of sequentially. This decreases analysis times from nearly a minute (14 sections × 3.5s) to ~3–5 seconds total, preventing gateway read/socket timeouts (ECONNRESET) on the client side.
-6. **In-Place Paragraph Patches**: Rather than recreating DOCX files which destroys headers, footers, custom styles, tables, and page geometry, the `PatchService` targets and rewrites only the body paragraph runs inside user-approved sections.
+5. **Parallel Section Reviews**: Section reviews are processed concurrently using a `ThreadPoolExecutor` instead of sequentially.
+6. **In-Place Paragraph Patches**: Rather than recreating DOCX files, the `PatchService` targets and rewrites only the body paragraph runs inside user-approved sections.
+7. **Universal Resume Design**: All role-routing, section-classification, and keyword constants are centralised in `app/constants/resume_keywords.py`. This single source of truth is imported by `section_detector`, `rewrite_service`, `patch_service`, and `resume_analysis_workflow` — eliminating duplicated lists and making it trivial to extend support for new industries or professions.
 
 ---
 
@@ -262,6 +267,16 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 - [x] Profile Modal contact info management and base resume/cover letter template tracking.
 - [x] High-fidelity PDF document rendering via headless LibreOffice compiler.
 - [x] Secure Webhook Redeployment System (immune to SSH action connection timeouts).
+- [x] **Universal Resume Support** (Phase 6):
+  - Shared constants module (`app/constants/resume_keywords.py`) — 260 role titles, 75 soft skill phrases
+  - 4-signal section heading detection (Heading style, map match, ALL-CAPS, Bold-Normal)
+  - SECTION_NAME_MAP expanded to 190+ variants across all industries
+  - Multi-domain JD technology list: Healthcare, Finance, Marketing, HR, Legal, Construction, Education
+  - Two-pass JD keyword extraction (frequency-based + soft skill allow-list)
+  - Universal experience sub-section routing for all professions (not just software)
+  - Preserve-verbatim gate for Additional Information, Languages, Declarations
+  - Rule 2 metadata heuristic tightened (no false-positives on short bullets)
+  - 3x duplication of role keyword lists eliminated via shared constants
 
 ## Features Intentionally Postponed
 - **PostgreSQL**: Kept as a future database option for production scale.

@@ -25,9 +25,9 @@ Document Service   AI Service     Resume Service
 
 Document Parser   LLM Providers   Resume Patcher
 
-                       ▼
+        ▼                              ▼
 
-               OpenAI / Claude / Gemini
+ Constants Layer              OpenAI / Claude / Gemini
 
                        ▼
 
@@ -90,14 +90,31 @@ Responsible for reading documents.
 
 Supported formats:
 
-- DOCX
-- PDF (read-only initially)
+- DOCX (full paragraph + table extraction, bold-run detection)
+- PDF (read-only)
 
 Responsibilities:
 
-- Extract sections
+- Extract paragraphs and detect bold runs (`is_bold` field on `ParsedParagraph`)
 - Preserve formatting metadata
 - Build internal document model
+- Parse job descriptions with multi-domain technology and soft skill extraction
+
+---
+
+### Constants Layer
+
+`app/constants/resume_keywords.py` — single source of truth for all keyword constants.
+
+Contains:
+
+- `UNIVERSAL_ROLE_TITLES` (260 entries) — job titles across all industries used for experience sub-section routing
+- `PRESERVE_VERBATIM_SECTIONS` — sections that must never be rewritten (Additional Information, Languages, Declarations, etc.)
+- `SKILLS_SECTION_KEYWORDS` — section title variants routed to the skills rewriter
+- `SUMMARY_SECTION_KEYWORDS` — section title variants routed to the summary rewriter
+- `EXPERIENCE_SECTION_KEYWORDS` — experience container section title keywords
+
+Imported by `section_detector`, `rewrite_service`, `patch_service`, and `resume_analysis_workflow`. Eliminates duplicated lists across services.
 
 ---
 
@@ -149,10 +166,16 @@ Stores:
 
 ---
 
-## Project Rule
+## Project Rules
 
-Large language models never directly modify DOCX files.
+1. Large language models never directly modify DOCX files.
+   LLMs only generate structured text changes. Python is solely responsible for updating documents while preserving formatting.
 
-LLMs only generate structured text changes.
+2. Keyword constants are never duplicated across services.
+   All role titles, section name variants, and routing keywords live in `app/constants/resume_keywords.py` and are imported where needed.
 
-Python is solely responsible for updating documents while preserving formatting.
+3. Preserve-verbatim sections are never AI-rewritten.
+   Sections in `PRESERVE_VERBATIM_SECTIONS` (Languages, Additional Information, Declarations, References, Interests, Hobbies, Driving License) are passed through unchanged at every pipeline layer.
+
+4. Section heading detection uses all available signals.
+   `_is_heading()` checks four independent signals: Word Heading style, SECTION_NAME_MAP text match, ALL-CAPS heuristic, and Bold-Normal run detection. This ensures compatibility with all major real-world DOCX template formats.
