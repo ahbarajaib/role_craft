@@ -3309,8 +3309,9 @@ export default function Home() {
                     // NOT s.evidence_used (which contains full paragraph text for the diff UI)
                     const evidenceKeywords = (analysisResult.sections || [])
                       .flatMap((s: any) => s.strengths || [])
+                      .flatMap((e: string) => extractStrictKeywordsFromRaw(e))
                       .map((e: string) => cleanKeywordName(e))
-                      .filter((kw: string) => kw.length > 0 && kw.length <= 60); // max 60 chars = real keyword, not a sentence
+                      .filter((kw: string) => kw.length > 0 && isActualATSKeyword(kw));
 
                     const matchedLower = new Set(
                       (analysisResult.top_strengths || []).map((s: any) =>
