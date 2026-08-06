@@ -344,7 +344,20 @@ def detect_sections(paragraphs: list[ParsedParagraph]) -> list[DetectedSection]:
     current: DetectedSection | None = None
 
     for para in paragraphs:
-        if _is_heading(para):
+        is_hd = _is_heading(para)
+
+        # If currently inside a container section (Experience, Education, Projects, Certifications),
+        # sub-headings (job titles, degrees, project names) that are not canonical top-level
+        # section names (like EDUCATION, SKILLS, EXPERIENCE, etc.) should remain inside the parent section.
+        if current and (
+            current.normalized_name in ["experience", "education", "projects", "certifications"]
+            or any(kw in current.title.lower() for kw in ["experience", "employment", "history", "work record", "education", "academic", "project", "certification"])
+        ):
+            norm = _normalize(para.text)
+            if is_hd and norm is None and not _is_known_section(para.text):
+                is_hd = False
+
+        if is_hd:
             # Commit the previous section before starting a new one.
             if current is not None:
                 sections.append(current)
