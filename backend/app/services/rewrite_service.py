@@ -401,23 +401,43 @@ class RewriteService:
             )
             result.rewritten_text = sanitized_rewritten_text
 
-        # Python Shield 2: Deduplicate identical lines and filter full sentences from Skills section
+        # Python Shield 2: Deduplicate identical lines, filter full sentences from Skills section, and strip header repeats
         lines = [l.strip() for l in result.rewritten_text.split("\n") if l.strip()]
         seen_lines = set()
         cleaned_output_lines = []
 
+        ACTION_VERB_AND_METRIC_KEYWORDS = [
+            "engineered", "developed", "managed", "utilized", "employed",
+            "achieved", "achieving", "optimizing", "enhancing", "ensuring",
+            "leveraged", "built", "spearheaded", "crafted", "designed",
+            "implemented", "configured", "created", "improving", "translated",
+            "servicing", "handling", "increased", "decreased", "boosted", "reduced",
+            "%", "percent"
+        ]
+
         for line in lines:
-            if is_skills_section and any(
-                action_kw in line.lower()
-                for action_kw in ["engineered ", "developed ", "managed ", "utilized ", "achieving ", "improving ", "spearheaded "]
-            ):
-                logger.warning(
-                    "🛡️ [RoleCraft Shield] Stripped achievement sentence from Skills section",
+            line_l = line.lower()
+            # If line repeats the section title (e.g. "Technical Skills"), discard it
+            if _normalize_title(line) == _normalize_title(section_name):
+                logger.info(
+                    "🛡️ [RoleCraft Shield] Stripped repeated section title line",
                     section=section_name,
-                    sentence=line[:60],
+                    title_line=line,
                 )
                 continue
-            norm_key = re.sub(r"[^a-zA-Z0-9]", "", line.lower())
+
+            if is_skills_section:
+                words_in_line = set(re.findall(r"\b[a-z%]+\b", line_l))
+                has_action_or_metric = any(kw in words_in_line or kw in line_l for kw in ACTION_VERB_AND_METRIC_KEYWORDS)
+                if has_action_or_metric:
+                    logger.warning(
+                        "🛡️ [RoleCraft Shield] Stripped achievement sentence from Skills section",
+                        section=section_name,
+                        sentence=line[:60],
+                    )
+                    continue
+
+            norm_key = re.sub(r"[^a-zA-Z0-9]", "", line_l)
             if norm_key and norm_key not in seen_lines:
                 seen_lines.add(norm_key)
                 cleaned_output_lines.append(line)

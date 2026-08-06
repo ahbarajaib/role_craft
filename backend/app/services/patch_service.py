@@ -508,7 +508,10 @@ class PatchService:
 
             # The first index is the section heading — we never touch its text.
             heading_para = all_paras[first_idx]
-            body_paras = [all_paras[idx] for idx in target_sec.paragraph_indexes[1:] if idx < len(all_paras)]
+            body_paras = [
+                all_paras[idx] for idx in target_sec.paragraph_indexes[1:]
+                if idx < len(all_paras) and all_paras[idx].text.strip().lower() != target_sec.title.strip().lower()
+            ]
 
             # Check if this section is an Experience section or individual job entry sub-section
             # (where role/company/date metadata headers exist)
