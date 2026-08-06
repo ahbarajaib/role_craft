@@ -162,6 +162,22 @@ class ResumeAnalysisWorkflow:
                         return fallback
             return [sec.title]
 
+        def _get_missing_keywords(sec_item: SectionItem, sec_comp: SectionComparison) -> list[str]:
+            missing = list(sec_comp.missing_keywords) + list(sec_comp.missing_technologies)
+            title_l = sec_item.title.lower()
+            if not missing or any(k in title_l for k in ["skill", "competenc", "tech", "summary", "qualification"]):
+                missing.extend(comparison.missing_skills)
+                missing.extend(comparison.missing_technologies)
+                missing.extend(comparison.keyword_gaps)
+            seen = set()
+            result = []
+            for item in missing:
+                item_clean = item.strip()
+                if item_clean and item_clean.lower() not in seen:
+                    seen.add(item_clean.lower())
+                    result.append(item_clean)
+            return result
+
         for s_review in unified_result.sections:
             if s_review == exp_review:
                 continue
@@ -178,7 +194,6 @@ class ResumeAnalysisWorkflow:
 
             processed_section_ids.add(section_item.title)
             section_comparison = _find_comparison(section_item, comparison_by_name)
-            sec_missing = list(dict.fromkeys(section_comparison.missing_keywords + section_comparison.missing_technologies))
 
             reviewed_sections.append(
                 ReviewedSection(
@@ -189,7 +204,7 @@ class ResumeAnalysisWorkflow:
                     reason=s_review.reason,
                     recommendations=s_review.recommendations,
                     evidence_used=_get_section_evidence(section_item),
-                    missing_keywords=sec_missing,
+                    missing_keywords=_get_missing_keywords(section_item, section_comparison),
                     strengths=s_review.strengths,
                     coverage_percentage=section_comparison.coverage_percentage,
                     recruiter_impact="",
@@ -203,19 +218,18 @@ class ResumeAnalysisWorkflow:
                 if s.title not in processed_section_ids:
                     processed_section_ids.add(s.title)
                     section_comparison = _find_comparison(s, comparison_by_name)
-                    sec_missing = list(dict.fromkeys(section_comparison.missing_keywords + section_comparison.missing_technologies))
                     
                     if exp_review:
                         reviewed_sections.append(
                             ReviewedSection(
                                 section_name=s.title,
-                                review_status=ReviewStatus.IMPROVE if exp_review.review_status != ReviewStatus.KEEP else ReviewStatus.KEEP,
+                                review_status=exp_review.review_status,
                                 rewrite_worthwhile=exp_review.rewrite_worthwhile,
                                 priority=exp_review.priority,
                                 reason=exp_review.reason,
                                 recommendations=exp_review.recommendations,
                                 evidence_used=_get_section_evidence(s),
-                                missing_keywords=sec_missing,
+                                missing_keywords=_get_missing_keywords(s, section_comparison),
                                 strengths=exp_review.strengths,
                                 coverage_percentage=section_comparison.coverage_percentage,
                                 recruiter_impact="",
@@ -232,7 +246,7 @@ class ResumeAnalysisWorkflow:
                                 reason="Tailor role achievements and technical metrics using Google XYZ formula.",
                                 recommendations=["Re-structure bullet points using Google XYZ metric formula while preserving original technical evidence."],
                                 evidence_used=_get_section_evidence(s),
-                                missing_keywords=sec_missing,
+                                missing_keywords=_get_missing_keywords(s, section_comparison),
                                 strengths=["Chronological employment history preserved."],
                                 coverage_percentage=section_comparison.coverage_percentage,
                                 recruiter_impact="",
@@ -245,7 +259,6 @@ class ResumeAnalysisWorkflow:
             if s.title not in processed_section_ids:
                 processed_section_ids.add(s.title)
                 section_comparison = _find_comparison(s, comparison_by_name)
-                sec_missing = list(dict.fromkeys(section_comparison.missing_keywords + section_comparison.missing_technologies))
                 reviewed_sections.append(
                     ReviewedSection(
                         section_name=s.title,
@@ -255,7 +268,7 @@ class ResumeAnalysisWorkflow:
                         reason="Section is high quality and aligns well with the profile.",
                         recommendations=[],
                         evidence_used=_get_section_evidence(s),
-                        missing_keywords=sec_missing,
+                        missing_keywords=_get_missing_keywords(s, section_comparison),
                         strengths=["Clear representation of candidate profile."],
                         coverage_percentage=section_comparison.coverage_percentage,
                         recruiter_impact="",

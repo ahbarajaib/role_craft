@@ -1461,24 +1461,15 @@ export default function Home() {
         (s) => s.review_status === "improve"
       );
 
-      // Ensure Experience, Summary, and Skills sections are ALWAYS included in 1-Click Auto-Tailor
+      // Ensure Professional Summary section is included in 1-Click Auto-Tailor
+      const summarySection = (result.sections || []).find(
+        (s) => s.section_name.toLowerCase().includes("summary") || s.section_name.toLowerCase().includes("profile")
+      );
+      
       const sectionsToTailor = [...sectionsToImprove];
-
-      (result.sections || []).forEach((sec: any) => {
-        const nameLower = sec.section_name.toLowerCase();
-        const isCoreSec =
-          nameLower.includes("experience") ||
-          nameLower.includes("employment") ||
-          nameLower.includes("work") ||
-          nameLower.includes("summary") ||
-          nameLower.includes("profile") ||
-          nameLower.includes("skill") ||
-          nameLower.includes("competenc");
-
-        if (isCoreSec && !sectionsToTailor.some((s: any) => s.section_name.toLowerCase() === nameLower)) {
-          sectionsToTailor.push(sec);
-        }
-      });
+      if (summarySection && !sectionsToTailor.some(s => s.section_name.toLowerCase() === summarySection.section_name.toLowerCase())) {
+        sectionsToTailor.unshift(summarySection);
+      }
 
       console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToTailor.map((s: any) => s.section_name));
 
@@ -3314,13 +3305,14 @@ export default function Home() {
 
                   {/* 🟡 Supported in Evidence — per-section matched strengths (click to weave into skills) */}
                   {(() => {
-                    // Use s.strengths (short keyword/skill strings from AI per-section analysis)
-                    // NOT s.evidence_used (which contains full paragraph text for the diff UI)
-                    const evidenceKeywords = (analysisResult.sections || [])
-                      .flatMap((s: any) => s.strengths || [])
-                      .flatMap((e: string) => extractStrictKeywordsFromRaw(e))
+                    const evidenceKeywords = [
+                      ...(analysisResult.sections || []).flatMap((s: any) => s.strengths || []),
+                      ...(analysisResult.top_improvements || [])
+                        .filter((imp: any) => imp.evidence_reused && imp.evidence_reused.trim())
+                        .map((imp: any) => (typeof imp === "string" ? imp : imp.name))
+                    ]
                       .map((e: string) => cleanKeywordName(e))
-                      .filter((kw: string) => kw.length > 0 && isActualATSKeyword(kw));
+                      .filter((kw: string) => kw.length > 0 && kw.length <= 60); // max 60 chars = real keyword, not a sentence
 
                     const matchedLower = new Set(
                       (analysisResult.top_strengths || []).map((s: any) =>
@@ -3371,15 +3363,14 @@ export default function Home() {
 
                   {/* 🔴 Missing ATS Keywords — click to weave into skills section */}
                   {(() => {
-                    const missingFromSections = (analysisResult.sections || []).flatMap((s: any) => s.missing_keywords || []);
-                    const missingFromImps = (analysisResult.top_improvements || [])
-                      .filter((imp: any) => !imp.evidence_reused || !imp.evidence_reused.trim())
-                      .map((imp: any) => imp.name || "");
-
-                    const allMissing = [...missingFromSections, ...missingFromImps]
-                      .flatMap((k: string) => extractStrictKeywordsFromRaw(k))
+                    const allMissing = [
+                      ...(analysisResult.sections || []).flatMap((s: any) => s.missing_keywords || []),
+                      ...(analysisResult.top_improvements || [])
+                        .filter((imp: any) => !imp.evidence_reused || !imp.evidence_reused.trim())
+                        .map((imp: any) => (typeof imp === "string" ? imp : imp.name))
+                    ]
                       .map((k: string) => cleanKeywordName(k))
-                      .filter((k: string) => k.length > 0 && k.length <= 60);
+                      .filter(Boolean);
 
                     const matchedLower = new Set(
                       (analysisResult.top_strengths || []).map((s: any) =>
@@ -3387,21 +3378,12 @@ export default function Home() {
                       )
                     );
 
-                    const supportedLower = new Set(
-                      (analysisResult.sections || [])
-                        .flatMap((s: any) => s.strengths || [])
-                        .map((e: string) => cleanKeywordName(e).toLowerCase())
-                    );
-
                     const appliedWovenLower = new Set(
                       appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
                     );
 
                     const trulyMissing = Array.from(new Set(allMissing)).filter(
-                      (kw) =>
-                        !matchedLower.has(kw.toLowerCase()) &&
-                        !supportedLower.has(kw.toLowerCase()) &&
-                        !appliedWovenLower.has(kw.toLowerCase())
+                      (kw) => !matchedLower.has(kw.toLowerCase()) && !appliedWovenLower.has(kw.toLowerCase())
                     );
 
                     if (trulyMissing.length === 0) return null;
