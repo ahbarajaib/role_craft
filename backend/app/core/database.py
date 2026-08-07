@@ -23,6 +23,7 @@ def init_db() -> None:
         ("phone_number", "VARCHAR(50)"),
         ("address", "VARCHAR(255)"),
         ("linkedin_url", "VARCHAR(255)"),
+        ("missing_skills_tracker", "TEXT"),
     ]
     for col_name, col_type in columns_to_add:
         try:
