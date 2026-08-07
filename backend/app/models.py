@@ -28,6 +28,7 @@ class User(Base):
     address: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     linkedin_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     daily_target: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
+    missing_skills_tracker: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # JSON string mapping skill -> frequency count
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 class IPLimit(Base):

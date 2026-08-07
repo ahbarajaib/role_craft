@@ -35,6 +35,7 @@ class UserResponse(BaseModel):
     phone_number: Optional[str] = None
     address: Optional[str] = None
     linkedin_url: Optional[str] = None
+    missing_skills_tracker: Optional[dict[str, int]] = None
     created_at: datetime
 
     class Config:

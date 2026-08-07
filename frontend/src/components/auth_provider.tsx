@@ -18,6 +18,7 @@ export interface User {
   phone_number?: string | null;
   address?: string | null;
   linkedin_url?: string | null;
+  missing_skills_tracker?: Record<string, number> | null;
   created_at: string;
 }
 //change 

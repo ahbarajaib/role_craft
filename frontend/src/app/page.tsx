@@ -2533,6 +2533,32 @@ export default function Home() {
                           </span>
                         </div>
                       )}
+
+                      {user?.missing_skills_tracker && Object.keys(user.missing_skills_tracker).length > 0 && (
+                        <div className="p-2.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/40 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1 text-[11px]">
+                              <Target className="h-3 w-3 text-rose-500 shrink-0" />
+                              Tracked Red Skill Gaps
+                            </span>
+                            <span className="px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-700 dark:text-rose-300 font-black text-[10px]">
+                              {Object.keys(user.missing_skills_tracker).length} Skills
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 flex-wrap max-h-16 overflow-hidden">
+                            {Object.entries(user.missing_skills_tracker as Record<string, number>).slice(0, 5).map(([skill, count]) => (
+                              <span key={skill} className="px-1.5 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 text-[10px] font-extrabold text-rose-700 dark:text-rose-300">
+                                {skill} {count > 1 ? `(×${count})` : ""}
+                              </span>
+                            ))}
+                            {Object.keys(user.missing_skills_tracker).length > 5 && (
+                              <span className="text-[10px] text-slate-400 font-bold">
+                                +{Object.keys(user.missing_skills_tracker).length - 5} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <button

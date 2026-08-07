@@ -22,6 +22,40 @@ from google.auth.transport import requests as google_requests
 settings = get_settings()
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+def serialize_user_response(user: User) -> UserResponse:
+    import json
+    from datetime import datetime
+    tracker_dict = {}
+    if user.missing_skills_tracker:
+        try:
+            tracker_dict = json.loads(user.missing_skills_tracker)
+        except Exception:
+            tracker_dict = {}
+    
+    # Sort dictionary by frequency count descending
+    sorted_tracker = dict(sorted(tracker_dict.items(), key=lambda item: item[1], reverse=True))
+
+    data = {
+        "id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "provider": user.provider,
+        "credits": user.credits,
+        "plan_type": user.plan_type,
+        "subscription_status": user.subscription_status,
+        "base_resume_id": user.base_resume_id,
+        "base_resume_filename": user.base_resume_filename,
+        "base_cover_letter_id": getattr(user, "base_cover_letter_id", None),
+        "base_cover_letter_filename": getattr(user, "base_cover_letter_filename", None),
+        "phone_number": user.phone_number,
+        "address": user.address,
+        "linkedin_url": user.linkedin_url,
+        "missing_skills_tracker": sorted_tracker,
+        "created_at": user.created_at or datetime.utcnow(),
+    }
+    return UserResponse.model_validate(data)
+
+
 @router.post("/signup", response_model=AuthResponse)
 def signup(req: UserSignupRequest, db: Session = Depends(get_db)):
     """Register or link password credentials for an email address."""
@@ -41,7 +75,7 @@ def signup(req: UserSignupRequest, db: Session = Depends(get_db)):
         db.refresh(existing_user)
 
         token = create_access_token({"sub": existing_user.email})
-        return AuthResponse(access_token=token, user=existing_user)
+        return AuthResponse(access_token=token, user=serialize_user_response(existing_user))
 
     new_user = User(
         email=email_clean,
@@ -55,7 +89,7 @@ def signup(req: UserSignupRequest, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     token = create_access_token({"sub": new_user.email})
-    return AuthResponse(access_token=token, user=new_user)
+    return AuthResponse(access_token=token, user=serialize_user_response(new_user))
 
 @router.post("/login", response_model=AuthResponse)
 def login(req: UserLoginRequest, db: Session = Depends(get_db)):
@@ -74,7 +108,7 @@ def login(req: UserLoginRequest, db: Session = Depends(get_db)):
         return AuthResponse(error_message="Incorrect password. Please try again or click 'Forgot Password?'.")
 
     token = create_access_token({"sub": user.email})
-    return AuthResponse(access_token=token, user=user)
+    return AuthResponse(access_token=token, user=serialize_user_response(user))
 
 @router.post("/google", response_model=AuthResponse)
 def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
@@ -137,7 +171,8 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
         db.refresh(user)
 
     token = create_access_token({"sub": user.email})
-    return AuthResponse(access_token=token, user=user)
+    return AuthResponse(access_token=token, user=serialize_user_response(user))
+
 
 @router.get("/me", response_model=UserResponse)
 def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -147,7 +182,7 @@ def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
         user.credits = 200
         db.commit()
         db.refresh(user)
-    return user
+    return serialize_user_response(user)
 
 @router.patch("/profile", response_model=UserResponse)
 @router.put("/profile", response_model=UserResponse)
@@ -168,7 +203,18 @@ def update_profile(
         user.linkedin_url = req.linkedin_url.strip() or None
     db.commit()
     db.refresh(user)
-    return user
+    return serialize_user_response(user)
+
+@router.post("/clear-missing-skills", response_model=UserResponse)
+def clear_missing_skills(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Clear recorded missing market skills frequency tracker for user profile."""
+    user.missing_skills_tracker = None
+    db.commit()
+    db.refresh(user)
+    return serialize_user_response(user)
 
 @router.post("/forgot-password", response_model=MessageResponse)
 def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):

@@ -216,6 +216,18 @@ export async function updateProfile(payload: ProfileUpdatePayload): Promise<any>
   return response.json();
 }
 
+export async function clearMissingSkills(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/clear-missing-skills`, {
+    method: "POST",
+    headers: getHeaders(),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.error?.detail || "Failed to clear missing skills");
+  }
+  return response.json();
+}
+
 export async function setBaseCoverLetter(documentId: string, filename: string): Promise<any> {
   const response = await fetch(`${API_BASE_URL}/api/v1/documents/set-base-cover-letter`, {
     method: "POST",

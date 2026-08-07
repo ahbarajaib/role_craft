@@ -103,6 +103,35 @@ def analyze_resume(
         )
         db.add(history_entry)
         db.commit()
+
+        # Collect missing red skills from section reviews and matrix
+        missing_red_skills = set()
+        for sec in (result.sections or []):
+            missing_kws = getattr(sec, "missing_keywords", None) or []
+            for kw in missing_kws:
+                kw_clean = kw.strip()
+                if kw_clean and len(kw_clean) >= 2:
+                    missing_red_skills.add(kw_clean)
+
+        if missing_red_skills:
+            try:
+                import json
+                current_tracker = {}
+                if getattr(user, "missing_skills_tracker", None):
+                    try:
+                        current_tracker = json.loads(user.missing_skills_tracker)
+                    except Exception:
+                        current_tracker = {}
+
+                for kw in missing_red_skills:
+                    current_tracker[kw] = current_tracker.get(kw, 0) + 1
+
+                user.missing_skills_tracker = json.dumps(current_tracker)
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+            except Exception as tracker_err:
+                logger.error(f"Failed to update missing_skills_tracker: {tracker_err}")
     except Exception as hist_err:
         logger.error(f"Failed to auto-save AnalysisHistory: {hist_err}")
 

@@ -14,8 +14,11 @@ import {
   Save,
   Sparkles,
   Info,
+  Target,
+  Copy,
+  Check,
 } from "lucide-react";
-import { updateProfile, setBaseCoverLetter, deleteBaseCoverLetter, uploadResume, calculateProfileCompletion } from "@/lib/api";
+import { updateProfile, setBaseCoverLetter, deleteBaseCoverLetter, uploadResume, calculateProfileCompletion, clearMissingSkills } from "@/lib/api";
 import { WordLogoIcon } from "@/components/file_format_icons";
 
 
@@ -42,6 +45,8 @@ export function ProfileModal({
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingCl, setIsUploadingCl] = useState(false);
   const [isDeletingCl, setIsDeletingCl] = useState(false);
+  const [isClearingSkills, setIsClearingSkills] = useState(false);
+  const [copiedSkill, setCopiedSkill] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -415,6 +420,91 @@ export function ProfileModal({
                 </label>
               </div>
             </div>
+          </div>
+
+          {/* Market Skill Gaps Tracker (Red Skills) */}
+          <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <Target className="h-3.5 w-3.5 text-rose-500" />
+                Market Skill Gaps Tracker (Red Skills)
+              </h3>
+              {user?.missing_skills_tracker && Object.keys(user.missing_skills_tracker).length > 0 && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!confirm("Are you sure you want to clear your recorded market skill gaps?")) return;
+                    setIsClearingSkills(true);
+                    try {
+                      await clearMissingSkills();
+                      onProfileUpdated();
+                    } catch (err: any) {
+                      setStatusMsg({ type: "error", text: err?.message || "Failed to clear skills." });
+                    } finally {
+                      setIsClearingSkills(false);
+                    }
+                  }}
+                  disabled={isClearingSkills}
+                  className="text-[11px] font-bold text-rose-500 hover:text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  {isClearingSkills ? "Clearing..." : "Clear Tracker"}
+                </button>
+              )}
+            </div>
+
+            {user?.missing_skills_tracker && Object.keys(user.missing_skills_tracker).length > 0 ? (
+              <div className="p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 dark:bg-rose-950/20 space-y-3">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Tracked keywords required by job descriptions you've analyzed that were missing from your resume.
+                  Repeated skills show their frequency count next to them (click to copy skill):
+                </p>
+
+                <div className="flex items-center gap-2 flex-wrap max-h-48 overflow-y-auto pr-1">
+                  {Object.entries(user.missing_skills_tracker as Record<string, number>).map(([skill, count]) => {
+                    const isCopied = copiedSkill === skill;
+                    return (
+                      <button
+                        key={skill}
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(skill);
+                          setCopiedSkill(skill);
+                          setTimeout(() => setCopiedSkill(null), 2000);
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer shadow-sm ${
+                          isCopied
+                            ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40"
+                            : "bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-950/40"
+                        }`}
+                        title={`Click to copy '${skill}'`}
+                      >
+                        {isCopied ? (
+                          <Check className="h-3 w-3 text-emerald-500 shrink-0" />
+                        ) : (
+                          <Target className="h-3 w-3 text-rose-500 shrink-0" />
+                        )}
+                        <span>{skill}</span>
+                        {count > 1 && (
+                          <span className="px-1.5 py-0.2 rounded-full bg-rose-500/20 dark:bg-rose-500/30 text-rose-800 dark:text-rose-200 font-black text-[10px]">
+                            ×{count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-center space-y-1">
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  No missing skills tracked yet.
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Analyze resumes against target job descriptions in your workspace — missing keywords in red will automatically accumulate here with their counts for your reference!
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
