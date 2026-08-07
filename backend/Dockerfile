@@ -7,17 +7,24 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install uv package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Install system dependencies (LibreOffice for PDF rendering + basic tools)
-ENV CACHEBUST=20260730_01
+# Install system dependencies (LibreOffice for PDF rendering + font suites)
+ENV CACHEBUST=20260807_02
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libreoffice-core \
+    libreoffice \
     libreoffice-writer \
+    libreoffice-common \
+    default-jre-headless \
+    fonts-carlito \
+    fonts-caladea \
     fonts-liberation \
     fonts-opensymbol \
     fonts-dejavu \
+    fonts-freefont-ttf \
+    fontconfig \
     curl \
     wget \
     gnupg \
+    && fc-cache -fv \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory inside container

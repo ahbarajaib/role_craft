@@ -59,6 +59,13 @@ class PDFService:
                         shutil.move(generated_pdf, pdf_path)
                     logger.info("Successfully converted DOCX to PDF using LibreOffice CLI", path=str(pdf_path))
                     return pdf_path
+                else:
+                    logger.warning(
+                        "LibreOffice CLI exited with non-zero code or PDF not generated, falling back to ReportLab",
+                        returncode=res.returncode,
+                        stdout=res.stdout,
+                        stderr=res.stderr,
+                    )
             except Exception as exc:
                 logger.warning("LibreOffice CLI conversion failed, falling back to ReportLab", error=str(exc))
 
