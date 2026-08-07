@@ -342,9 +342,20 @@ def detect_sections(paragraphs: list[ParsedParagraph]) -> list[DetectedSection]:
     """
     sections: list[DetectedSection] = []
     current: DetectedSection | None = None
+    seen_first_known_section = False
 
     for para in paragraphs:
-        if _is_heading(para):
+        # All paragraphs before the first known section heading (e.g. Summary, Skills,
+        # Experience, Projects, Education) belong to the header section. We only trigger
+        # heuristic _is_heading() after encountering the first known major section.
+        is_h = False
+        if _is_known_section(para.text):
+            is_h = True
+            seen_first_known_section = True
+        elif seen_first_known_section:
+            is_h = _is_heading(para)
+
+        if is_h:
             # Commit the previous section before starting a new one.
             if current is not None:
                 sections.append(current)
