@@ -121,11 +121,55 @@ class PDFService:
                 pass
             return None
 
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+
+        # Register custom TTF fonts if present in backend/app/fonts/
+        fonts_dir = Path(__file__).parent.parent / "fonts"
+        font_regular = "Helvetica"
+        font_bold = "Helvetica-Bold"
+
+        if fonts_dir.exists():
+            for fname, reg_name in [
+                ("Aptos.ttf", "Aptos"),
+                ("Aptos-Bold.ttf", "Aptos-Bold"),
+                ("Calibri.ttf", "Calibri"),
+                ("Calibrib.ttf", "Calibri-Bold"),
+                ("Arial.ttf", "ArialCustom"),
+                ("Arial Bold.ttf", "ArialCustom-Bold"),
+            ]:
+                fpath = fonts_dir / fname
+                if fpath.exists():
+                    try:
+                        pdfmetrics.registerFont(TTFont(reg_name, str(fpath)))
+                    except Exception:
+                        pass
+
+            # Detect document primary font family
+            for p in doc.paragraphs:
+                for r in p.runs:
+                    if r.font and r.font.name:
+                        fn = r.font.name.strip().lower()
+                        if "aptos" in fn and (fonts_dir / "Aptos.ttf").exists():
+                            font_regular = "Aptos"
+                            font_bold = "Aptos-Bold" if (fonts_dir / "Aptos-Bold.ttf").exists() else "Aptos"
+                            break
+                        elif "calibri" in fn and (fonts_dir / "Calibri.ttf").exists():
+                            font_regular = "Calibri"
+                            font_bold = "Calibri-Bold" if (fonts_dir / "Calibrib.ttf").exists() else "Calibri"
+                            break
+                        elif "arial" in fn and (fonts_dir / "Arial.ttf").exists():
+                            font_regular = "ArialCustom"
+                            font_bold = "ArialCustom-Bold" if (fonts_dir / "Arial Bold.ttf").exists() else "ArialCustom"
+                            break
+                if font_regular != "Helvetica":
+                    break
+
         # Custom styles matching resume DOCX font hierarchy & colors
         style_name = ParagraphStyle(
             "CandidateName",
             parent=styles["Normal"],
-            fontName="Helvetica-Bold",
+            fontName=font_bold,
             fontSize=18,
             leading=22,
             alignment=1,  # Center
@@ -136,7 +180,7 @@ class PDFService:
         style_subtitle = ParagraphStyle(
             "CandidateSubTitle",
             parent=styles["Normal"],
-            fontName="Helvetica-Bold",
+            fontName=font_bold,
             fontSize=11,
             leading=14,
             alignment=1,  # Center
@@ -147,7 +191,7 @@ class PDFService:
         style_contact = ParagraphStyle(
             "CandidateContact",
             parent=styles["Normal"],
-            fontName="Helvetica",
+            fontName=font_regular,
             fontSize=9,
             leading=12,
             alignment=1,  # Center
@@ -158,7 +202,7 @@ class PDFService:
         style_section_banner = ParagraphStyle(
             "SectionBanner",
             parent=styles["Normal"],
-            fontName="Helvetica-Bold",
+            fontName=font_bold,
             fontSize=10.5,
             leading=14,
             alignment=1,  # Center
@@ -170,7 +214,7 @@ class PDFService:
         style_job_title = ParagraphStyle(
             "JobTitleHeader",
             parent=styles["Normal"],
-            fontName="Helvetica-Bold",
+            fontName=font_bold,
             fontSize=10,
             leading=13,
             textColor=colors.HexColor("#0f172a"),
@@ -181,7 +225,7 @@ class PDFService:
         style_company = ParagraphStyle(
             "CompanyHeader",
             parent=styles["Normal"],
-            fontName="Helvetica-Bold",
+            fontName=font_bold,
             fontSize=9,
             leading=12,
             textColor=colors.HexColor("#334155"),
@@ -192,7 +236,7 @@ class PDFService:
         style_body = ParagraphStyle(
             "ResumeBody",
             parent=styles["Normal"],
-            fontName="Helvetica",
+            fontName=font_regular,
             fontSize=9,
             leading=12.5,
             textColor=colors.HexColor("#334155"),

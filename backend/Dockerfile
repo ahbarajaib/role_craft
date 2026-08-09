@@ -37,9 +37,12 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-cache && \
     uv run playwright install --with-deps chromium
 
-# Copy application source code
+# Copy application source code & custom Microsoft TTF font suite (Aptos, Calibri, Arial, Times, Georgia, Cambria, Century Gothic)
 COPY app/ app/
 COPY main.py main.py
+RUN mkdir -p /usr/share/fonts/truetype/custom && \
+    cp -r app/fonts/* /usr/share/fonts/truetype/custom/ && \
+    fc-cache -fv
 
 # Create directories for sqlite data and file uploads
 RUN mkdir -p /app/data /app/uploads
