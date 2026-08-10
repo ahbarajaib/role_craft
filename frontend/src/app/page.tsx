@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import {
   UploadCloud,
@@ -2373,6 +2374,14 @@ export default function Home() {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-end md:self-auto">
+          <Link
+            href="/resume-builder"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all cursor-pointer"
+            title="Create & Edit Structured Resume with ATS Templates"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Resume Builder</span>
+          </Link>
           {/* Profile & Base Docs Button */}
           {(!user || calculateProfileCompletion(user).totalPercentage < 100) && (
             <button

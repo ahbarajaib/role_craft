@@ -55,3 +55,18 @@ class AnalysisHistory(Base):
     job_description_text: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
+
+class StructuredResumeModel(Base):
+    __tablename__ = "structured_resumes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    resume_json: Mapped[str] = mapped_column(String, nullable=False)  # JSON string of StructuredResume schema
+    profile_photo_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    source_document_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    source_format: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # "docx" | "pdf" | "manual"
+    preferred_template: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # "clean_classic" | "modern_professional" | "executive_profile"
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+

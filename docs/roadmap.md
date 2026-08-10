@@ -74,7 +74,22 @@
 
 ---
 
-## Phase 7 - Planned
+## Phase 7 - AI Resume Builder & Structured Data Engine ✅
+
+- [x] Normalized `StructuredResume` Pydantic schema and SQLite model
+- [x] AI Resume Parser for DOCX and PDF uploads (`pymupdf` + `python-docx`)
+- [x] Field-level parse confidence tracking & red highlight/warning UI for unparsed fields
+- [x] Dedicated `/resume-builder` page with section editor (Add/Remove/Reorder sections)
+- [x] 3 Single-Column ATS Resume Templates:
+  - Clean Classic (Times New Roman, 100% ATS safe)
+  - Modern Professional (Calibri, navy dividers)
+  - Executive Profile (Aptos/Calibri, blue accents, optional profile photo)
+- [x] Profile photo upload and embedding engine
+- [x] Programmatic DOCX template renderer (`ATSTemplateRenderer`) & PDF conversion
+
+---
+
+## Phase 8 - Planned
 
 - [ ] PostgreSQL + Redis migration
 - [ ] Multi-language resume support (Arabic, French, German...)

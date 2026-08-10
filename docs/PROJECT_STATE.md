@@ -277,6 +277,14 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
   - Preserve-verbatim gate for Additional Information, Languages, Declarations
   - Rule 2 metadata heuristic tightened (no false-positives on short bullets)
   - 3x duplication of role keyword lists eliminated via shared constants
+- [x] **AI Resume Builder & Structured Data Engine** (Phase 7):
+  - Normalized `StructuredResume` Pydantic schema and `StructuredResumeModel` database persistence
+  - AI Resume Parser service for DOCX and PDF uploads (`pymupdf` + `python-docx`)
+  - Low-confidence unparsed field tracking & red highlight/warning UI
+  - Dedicated `/resume-builder` page with interactive section editor (Add/Remove/Reorder)
+  - 3 ATS single-column templates ("Clean Classic", "Modern Professional", "Executive Profile")
+  - Profile photo upload and embedding engine for Executive Profile template
+  - Programmatic DOCX template renderer (`ATSTemplateRenderer`) & PDF streaming
 
 ## Features Intentionally Postponed
 - **PostgreSQL**: Kept as a future database option for production scale.

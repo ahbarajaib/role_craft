@@ -8,8 +8,8 @@ AI-powered resume optimization platform. Upload a DOCX resume, provide a job des
 
 ## Project Status
 
-> **Milestone 16 – Universal Resume Support (Complete)**
-> RoleCraft now works with any professional resume — not just software engineering. All 7 pipeline layers updated with universal role title coverage (260 titles), 4-signal heading detection (including Bold-Normal templates), multi-domain JD technology extraction (Healthcare, Finance, Marketing, HR, Legal, Construction), two-pass soft skill keyword extraction, and a shared constants module that eliminates duplication across services. Full backward compatibility maintained for all existing workflows.
+> **Milestone 17 – AI Resume Builder & Structured Data Engine (Complete)**
+> RoleCraft now features a full-fledged AI Resume Builder (`/resume-builder`) powered by a normalized `StructuredResume` JSON data model. Upload any DOCX or PDF resume to parse content via AI into editable sections (Summary, Skills categories, Experience, Education, Projects, Certifications, Custom). Unparsed/low-confidence fields are highlighted in red with ⚠️ badges for easy user completion. Render and export into 3 single-column ATS templates ("Clean Classic", "Modern Professional", "Executive Profile") with profile photo support and 100% font retention.
 
 ---
 
