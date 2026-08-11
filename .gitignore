@@ -38,5 +38,9 @@ uploads/
 temp/
 output/
 
+# Database
+*.db
+data/
+
 # Logs
 *.log

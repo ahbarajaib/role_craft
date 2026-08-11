@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Install system dependencies (LibreOffice for PDF rendering + font suites)
-ENV CACHEBUST=20260807_02
+ENV CACHEBUST=20260811_02
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libreoffice \
     libreoffice-writer \

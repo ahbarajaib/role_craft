@@ -2338,9 +2338,6 @@ export default function Home() {
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
               <span>Role Craft</span>
-              <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 font-bold shrink-0">
-                Engine v1.0
-              </span>
             </h1>
             <p className="text-xs text-slate-600 font-semibold truncate">
               Craft every resume for the role.
