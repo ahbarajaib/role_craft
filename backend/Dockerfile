@@ -41,7 +41,7 @@ RUN uv sync --frozen --no-cache && \
 COPY app/ app/
 COPY main.py main.py
 RUN mkdir -p /usr/share/fonts/truetype/custom && \
-    cp -r app/fonts/* /usr/share/fonts/truetype/custom/ && \
+    find /app/app/fonts -type f -name "*.ttf" -exec cp "{}" /usr/share/fonts/truetype/custom/ \; && \
     fc-cache -fv
 
 # Create directories for sqlite data and file uploads
