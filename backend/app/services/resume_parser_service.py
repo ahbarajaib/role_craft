@@ -20,6 +20,8 @@ from app.core.exceptions import BadRequestError
 from app.schemas.structured_resume import (
     ParseConfidence,
     StructuredResume,
+    StructuredResumeParseModel,
+    convert_parsed_to_structured,
 )
 
 
@@ -131,11 +133,12 @@ class ResumeParserService:
         input_prompt = build_parse_resume_input(raw_text, filename)
 
         try:
-            parsed = self._ai.parse_response(
+            parsed_raw = self._ai.parse_response(
                 instructions=PARSE_RESUME_SYSTEM_INSTRUCTIONS,
                 input_text=input_prompt,
-                response_format=StructuredResume,
+                response_format=StructuredResumeParseModel,
             )
+            parsed = convert_parsed_to_structured(parsed_raw)
         except Exception as exc:
             logger.error("AI parse failed, building fallback structured resume", error=str(exc))
             raise BadRequestError(f"Failed to parse resume content with AI: {str(exc)}")
