@@ -23,10 +23,12 @@ from app.schemas.resume_analysis import (
 )
 from app.schemas.review import ReviewStatus, SectionReviewItem
 from app.schemas.section import SectionItem
+from app.schemas.structured_resume import StructuredResume
 from app.services.comparison_service import ComparisonService
 from app.services.job_description_service import JobDescriptionService
 from app.services.review_service import ReviewService
 from app.services.section_service import SectionService
+from app.services.structured_resume_text_service import serialize_to_sections
 
 
 class ResumeAnalysisWorkflow:
@@ -56,6 +58,34 @@ class ResumeAnalysisWorkflow:
         sections_response = self._sections.detect_document_sections(document_id)
         sections = sections_response.sections
         logger.debug("Sections loaded", count=len(sections))
+
+        return self._run_pipeline(sections=sections, document_id=document_id, job_description_text=job_description_text)
+
+    def run_from_structured(
+        self,
+        resume: StructuredResume,
+        job_description_text: str,
+        document_id: str = "structured",
+    ) -> ResumeAnalysisResult:
+        """Run the full analysis pipeline directly from a StructuredResume JSON object.
+
+        This method bypasses DOCX file loading entirely — no file on disk is needed.
+        The ``StructuredResume`` is serialized to a ``list[SectionItem]`` by
+        ``serialize_to_sections()`` and fed directly into the compare + review pipeline.
+
+        This is the JSON-first path used when the user has a master resume in DB.
+        """
+        logger.info("Resume analysis workflow started from structured JSON", document_id=document_id)
+        sections = serialize_to_sections(resume)
+        logger.debug("Sections serialized from JSON", count=len(sections))
+        return self._run_pipeline(sections=sections, document_id=document_id, job_description_text=job_description_text)
+
+    def _run_pipeline(
+        self,
+        sections: list[SectionItem],
+        document_id: str,
+        job_description_text: str,
+    ) -> ResumeAnalysisResult:
 
         # Step 2 – Parse job description
         job_description = self._jd.parse(job_description_text)

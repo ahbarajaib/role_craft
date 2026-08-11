@@ -43,7 +43,7 @@ from app.dependencies.common import get_settings
 from app.dependencies.document import get_document_service
 from app.dependencies.parser import get_parser_service
 from app.dependencies.section import get_section_service
-from app.models import User
+from app.models import User, StructuredResumeModel
 from app.schemas.document import DocumentUploadResponse
 from app.schemas.parser import DocumentParseResponse
 from app.schemas.section import DocumentSectionsResponse
@@ -123,17 +123,28 @@ def set_base_resume(
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
     settings: Annotated[Settings, Depends(get_settings)],
+    background_tasks: BackgroundTasks,
 ) -> BaseResumeResponse:
-    """Copy the given document to the base resume store and update the user record."""
+    """Copy the given document to the base resume store and update the user record.
+
+    Also triggers background AI parsing to build/update the user's StructuredResume JSON.
+    This is the integration hook that keeps the workspace and resume builder in sync.
+    """
     upload_dir = Path(settings.UPLOAD_DIR)
+
+    # Support both DOCX and PDF — find the file with either extension
     src_path = upload_dir / f"{body.document_id}.docx"
+    src_ext = ".docx"
+    if not src_path.exists():
+        src_path = upload_dir / f"{body.document_id}.pdf"
+        src_ext = ".pdf"
     if not src_path.exists():
         raise NotFoundError(f"Document '{body.document_id}' not found.")
 
     # Persist to base/ subdirectory keyed by user ID (not auto-cleaned)
     base_dir = upload_dir / "base"
     base_dir.mkdir(parents=True, exist_ok=True)
-    dest_path = base_dir / f"{user.id}.docx"
+    dest_path = base_dir / f"{user.id}{src_ext}"
     shutil.copy2(src_path, dest_path)
 
     # Store the stable base document_id as user_{id}_base so the download endpoint
@@ -143,6 +154,15 @@ def set_base_resume(
     user.base_resume_filename = body.filename
     db.commit()
     db.refresh(user)
+
+    # Trigger background AI parse to build StructuredResume JSON in DB
+    background_tasks.add_task(
+        _parse_and_save_structured_resume,
+        file_path=dest_path,
+        filename=body.filename,
+        user_id=user.id,
+        settings=settings,
+    )
 
     return BaseResumeResponse(document_id=stable_id, filename=body.filename)
 
@@ -200,6 +220,60 @@ def delete_base_cover_letter(
     user.base_cover_letter_filename = None
     db.commit()
     return {"status": "ok", "message": "Base cover letter template removed."}
+
+
+# ── Background Task: AI Parse & Save Structured Resume ───────────────────────
+
+def _parse_and_save_structured_resume(
+    file_path: Path,
+    filename: str,
+    user_id: int,
+    settings: Settings,
+) -> None:
+    """Background task: parse a resume file into StructuredResume JSON and upsert in DB.
+
+    Called after set-base or any upload that should update the master resume.
+    Runs in a background thread so it does not block the API response.
+    """
+    from loguru import logger
+    from app.ai.provider import OpenAIProvider
+    from app.core.database import SessionLocal
+    from app.models import StructuredResumeModel
+    from app.services.resume_parser_service import ResumeParserService
+
+    logger.info("Background AI resume parse started", user_id=user_id, file=str(file_path))
+    try:
+        ai_provider = OpenAIProvider(
+            api_key=settings.OPENAI_API_KEY,
+            model=settings.OPENAI_MODEL,
+        )
+        parser = ResumeParserService(ai_provider=ai_provider)
+        structured = parser.parse_document(file_path, filename)
+        resume_json_str = structured.model_dump_json()
+
+        db = SessionLocal()
+        try:
+            existing = db.query(StructuredResumeModel).filter(
+                StructuredResumeModel.user_id == user_id
+            ).first()
+            if existing:
+                existing.resume_json = resume_json_str
+                existing.source_format = structured.source_format
+                existing.version += 1
+            else:
+                record = StructuredResumeModel(
+                    user_id=user_id,
+                    resume_json=resume_json_str,
+                    source_format=structured.source_format or "docx",
+                    preferred_template=structured.preferred_template or "clean_classic",
+                )
+                db.add(record)
+            db.commit()
+        finally:
+            db.close()
+        logger.info("Background AI resume parse completed", user_id=user_id)
+    except Exception as exc:
+        logger.error("Background AI resume parse failed", user_id=user_id, error=str(exc))
 
 
 @router.get(

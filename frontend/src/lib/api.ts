@@ -71,6 +71,7 @@ function getHeaders(contentType: string | null = "application/json"): HeadersIni
 }
 
 export async function uploadResume(file: File): Promise<DocumentUploadResponse> {
+  // Accept both DOCX and PDF
   const formData = new FormData();
   formData.append("file", file);
 
@@ -94,16 +95,16 @@ export async function uploadResume(file: File): Promise<DocumentUploadResponse> 
 
 
 export async function analyzeResume(
-  documentId: string,
-  jobDescriptionText: string
+  jobDescriptionText: string,
+  documentId?: string,
 ): Promise<ResumeAnalysisResult> {
+  const body: Record<string, unknown> = { job_description_text: jobDescriptionText };
+  if (documentId) body.document_id = documentId;
+
   const response = await fetch(`${API_BASE_URL}/api/v1/resume/analyze`, {
     method: "POST",
     headers: getHeaders(),
-    body: JSON.stringify({
-      document_id: documentId,
-      job_description_text: jobDescriptionText,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -128,8 +129,11 @@ export interface RewriteSectionResponse {
 }
 
 export interface RewriteSectionRequest {
-  document_id: string;
+  document_id?: string;          // Legacy DOCX mode: UUID of uploaded file
   section_name: string;
+  section_type?: string;         // JSON-first mode: 'summary' | 'skills' | 'experience' | ...
+  section_content?: Record<string, unknown>; // JSON-first mode: content dict from StructuredResume
+  evidence_text?: string;        // JSON-first mode: full resume plain text for evidence gating
   job_description_text: string;
   recommendations: string[];
   user_instructions?: string;
@@ -159,8 +163,9 @@ export interface ApplyRewriteItem {
 }
 
 export interface ApplyRewriteRequest {
-  document_id: string;
+  document_id?: string;          // Optional: if omitted, ATS template generated from JSON
   accepted_rewrites: ApplyRewriteItem[];
+  preferred_template?: string;   // 'clean_classic' | 'modern_professional' | 'executive_profile'
 }
 
 export interface ApplyRewriteResponse {
@@ -224,6 +229,19 @@ export async function clearMissingSkills(): Promise<any> {
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
     throw new Error(err?.error?.detail || "Failed to clear missing skills");
+  }
+  return response.json();
+}
+
+export async function setBaseResume(documentId: string, filename: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/documents/set-base`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ document_id: documentId, filename }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.error?.detail || "Failed to set base resume");
   }
   return response.json();
 }

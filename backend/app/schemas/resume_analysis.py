@@ -9,6 +9,7 @@ reviewer into one flat, easy-to-render structure.
 """
 
 from enum import Enum
+from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.analysis import Priority
@@ -28,24 +29,17 @@ class ReviewStatus(str, Enum):
 class ResumeAnalysisRequest(BaseModel):
     """Request body for POST /resume/analyze.
 
-    The caller supplies a ``document_id`` (returned by POST /documents/upload)
-    and the raw job description text.  The workflow loads the document from
-    the upload directory and parses the job description internally.
+    When ``document_id`` is omitted, the backend uses the user's StructuredResume
+    JSON from the database (JSON-first path). This means no uploaded file is needed.
     """
 
-    document_id: str = Field(
-        description="UUID returned by POST /documents/upload.",
+    document_id: Optional[str] = Field(
+        default=None,
+        description="UUID returned by POST /documents/upload. Omit to use the structured resume JSON master.",
     )
     job_description_text: str = Field(
         description="Plain text of the job description to analyse against.",
     )
-
-    @field_validator("document_id")
-    @classmethod
-    def validate_document_id(cls, v: str) -> str:
-        if not v or not v.strip():
-            raise ValueError("Document ID cannot be empty or whitespace only.")
-        return v.strip()
 
     @field_validator("job_description_text")
     @classmethod

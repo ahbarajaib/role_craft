@@ -1457,7 +1457,7 @@ export default function Home() {
       let result = analysisResult;
       if (!result) {
         console.log("🔍 [RoleCraft Audit] No existing analysis found – triggering analyzeResume first");
-        result = await analyzeResume(documentId!, jobDescription);
+        result = await analyzeResume(jobDescription, documentId || undefined);
         setAnalysisResult(result);
       }
 
@@ -2098,11 +2098,12 @@ export default function Home() {
         "background: #7c3aed; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
         { documentId, jobDescriptionLength: jobDescription.length }
       );
-      if (!documentId) throw new Error("Please upload a resume first");
+      if (!documentId && !user?.base_resume_id) throw new Error("Please upload a resume first");
       if (jobDescription.trim().length < 50) {
         throw new Error("Job description must be at least 50 characters long");
       }
-      return analyzeResume(documentId, jobDescription);
+      // JSON-first: pass documentId as optional (backend uses structured JSON if available)
+      return analyzeResume(jobDescription, documentId || undefined);
     },
     onSuccess: (data) => {
       console.log(
@@ -2902,7 +2903,7 @@ export default function Home() {
                   >
                     <input
                       type="file"
-                      accept=".docx"
+                      accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
                       onChange={handleFileChange}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
@@ -2960,7 +2961,7 @@ export default function Home() {
                     <label className="flex items-center gap-2 cursor-pointer group">
                       <input
                         type="file"
-                        accept=".docx"
+                        accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
                         onChange={handleFileChange}
                         className="hidden"
                       />

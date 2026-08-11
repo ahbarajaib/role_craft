@@ -80,6 +80,76 @@ class ATSTemplateRenderer:
         logger.info("Successfully generated ATS resume DOCX", template=template_key, path=str(output_path))
         return output_path
 
+    def render_with_rewrites(
+        self,
+        resume: StructuredResume,
+        accepted_rewrites: list[dict],
+        output_path: Path,
+        template_name: str = "clean_classic",
+        profile_photo_abs_path: Optional[Path] = None,
+    ) -> Path:
+        """Render resume with accepted AI rewrites merged in-memory.
+
+        The ``resume`` (master JSON) is **never mutated**. A deep copy is made,
+        the accepted rewrite texts are merged into the copy's section content,
+        and then the merged copy is rendered to a DOCX.
+
+        ``accepted_rewrites`` is a list of dicts with keys:
+          - ``section``: section title or normalized section_type
+          - ``rewritten_text``: AI-generated replacement text for that section
+
+        Original DOCX formatting is NOT preserved here — a fresh ATS template is
+        rendered. If the user wants their original formatting, use PatchService instead.
+        """
+        import copy
+
+        # Deep copy to avoid mutating the master JSON
+        merged = copy.deepcopy(resume)
+
+        for rw in accepted_rewrites:
+            section_title = (rw.get("section") or "").strip().lower()
+            rewritten_text = (rw.get("rewritten_text") or "").strip()
+            if not section_title or not rewritten_text:
+                continue
+
+            # Match against merged.sections by section_title or section_type
+            for sec in merged.sections:
+                if (
+                    sec.section_title.lower() == section_title
+                    or sec.section_type.lower() == section_title
+                ):
+                    if sec.section_type == "summary":
+                        sec.content["text"] = rewritten_text
+                    elif sec.section_type == "skills":
+                        lines = [line.strip() for line in rewritten_text.split("\n") if line.strip()]
+                        categories = []
+                        for line in lines:
+                            if ":" in line:
+                                cat_name, skills_str = line.split(":", 1)
+                                skills = [s.strip() for s in skills_str.split(",") if s.strip()]
+                                categories.append({"category_name": cat_name.strip(), "skills": skills})
+                            else:
+                                categories.append({"category_name": "Skills", "skills": [line]})
+                        sec.content["categories"] = categories
+                    elif sec.section_type == "experience":
+                        # Store as plain-text override; renderer will use bullets from this
+                        sec.content["_rewritten_text_override"] = rewritten_text
+                    else:
+                        lines = [line.strip() for line in rewritten_text.split("\n") if line.strip()]
+                        sec.content["entries"] = lines
+                    break
+
+            # Handle top-level summary
+            if "summary" in section_title and merged.summary is not None:
+                merged.summary = rewritten_text
+
+        return self.render_docx(
+            resume=merged,
+            output_path=output_path,
+            template_name=template_name,
+            profile_photo_abs_path=profile_photo_abs_path,
+        )
+
     # ── Template 1: Clean Classic ────────────────────────────────────────────────
     def _render_clean_classic(self, doc: docx.Document, resume: StructuredResume) -> None:
         font_name = "Times New Roman"

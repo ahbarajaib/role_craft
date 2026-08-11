@@ -51,9 +51,11 @@ class DocumentService:
     ) -> None:
         self._upload_dir = upload_dir
         self._max_size_bytes = max_size_bytes
-        self._allowed_extensions = allowed_extensions or [".docx"]
+        self._allowed_extensions = allowed_extensions or [".docx", ".pdf"]
         self._allowed_mime_types = allowed_mime_types or [
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/pdf",
+            "application/octet-stream",  # Some browsers send PDFs with this MIME type
         ]
 
     async def save_upload(self, file: UploadFile) -> DocumentUploadResponse:
@@ -70,7 +72,7 @@ class DocumentService:
         self._validate_size(len(content))
 
         document_id = str(uuid.uuid4())
-        saved_path = self._persist(document_id, content)
+        saved_path = self._persist(document_id, content, file.filename or "")
 
         logger.info(
             "Document uploaded",
@@ -114,14 +116,20 @@ class DocumentService:
                 f"File too large. Maximum allowed size is {limit_mb:.0f} MB."
             )
 
-    def _persist(self, document_id: str, content: bytes) -> Path:
+    def _persist(self, document_id: str, content: bytes, original_filename: str = "") -> Path:
         """Write the file bytes to the upload directory.
 
         The filename uses the UUID as a stem so collisions are impossible and
         the original filename is not exposed on the filesystem.
+        Uses the original file extension (docx or pdf) for correct downstream identification.
         """
         self._upload_dir.mkdir(parents=True, exist_ok=True)
-        ext = self._allowed_extensions[0]
+        # Preserve the original extension so resume_parser_service can identify the format
+        if original_filename:
+            orig_ext = Path(original_filename).suffix.lower()
+            ext = orig_ext if orig_ext in (".docx", ".pdf") else self._allowed_extensions[0]
+        else:
+            ext = self._allowed_extensions[0]
         destination = self._upload_dir / f"{document_id}{ext}"
         destination.write_bytes(content)
         return destination

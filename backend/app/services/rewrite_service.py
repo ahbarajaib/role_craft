@@ -473,3 +473,195 @@ class RewriteService:
         )
 
         return result
+
+    def rewrite_from_json(
+        self,
+        section_name: str,
+        section_type: str,
+        section_content: dict,
+        evidence_text: str,
+        job_description_text: str,
+        recommendations: list[str],
+        user_instructions: str | None = None,
+        metric_inputs: dict[str, str] | None = None,
+    ) -> "RewriteSectionResponse":
+        """Rewrite a single section using JSON content instead of a DOCX file.
+
+        This is the JSON-first path for the unified architecture. Section content
+        comes directly from the StructuredResume JSON — no DOCX file needed on disk.
+
+        ``evidence_text`` is the full resume as plain text (for evidence gating).
+        """
+        # Serialize section content to plain text for AI processing
+        lines: list[str] = []
+
+        if section_type == "summary":
+            text = section_content.get("text") or ""
+            if text.strip():
+                lines.append(text.strip())
+
+        elif section_type == "skills":
+            categories = section_content.get("categories") or []
+            for cat in categories:
+                cat_name = cat.get("category_name") or ""
+                skills = cat.get("skills") or []
+                if cat_name and skills:
+                    lines.append(f"{cat_name}: {', '.join(skills)}")
+
+        elif section_type == "experience":
+            entries = section_content.get("entries") or []
+            for entry in entries:
+                if entry.get("job_title"):
+                    lines.append(entry["job_title"])
+                if entry.get("company"):
+                    meta = entry["company"]
+                    if entry.get("location"):
+                        meta += f", {entry['location']}"
+                    if entry.get("start_date"):
+                        meta += f" | {entry['start_date']} - {entry.get('end_date', 'Present')}"
+                    lines.append(meta)
+                lines.extend(entry.get("bullets") or [])
+
+        elif section_type == "projects":
+            entries = section_content.get("entries") or []
+            for entry in entries:
+                if entry.get("name"):
+                    lines.append(entry["name"])
+                techs = entry.get("technologies") or []
+                if techs:
+                    lines.append(f"Technologies: {', '.join(techs)}")
+                lines.extend(entry.get("bullets") or [])
+
+        elif section_type == "certifications":
+            entries = section_content.get("entries") or []
+            for entry in entries:
+                cert_parts = [entry.get("name") or ""]
+                if entry.get("issuer"):
+                    cert_parts.append(f"— {entry['issuer']}")
+                if entry.get("date"):
+                    cert_parts.append(f"({entry['date']})")
+                lines.append(" ".join(cert_parts).strip())
+
+        else:
+            # Custom / unknown section type — try entries list
+            entries = section_content.get("entries") or []
+            lines.extend([str(e) for e in entries if e])
+
+        original_text = "\n".join(lines)
+        if not original_text.strip():
+            return RewriteSectionResponse(
+                section=section_name,
+                original_text="",
+                rewritten_text="",
+                reasoning="Section contains no content to rewrite.",
+                changes=[],
+            )
+
+        # Use the same core rewrite logic via _rewrite_section_text
+        return self._rewrite_section_text(
+            section_name=section_name,
+            original_text=original_text,
+            evidence_context=evidence_text,
+            job_description_text=job_description_text,
+            recommendations=recommendations,
+            user_instructions=user_instructions,
+            metric_inputs=metric_inputs,
+            is_skills_section=section_type == "skills",
+            is_summary_section=section_type == "summary",
+        )
+
+    def _rewrite_section_text(
+        self,
+        section_name: str,
+        original_text: str,
+        evidence_context: str,
+        job_description_text: str,
+        recommendations: list[str],
+        user_instructions: str | None,
+        metric_inputs: dict[str, str] | None,
+        is_skills_section: bool,
+        is_summary_section: bool,
+    ) -> "RewriteSectionResponse":
+        """Core AI rewrite logic extracted for reuse between DOCX and JSON modes."""
+        import re as _re
+
+        orig_lines = [l.strip() for l in original_text.split("\n") if l.strip()]
+        orig_line_count = max(len(orig_lines), 1)
+
+        if is_skills_section:
+            system_prompt = SKILLS_REWRITE_SYSTEM_PROMPT
+        elif is_summary_section:
+            system_prompt = SUMMARY_REWRITE_SYSTEM_PROMPT
+        else:
+            system_prompt = REWRITE_SYSTEM_PROMPT
+
+        all_evidence_text = original_text + "\n" + evidence_context
+        unsupported_jd_techs = get_unsupported_jd_technologies(
+            all_evidence_text=all_evidence_text,
+            job_description_text=job_description_text,
+        )
+
+        manually_requested_kws: set[str] = set()
+        for r_item in recommendations + ([user_instructions] if user_instructions else []):
+            if r_item and "weave" in r_item.lower() and ":" in r_item:
+                kw_part = r_item.split(":", 1)[1].strip()
+                for item in kw_part.split(","):
+                    if item.strip():
+                        manually_requested_kws.add(item.strip().lower())
+
+        effective_unsupported_techs = {
+            t for t in unsupported_jd_techs if t.lower() not in manually_requested_kws
+        }
+
+        sanitized_recs: list[str] = []
+        for rec in recommendations:
+            r_clean = rec
+            if "weave" in r_clean.lower() and ":" in r_clean:
+                sanitized_recs.append(r_clean)
+                continue
+            for tech in effective_unsupported_techs:
+                pat = r"\b" + _re.escape(tech.lower()) + r"\b"
+                r_clean = _re.sub(pat, "", r_clean, flags=_re.IGNORECASE)
+            r_clean = " ".join(r_clean.split()).strip()
+            if len(r_clean) > 8:
+                sanitized_recs.append(r_clean)
+
+        input_parts = [
+            f"=== TARGET JOB DESCRIPTION ===\n{job_description_text.strip()}",
+            f"=== RECRUITER RECOMMENDATIONS FOR THIS SECTION ===\n"
+            f"{' / '.join(sanitized_recs) if sanitized_recs else 'Improve overall impact using Google XYZ formula.'}",
+        ]
+
+        if not is_skills_section:
+            non_meta_lines = [l for l in orig_lines]
+            bullet_count = len([l for l in non_meta_lines if l.startswith(("•", "-", "*", "–", "—", "▪"))])
+            non_bullet_count = len(non_meta_lines) - bullet_count
+            input_parts.append(
+                f"=== LINE COUNT CONSTRAINT ===\n"
+                f"Output EXACTLY {orig_line_count} non-empty content lines. "
+                f"This section has {bullet_count} bullet points and {non_bullet_count} non-bullet lines."
+            )
+
+        if metric_inputs:
+            metric_str = "\n".join(f"- {k}: {v}" for k, v in metric_inputs.items())
+            input_parts.append(f"=== CANDIDATE-SUPPLIED METRICS & DATA POINTS ===\n{metric_str}")
+
+        input_parts.append(f"=== EVIDENCE CONTEXT (FROM REST OF RESUME) ===\n{evidence_context}")
+        input_parts.append(f"=== ORIGINAL SECTION TEXT TO REWRITE ===\n{original_text}")
+
+        full_input = "\n\n".join(input_parts)
+
+        try:
+            result = self._provider.parse_response(
+                instructions=system_prompt,
+                input_text=full_input,
+                response_format=RewriteSectionResponse,
+            )
+        except Exception as exc:
+            raise BadRequestError(f"AI rewrite failed: {str(exc)}")
+
+        rewritten_text, _ = sanitize_unsupported_skills_from_text(result.rewritten_text, effective_unsupported_techs)
+        result.rewritten_text = rewritten_text
+        result.original_text = original_text
+        result.section = section_name
+        return result

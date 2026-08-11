@@ -5,6 +5,7 @@ for the individual section rewrite endpoint.
 """
 
 from enum import Enum
+from typing import Any, Optional
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -31,11 +32,24 @@ class RewriteChangeItem(BaseModel):
 class RewriteSectionRequest(BaseModel):
     """Request body for POST /resume/rewrite."""
 
-    document_id: str = Field(
-        description="UUID of the uploaded resume document."
+    document_id: Optional[str] = Field(
+        default=None,
+        description="UUID of the uploaded resume document. If omitted, section_content must be provided (JSON-first mode)."
     )
     section_name: str = Field(
         description="Canonical or title name of the section to rewrite (e.g. 'summary')."
+    )
+    section_type: Optional[str] = Field(
+        default=None,
+        description="Section type for JSON-first mode: 'summary' | 'skills' | 'experience' | 'education' | 'projects' | 'certifications' | 'custom'"
+    )
+    section_content: Optional[dict[str, Any]] = Field(
+        default=None,
+        description="Section content dict from StructuredResume JSON. Used in JSON-first mode when document_id is not provided."
+    )
+    evidence_text: Optional[str] = Field(
+        default=None,
+        description="Plain-text representation of the full resume for evidence gating. Used in JSON-first mode."
     )
     job_description_text: str = Field(
         description="Plain text of the target job description."
@@ -50,14 +64,14 @@ class RewriteSectionRequest(BaseModel):
     )
     metric_inputs: dict[str, str] | None = Field(
         default=None,
-        description="Optional candidate-provided metrics to format into Google XYZ bullets (e.g. {'latency_drop': '35%', 'team_size': '8 engineers'})."
+        description="Optional candidate-provided metrics to format into Google XYZ bullets."
     )
 
-    @field_validator("document_id", "section_name")
+    @field_validator("section_name")
     @classmethod
-    def validate_non_empty_strings(cls, v: str) -> str:
+    def validate_section_name(cls, v: str) -> str:
         if not v or not v.strip():
-            raise ValueError("Field cannot be empty or whitespace only.")
+            raise ValueError("section_name cannot be empty or whitespace only.")
         return v.strip()
 
     @field_validator("job_description_text")

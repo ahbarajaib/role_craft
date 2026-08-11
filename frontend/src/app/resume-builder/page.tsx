@@ -92,14 +92,27 @@ export default function ResumeBuilderPage() {
     setStatusMsg({ type: "info", text: "AI is parsing resume content into structured sections..." });
 
     try {
+      // Step 1: AI parse → structured JSON (primary path)
       const parsed = await parseAndSaveStructuredResume(file);
       setResume(parsed);
       if (parsed.preferred_template) {
         setSelectedTemplate(parsed.preferred_template);
       }
+
+      // Step 2: Also upload + set as workspace base resume in background
+      // This keeps both Resume Builder and Workspace in sync
+      try {
+        const { uploadResume, setBaseResume } = await import("@/lib/api");
+        const uploadResult = await uploadResume(file);
+        await setBaseResume(uploadResult.document_id, file.name);
+      } catch {
+        // Non-fatal: base resume sync failed, but structured JSON was saved
+        console.warn("Could not sync to workspace base resume (non-fatal)");
+      }
+
       setStatusMsg({
         type: "success",
-        text: "Resume successfully parsed into editable sections! Fields needing review are highlighted in red.",
+        text: "Resume successfully parsed! Fields needing review are highlighted in red.",
       });
     } catch (err: any) {
       setStatusMsg({

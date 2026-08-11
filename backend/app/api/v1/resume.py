@@ -14,7 +14,7 @@ The handler's only responsibilities are:
 """
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.responses import FileResponse
 
@@ -23,6 +23,7 @@ from app.services.cleanup import cleanup_old_files
 from loguru import logger
 from app.core.config import Settings
 from app.core.exceptions import NotFoundError
+from app.core.database import get_db
 from app.dependencies.common import get_settings
 from app.dependencies.resume_analysis import get_resume_analysis_workflow, get_rewrite_service, get_patch_service, get_cover_letter_service
 from app.schemas.resume_analysis import ResumeAnalysisRequest, ResumeAnalysisResult
@@ -34,9 +35,9 @@ from app.services.rewrite_service import RewriteService
 from app.services.patch_service import PatchService
 from app.services.cover_letter_service import CoverLetterService
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.models import User, AnalysisHistory
+from app.models import User, AnalysisHistory, StructuredResumeModel
 from app.dependencies.limits import verify_analysis_permission, verify_premium_permission, deduct_analysis_credit
+from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/resume", tags=["resume"])
 
@@ -61,11 +62,46 @@ def analyze_resume(
     db: Annotated[Session, Depends(get_db)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> ResumeAnalysisResult:
-    """Delegate the full workflow to the workflow service."""
-    result = workflow.run(
-        document_id=body.document_id,
-        job_description_text=body.job_description_text,
-    )
+    """Delegate the full workflow to the workflow service.
+
+    JSON-first: if the user has a StructuredResume in the DB, the analysis
+    runs directly from that JSON without loading any DOCX file. This means
+    the analysis works even after the uploaded file has been cleaned up.
+
+    Falls back to legacy DOCX-based analysis if no structured resume exists.
+    """
+    import json as _json
+    from app.schemas.structured_resume import StructuredResume as _StructuredResume
+
+    # --- JSON-FIRST PATH ---
+    structured_record = db.query(StructuredResumeModel).filter(
+        StructuredResumeModel.user_id == user.id
+    ).first()
+
+    if structured_record:
+        try:
+            structured_data = _json.loads(structured_record.resume_json)
+            resume = _StructuredResume.model_validate(structured_data)
+            result = workflow.run_from_structured(
+                resume=resume,
+                job_description_text=body.job_description_text,
+                document_id=body.document_id or f"structured:{user.id}",
+            )
+            logger.info("Analysis ran from structured JSON", user_id=user.id)
+        except Exception as exc:
+            logger.warning("Structured JSON analysis failed, falling back to DOCX", error=str(exc))
+            # Fall through to legacy DOCX path
+            result = workflow.run(
+                document_id=body.document_id or f"base/{user.id}",
+                job_description_text=body.job_description_text,
+            )
+    else:
+        # --- LEGACY DOCX PATH ---
+        result = workflow.run(
+            document_id=body.document_id or f"base/{user.id}",
+            job_description_text=body.job_description_text,
+        )
+
     deduct_analysis_credit(db, user)
 
     # Save to AnalysisHistory safely
@@ -148,10 +184,52 @@ def analyze_resume(
 def rewrite_section(
     body: RewriteSectionRequest,
     service: Annotated[RewriteService, Depends(get_rewrite_service)],
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
 ) -> RewriteSectionResponse:
-    """Delegate section rewrite to RewriteService."""
+    """Rewrite a resume section using AI.
+
+    JSON-first: if section_content is provided in the request body (from the
+    structured resume editor), the rewrite runs directly from that JSON content
+    without loading any DOCX file.
+
+    Falls back to legacy DOCX-based rewrite if document_id is provided.
+    """
+    # JSON-first path: section content is passed directly from the structured resume
+    if body.section_content is not None and body.section_type is not None:
+        evidence_text = body.evidence_text or ""
+
+        # If evidence_text not provided, try to build it from the user's structured resume
+        if not evidence_text:
+            import json as _json
+            from app.services.structured_resume_text_service import serialize_to_plain_text
+            from app.schemas.structured_resume import StructuredResume as _StructuredResume
+
+            record = db.query(StructuredResumeModel).filter(
+                StructuredResumeModel.user_id == user.id
+            ).first()
+            if record:
+                try:
+                    data = _json.loads(record.resume_json)
+                    resume = _StructuredResume.model_validate(data)
+                    evidence_text = serialize_to_plain_text(resume)
+                except Exception:
+                    pass
+
+        return service.rewrite_from_json(
+            section_name=body.section_name,
+            section_type=body.section_type,
+            section_content=body.section_content,
+            evidence_text=evidence_text,
+            job_description_text=body.job_description_text,
+            recommendations=body.recommendations,
+            user_instructions=body.user_instructions,
+            metric_inputs=body.metric_inputs,
+        )
+
+    # Legacy DOCX path
     return service.rewrite(
-        document_id=body.document_id,
+        document_id=body.document_id or f"base/{user.id}",
         section_name=body.section_name,
         job_description_text=body.job_description_text,
         recommendations=body.recommendations,
@@ -173,26 +251,99 @@ def apply_rewrites(
     background_tasks: BackgroundTasks,
     settings: Annotated[Settings, Depends(get_settings)],
     db: Annotated[Session, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
 ) -> ApplyRewriteResponse:
-    """Delegate patching operation to PatchService."""
+    """Apply accepted rewrites and return a download link.
+
+    Smart dual-mode:
+    - If the user's source is DOCX (raw file on disk) AND they don't request
+      a specific ATS template → patch the original DOCX (preserves formatting).
+    - Otherwise (PDF source, or ATS template requested, or file gone) → render
+      a fresh ATS template DOCX with rewrites merged in-memory (master JSON unchanged).
+    """
     background_tasks.add_task(
         cleanup_old_files,
         upload_dir=Path(settings.UPLOAD_DIR),
         max_age_hours=settings.GENERATED_CLEANUP_HOURS,
     )
-    res = service.apply_rewrites(body)
 
-    # Link download_id to the latest matching history record for this document_id
+    import json as _json
+    import uuid
+    from app.schemas.structured_resume import StructuredResume as _StructuredResume
+    from app.services.template_renderer import ATSTemplateRenderer
+
+    upload_dir = Path(settings.UPLOAD_DIR)
+    generated_dir = upload_dir / "generated"
+    generated_dir.mkdir(parents=True, exist_ok=True)
+    download_id = str(uuid.uuid4())
+    out_path = generated_dir / f"{download_id}.docx"
+
+    # Check if user has a structured resume in DB
+    structured_record = db.query(StructuredResumeModel).filter(
+        StructuredResumeModel.user_id == user.id
+    ).first()
+
+    # Check if original raw DOCX still exists on disk
+    base_docx = upload_dir / "base" / f"{user.id}.docx"
+    has_raw_docx = base_docx.exists()
+
+    # Use the document_id from request if provided and file exists
+    if body.document_id:
+        candidate_path = upload_dir / f"{body.document_id}.docx"
+        if candidate_path.exists():
+            has_raw_docx = True
+            base_docx = candidate_path
+        elif (upload_dir / "base" / f"{body.document_id.split('/', 1)[-1]}.docx").exists():
+            base_docx = upload_dir / "base" / f"{body.document_id.split('/', 1)[-1]}.docx"
+            has_raw_docx = True
+
+    # --- ATS Template path: structured JSON + rewrites merged in-memory ---
+    if structured_record and (not has_raw_docx or body.document_id is None):
+        try:
+            data = _json.loads(structured_record.resume_json)
+            resume = _StructuredResume.model_validate(data)
+
+            template_name = body.preferred_template or structured_record.preferred_template or "clean_classic"
+            photo_path_str = structured_record.profile_photo_path
+            photo_path = Path(photo_path_str) if photo_path_str and Path(photo_path_str).exists() else None
+
+            rewrites_as_dicts = [{"section": rw.section, "rewritten_text": rw.rewritten_text} for rw in body.accepted_rewrites]
+
+            renderer = ATSTemplateRenderer()
+            renderer.render_with_rewrites(
+                resume=resume,
+                accepted_rewrites=rewrites_as_dicts,
+                output_path=out_path,
+                template_name=template_name,
+                profile_photo_abs_path=photo_path,
+            )
+
+            res = ApplyRewriteResponse(
+                download_id=download_id,
+                sections_updated=len(body.accepted_rewrites),
+                download_url=f"/api/v1/resume/download/{download_id}",
+            )
+        except Exception as exc:
+            logger.error("ATS template render failed, falling back to patch", error=str(exc))
+            # Fall through to DOCX patch
+            res = service.apply_rewrites(body)
+            download_id = res.download_id
+    else:
+        # --- Legacy DOCX patch path: preserves original formatting ---
+        res = service.apply_rewrites(body)
+        download_id = res.download_id
+
+    # Link download_id to the latest matching history record
     try:
         from sqlalchemy import select
         stmt = (
             select(AnalysisHistory)
-            .where(AnalysisHistory.document_id == body.document_id)
+            .where(AnalysisHistory.user_id == user.id)
             .order_by(AnalysisHistory.created_at.desc())
         )
         hist = db.scalars(stmt).first()
         if hist:
-            hist.download_id = res.download_id
+            hist.download_id = download_id
             db.add(hist)
             db.commit()
     except Exception:
