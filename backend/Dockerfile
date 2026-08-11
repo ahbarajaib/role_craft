@@ -14,8 +14,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libreoffice-writer \
     libreoffice-common \
     default-jre-headless \
-    fonts-carlito \
-    fonts-caladea \
     fonts-liberation \
     fonts-opensymbol \
     fonts-dejavu \
