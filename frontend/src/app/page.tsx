@@ -312,7 +312,7 @@ function SectionCard({
     if (onBulletExclusionChange) {
       onBulletExclusionChange(section.section_name, new Set());
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rewrittenText]);
 
   const handleBulletToggle = (lineIdx: number) => {
@@ -373,8 +373,8 @@ function SectionCard({
             {section.review_status === "improve"
               ? "Needs Improvement"
               : section.review_status === "keep"
-              ? "Good As Is"
-              : "Reduce Emphasis"}
+                ? "Good As Is"
+                : "Reduce Emphasis"}
           </span>
           <h3 className="font-black text-slate-900 dark:text-white text-base md:text-lg flex items-center gap-2">
             {section.section_name}
@@ -599,16 +599,15 @@ function SectionCard({
                                 e.stopPropagation();
                                 handleBulletToggle(lineIdx);
                               }}
-                              className={`mt-0.5 shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-all duration-150 cursor-pointer ${
-                                isUnchecked
+                              className={`mt-0.5 shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-all duration-150 cursor-pointer ${isUnchecked
                                   ? "border-slate-300 bg-white"
                                   : "border-emerald-500 bg-emerald-500"
-                              }`}
+                                }`}
                               title={isUnchecked ? "Click to include in resume" : "Click to exclude from resume"}
                             >
                               {!isUnchecked && (
                                 <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 10" fill="none">
-                                  <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                               )}
                             </button>
@@ -703,11 +702,10 @@ function SectionCard({
                   onImproveClick(section.section_name, section.recommendations);
                 }
               }}
-              className={`mt-2 w-full py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2.5 shadow-md transition-all duration-200 select-none ${
-                inlineLoadingSections[section.section_name]
+              className={`mt-2 w-full py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2.5 shadow-md transition-all duration-200 select-none ${inlineLoadingSections[section.section_name]
                   ? "bg-slate-900 dark:bg-slate-950 text-white border border-slate-700 shadow-slate-900/30 cursor-wait"
                   : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20 cursor-pointer"
-              }`}
+                }`}
             >
               {inlineLoadingSections[section.section_name] ? (
                 <>
@@ -807,7 +805,7 @@ function LoadingState() {
         if (prev < 85) {
           return prev + 1;
         } else {
-          // Slow crawl: only increment approx. once per second (15% chance per 180ms tick)
+          // hoSlow crawl: only increment approx. once per second (15% chance per 180ms tick)
           return Math.random() < 0.15 ? prev + 1 : prev;
         }
       });
@@ -1280,7 +1278,7 @@ export default function Home() {
   // Track how many sections needing improvement have been accepted/rewritten
   const improvedCount = sectionsToImproveList.filter(
     (s) => !!rewrittenSections[s.section_name.toLowerCase()] ||
-           Object.keys(rewrittenSections).some((rk) => s.section_name.toLowerCase().includes(rk) || rk.includes(s.section_name.toLowerCase()))
+      Object.keys(rewrittenSections).some((rk) => s.section_name.toLowerCase().includes(rk) || rk.includes(s.section_name.toLowerCase()))
   ).length;
 
 
@@ -1370,7 +1368,7 @@ export default function Home() {
       });
       const duration = ((performance.now() - startTime) / 1000).toFixed(2);
       const lines = data.rewritten_text.split("\n").filter((l: string) => l.trim());
-      
+
       console.log(
         `%c ✨ [RoleCraft Audit] AI Response Received for "${sectionName}" (${duration}s) `,
         "background: #10b981; color: #000; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
@@ -1471,7 +1469,7 @@ export default function Home() {
       const summarySection = (result.sections || []).find(
         (s) => s.section_name.toLowerCase().includes("summary") || s.section_name.toLowerCase().includes("profile")
       );
-      
+
       const sectionsToTailor = [...sectionsToImprove];
       if (summarySection && !sectionsToTailor.some(s => s.section_name.toLowerCase() === summarySection.section_name.toLowerCase())) {
         sectionsToTailor.unshift(summarySection);
@@ -2443,11 +2441,10 @@ export default function Home() {
           <button
             type="button"
             onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${
-              activeNavTab === "workspace"
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${activeNavTab === "workspace"
                 ? "bg-slate-900 text-white ring-2 ring-emerald-500"
                 : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
-            }`}
+              }`}
           >
             <Sparkles className="h-3.5 w-3.5 text-amber-300" />
             <span>{activeNavTab === "workspace" ? "← Exit Workspace" : "⚡ Launch Workspace"}</span>
@@ -2883,1085 +2880,1080 @@ export default function Home() {
       ) : (
         /* Main Workspace Container */
         <main className="relative max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Form Panel */}
-        <div className="lg:col-span-4 space-y-6 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
-          <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
-            <h2 className="text-lg font-bold text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center gap-2">
-              <Layers className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
-              Configure Analysis
-            </h2>
+          {/* Left Form Panel */}
+          <div className="lg:col-span-4 space-y-6 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+            <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center gap-2">
+                <Layers className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
+                Configure Analysis
+              </h2>
 
-            {/* Resume Upload Box */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
-                Upload Resume (DOCX only)
-              </label>
+              {/* Resume Upload Box */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+                  Upload Resume (DOCX only)
+                </label>
 
-              {!file ? (
-                <div
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  className="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-xl p-8 text-center bg-slate-100/30 dark:bg-slate-900/30 hover:bg-slate-200/40 dark:hover:bg-slate-900/50 transition-all duration-300"
-                >
-                  <input
-                    type="file"
-                    accept=".docx"
-                    onChange={handleFileChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <UploadCloud className="h-10 w-10 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 mx-auto mb-3 transition-colors" />
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    Drag & drop or click to upload
-                  </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                    Word documents (.docx) up to 5MB
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between p-3.5 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden gap-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="h-9 w-9 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shrink-0">
-                        <WordLogoIcon className="h-5 w-5 shrink-0 shadow-sm" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" title={file.name}>
-                          {file.name}
-                        </p>
-                        {file.size > 0 ? (
-                          <p className="text-[11px] text-slate-400 dark:text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
-                        ) : (
-                          <p className="text-[11px] text-indigo-500 dark:text-indigo-400 font-medium">
-                            Base Resume
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {isUploading ? (
-                        <span className="text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5 font-medium">
-                          <span className="h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-500 animate-ping" />
-                          Uploading...
-                        </span>
-                      ) : documentId ? (
-                        <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
-                          <CheckCircle className="h-3.5 w-3.5" />
-                          Ready
-                        </span>
-                      ) : null}
-                      <button
-                        type="button"
-                        onClick={clearFile}
-                        className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
-                        title="Remove and upload a different resume"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                  {/* Use different resume option */}
-                  <label className="flex items-center gap-2 cursor-pointer group">
+                {!file ? (
+                  <div
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    className="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-xl p-8 text-center bg-slate-100/30 dark:bg-slate-900/30 hover:bg-slate-200/40 dark:hover:bg-slate-900/50 transition-all duration-300"
+                  >
                     <input
                       type="file"
                       accept=".docx"
                       onChange={handleFileChange}
-                      className="hidden"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
-                    <span className="text-xs text-indigo-500 dark:text-indigo-400 hover:underline group-hover:text-indigo-600 transition-colors">
-                      ↑ Upload a different resume for this session
-                    </span>
-                  </label>
-                </div>
-              )}
-            </div>
-
-            {/* Job Description Input Container */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Job Description
-                </label>
-                {(jobDescription || analysisResult) && (
-                  <button
-                    type="button"
-                    onClick={() => handleResetWorkspace(true)}
-                    className="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 font-bold flex items-center gap-1 cursor-pointer transition-colors"
-                  >
-                    <RotateCcw className="h-3 w-3" /> Clear & New Analysis
-                  </button>
-                )}
-              </div>
-              <textarea
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
-                placeholder="Paste the job description or requirement spec here (minimum 50 characters)..."
-                rows={8}
-                maxLength={8000}
-                className="w-full bg-white text-slate-900 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 text-sm placeholder-slate-400 transition-all outline-none resize-y shadow-inner"
-              />
-              <div className="flex items-center justify-between text-xs text-slate-500">
-                <span>Min: 50 chars</span>
-                <span className={jobDescription.length < 50 ? "text-amber-600 font-medium" : "text-emerald-600 font-bold"}>
-                  {jobDescription.length.toLocaleString()} / 8,000 characters
-                </span>
-              </div>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-xs">
-                <div className="flex items-start gap-2.5">
-                  <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
-                  <span className="flex-1 leading-relaxed">{error}</span>
-                </div>
-                {analyzeMutation.isError && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      analyzeMutation.mutate();
-                    }}
-                    className="self-end mt-1 px-3 py-1 bg-red-100 dark:bg-red-500/20 hover:bg-red-200 dark:hover:bg-red-500/30 text-red-700 dark:text-red-200 border border-red-300 dark:border-red-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
-                  >
-                    <RefreshCw className="h-3 w-3" />
-                    Retry Analysis
-                  </button>
-                )}
-                {uploadMutation.isError && file && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      uploadMutation.mutate(file);
-                    }}
-                    className="self-end mt-1 px-3 py-1 bg-red-100 dark:bg-red-500/20 hover:bg-red-200 dark:hover:bg-red-500/30 text-red-700 dark:text-red-200 border border-red-300 dark:border-red-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
-                  >
-            <RefreshCw className="h-3 w-3" />
-                    Retry Upload
-                  </button>
-                )}
-              </div>
-            )}
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-3">
-              <button
-                type="submit"
-                disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing}
-                className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${
-                  documentId && jobDescription.trim().length >= 50 && !isAnalyzing
-                    ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 cursor-pointer"
-                    : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-                }`}
-              >
-                {isAnalyzing ? (
-                  <>
-                    <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    Running AI Analysis...
-                  </>
+                    <UploadCloud className="h-10 w-10 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 mx-auto mb-3 transition-colors" />
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      Drag & drop or click to upload
+                    </p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                      Word documents (.docx) up to 5MB
+                    </p>
+                  </div>
                 ) : (
-                  <>
-                    <Sparkles className="h-4 w-4" />
-                    Analyze Gaps & Fit
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Right Results Panel */}
-        <div className="lg:col-span-8 space-y-6 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-          {isAnalyzing ? (
-            <LoadingState />
-          ) : !analysisResult ? (
-            <div className="glass-panel rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800 min-h-[450px] flex flex-col items-center justify-center space-y-4">
-              <div className="h-16 w-16 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-800 shadow-sm animate-pulse">
-                <Activity className="h-8 w-8 text-slate-400 dark:text-slate-500" />
-              </div>
-              <div className="space-y-2 max-w-sm">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Awaiting Analysis</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Upload your resume and provide a target job description on the left to start detecting gaps and strengths.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* ⚡ 1-Click Auto-Tailor Hero Banner */}
-              <div className="relative overflow-hidden rounded-2xl p-5.5 border border-indigo-500/30 dark:border-indigo-500/30 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-950 text-white shadow-2xl backdrop-blur-xl animate-fade-in border-t-white/10">
-                <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -left-12 -top-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-                
-                <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-400 via-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0 ring-1 ring-white/20">
-                      <Sparkles className="h-6 w-6 animate-pulse text-amber-200" />
-                    </div>
-                    <div>
-                      <h4 className="text-base font-extrabold text-white flex items-center gap-2 tracking-tight">
-                        ⚡ 1-Click Full Resume Auto-Tailor
-                      </h4>
-                      <p className="text-xs text-slate-300 mt-0.5 max-w-md leading-relaxed">
-                        Automatically rewrite weak sections, weave missing ATS keywords, & add Google XYZ impact metrics in one click.
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleAutoTailor}
-                    disabled={isAutoTailoring}
-                    className="px-6 py-3.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20"
-                  >
-                    {isAutoTailoring ? (
-                      <>
-                        <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                        ⚡ Auto-Tailoring Resume...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 text-amber-200" />
-                        ⚡ Auto-Tailor Full Resume (1-Click)
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Summary Dashboard Card */}
-              <div className="glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-r from-white/90 via-indigo-500/5 to-white/90 dark:from-slate-900/90 dark:via-indigo-950/20 dark:to-slate-900/90 shadow-xl">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 dark:border-indigo-500/30 uppercase tracking-wider">
-                        Target Role Detected
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 flex-wrap">
-                      {(() => {
-                        const rawJobTitle = analysisResult.overall_summary.job_title || "";
-                        const isGenericTitle = !rawJobTitle || ["full job description", "job description", "about the role", "overview", "target role", "description"].includes(rawJobTitle.toLowerCase().trim());
-                        const displayTitle = rewrittenSections["header"] || (!isGenericTitle ? rawJobTitle : "Target Role");
-                        const canApply = !isGenericTitle;
-
-                        return (
-                          <>
-                            <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                              {displayTitle}
-                            </h3>
-                            {canApply && (
-                              <button
-                                type="button"
-                                onClick={() => handleApplyTargetTitle(rawJobTitle)}
-                                disabled={isApplyingTitle || applyMutation.isPending}
-                                className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${
-                                  rewrittenSections["header"] === rawJobTitle && isPatchingApplied
-                                    ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
-                                    : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white border-emerald-500/30 shadow-emerald-500/20 hover:scale-105"
-                                }`}
-                                title="Apply this target job title directly to your resume header and DOCX file"
-                              >
-                                {isApplyingTitle ? (
-                                  <>
-                                    <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin shrink-0" />
-                                    <span>Applying Title...</span>
-                                  </>
-                                ) : rewrittenSections["header"] === rawJobTitle && isPatchingApplied ? (
-                                  <>
-                                    <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                                    <span>Title Applied & Saved</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <CheckCircle className="h-3.5 w-3.5 text-white shrink-0" />
-                                    <span>Apply Job Title</span>
-                                  </>
-                                )}
-                              </button>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Overall Score Circle */}
-                  <div className="flex items-center gap-4 bg-white/90 dark:bg-slate-950/70 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-md">
-                    <div className="relative flex items-center justify-center">
-                      {/* SVG Gauge */}
-                      <svg className="w-20 h-20 transform -rotate-90">
-                        <circle
-                          cx="40"
-                          cy="40"
-                          r="34"
-                          stroke="currentColor"
-                          strokeWidth="6"
-                          fill="transparent"
-                          className="text-slate-200 dark:text-slate-800"
-                        />
-                        <circle
-                          cx="40"
-                          cy="40"
-                          r="34"
-                          stroke="currentColor"
-                          strokeWidth="6"
-                          fill="transparent"
-                          strokeDasharray={2 * Math.PI * 34}
-                          strokeDashoffset={2 * Math.PI * 34 * (1 - currentScore / 100)}
-                          className="text-indigo-500 transition-all duration-1000"
-                        />
-                      </svg>
-                      <span className="absolute text-base font-black text-slate-900 dark:text-white">
-                        {currentScore}%
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Overall Fit</p>
-                      <p className="text-xs font-medium text-slate-600 dark:text-slate-300 mt-0.5">
-                        <span className="font-bold text-indigo-600 dark:text-indigo-400">{sectionsStillNeedingImprovement} of {totalNeeded}</span> sections need improvement
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Interactive ATS Skill & Keyword Matrix Card */}
-              <div className="glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 space-y-4 shadow-xl">
-                <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200/80 dark:border-slate-800/80 pb-3.5">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500/15 via-purple-500/15 to-indigo-600/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20 shrink-0 shadow-sm">
-                      <Layers className="h-4.5 w-4.5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">
-                        ATS Skill & Keyword Matrix
-                      </h3>
-                      <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                        Match overview & 1-click keyword insertion.
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={openKeywordWeaveModal}
-                    disabled={isWeavingKeywords}
-                    className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-md border ${
-                      isKeywordsWoven
-                        ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/30 shadow-emerald-600/25"
-                        : "bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white border-white/20 shadow-indigo-500/20 hover:scale-[1.02] active:scale-[0.98]"
-                    }`}
-                  >
-                    {isWeavingKeywords ? (
-                      <>
-                        <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                        Weaving Keywords...
-                      </>
-                    ) : isKeywordsWoven ? (
-                      <>
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-200" />
-                        ✓ Keywords Woven & Applied
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-3.5 w-3.5 text-amber-200 animate-pulse" />
-                        ⚡ Auto-Weave All Keywords (1-Click)
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  {/* 🟢 Matched Skills — click to un-weave (woven) or remove (original) */}
-                  {(() => {
-                    const originalMatched = new Set(
-                      (analysisResult.top_strengths || []).map((s: any) =>
-                        (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
-                      )
-                    );
-                    const wovenMatchedLower = new Set(
-                      appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
-                    );
-                    const allMatched = Array.from(
-                      new Set([
-                        ...(analysisResult.top_strengths || []).map((s: any) =>
-                          typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
-                        ),
-                        ...appliedWovenKeywords.map((k) => cleanKeywordName(k)),
-                      ])
-                    ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
-
-                    return (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                            Confirmed Matched Skills ({allMatched.length})
-                          </span>
+                    <div className="flex items-center justify-between p-3.5 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="h-9 w-9 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shrink-0">
+                          <WordLogoIcon className="h-5 w-5 shrink-0 shadow-sm" />
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {allMatched.map((skillName, idx) => {
-                            const skillLower = skillName.toLowerCase();
-                            const isWoven = wovenMatchedLower.has(skillLower);
-                            const isOriginal = originalMatched.has(skillLower);
-
-                            return (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => {
-                                  if (isWoven) {
-                                    setAppliedWovenKeywords((prev) => {
-                                      const next = prev.filter((k) => cleanKeywordName(k).toLowerCase() !== skillLower);
-                                      if (next.length === 0) setIsKeywordsWoven(false);
-                                      return next;
-                                    });
-                                  } else {
-                                    setManuallyRemovedSkills((prev) => {
-                                      const next = new Set(prev);
-                                      next.add(skillLower);
-                                      return next;
-                                    });
-                                  }
-                                  removeSkillFromRewrites(skillName);
-                                }}
-                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-emerald-500/10 hover:bg-rose-500/10 text-emerald-700 hover:text-rose-600 dark:text-emerald-300 dark:hover:text-rose-400 border border-emerald-500/25 hover:border-rose-400/30 transition-all duration-150 cursor-pointer group shadow-xs"
-                                title={isWoven ? `Click to move '${skillName}' back to ${isOriginal ? "supported" : "missing"} keywords` : `Click to remove '${skillName}' from matched skills`}
-                              >
-                                <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 group-hover:hidden" />
-                                <X className="h-3 w-3 shrink-0 text-rose-500 hidden group-hover:block" />
-                                {skillName}
-                                {isWoven && (
-                                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 font-extrabold uppercase">
-                                    Woven
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" title={file.name}>
+                            {file.name}
+                          </p>
+                          {file.size > 0 ? (
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
+                          ) : (
+                            <p className="text-[11px] text-indigo-500 dark:text-indigo-400 font-medium">
+                              Base Resume
+                            </p>
+                          )}
                         </div>
                       </div>
-                    );
-                  })()}
-
-                  {/* 🟡 Supported in Evidence — per-section matched strengths (click to weave into skills) */}
-                  {(() => {
-                    const evidenceKeywords = [
-                      ...(analysisResult.sections || []).flatMap((s: any) => s.strengths || []),
-                      ...(analysisResult.top_improvements || [])
-                        .filter((imp: any) => imp.evidence_reused && imp.evidence_reused.trim())
-                        .map((imp: any) => (typeof imp === "string" ? imp : imp.name))
-                    ]
-                      .map((e: string) => cleanKeywordName(e))
-                      .filter((kw: string) => kw.length > 0 && kw.length <= 60); // max 60 chars = real keyword, not a sentence
-
-                    const matchedLower = new Set(
-                      (analysisResult.top_strengths || []).map((s: any) =>
-                        (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
-                      )
-                    );
-
-                    const appliedWovenLower = new Set(
-                      appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
-                    );
-
-                    const unMatchedEvidence = Array.from(new Set(evidenceKeywords)).filter(
-                      (kw: string) => !matchedLower.has(kw.toLowerCase()) && !appliedWovenLower.has(kw.toLowerCase())
-                    );
-
-                    if (unMatchedEvidence.length === 0) return null;
-
-                    return (
-                      <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full bg-amber-500" />
-                          <span className="text-[11px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-                            Supported in Evidence (Click to Weave into Skills)
+                      <div className="flex items-center gap-2 shrink-0">
+                        {isUploading ? (
+                          <span className="text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5 font-medium">
+                            <span className="h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-500 animate-ping" />
+                            Uploading...
                           </span>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {unMatchedEvidence.map((kw: string, idx: number) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => handleQuickWeaveKeyword(kw)}
-                              disabled={weavingSingleKeyword === kw}
-                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/25 transition-all duration-150 cursor-pointer shadow-xs hover:scale-105 active:scale-95"
-                              title={`Click to weave '${kw}' into Technical Skills section`}
-                            >
-                              {weavingSingleKeyword === kw ? (
-                                <div className="h-3 w-3 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin shrink-0" />
-                              ) : (
-                                <Sparkles className="h-3 w-3 shrink-0 text-amber-500" />
-                              )}
-                              {kw}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* 🔴 Missing ATS Keywords — click to weave into skills section */}
-                  {(() => {
-                    const allMissing = [
-                      ...(analysisResult.sections || []).flatMap((s: any) => s.missing_keywords || []),
-                      ...(analysisResult.top_improvements || [])
-                        .filter((imp: any) => !imp.evidence_reused || !imp.evidence_reused.trim())
-                        .map((imp: any) => (typeof imp === "string" ? imp : imp.name))
-                    ]
-                      .map((k: string) => cleanKeywordName(k))
-                      .filter(Boolean);
-
-                    const matchedLower = new Set(
-                      (analysisResult.top_strengths || []).map((s: any) =>
-                        (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
-                      )
-                    );
-
-                    const appliedWovenLower = new Set(
-                      appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
-                    );
-
-                    const trulyMissing = Array.from(new Set(allMissing)).filter(
-                      (kw) => !matchedLower.has(kw.toLowerCase()) && !appliedWovenLower.has(kw.toLowerCase())
-                    );
-
-                    if (trulyMissing.length === 0) return null;
-
-                    return (
-                      <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-                          <span className="text-[11px] font-extrabold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
-                            Missing ATS Keywords (Only in Job Description - Click to Manually Weave)
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {trulyMissing.map((kw, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => handleQuickWeaveKeyword(kw)}
-                              disabled={weavingSingleKeyword === kw}
-                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-500/30 transition-all duration-150 cursor-pointer shadow-xs hover:scale-105 active:scale-95 group"
-                              title={`Click to manually weave missing JD keyword '${kw}' into Technical Skills section`}
-                            >
-                              {weavingSingleKeyword === kw ? (
-                                <div className="h-3 w-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin shrink-0" />
-                              ) : (
-                                <Plus className="h-3 w-3 shrink-0 text-rose-500 group-hover:scale-110" />
-                              )}
-                              {kw}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-
-              {/* ✉️ Tailored Cover Letter Card */}
-              <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 space-y-4 shadow-xl">
-                <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
-                      <FileText className="h-4.5 w-4.5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        Tailored Cover Letter
-                        {coverLetterText && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
+                        ) : documentId ? (
+                          <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
+                            <CheckCircle className="h-3.5 w-3.5" />
                             Ready
                           </span>
-                        )}
-                      </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Generate a 3-paragraph executive cover letter tailored to the job description & your resume.
-                      </p>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={clearFile}
+                          className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
+                          title="Remove and upload a different resume"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
+                    {/* Use different resume option */}
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="file"
+                        accept=".docx"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <span className="text-xs text-indigo-500 dark:text-indigo-400 hover:underline group-hover:text-indigo-600 transition-colors">
+                        ↑ Upload a different resume for this session
+                      </span>
+                    </label>
                   </div>
+                )}
+              </div>
 
-                  {!coverLetterText && (
+              {/* Job Description Input Container */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Job Description
+                  </label>
+                  {(jobDescription || analysisResult) && (
                     <button
                       type="button"
-                      onClick={handleGenerateCoverLetter}
-                      disabled={isGeneratingCoverLetter}
-                      className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-600/20 disabled:opacity-50"
+                      onClick={() => handleResetWorkspace(true)}
+                      className="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 font-bold flex items-center gap-1 cursor-pointer transition-colors"
                     >
-                      {isGeneratingCoverLetter ? (
+                      <RotateCcw className="h-3 w-3" /> Clear & New Analysis
+                    </button>
+                  )}
+                </div>
+                <textarea
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
+                  placeholder="Paste the job description or requirement spec here (minimum 50 characters)..."
+                  rows={8}
+                  maxLength={8000}
+                  className="w-full bg-white text-slate-900 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 text-sm placeholder-slate-400 transition-all outline-none resize-y shadow-inner"
+                />
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span>Min: 50 chars</span>
+                  <span className={jobDescription.length < 50 ? "text-amber-600 font-medium" : "text-emerald-600 font-bold"}>
+                    {jobDescription.length.toLocaleString()} / 8,000 characters
+                  </span>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-xs">
+                  <div className="flex items-start gap-2.5">
+                    <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span className="flex-1 leading-relaxed">{error}</span>
+                  </div>
+                  {analyzeMutation.isError && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        analyzeMutation.mutate();
+                      }}
+                      className="self-end mt-1 px-3 py-1 bg-red-100 dark:bg-red-500/20 hover:bg-red-200 dark:hover:bg-red-500/30 text-red-700 dark:text-red-200 border border-red-300 dark:border-red-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                      Retry Analysis
+                    </button>
+                  )}
+                  {uploadMutation.isError && file && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        uploadMutation.mutate(file);
+                      }}
+                      className="self-end mt-1 px-3 py-1 bg-red-100 dark:bg-red-500/20 hover:bg-red-200 dark:hover:bg-red-500/30 text-red-700 dark:text-red-200 border border-red-300 dark:border-red-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                      Retry Upload
+                    </button>
+                  )}
+                </div>
+              )}
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-3">
+                <button
+                  type="submit"
+                  disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing}
+                  className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${documentId && jobDescription.trim().length >= 50 && !isAnalyzing
+                      ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 cursor-pointer"
+                      : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed"
+                    }`}
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      Running AI Analysis...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      Analyze Gaps & Fit
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Right Results Panel */}
+          <div className="lg:col-span-8 space-y-6 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+            {isAnalyzing ? (
+              <LoadingState />
+            ) : !analysisResult ? (
+              <div className="glass-panel rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800 min-h-[450px] flex flex-col items-center justify-center space-y-4">
+                <div className="h-16 w-16 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-800 shadow-sm animate-pulse">
+                  <Activity className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+                </div>
+                <div className="space-y-2 max-w-sm">
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-white">Awaiting Analysis</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Upload your resume and provide a target job description on the left to start detecting gaps and strengths.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* ⚡ 1-Click Auto-Tailor Hero Banner */}
+                <div className="relative overflow-hidden rounded-2xl p-5.5 border border-indigo-500/30 dark:border-indigo-500/30 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-950 text-white shadow-2xl backdrop-blur-xl animate-fade-in border-t-white/10">
+                  <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -left-12 -top-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                  <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-400 via-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0 ring-1 ring-white/20">
+                        <Sparkles className="h-6 w-6 animate-pulse text-amber-200" />
+                      </div>
+                      <div>
+                        <h4 className="text-base font-extrabold text-white flex items-center gap-2 tracking-tight">
+                          ⚡ 1-Click Full Resume Auto-Tailor
+                        </h4>
+                        <p className="text-xs text-slate-300 mt-0.5 max-w-md leading-relaxed">
+                          Automatically rewrite weak sections, weave missing ATS keywords, & add Google XYZ impact metrics in one click.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleAutoTailor}
+                      disabled={isAutoTailoring}
+                      className="px-6 py-3.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20"
+                    >
+                      {isAutoTailoring ? (
                         <>
-                          <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                          Generating Cover Letter...
+                          <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          ⚡ Auto-Tailoring Resume...
                         </>
                       ) : (
                         <>
-                          <Sparkles className="h-3.5 w-3.5 text-purple-200 animate-pulse" />
-                          ✨ Generate Cover Letter (1-Click)
+                          <Sparkles className="h-4 w-4 text-amber-200" />
+                          ⚡ Auto-Tailor Full Resume (1-Click)
                         </>
                       )}
                     </button>
-                  )}
-                </div>
-
-                {/* Editable Target Designation & Contact Header Controls */}
-                <div className="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">
-                      Target Designation:
-                    </span>
-                    <input
-                      type="text"
-                      value={customTargetRole}
-                      onChange={(e) => setCustomTargetRole(e.target.value)}
-                      placeholder="e.g. Full Stack Developer"
-                      className="flex-1 min-w-[200px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-purple-500/30"
-                    />
-                    <button
-                      type="button"
-                      disabled={isGeneratingCoverLetter}
-                      onClick={handleGenerateCoverLetter}
-                      className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer disabled:opacity-50 shadow-sm"
-                    >
-                      Update Header
-                    </button>
                   </div>
-                  {user && (user.address || user.phone_number || user.linkedin_url) ? (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                      <strong>Header Contact Line:</strong> {[user.address, user.phone_number, user.email, user.linkedin_url].filter(Boolean).join(" | ")}
-                    </p>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setIsProfileModalOpen(true)}
-                      className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
-                    >
-                      + Add Address, Phone & LinkedIn to Profile for Cover Letter Header
-                    </button>
-                  )}
                 </div>
 
-                {/* Cover Letter Content Body */}
-                {coverLetterText ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between gap-2 flex-wrap bg-slate-50 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
-                      <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium">
-                        <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                        <span>Cover Letter tailored to job description</span>
-                      </div>
+                {/* Summary Dashboard Card */}
+                <div className="glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-r from-white/90 via-indigo-500/5 to-white/90 dark:from-slate-900/90 dark:via-indigo-950/20 dark:to-slate-900/90 shadow-xl">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={handleCopyCoverLetterText}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border ${
-                            isCoverLetterCopied
-                              ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
-                              : "bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 border-purple-500/20"
-                          }`}
-                          title="Copy full cover letter text content"
-                        >
-                          {isCoverLetterCopied ? (
-                            <>
-                              <Check className="h-3 w-3 text-emerald-500" />
-                              <span>Copied!</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="h-3 w-3 text-purple-500" />
-                              <span>Copy Text</span>
-                            </>
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsEditingCoverLetter(!isEditingCoverLetter)}
-                          className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all flex items-center gap-1 cursor-pointer"
-                        >
-                          <Edit className="h-3 w-3" />
-                          {isEditingCoverLetter ? "Done Editing" : "Edit Text"}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isGeneratingCoverLetter}
-                          onClick={handleGenerateCoverLetter}
-                          className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                        >
-                          <RefreshCw className={`h-3 w-3 ${isGeneratingCoverLetter ? "animate-spin" : ""}`} />
-                          Regenerate
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Preview / Edit Area */}
-                    {isEditingCoverLetter ? (
-                      <div className="space-y-2">
-                        <textarea
-                          value={coverLetterText}
-                          onChange={(e) => setCoverLetterText(e.target.value)}
-                          rows={12}
-                          className="w-full p-3.5 rounded-xl border border-purple-300 dark:border-purple-800/60 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-purple-500/30 resize-y font-sans"
-                          placeholder="Edit your cover letter here..."
-                        />
-                        <button
-                          type="button"
-                          disabled={isUpdatingCoverLetter}
-                          onClick={() => handleUpdateCoverLetterText(coverLetterText)}
-                          className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                        >
-                          {isUpdatingCoverLetter ? (
-                            <div className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                          ) : (
-                            <CheckCircle className="h-3.5 w-3.5" />
-                          )}
-                          Save Changes to Cover Letter
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-slate-800 dark:text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-sans space-y-2 shadow-inner">
-                        {coverLetterText}
-                      </div>
-                    )}
-
-                    {/* Download Buttons Bar */}
-                    {coverLetterDownloadId && (
-                      <div className="flex items-center justify-end flex-wrap gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mr-auto">
-                          Export Cover Letter:
+                        <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 dark:border-indigo-500/30 uppercase tracking-wider">
+                          Target Role Detected
                         </span>
-                        <button
-                          type="button"
-                          onClick={handleCopyCoverLetterText}
-                          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
-                            isCoverLetterCopied
-                              ? "bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20"
-                              : "bg-purple-600 hover:bg-purple-500 text-white border-purple-500/40 shadow-md shadow-purple-600/20 hover:scale-105 active:scale-95"
-                          }`}
-                          title="Copy text content of cover letter"
-                        >
-                          {isCoverLetterCopied ? (
-                            <>
-                              <Check className="h-4 w-4 shrink-0" />
-                              <span>Copied Text!</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="h-4 w-4 shrink-0" />
-                              <span>Copy Text Content</span>
-                            </>
-                          )}
-                        </button>
-                        <a
-                          href={`${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=docx`}
-                          download
-                          className="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <WordLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
-                          Download Cover Letter (.DOCX)
-                        </a>
-                        <a
-                          href={`${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=pdf`}
-                          download
-                          onClick={() => setSuccessNotification("Downloading Cover Letter PDF...")}
-                          className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer border border-slate-700/60"
-                        >
-                          <PdfLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
-                          Download Cover Letter (.PDF)
-                        </a>
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950/20 text-center space-y-2">
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Click the button above to generate an executive 3-paragraph cover letter tailored to this role and your resume achievements.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Section Analysis Breakdown (Actionable cards shown at the top for maximum speed) */}
-              <div className="space-y-6">
-                {(() => {
-                  const sectionsToImprove = (analysisResult.sections || [])
-                    .filter((s) => s.review_status === "improve")
-                    .sort((a, b) => {
-                      const priorityMap = { high: 3, medium: 2, low: 1 };
-                      return (priorityMap[b.priority] || 0) - (priorityMap[a.priority] || 0);
-                    });
-
-                  const sectionsToKeep = (analysisResult.sections || [])
-                    .filter((s) => s.review_status === "keep");
-
-                  const sectionsToReduce = (analysisResult.sections || [])
-                    .filter((s) => s.review_status === "reduce_emphasis");
-
-                  return (
-                    <>
-                      {/* Improve Sections (🟡) */}
-                      {sectionsToImprove.length > 0 && (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-900 pb-2">
-                            <h3 className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                              <span>🟡 Recommendations to Improve ({sectionsToImprove.length})</span>
-                            </h3>
-                            <button
-                              type="button"
-                              disabled={isImprovingAll || Object.values(inlineLoadingSections).some(Boolean)}
-                              onClick={() => handleImproveAllClick(sectionsToImprove)}
-                              className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 disabled:bg-slate-100 dark:disabled:bg-slate-900 text-amber-700 dark:text-amber-400 disabled:text-slate-400 dark:disabled:text-slate-600 border border-amber-500/25 disabled:border-slate-200 dark:disabled:border-slate-800 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed select-none"
-                            >
-                              {isImprovingAll ? (
-                                <>
-                                  <RefreshCw className="h-3 w-3 animate-spin" />
-                                  Improving All...
-                                </>
-                              ) : (
-                                <>
-                                  <Sparkles className="h-3 w-3 animate-pulse" />
-                                  Improve All with AI
-                                </>
-                              )}
-                            </button>
-                          </div>
-                          <div className="space-y-4">
-                            {sectionsToImprove.map((section, idx) =>
-                              renderSectionCard(
-                                section,
-                                idx,
-                                !!expandedSections[section.section_name],
-                                () => toggleSection(section.section_name),
-                                rewrittenSections[section.section_name.toLowerCase()],
-                                previousRewrittenSections[section.section_name.toLowerCase()],
-                                handleRevert,
-                                handleUndoLastRewrite,
-                                handleImproveClick,
-                                inlineLoadingSections,
-                                triggerInlineRewrite,
-                                (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded })),
-                                isPatchingApplied
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Keep Sections (🟢) */}
-                      {sectionsToKeep.length > 0 && (
-                        <div className="space-y-3">
-                          <h3 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-900 pb-2">
-                            <span>🟢 Keep As-Is ({sectionsToKeep.length})</span>
-                          </h3>
-                          <div className="space-y-4">
-                            {sectionsToKeep.map((section, idx) =>
-                              renderSectionCard(
-                                section,
-                                idx,
-                                !!expandedSections[section.section_name],
-                                () => toggleSection(section.section_name),
-                                rewrittenSections[section.section_name.toLowerCase()],
-                                previousRewrittenSections[section.section_name.toLowerCase()],
-                                handleRevert,
-                                handleUndoLastRewrite,
-                                handleImproveClick,
-                                inlineLoadingSections,
-                                triggerInlineRewrite,
-                                (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded })),
-                                isPatchingApplied
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Reduce Emphasis Sections (⚪) */}
-                      {sectionsToReduce.length > 0 && (
-                        <div className="space-y-3">
-                          <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-900 pb-2">
-                            <span>⚪ Reduce Emphasis ({sectionsToReduce.length})</span>
-                          </h3>
-                          <div className="space-y-4">
-                            {sectionsToReduce.map((section, idx) =>
-                              renderSectionCard(
-                                section,
-                                idx,
-                                !!expandedSections[section.section_name],
-                                () => toggleSection(section.section_name),
-                                rewrittenSections[section.section_name.toLowerCase()],
-                                previousRewrittenSections[section.section_name.toLowerCase()],
-                                handleRevert,
-                                handleUndoLastRewrite,
-                                handleImproveClick,
-                                inlineLoadingSections,
-                                triggerInlineRewrite,
-                                (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded })),
-                                isPatchingApplied
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-
-              {/* Detailed Recruitment Insights Toggle (Collapsible by default at the bottom) */}
-              <div className="pt-4 border-t border-slate-900/60">
-                <button
-                  type="button"
-                  onClick={() => setShowDetailedInsights(!showDetailedInsights)}
-                  className="w-full py-3 bg-slate-950/40 hover:bg-slate-950/80 text-slate-400 hover:text-white rounded-xl text-xs font-semibold border border-slate-900 transition-all flex items-center justify-center gap-2 select-none"
-                >
-                  <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showDetailedInsights ? "transform rotate-180" : ""}`} />
-                  {showDetailedInsights ? "Hide Detailed Recruiter Insights" : "Show Detailed Recruiter Insights (Strengths & Gap Highlights)"}
-                </button>
-              </div>
-
-              {showDetailedInsights && (
-                <div className="space-y-6 pt-2 animate-fade-in-up">
-                  {/* Top Strengths Panel */}
-                  {analysisResult.top_strengths && analysisResult.top_strengths.length > 0 && (
-                    <div className="rounded-2xl p-6 border border-emerald-200 bg-emerald-50/60 space-y-4 shadow-sm">
-                      <h3 className="text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-2 border-b border-emerald-200 pb-2">
-                        <TrendingUp className="h-4 w-4 text-emerald-600" />
-                        Top Strengths Match
-                      </h3>
-                      <div className="grid grid-cols-1 gap-3">
-                        {analysisResult.top_strengths.map((strength, i) => (
-                          <div key={i} className="flex items-start gap-3 bg-white p-3.5 rounded-xl border border-emerald-200/80 shadow-xs">
-                            <div className="h-7 w-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 mt-0.5">
-                              <CategoryIcon category={strength.category} className="h-4 w-4 text-emerald-700" />
-                            </div>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold text-slate-900">{strength.name}</span>
-                                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase font-extrabold">
-                                  {strength.category}
-                                </span>
-                              </div>
-                              <p className="text-xs text-slate-700 font-medium leading-relaxed">{strength.reason}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Top Improvements Panel */}
-                  {analysisResult.top_improvements && analysisResult.top_improvements.length > 0 && (
-                    <div className="rounded-2xl p-6 border border-amber-200 bg-amber-50/60 space-y-4 shadow-sm">
-                      <h3 className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-2 border-b border-amber-200 pb-2">
-                        <ShieldAlert className="h-4 w-4 text-amber-600" />
-                        Top Recommended Improvements
-                      </h3>
-                      <div className="grid grid-cols-1 gap-3">
+                      <div className="flex items-center gap-3 flex-wrap">
                         {(() => {
-                          const sortedImprovements = [...(analysisResult.top_improvements || [])].sort(
-                            (a, b) => a.priority - b.priority
-                          );
+                          const rawJobTitle = analysisResult.overall_summary.job_title || "";
+                          const isGenericTitle = !rawJobTitle || ["full job description", "job description", "about the role", "overview", "target role", "description"].includes(rawJobTitle.toLowerCase().trim());
+                          const displayTitle = rewrittenSections["header"] || (!isGenericTitle ? rawJobTitle : "Target Role");
+                          const canApply = !isGenericTitle;
 
-                          return sortedImprovements.map((imp, i) => {
-                            const isExpanded = !!expandedImprovements[imp.name];
-                            const priorityColor = [
-                              "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
-                              "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
-                              "bg-amber-100 text-amber-800 border-amber-300 font-extrabold",
-                              "bg-sky-100 text-sky-800 border-sky-300 font-extrabold",
-                              "bg-slate-100 text-slate-800 border-slate-300 font-bold"
-                            ][imp.priority - 1] || "bg-slate-100 text-slate-800 border-slate-300 font-bold";
-
-                            return (
-                              <div
-                                key={i}
-                                className="rounded-xl border border-slate-200 hover:border-slate-300 transition-all duration-300 bg-white shadow-xs"
-                              >
-                                {/* Clickable Header for Collapsing */}
-                                <div
-                                  onClick={() => toggleImprovement(imp.name)}
-                                  className="flex flex-wrap items-center justify-between gap-4 p-4 cursor-pointer select-none"
+                          return (
+                            <>
+                              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                                {displayTitle}
+                              </h3>
+                              {canApply && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleApplyTargetTitle(rawJobTitle)}
+                                  disabled={isApplyingTitle || applyMutation.isPending}
+                                  className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${rewrittenSections["header"] === rawJobTitle && isPatchingApplied
+                                      ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
+                                      : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white border-emerald-500/30 shadow-emerald-500/20 hover:scale-105"
+                                    }`}
+                                  title="Apply this target job title directly to your resume header and DOCX file"
                                 >
-                                  <div className="flex items-center gap-3">
-                                    <span className={`text-[10px] px-2.5 py-0.5 rounded-full border uppercase ${priorityColor}`}>
-                                      Priority #{imp.priority}
-                                    </span>
-                                    <span className="text-sm font-bold text-slate-900">{imp.name}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${isExpanded ? "transform rotate-180" : ""}`} />
-                                  </div>
-                                </div>
-
-                                {/* Collapsible Details */}
-                                {isExpanded && (
-                                  <div className="px-4 pb-4 border-t border-slate-200 pt-3 space-y-3.5 animate-fade-in-up">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                                      {/* Rationale */}
-                                      <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                        <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider block">
-                                          Hiring Manager Rationale
-                                        </span>
-                                        <p className="text-[11px] text-slate-700 font-medium leading-relaxed italic">
-                                          "{imp.reason}"
-                                        </p>
-                                      </div>
-
-                                      {/* Expected Impact */}
-                                      <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                        <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider block">
-                                          Expected Interview Impact
-                                        </span>
-                                        <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
-                                          {imp.expected_interview_impact}
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                                      {/* Evidence Reused */}
-                                      <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                        <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider block">
-                                          Evidence Reused or Adjacent Skills
-                                        </span>
-                                        <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
-                                          {imp.evidence_reused || "No direct/adjacent evidence found. Recommended with caution."}
-                                        </p>
-                                      </div>
-
-                                      {/* Metrics (Section & Confidence) */}
-                                      <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                        <div className="flex items-center justify-between text-[11px]">
-                                          <span className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Target Section</span>
-                                          <span className="text-slate-900 font-bold capitalize">{imp.section}</span>
-                                        </div>
-                                        <div className="space-y-1 pt-1 border-t border-slate-200">
-                                          <div className="flex items-center justify-between text-[11px]">
-                                            <span className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Recruiter Confidence</span>
-                                            <span className="text-indigo-700 font-extrabold">{Math.round(imp.confidence * 100)}%</span>
-                                          </div>
-                                          <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
-                                            <div
-                                              className="h-full bg-indigo-600 rounded-full transition-all duration-500"
-                                              style={{ width: `${imp.confidence * 100}%` }}
-                                            />
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          });
+                                  {isApplyingTitle ? (
+                                    <>
+                                      <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin shrink-0" />
+                                      <span>Applying Title...</span>
+                                    </>
+                                  ) : rewrittenSections["header"] === rawJobTitle && isPatchingApplied ? (
+                                    <>
+                                      <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                                      <span>Title Applied & Saved</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle className="h-3.5 w-3.5 text-white shrink-0" />
+                                      <span>Apply Job Title</span>
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                            </>
+                          );
                         })()}
                       </div>
                     </div>
+
+                    {/* Overall Score Circle */}
+                    <div className="flex items-center gap-4 bg-white/90 dark:bg-slate-950/70 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-md">
+                      <div className="relative flex items-center justify-center">
+                        {/* SVG Gauge */}
+                        <svg className="w-20 h-20 transform -rotate-90">
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="34"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="transparent"
+                            className="text-slate-200 dark:text-slate-800"
+                          />
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="34"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="transparent"
+                            strokeDasharray={2 * Math.PI * 34}
+                            strokeDashoffset={2 * Math.PI * 34 * (1 - currentScore / 100)}
+                            className="text-indigo-500 transition-all duration-1000"
+                          />
+                        </svg>
+                        <span className="absolute text-base font-black text-slate-900 dark:text-white">
+                          {currentScore}%
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Overall Fit</p>
+                        <p className="text-xs font-medium text-slate-600 dark:text-slate-300 mt-0.5">
+                          <span className="font-bold text-indigo-600 dark:text-indigo-400">{sectionsStillNeedingImprovement} of {totalNeeded}</span> sections need improvement
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Interactive ATS Skill & Keyword Matrix Card */}
+                <div className="glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200/80 dark:border-slate-800/80 pb-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500/15 via-purple-500/15 to-indigo-600/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20 shrink-0 shadow-sm">
+                        <Layers className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">
+                          ATS Skill & Keyword Matrix
+                        </h3>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                          Match overview & 1-click keyword insertion.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={openKeywordWeaveModal}
+                      disabled={isWeavingKeywords}
+                      className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-md border ${isKeywordsWoven
+                          ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/30 shadow-emerald-600/25"
+                          : "bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white border-white/20 shadow-indigo-500/20 hover:scale-[1.02] active:scale-[0.98]"
+                        }`}
+                    >
+                      {isWeavingKeywords ? (
+                        <>
+                          <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          Weaving Keywords...
+                        </>
+                      ) : isKeywordsWoven ? (
+                        <>
+                          <CheckCircle className="h-3.5 w-3.5 text-emerald-200" />
+                          ✓ Keywords Woven & Applied
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-3.5 w-3.5 text-amber-200 animate-pulse" />
+                          ⚡ Auto-Weave All Keywords (1-Click)
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* 🟢 Matched Skills — click to un-weave (woven) or remove (original) */}
+                    {(() => {
+                      const originalMatched = new Set(
+                        (analysisResult.top_strengths || []).map((s: any) =>
+                          (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
+                        )
+                      );
+                      const wovenMatchedLower = new Set(
+                        appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
+                      );
+                      const allMatched = Array.from(
+                        new Set([
+                          ...(analysisResult.top_strengths || []).map((s: any) =>
+                            typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
+                          ),
+                          ...appliedWovenKeywords.map((k) => cleanKeywordName(k)),
+                        ])
+                      ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
+
+                      return (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                              Confirmed Matched Skills ({allMatched.length})
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {allMatched.map((skillName, idx) => {
+                              const skillLower = skillName.toLowerCase();
+                              const isWoven = wovenMatchedLower.has(skillLower);
+                              const isOriginal = originalMatched.has(skillLower);
+
+                              return (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isWoven) {
+                                      setAppliedWovenKeywords((prev) => {
+                                        const next = prev.filter((k) => cleanKeywordName(k).toLowerCase() !== skillLower);
+                                        if (next.length === 0) setIsKeywordsWoven(false);
+                                        return next;
+                                      });
+                                    } else {
+                                      setManuallyRemovedSkills((prev) => {
+                                        const next = new Set(prev);
+                                        next.add(skillLower);
+                                        return next;
+                                      });
+                                    }
+                                    removeSkillFromRewrites(skillName);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-emerald-500/10 hover:bg-rose-500/10 text-emerald-700 hover:text-rose-600 dark:text-emerald-300 dark:hover:text-rose-400 border border-emerald-500/25 hover:border-rose-400/30 transition-all duration-150 cursor-pointer group shadow-xs"
+                                  title={isWoven ? `Click to move '${skillName}' back to ${isOriginal ? "supported" : "missing"} keywords` : `Click to remove '${skillName}' from matched skills`}
+                                >
+                                  <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 group-hover:hidden" />
+                                  <X className="h-3 w-3 shrink-0 text-rose-500 hidden group-hover:block" />
+                                  {skillName}
+                                  {isWoven && (
+                                    <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 font-extrabold uppercase">
+                                      Woven
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* 🟡 Supported in Evidence — per-section matched strengths (click to weave into skills) */}
+                    {(() => {
+                      const evidenceKeywords = [
+                        ...(analysisResult.sections || []).flatMap((s: any) => s.strengths || []),
+                        ...(analysisResult.top_improvements || [])
+                          .filter((imp: any) => imp.evidence_reused && imp.evidence_reused.trim())
+                          .map((imp: any) => (typeof imp === "string" ? imp : imp.name))
+                      ]
+                        .map((e: string) => cleanKeywordName(e))
+                        .filter((kw: string) => kw.length > 0 && kw.length <= 60); // max 60 chars = real keyword, not a sentence
+
+                      const matchedLower = new Set(
+                        (analysisResult.top_strengths || []).map((s: any) =>
+                          (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
+                        )
+                      );
+
+                      const appliedWovenLower = new Set(
+                        appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
+                      );
+
+                      const unMatchedEvidence = Array.from(new Set(evidenceKeywords)).filter(
+                        (kw: string) => !matchedLower.has(kw.toLowerCase()) && !appliedWovenLower.has(kw.toLowerCase())
+                      );
+
+                      if (unMatchedEvidence.length === 0) return null;
+
+                      return (
+                        <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-amber-500" />
+                            <span className="text-[11px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                              Supported in Evidence (Click to Weave into Skills)
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {unMatchedEvidence.map((kw: string, idx: number) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => handleQuickWeaveKeyword(kw)}
+                                disabled={weavingSingleKeyword === kw}
+                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/25 transition-all duration-150 cursor-pointer shadow-xs hover:scale-105 active:scale-95"
+                                title={`Click to weave '${kw}' into Technical Skills section`}
+                              >
+                                {weavingSingleKeyword === kw ? (
+                                  <div className="h-3 w-3 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin shrink-0" />
+                                ) : (
+                                  <Sparkles className="h-3 w-3 shrink-0 text-amber-500" />
+                                )}
+                                {kw}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* 🔴 Missing ATS Keywords — click to weave into skills section */}
+                    {(() => {
+                      const allMissing = [
+                        ...(analysisResult.sections || []).flatMap((s: any) => s.missing_keywords || []),
+                        ...(analysisResult.top_improvements || [])
+                          .filter((imp: any) => !imp.evidence_reused || !imp.evidence_reused.trim())
+                          .map((imp: any) => (typeof imp === "string" ? imp : imp.name))
+                      ]
+                        .map((k: string) => cleanKeywordName(k))
+                        .filter(Boolean);
+
+                      const matchedLower = new Set(
+                        (analysisResult.top_strengths || []).map((s: any) =>
+                          (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
+                        )
+                      );
+
+                      const appliedWovenLower = new Set(
+                        appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
+                      );
+
+                      const trulyMissing = Array.from(new Set(allMissing)).filter(
+                        (kw) => !matchedLower.has(kw.toLowerCase()) && !appliedWovenLower.has(kw.toLowerCase())
+                      );
+
+                      if (trulyMissing.length === 0) return null;
+
+                      return (
+                        <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                            <span className="text-[11px] font-extrabold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
+                              Missing ATS Keywords (Only in Job Description - Click to Manually Weave)
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {trulyMissing.map((kw, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => handleQuickWeaveKeyword(kw)}
+                                disabled={weavingSingleKeyword === kw}
+                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-500/30 transition-all duration-150 cursor-pointer shadow-xs hover:scale-105 active:scale-95 group"
+                                title={`Click to manually weave missing JD keyword '${kw}' into Technical Skills section`}
+                              >
+                                {weavingSingleKeyword === kw ? (
+                                  <div className="h-3 w-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin shrink-0" />
+                                ) : (
+                                  <Plus className="h-3 w-3 shrink-0 text-rose-500 group-hover:scale-110" />
+                                )}
+                                {kw}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                {/* ✉️ Tailored Cover Letter Card */}
+                <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
+                        <FileText className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          Tailored Cover Letter
+                          {coverLetterText && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
+                              Ready
+                            </span>
+                          )}
+                        </h3>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Generate a 3-paragraph executive cover letter tailored to the job description & your resume.
+                        </p>
+                      </div>
+                    </div>
+
+                    {!coverLetterText && (
+                      <button
+                        type="button"
+                        onClick={handleGenerateCoverLetter}
+                        disabled={isGeneratingCoverLetter}
+                        className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-600/20 disabled:opacity-50"
+                      >
+                        {isGeneratingCoverLetter ? (
+                          <>
+                            <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            Generating Cover Letter...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-3.5 w-3.5 text-purple-200 animate-pulse" />
+                            ✨ Generate Cover Letter (1-Click)
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Editable Target Designation & Contact Header Controls */}
+                  <div className="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">
+                        Target Designation:
+                      </span>
+                      <input
+                        type="text"
+                        value={customTargetRole}
+                        onChange={(e) => setCustomTargetRole(e.target.value)}
+                        placeholder="e.g. Full Stack Developer"
+                        className="flex-1 min-w-[200px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                      />
+                      <button
+                        type="button"
+                        disabled={isGeneratingCoverLetter}
+                        onClick={handleGenerateCoverLetter}
+                        className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer disabled:opacity-50 shadow-sm"
+                      >
+                        Update Header
+                      </button>
+                    </div>
+                    {user && (user.address || user.phone_number || user.linkedin_url) ? (
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        <strong>Header Contact Line:</strong> {[user.address, user.phone_number, user.email, user.linkedin_url].filter(Boolean).join(" | ")}
+                      </p>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsProfileModalOpen(true)}
+                        className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                      >
+                        + Add Address, Phone & LinkedIn to Profile for Cover Letter Header
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Cover Letter Content Body */}
+                  {coverLetterText ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between gap-2 flex-wrap bg-slate-50 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium">
+                          <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                          <span>Cover Letter tailored to job description</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleCopyCoverLetterText}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border ${isCoverLetterCopied
+                                ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                                : "bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 border-purple-500/20"
+                              }`}
+                            title="Copy full cover letter text content"
+                          >
+                            {isCoverLetterCopied ? (
+                              <>
+                                <Check className="h-3 w-3 text-emerald-500" />
+                                <span>Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3 text-purple-500" />
+                                <span>Copy Text</span>
+                              </>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingCoverLetter(!isEditingCoverLetter)}
+                            className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all flex items-center gap-1 cursor-pointer"
+                          >
+                            <Edit className="h-3 w-3" />
+                            {isEditingCoverLetter ? "Done Editing" : "Edit Text"}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isGeneratingCoverLetter}
+                            onClick={handleGenerateCoverLetter}
+                            className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                          >
+                            <RefreshCw className={`h-3 w-3 ${isGeneratingCoverLetter ? "animate-spin" : ""}`} />
+                            Regenerate
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Preview / Edit Area */}
+                      {isEditingCoverLetter ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={coverLetterText}
+                            onChange={(e) => setCoverLetterText(e.target.value)}
+                            rows={12}
+                            className="w-full p-3.5 rounded-xl border border-purple-300 dark:border-purple-800/60 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-purple-500/30 resize-y font-sans"
+                            placeholder="Edit your cover letter here..."
+                          />
+                          <button
+                            type="button"
+                            disabled={isUpdatingCoverLetter}
+                            onClick={() => handleUpdateCoverLetterText(coverLetterText)}
+                            className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                          >
+                            {isUpdatingCoverLetter ? (
+                              <div className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            ) : (
+                              <CheckCircle className="h-3.5 w-3.5" />
+                            )}
+                            Save Changes to Cover Letter
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-slate-800 dark:text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-sans space-y-2 shadow-inner">
+                          {coverLetterText}
+                        </div>
+                      )}
+
+                      {/* Download Buttons Bar */}
+                      {coverLetterDownloadId && (
+                        <div className="flex items-center justify-end flex-wrap gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mr-auto">
+                            Export Cover Letter:
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleCopyCoverLetterText}
+                            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${isCoverLetterCopied
+                                ? "bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20"
+                                : "bg-purple-600 hover:bg-purple-500 text-white border-purple-500/40 shadow-md shadow-purple-600/20 hover:scale-105 active:scale-95"
+                              }`}
+                            title="Copy text content of cover letter"
+                          >
+                            {isCoverLetterCopied ? (
+                              <>
+                                <Check className="h-4 w-4 shrink-0" />
+                                <span>Copied Text!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-4 w-4 shrink-0" />
+                                <span>Copy Text Content</span>
+                              </>
+                            )}
+                          </button>
+                          <a
+                            href={`${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=docx`}
+                            download
+                            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <WordLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
+                            Download Cover Letter (.DOCX)
+                          </a>
+                          <a
+                            href={`${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=pdf`}
+                            download
+                            onClick={() => setSuccessNotification("Downloading Cover Letter PDF...")}
+                            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer border border-slate-700/60"
+                          >
+                            <PdfLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
+                            Download Cover Letter (.PDF)
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950/20 text-center space-y-2">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Click the button above to generate an executive 3-paragraph cover letter tailored to this role and your resume achievements.
+                      </p>
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-      </main>
+
+                {/* Section Analysis Breakdown (Actionable cards shown at the top for maximum speed) */}
+                <div className="space-y-6">
+                  {(() => {
+                    const sectionsToImprove = (analysisResult.sections || [])
+                      .filter((s) => s.review_status === "improve")
+                      .sort((a, b) => {
+                        const priorityMap = { high: 3, medium: 2, low: 1 };
+                        return (priorityMap[b.priority] || 0) - (priorityMap[a.priority] || 0);
+                      });
+
+                    const sectionsToKeep = (analysisResult.sections || [])
+                      .filter((s) => s.review_status === "keep");
+
+                    const sectionsToReduce = (analysisResult.sections || [])
+                      .filter((s) => s.review_status === "reduce_emphasis");
+
+                    return (
+                      <>
+                        {/* Improve Sections (🟡) */}
+                        {sectionsToImprove.length > 0 && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-900 pb-2">
+                              <h3 className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <span>🟡 Recommendations to Improve ({sectionsToImprove.length})</span>
+                              </h3>
+                              <button
+                                type="button"
+                                disabled={isImprovingAll || Object.values(inlineLoadingSections).some(Boolean)}
+                                onClick={() => handleImproveAllClick(sectionsToImprove)}
+                                className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 disabled:bg-slate-100 dark:disabled:bg-slate-900 text-amber-700 dark:text-amber-400 disabled:text-slate-400 dark:disabled:text-slate-600 border border-amber-500/25 disabled:border-slate-200 dark:disabled:border-slate-800 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed select-none"
+                              >
+                                {isImprovingAll ? (
+                                  <>
+                                    <RefreshCw className="h-3 w-3 animate-spin" />
+                                    Improving All...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles className="h-3 w-3 animate-pulse" />
+                                    Improve All with AI
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                            <div className="space-y-4">
+                              {sectionsToImprove.map((section, idx) =>
+                                renderSectionCard(
+                                  section,
+                                  idx,
+                                  !!expandedSections[section.section_name],
+                                  () => toggleSection(section.section_name),
+                                  rewrittenSections[section.section_name.toLowerCase()],
+                                  previousRewrittenSections[section.section_name.toLowerCase()],
+                                  handleRevert,
+                                  handleUndoLastRewrite,
+                                  handleImproveClick,
+                                  inlineLoadingSections,
+                                  triggerInlineRewrite,
+                                  (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded })),
+                                  isPatchingApplied
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Keep Sections (🟢) */}
+                        {sectionsToKeep.length > 0 && (
+                          <div className="space-y-3">
+                            <h3 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-900 pb-2">
+                              <span>🟢 Keep As-Is ({sectionsToKeep.length})</span>
+                            </h3>
+                            <div className="space-y-4">
+                              {sectionsToKeep.map((section, idx) =>
+                                renderSectionCard(
+                                  section,
+                                  idx,
+                                  !!expandedSections[section.section_name],
+                                  () => toggleSection(section.section_name),
+                                  rewrittenSections[section.section_name.toLowerCase()],
+                                  previousRewrittenSections[section.section_name.toLowerCase()],
+                                  handleRevert,
+                                  handleUndoLastRewrite,
+                                  handleImproveClick,
+                                  inlineLoadingSections,
+                                  triggerInlineRewrite,
+                                  (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded })),
+                                  isPatchingApplied
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Reduce Emphasis Sections (⚪) */}
+                        {sectionsToReduce.length > 0 && (
+                          <div className="space-y-3">
+                            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-900 pb-2">
+                              <span>⚪ Reduce Emphasis ({sectionsToReduce.length})</span>
+                            </h3>
+                            <div className="space-y-4">
+                              {sectionsToReduce.map((section, idx) =>
+                                renderSectionCard(
+                                  section,
+                                  idx,
+                                  !!expandedSections[section.section_name],
+                                  () => toggleSection(section.section_name),
+                                  rewrittenSections[section.section_name.toLowerCase()],
+                                  previousRewrittenSections[section.section_name.toLowerCase()],
+                                  handleRevert,
+                                  handleUndoLastRewrite,
+                                  handleImproveClick,
+                                  inlineLoadingSections,
+                                  triggerInlineRewrite,
+                                  (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded })),
+                                  isPatchingApplied
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Detailed Recruitment Insights Toggle (Collapsible by default at the bottom) */}
+                <div className="pt-4 border-t border-slate-900/60">
+                  <button
+                    type="button"
+                    onClick={() => setShowDetailedInsights(!showDetailedInsights)}
+                    className="w-full py-3 bg-slate-950/40 hover:bg-slate-950/80 text-slate-400 hover:text-white rounded-xl text-xs font-semibold border border-slate-900 transition-all flex items-center justify-center gap-2 select-none"
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showDetailedInsights ? "transform rotate-180" : ""}`} />
+                    {showDetailedInsights ? "Hide Detailed Recruiter Insights" : "Show Detailed Recruiter Insights (Strengths & Gap Highlights)"}
+                  </button>
+                </div>
+
+                {showDetailedInsights && (
+                  <div className="space-y-6 pt-2 animate-fade-in-up">
+                    {/* Top Strengths Panel */}
+                    {analysisResult.top_strengths && analysisResult.top_strengths.length > 0 && (
+                      <div className="rounded-2xl p-6 border border-emerald-200 bg-emerald-50/60 space-y-4 shadow-sm">
+                        <h3 className="text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-2 border-b border-emerald-200 pb-2">
+                          <TrendingUp className="h-4 w-4 text-emerald-600" />
+                          Top Strengths Match
+                        </h3>
+                        <div className="grid grid-cols-1 gap-3">
+                          {analysisResult.top_strengths.map((strength, i) => (
+                            <div key={i} className="flex items-start gap-3 bg-white p-3.5 rounded-xl border border-emerald-200/80 shadow-xs">
+                              <div className="h-7 w-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 mt-0.5">
+                                <CategoryIcon category={strength.category} className="h-4 w-4 text-emerald-700" />
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-slate-900">{strength.name}</span>
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase font-extrabold">
+                                    {strength.category}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-slate-700 font-medium leading-relaxed">{strength.reason}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Top Improvements Panel */}
+                    {analysisResult.top_improvements && analysisResult.top_improvements.length > 0 && (
+                      <div className="rounded-2xl p-6 border border-amber-200 bg-amber-50/60 space-y-4 shadow-sm">
+                        <h3 className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-2 border-b border-amber-200 pb-2">
+                          <ShieldAlert className="h-4 w-4 text-amber-600" />
+                          Top Recommended Improvements
+                        </h3>
+                        <div className="grid grid-cols-1 gap-3">
+                          {(() => {
+                            const sortedImprovements = [...(analysisResult.top_improvements || [])].sort(
+                              (a, b) => a.priority - b.priority
+                            );
+
+                            return sortedImprovements.map((imp, i) => {
+                              const isExpanded = !!expandedImprovements[imp.name];
+                              const priorityColor = [
+                                "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
+                                "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
+                                "bg-amber-100 text-amber-800 border-amber-300 font-extrabold",
+                                "bg-sky-100 text-sky-800 border-sky-300 font-extrabold",
+                                "bg-slate-100 text-slate-800 border-slate-300 font-bold"
+                              ][imp.priority - 1] || "bg-slate-100 text-slate-800 border-slate-300 font-bold";
+
+                              return (
+                                <div
+                                  key={i}
+                                  className="rounded-xl border border-slate-200 hover:border-slate-300 transition-all duration-300 bg-white shadow-xs"
+                                >
+                                  {/* Clickable Header for Collapsing */}
+                                  <div
+                                    onClick={() => toggleImprovement(imp.name)}
+                                    className="flex flex-wrap items-center justify-between gap-4 p-4 cursor-pointer select-none"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <span className={`text-[10px] px-2.5 py-0.5 rounded-full border uppercase ${priorityColor}`}>
+                                        Priority #{imp.priority}
+                                      </span>
+                                      <span className="text-sm font-bold text-slate-900">{imp.name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${isExpanded ? "transform rotate-180" : ""}`} />
+                                    </div>
+                                  </div>
+
+                                  {/* Collapsible Details */}
+                                  {isExpanded && (
+                                    <div className="px-4 pb-4 border-t border-slate-200 pt-3 space-y-3.5 animate-fade-in-up">
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                        {/* Rationale */}
+                                        <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                          <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider block">
+                                            Hiring Manager Rationale
+                                          </span>
+                                          <p className="text-[11px] text-slate-700 font-medium leading-relaxed italic">
+                                            "{imp.reason}"
+                                          </p>
+                                        </div>
+
+                                        {/* Expected Impact */}
+                                        <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                          <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider block">
+                                            Expected Interview Impact
+                                          </span>
+                                          <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
+                                            {imp.expected_interview_impact}
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                        {/* Evidence Reused */}
+                                        <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                          <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider block">
+                                            Evidence Reused or Adjacent Skills
+                                          </span>
+                                          <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
+                                            {imp.evidence_reused || "No direct/adjacent evidence found. Recommended with caution."}
+                                          </p>
+                                        </div>
+
+                                        {/* Metrics (Section & Confidence) */}
+                                        <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                          <div className="flex items-center justify-between text-[11px]">
+                                            <span className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Target Section</span>
+                                            <span className="text-slate-900 font-bold capitalize">{imp.section}</span>
+                                          </div>
+                                          <div className="space-y-1 pt-1 border-t border-slate-200">
+                                            <div className="flex items-center justify-between text-[11px]">
+                                              <span className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Recruiter Confidence</span>
+                                              <span className="text-indigo-700 font-extrabold">{Math.round(imp.confidence * 100)}%</span>
+                                            </div>
+                                            <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                                              <div
+                                                className="h-full bg-indigo-600 rounded-full transition-all duration-500"
+                                                style={{ width: `${imp.confidence * 100}%` }}
+                                              />
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            });
+                          })()}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </main>
       )}
 
       {/* ─── ⚡ Keyword Weave Selection Modal ───────────────────────────────── */}
@@ -4028,16 +4020,14 @@ export default function Home() {
                           return (
                             <label
                               key={i}
-                              className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${
-                                isChecked
+                              className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${isChecked
                                   ? "bg-amber-50 border-amber-300"
                                   : "bg-slate-50 border-slate-200 hover:border-slate-300 opacity-60"
-                              }`}
+                                }`}
                             >
                               <div
-                                className={`shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-all duration-150 ${
-                                  isChecked ? "border-amber-500 bg-amber-500" : "border-slate-300 bg-white"
-                                }`}
+                                className={`shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-all duration-150 ${isChecked ? "border-amber-500 bg-amber-500" : "border-slate-300 bg-white"
+                                  }`}
                                 onClick={() => {
                                   setSelectedKeywordsToWeave((prev) => {
                                     const next = new Set(prev);
@@ -4049,7 +4039,7 @@ export default function Home() {
                               >
                                 {isChecked && (
                                   <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 10" fill="none">
-                                    <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                                   </svg>
                                 )}
                               </div>
@@ -4078,16 +4068,14 @@ export default function Home() {
                           return (
                             <label
                               key={i}
-                              className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${
-                                isChecked
+                              className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${isChecked
                                   ? "bg-rose-50 border-rose-300"
                                   : "bg-slate-50 border-slate-200 hover:border-slate-300 opacity-60"
-                              }`}
+                                }`}
                             >
                               <div
-                                className={`shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-all duration-150 ${
-                                  isChecked ? "border-rose-500 bg-rose-500" : "border-slate-300 bg-white"
-                                }`}
+                                className={`shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-all duration-150 ${isChecked ? "border-rose-500 bg-rose-500" : "border-slate-300 bg-white"
+                                  }`}
                                 onClick={() => {
                                   setSelectedKeywordsToWeave((prev) => {
                                     const next = new Set(prev);
@@ -4099,7 +4087,7 @@ export default function Home() {
                               >
                                 {isChecked && (
                                   <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 10" fill="none">
-                                    <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                                   </svg>
                                 )}
                               </div>
@@ -4605,11 +4593,10 @@ export default function Home() {
             <button
               onClick={handleApplyRewrites}
               disabled={applyMutation.isPending}
-              className={`px-3.5 py-1.5 ${
-                isPatchingApplied
+              className={`px-3.5 py-1.5 ${isPatchingApplied
                   ? "bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold"
                   : "bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white border border-white/20 shadow-md shadow-emerald-500/20 text-xs font-black hover:scale-105 active:scale-95"
-              } disabled:opacity-50 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer`}
+                } disabled:opacity-50 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer`}
             >
               {applyMutation.isPending ? (
                 <>
@@ -4796,7 +4783,7 @@ export default function Home() {
           isOpen={isHistoryModalOpen}
           onClose={() => {
             setIsHistoryModalOpen(false);
-            fetchDailyGoal().catch(() => {});
+            fetchDailyGoal().catch(() => { });
           }}
           onRestoreSession={handleRestoreSession}
         />
@@ -4810,7 +4797,7 @@ export default function Home() {
           user={user}
           token={token}
           onProfileUpdated={() => {
-            refreshMe().catch(() => {});
+            refreshMe().catch(() => { });
           }}
         />
       )}
