@@ -62,6 +62,26 @@ class CustomSection(BaseModel):
     entries: list[str] = Field(default_factory=list, description="List of free-form text bullet points or entries")
 
 
+def normalize_section_type(sec_type: str, sec_title: str = "") -> str:
+    """Normalize raw section type string or title into canonical section type."""
+    st = (sec_type or "").lower().strip().replace("-", "_").replace(" ", "_")
+    tt = (sec_title or "").lower().strip()
+
+    if any(k in st or k in tt for k in ["exp", "work", "job", "career", "employment", "history", "position"]):
+        return "experience"
+    elif any(k in st or k in tt for k in ["skill", "competenc", "technolog", "tool", "expert", "proficien"]):
+        return "skills"
+    elif any(k in st or k in tt for k in ["edu", "academic", "degree", "qualification", "university", "school"]):
+        return "education"
+    elif any(k in st or k in tt for k in ["proj", "portfolio"]):
+        return "projects"
+    elif any(k in st or k in tt for k in ["certif", "license", "credential", "course"]):
+        return "certifications"
+    elif any(k in st or k in tt for k in ["summar", "profile", "about", "objective", "headline"]):
+        return "summary"
+    return "custom"
+
+
 class SectionContent(BaseModel):
     text: Optional[str] = Field(None, description="Text content for summary or text sections")
     categories: list[SkillCategory] = Field(default_factory=list, description="Skill categories for skills section")
@@ -71,23 +91,45 @@ class SectionContent(BaseModel):
     certification_entries: list[CertificationEntry] = Field(default_factory=list, description="Certifications / license entries")
     custom_entries: list[str] = Field(default_factory=list, description="Text entries/bullet points for custom sections")
 
-    def to_dict(self, section_type: str) -> dict[str, Any]:
+    def to_dict(self, section_type: str = "", section_title: str = "") -> dict[str, Any]:
         """Convert SectionContent into standard dictionary format expected by UI and renderers."""
-        sec_type = (section_type or "").lower()
-        if sec_type == "summary":
-            return {"text": self.text or ""}
-        elif sec_type == "skills":
-            return {"categories": [c.model_dump() for c in self.categories]}
-        elif sec_type == "experience":
+        norm_type = normalize_section_type(section_type, section_title)
+
+        # 1. Primary check based on normalized section_type
+        if norm_type == "summary":
+            if self.text:
+                return {"text": self.text}
+        elif norm_type == "skills":
+            if self.categories:
+                return {"categories": [c.model_dump() for c in self.categories]}
+        elif norm_type == "experience":
+            if self.experience_entries:
+                return {"entries": [e.model_dump() for e in self.experience_entries]}
+        elif norm_type == "education":
+            if self.education_entries:
+                return {"entries": [e.model_dump() for e in self.education_entries]}
+        elif norm_type == "projects":
+            if self.project_entries:
+                return {"entries": [e.model_dump() for e in self.project_entries]}
+        elif norm_type == "certifications":
+            if self.certification_entries:
+                return {"entries": [e.model_dump() for e in self.certification_entries]}
+
+        # 2. Smart fallback if AI populated a specific entry list regardless of section_type string
+        if self.experience_entries:
             return {"entries": [e.model_dump() for e in self.experience_entries]}
-        elif sec_type == "education":
+        elif self.education_entries:
             return {"entries": [e.model_dump() for e in self.education_entries]}
-        elif sec_type == "projects":
+        elif self.project_entries:
             return {"entries": [e.model_dump() for e in self.project_entries]}
-        elif sec_type == "certifications":
+        elif self.certification_entries:
             return {"entries": [e.model_dump() for e in self.certification_entries]}
+        elif self.categories:
+            return {"categories": [c.model_dump() for c in self.categories]}
+        elif self.text:
+            return {"text": self.text}
         else:
-            return {"entries": self.custom_entries or ([self.text] if self.text else [])}
+            return {"entries": self.custom_entries or []}
 
 
 class ResumeSectionParseModel(BaseModel):
@@ -155,16 +197,20 @@ class StructuredResume(BaseModel):
 
 def convert_parsed_to_structured(parsed: StructuredResumeParseModel) -> StructuredResume:
     """Convert AI-parsed StructuredResumeParseModel into normalized StructuredResume."""
-    sections = [
-        ResumeSection(
-            section_type=s.section_type,
-            section_title=s.section_title,
-            order=s.order,
-            visible=s.visible,
-            content=s.content.to_dict(s.section_type),
+    sections = []
+    for s in parsed.sections:
+        canonical_type = normalize_section_type(s.section_type, s.section_title)
+        content_dict = s.content.to_dict(s.section_type, s.section_title)
+        sections.append(
+            ResumeSection(
+                section_type=canonical_type,
+                section_title=s.section_title,
+                order=s.order,
+                visible=s.visible,
+                content=content_dict,
+            )
         )
-        for s in parsed.sections
-    ]
+
     return StructuredResume(
         contact_info=parsed.contact_info,
         summary=parsed.summary,
