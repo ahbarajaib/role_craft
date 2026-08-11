@@ -89,18 +89,31 @@ export async function parseAndSaveStructuredResume(file: File): Promise<Structur
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(`${API_BASE_URL}/api/v1/structured-resume/parse`, {
-    method: "POST",
-    headers: getAuthHeaders(null),
-    body: formData,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData?.error?.detail || "Failed to parse resume file");
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/structured-resume/parse`, {
+      method: "POST",
+      headers: getAuthHeaders(null),
+      body: formData,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData?.error?.detail || "Failed to parse resume file");
+    }
+
+    return await response.json();
+  } catch (err: any) {
+    if (err.name === "AbortError") {
+      throw new Error("Parsing request timed out. Please verify your connection and try again.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return response.json();
 }
 
 export async function fetchStructuredResume(): Promise<StructuredResume | null> {
