@@ -53,6 +53,7 @@ export default function ResumeBuilderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving">("saved");
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
+  const [isLoadingResume, setIsLoadingResume] = useState(true);
 
   const [selectedTemplate, setSelectedTemplate] = useState<"clean_classic" | "modern_professional" | "executive_profile">("clean_classic");
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -65,10 +66,13 @@ export default function ResumeBuilderPage() {
   useEffect(() => {
     if (token) {
       loadResume();
+    } else if (!authLoading) {
+      setIsLoadingResume(false);
     }
-  }, [token]);
+  }, [token, authLoading]);
 
   const loadResume = async () => {
+    setIsLoadingResume(true);
     try {
       const data = await fetchStructuredResume();
       if (data) {
@@ -79,6 +83,8 @@ export default function ResumeBuilderPage() {
       }
     } catch (err: any) {
       console.error("Failed to load structured resume:", err);
+    } finally {
+      setIsLoadingResume(false);
     }
   };
 
@@ -361,53 +367,57 @@ export default function ResumeBuilderPage() {
           </div>
         )}
 
-        {/* Top Import & Action Bar */}
-        <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept=".docx,.pdf"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isParsing}
-              className="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all cursor-pointer shadow-md shadow-indigo-500/20 flex items-center gap-2"
-            >
-              <UploadCloud className="h-4 w-4" />
-              {isParsing ? "AI Parsing Resume..." : "Import DOCX or PDF Resume"}
-            </button>
+        {/* Hidden File Input for Re-import / Upload */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept=".docx,.pdf"
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
+          }}
+        />
 
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              AI parses any document format into structured, editable sections
-            </span>
-          </div>
-
-          {resume && token && (
-            <div className="flex items-center gap-2">
-              <a
-                href={getTemplateDownloadUrl(selectedTemplate, "docx")}
-                download
-                className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
+        {/* Top Action Bar (shown ONLY when resume is loaded) */}
+        {resume && !isParsing && (
+          <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isParsing}
+                className="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all cursor-pointer border border-slate-200 dark:border-slate-700 flex items-center gap-2"
               >
-                <WordLogoIcon className="h-4 w-4" /> Download DOCX
-              </a>
+                <UploadCloud className="h-4 w-4 text-indigo-500" />
+                Re-import Resume (DOCX / PDF)
+              </button>
 
-              <a
-                href={getTemplateDownloadUrl(selectedTemplate, "pdf")}
-                download
-                className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                <PdfLogoIcon className="h-4 w-4" /> Download PDF
-              </a>
+              <span className="text-xs text-slate-500 dark:text-slate-400 hidden sm:inline">
+                Master Resume JSON synced live across RoleCraft workspace
+              </span>
             </div>
-          )}
-        </div>
+
+            {token && (
+              <div className="flex items-center gap-2">
+                <a
+                  href={getTemplateDownloadUrl(selectedTemplate, "docx")}
+                  download
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <WordLogoIcon className="h-4 w-4" /> Download DOCX
+                </a>
+
+                <a
+                  href={getTemplateDownloadUrl(selectedTemplate, "pdf")}
+                  download
+                  className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-sm shadow-indigo-500/20"
+                >
+                  <PdfLogoIcon className="h-4 w-4" /> Download PDF
+                </a>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Two-Panel Layout */}
         {resume ? (
@@ -785,9 +795,36 @@ export default function ResumeBuilderPage() {
               </div>
             </div>
           </div>
+        ) : isLoadingResume ? (
+          /* Loading State */
+          <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center max-w-xl mx-auto space-y-4 my-12">
+            <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 mx-auto">
+              <RefreshCw className="h-6 w-6 animate-spin" />
+            </div>
+            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Loading Master Resume...</p>
+          </div>
+        ) : isParsing ? (
+          /* Parsing State */
+          <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800/60 shadow-xl shadow-indigo-500/5 text-center max-w-xl mx-auto space-y-6 my-12 relative overflow-hidden">
+            <div className="h-16 w-16 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white mx-auto shadow-lg shadow-indigo-500/30 animate-pulse">
+              <Sparkles className="h-8 w-8" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center justify-center gap-2">
+                <RefreshCw className="h-4 w-4 animate-spin text-indigo-500" />
+                AI Parsing Resume into Structured Sections...
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                Extracting contact info, skills categories, work experience, and education into your unified Master Resume format.
+              </p>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden max-w-sm mx-auto">
+              <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 h-full w-3/4 animate-pulse rounded-full" />
+            </div>
+          </div>
         ) : (
-          /* Empty Initial State */
-          <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center max-w-xl mx-auto space-y-6">
+          /* Empty Initial State Card */
+          <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center max-w-xl mx-auto space-y-6 my-8">
             <div className="h-16 w-16 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mx-auto">
               <UploadCloud className="h-8 w-8" />
             </div>
@@ -796,18 +833,17 @@ export default function ResumeBuilderPage() {
                 Import Your Resume to Start Building
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
-                Upload your DOCX or PDF resume. RoleCraft AI will parse your content into structured, editable sections so you can modify details, manage section ordering, and export cleanly into ATS single-column templates.
+                Upload your DOCX or PDF resume. RoleCraft AI parses your content into structured, editable sections so you can modify details, manage section ordering, and export cleanly into ATS single-column templates.
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isParsing}
               className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all cursor-pointer shadow-lg shadow-indigo-500/25 inline-flex items-center gap-2"
             >
               <UploadCloud className="h-4 w-4" />
-              {isParsing ? "Parsing Resume..." : "Upload DOCX or PDF"}
+              Upload DOCX or PDF
             </button>
           </div>
         )}
