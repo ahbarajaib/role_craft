@@ -246,6 +246,7 @@ def _parse_and_save_structured_resume(
         ai_provider = OpenAIProvider(
             api_key=settings.OPENAI_API_KEY,
             model=settings.OPENAI_MODEL,
+            timeout=settings.OPENAI_TIMEOUT_SECONDS,
         )
         parser = ResumeParserService(ai_provider=ai_provider)
         structured = parser.parse_document(file_path, filename)

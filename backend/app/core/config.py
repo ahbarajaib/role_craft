@@ -77,8 +77,8 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     # gpt-4o-mini is the cheapest model that supports structured outputs.
     OPENAI_MODEL: str = "gpt-4o-mini"
-    # Timeout in seconds for AI queries
-    OPENAI_TIMEOUT_SECONDS: float = 30.0
+    # Timeout in seconds for AI queries (increased to 120s for complex structured output generation)
+    OPENAI_TIMEOUT_SECONDS: float = 120.0
 
     # ── Authentication ────────────────────────────────────────────────────────
     JWT_SECRET: str = "supersecretrolecraftkey"

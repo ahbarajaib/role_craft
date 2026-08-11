@@ -90,7 +90,7 @@ export async function parseAndSaveStructuredResume(file: File): Promise<Structur
   formData.append("file", file);
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000);
+  const timeoutId = setTimeout(() => controller.abort(), 120000);
 
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/structured-resume/parse`, {
