@@ -604,16 +604,44 @@ export default function ResumeBuilderPage() {
                           key={fIdx}
                           type="button"
                           onClick={() => {
-                            let el = document.getElementById(elementId) || document.querySelector(`[data-field="${field}"]`);
+                            const { label, elementId } = humanizeFieldName(field);
+                            const cleanPath = field.replace(/^sections\.\d+\.content\./, "");
+
+                            // Strategy 1: Direct elementId match
+                            let el = document.getElementById(elementId);
+
+                            // Strategy 2: Clean path ID match (e.g. field-education-0-location)
                             if (!el) {
-                              const cleanPath = field.replace(/^sections\.\d+\.content\./, "");
-                              el = document.querySelector(`[data-field*="${cleanPath}"]`) || document.getElementById(`field-${cleanPath.replace(/\./g, "-")}`);
+                              el = document.getElementById(`field-${cleanPath.replace(/\./g, "-")}`);
                             }
+
+                            // Strategy 3: Exact attribute match
+                            if (!el) {
+                              el = (document.querySelector(`[data-field="${field}"]`) || document.querySelector(`[data-field="${cleanPath}"]`)) as HTMLElement;
+                            }
+
+                            // Strategy 4: Fallback property match
+                            if (!el) {
+                              const parts = field.split(".");
+                              const propKey = parts[parts.length - 1];
+                              let idx = "0";
+                              for (const p of parts) {
+                                if (!isNaN(Number(p))) {
+                                  idx = p;
+                                  break;
+                                }
+                              }
+
+                              if (field.includes("education")) el = document.getElementById(`field-education-${idx}-${propKey}`);
+                              else if (field.includes("experience")) el = document.getElementById(`field-sections-${idx}-content-entries-0-${propKey}`);
+                              else if (field.includes("project")) el = document.getElementById(`field-projects-${idx}-${propKey}`);
+                            }
+
                             if (el) {
                               el.scrollIntoView({ behavior: "smooth", block: "center" });
                               (el as HTMLElement).focus?.();
                               el.classList.add("ring-4", "ring-rose-500", "border-rose-500", "animate-pulse");
-                              setTimeout(() => el.classList.remove("ring-4", "ring-rose-500", "border-rose-500", "animate-pulse"), 3000);
+                              setTimeout(() => el?.classList.remove("ring-4", "ring-rose-500", "border-rose-500", "animate-pulse"), 3500);
                             }
                           }}
                           className="px-3 py-1.5 rounded-xl bg-white dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 font-extrabold text-xs hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:scale-105"

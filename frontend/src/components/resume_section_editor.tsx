@@ -200,6 +200,8 @@ export default function ResumeSectionEditor({
           {section.section_type === "education" && (
             <EducationEditor
               entries={section.content?.entries || []}
+              sectionIndex={index}
+              lowConfidenceFields={lowConfidenceFields}
               onChange={(newEntries) => updateContent({ ...section.content, entries: newEntries })}
             />
           )}
@@ -208,6 +210,8 @@ export default function ResumeSectionEditor({
           {section.section_type === "projects" && (
             <ProjectsEditor
               entries={section.content?.entries || []}
+              sectionIndex={index}
+              lowConfidenceFields={lowConfidenceFields}
               onChange={(newEntries) => updateContent({ ...section.content, entries: newEntries })}
             />
           )}
@@ -216,6 +220,8 @@ export default function ResumeSectionEditor({
           {section.section_type === "certifications" && (
             <CertificationsEditor
               entries={section.content?.entries || []}
+              sectionIndex={index}
+              lowConfidenceFields={lowConfidenceFields}
               onChange={(newEntries) => updateContent({ ...section.content, entries: newEntries })}
             />
           )}
@@ -224,6 +230,7 @@ export default function ResumeSectionEditor({
           {section.section_type === "custom" && (
             <CustomListEditor
               entries={section.content?.entries || []}
+              sectionIndex={index}
               onChange={(newEntries) => updateContent({ ...section.content, entries: newEntries })}
             />
           )}
@@ -533,7 +540,17 @@ function ExperienceEditor({
 }
 
 // ── Education Editor ──────────────────────────────────────────────────────────
-function EducationEditor({ entries, onChange }: { entries: any[]; onChange: (e: any[]) => void }) {
+function EducationEditor({
+  entries,
+  sectionIndex,
+  lowConfidenceFields,
+  onChange,
+}: {
+  entries: any[];
+  sectionIndex?: number;
+  lowConfidenceFields?: string[];
+  onChange: (e: any[]) => void;
+}) {
   const addEntry = () => {
     onChange([
       ...entries,
@@ -551,43 +568,84 @@ function EducationEditor({ entries, onChange }: { entries: any[]; onChange: (e: 
     <div className="space-y-3">
       {entries.map((item, idx) => {
         const e = typeof item === "string" ? { degree: item, institution: "", location: "", graduation_date: "" } : item;
+        const degreePath = `education.${idx}.degree`;
+        const instPath = `education.${idx}.institution`;
+        const locPath = `education.${idx}.location`;
+        const gradPath = `education.${idx}.graduation_date`;
+
+        const isLocLow = lowConfidenceFields?.some((p) => p.includes(`education.${idx}.location`) || p.includes(`entries.${idx}.location`));
+        const isGradLow = lowConfidenceFields?.some((p) => p.includes(`education.${idx}.graduation_date`) || p.includes(`entries.${idx}.graduation_date`));
+
         return (
-          <div key={idx} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
+          <div key={idx} className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
             <div className="flex items-center justify-between">
               <span className="font-bold text-xs text-purple-600 dark:text-purple-400">Education #{idx + 1}</span>
-              <button type="button" onClick={() => onChange(entries.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-rose-500 p-1">
+              <button type="button" onClick={() => onChange(entries.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-rose-500 p-1 cursor-pointer">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <input
-                type="text"
-                value={e.degree || ""}
-                onChange={(evt) => updateEntry(idx, { ...e, degree: evt.target.value })}
-                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                placeholder="Degree / Qualification"
-              />
-              <input
-                type="text"
-                value={e.institution || ""}
-                onChange={(evt) => updateEntry(idx, { ...e, institution: evt.target.value })}
-                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                placeholder="Institution / University"
-              />
-              <input
-                type="text"
-                value={e.location || ""}
-                onChange={(evt) => updateEntry(idx, { ...e, location: evt.target.value })}
-                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                placeholder="Location"
-              />
-              <input
-                type="text"
-                value={e.graduation_date || ""}
-                onChange={(evt) => updateEntry(idx, { ...e, graduation_date: evt.target.value })}
-                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                placeholder="Graduation Year / Date"
-              />
+              <div>
+                <label className="text-[10px] font-semibold text-slate-400 block mb-1">Degree / Qualification</label>
+                <input
+                  id={`field-education-${idx}-degree`}
+                  data-field={degreePath}
+                  type="text"
+                  value={e.degree || ""}
+                  onChange={(evt) => updateEntry(idx, { ...e, degree: evt.target.value })}
+                  className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
+                  placeholder="Degree / Qualification"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-semibold text-slate-400 block mb-1">Institution / University</label>
+                <input
+                  id={`field-education-${idx}-institution`}
+                  data-field={instPath}
+                  type="text"
+                  value={e.institution || ""}
+                  onChange={(evt) => updateEntry(idx, { ...e, institution: evt.target.value })}
+                  className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
+                  placeholder="Institution / University"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-semibold text-slate-400 flex items-center justify-between mb-1">
+                  Location
+                  {isLocLow && <span className="text-rose-500 font-bold text-[9px]">⚠️ Verify</span>}
+                </label>
+                <input
+                  id={`field-education-${idx}-location`}
+                  data-field={locPath}
+                  type="text"
+                  value={e.location || ""}
+                  onChange={(evt) => updateEntry(idx, { ...e, location: evt.target.value })}
+                  className={`w-full p-2 rounded-lg border text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white ${
+                    isLocLow ? "border-rose-400 dark:border-rose-500 bg-rose-50/20" : "border-slate-200 dark:border-slate-700"
+                  }`}
+                  placeholder="Location"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-semibold text-slate-400 flex items-center justify-between mb-1">
+                  Graduation Year / Date
+                  {isGradLow && <span className="text-rose-500 font-bold text-[9px]">⚠️ Verify</span>}
+                </label>
+                <input
+                  id={`field-education-${idx}-graduation_date`}
+                  data-field={gradPath}
+                  type="text"
+                  value={e.graduation_date || ""}
+                  onChange={(evt) => updateEntry(idx, { ...e, graduation_date: evt.target.value })}
+                  className={`w-full p-2 rounded-lg border text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white ${
+                    isGradLow ? "border-rose-400 dark:border-rose-500 bg-rose-50/20" : "border-slate-200 dark:border-slate-700"
+                  }`}
+                  placeholder="Graduation Year / Date"
+                />
+              </div>
             </div>
           </div>
         );
@@ -600,7 +658,17 @@ function EducationEditor({ entries, onChange }: { entries: any[]; onChange: (e: 
 }
 
 // ── Projects Editor ───────────────────────────────────────────────────────────
-function ProjectsEditor({ entries, onChange }: { entries: any[]; onChange: (e: any[]) => void }) {
+function ProjectsEditor({
+  entries,
+  sectionIndex,
+  lowConfidenceFields,
+  onChange,
+}: {
+  entries: any[];
+  sectionIndex?: number;
+  lowConfidenceFields?: string[];
+  onChange: (e: any[]) => void;
+}) {
   const addEntry = () => {
     onChange([
       ...entries,
@@ -618,6 +686,9 @@ function ProjectsEditor({ entries, onChange }: { entries: any[]; onChange: (e: a
     <div className="space-y-4">
       {entries.map((item, idx) => {
         const e = typeof item === "string" ? { name: item, description: "", url: "", technologies: [], bullets: [] } : item;
+        const namePath = `projects.${idx}.name`;
+        const urlPath = `projects.${idx}.url`;
+
         return (
           <div
             key={idx}
@@ -640,6 +711,8 @@ function ProjectsEditor({ entries, onChange }: { entries: any[]; onChange: (e: a
               <div>
                 <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Project Name</label>
                 <input
+                  id={`field-projects-${idx}-name`}
+                  data-field={namePath}
                   type="text"
                   value={e.name || ""}
                   onChange={(evt) => updateEntry(idx, { ...e, name: evt.target.value })}
@@ -651,6 +724,8 @@ function ProjectsEditor({ entries, onChange }: { entries: any[]; onChange: (e: a
               <div>
                 <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Project URL / Link</label>
                 <input
+                  id={`field-projects-${idx}-url`}
+                  data-field={urlPath}
                   type="text"
                   value={e.url || ""}
                   onChange={(evt) => updateEntry(idx, { ...e, url: evt.target.value })}
@@ -734,7 +809,17 @@ function ProjectsEditor({ entries, onChange }: { entries: any[]; onChange: (e: a
 }
 
 // ── Certifications Editor ─────────────────────────────────────────────────────
-function CertificationsEditor({ entries, onChange }: { entries: any[]; onChange: (e: any[]) => void }) {
+function CertificationsEditor({
+  entries,
+  sectionIndex,
+  lowConfidenceFields,
+  onChange,
+}: {
+  entries: any[];
+  sectionIndex?: number;
+  lowConfidenceFields?: string[];
+  onChange: (e: any[]) => void;
+}) {
   const addEntry = () => {
     onChange([
       ...entries,
@@ -752,48 +837,52 @@ function CertificationsEditor({ entries, onChange }: { entries: any[]; onChange:
     <div className="space-y-3">
       {entries.map((item, idx) => {
         const e = typeof item === "string" ? { name: item, issuer: "", date: "", credential_id: "" } : item;
+        const namePath = `certifications.${idx}.name`;
+
         return (
-          <div key={idx} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
+          <div key={idx} className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
             <div className="flex items-center justify-between">
               <span className="font-bold text-xs text-rose-600 dark:text-rose-400">Certification #{idx + 1}</span>
-              <button type="button" onClick={() => onChange(entries.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-rose-500 p-1">
+              <button type="button" onClick={() => onChange(entries.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-rose-500 p-1 cursor-pointer">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input
+                id={`field-certifications-${idx}-name`}
+                data-field={namePath}
                 type="text"
                 value={e.name || ""}
                 onChange={(evt) => updateEntry(idx, { ...e, name: evt.target.value })}
-                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
                 placeholder="Certification / License Name"
               />
               <input
                 type="text"
                 value={e.issuer || ""}
                 onChange={(evt) => updateEntry(idx, { ...e, issuer: evt.target.value })}
-                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
                 placeholder="Issuing Organization"
               />
               <input
                 type="text"
                 value={e.date || ""}
                 onChange={(evt) => updateEntry(idx, { ...e, date: evt.target.value })}
-                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
                 placeholder="Issue Date / Year"
               />
               <input
                 type="text"
                 value={e.credential_id || ""}
                 onChange={(evt) => updateEntry(idx, { ...e, credential_id: evt.target.value })}
-                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                placeholder="Credential ID / Verification URL"
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
+                placeholder="Credential ID / URL"
               />
             </div>
           </div>
         );
       })}
-      <button type="button" onClick={addEntry} className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1">
+      <button type="button" onClick={addEntry} className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1 cursor-pointer">
         <Plus className="h-3.5 w-3.5" /> Add Certification
       </button>
     </div>
@@ -801,7 +890,15 @@ function CertificationsEditor({ entries, onChange }: { entries: any[]; onChange:
 }
 
 // ── Custom List Editor ────────────────────────────────────────────────────────
-function CustomListEditor({ entries, onChange }: { entries: any[]; onChange: (e: any[]) => void }) {
+function CustomListEditor({
+  entries,
+  sectionIndex,
+  onChange,
+}: {
+  entries: any[];
+  sectionIndex?: number;
+  onChange: (e: any[]) => void;
+}) {
   return (
     <div className="space-y-2.5">
       {entries.map((entry, idx) => (
