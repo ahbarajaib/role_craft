@@ -44,11 +44,11 @@ TAILOR_SKILLS_SYSTEM = (
 )
 
 TAILOR_PROJECTS_SYSTEM = (
-    "You are a tech resume project editor. Rewrite project descriptions and bullet points to highlight target stack frameworks, APIs, and quantifiable engineering impact.\n"
+    "You are a master technical resume project strategist. Rewrite project descriptions and bullet points to highlight target stack frameworks, APIs, architecture patterns, and quantifiable engineering impact.\n"
     "RULES:\n"
-    "1. Weave target ATS keywords from the job description into project bullets.\n"
-    "2. Never alter real project names, links, or dates.\n"
-    "3. Output EXACTLY the same number of bullets as input, one line per bullet."
+    "1. MANDATORY: Seamlessly weave matching technical keywords, tools, frameworks, and methodologies from the target Job Description (e.g. REST APIs, Microservices, CI/CD, React, Node.js, Python, PostgreSQL, Docker, AWS, GraphQL) into every project bullet point.\n"
+    "2. STRICTLY LOCK & PRESERVE REAL FACTS: Never alter project names, company names, repository links, or dates.\n"
+    "3. Output EXACTLY the same number of bullets as input, one line per bullet, plain text only."
 )
 
 
@@ -136,8 +136,9 @@ class TailorOrchestrationService:
                     bullets = entry.get("bullets", [])
                     if not bullets:
                         continue
+                    proj_name = entry.get("name", "")
                     rewritten_bullets = self._rewrite_project_bullets(
-                        bullets, job_description, job_title
+                        bullets, job_description, job_title, project_name=proj_name
                     )
                     if rewritten_bullets and rewritten_bullets != bullets:
                         diff[f"sections[{i}].projects[{j}].bullets"] = {
@@ -199,16 +200,20 @@ class TailorOrchestrationService:
             return bullets
 
     def _rewrite_project_bullets(
-        self, bullets: list, jd: str, job_title: str
+        self, bullets: list, jd: str, job_title: str, project_name: str = ""
     ) -> list:
         if not bullets:
             return bullets
         bullets_text = "\n".join(bullets)
+        proj_ctx = f"Project: {project_name}" if project_name else "Technical Project"
         user_prompt = (
+            f"Candidate Specific {proj_ctx}\n"
             f"Target Role: {job_title}\n\n"
-            f"Job Description:\n{jd[:2000]}\n\n"
+            f"Target Job Description:\n{jd[:2500]}\n\n"
             f"Original Project Bullets ({len(bullets)} bullets):\n{bullets_text}\n\n"
-            f"Rewrite these {len(bullets)} project bullets to highlight relevant stack technologies and achievements (one per line, no bullet symbols):"
+            f"Rewrite these {len(bullets)} project bullets specifically for {proj_ctx}, "
+            f"seamlessly weaving in matching technical keywords, action verbs, and quantifiable engineering metrics from the target Job Description. "
+            f"Output EXACTLY {len(bullets)} bullets (one per line, no bullet symbols):"
         )
         try:
             response = self._ai.generate_text(TAILOR_PROJECTS_SYSTEM, user_prompt, temperature=0.3)
