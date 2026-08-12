@@ -52,6 +52,7 @@ export default function ResumeBuilderPage() {
 
   const [resume, setResume] = useState<StructuredResume | null>(null);
   const [isParsing, setIsParsing] = useState(false);
+  const [uploadingFileName, setUploadingFileName] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState<"pdf" | "docx" | null>(null);
   const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving">("saved");
@@ -97,6 +98,7 @@ export default function ResumeBuilderPage() {
       return;
     }
 
+    setUploadingFileName(file.name);
     setIsParsing(true);
     setStatusMsg({ type: "info", text: "AI is parsing resume content into structured sections..." });
 
@@ -462,8 +464,11 @@ export default function ResumeBuilderPage() {
           </div>
         )}
 
-        {/* Two-Panel Layout */}
-        {resume ? (
+        {/* Two-Panel Layout or Parsing State */}
+        {isParsing ? (
+          /* Dynamic Step-by-Step AI Parsing Progress UX */
+          <ParsingProgressCard fileName={uploadingFileName || undefined} />
+        ) : resume ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Panel (7 Cols): Section Editor */}
             <div className="lg:col-span-7 space-y-6">
@@ -854,9 +859,6 @@ export default function ResumeBuilderPage() {
             </div>
             <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Loading Master Resume...</p>
           </div>
-        ) : isParsing ? (
-          /* Dynamic Step-by-Step AI Parsing Progress UX */
-          <ParsingProgressCard />
         ) : (
           /* Empty Initial State Card */
           <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center max-w-xl mx-auto space-y-6 my-8">
