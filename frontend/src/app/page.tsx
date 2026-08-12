@@ -433,25 +433,29 @@ function RenderSegregatedContent({
   );
 }
 
-// ─── Helper: get rewritten text with fuzzy key matching ──────────────────────
+// ─── Helper: get rewritten text with fuzzy key & sectionType matching ────────
 function getRewrittenTextForSection(
   sectionName: string,
-  rewrites: Record<string, string>
+  rewrites: Record<string, string>,
+  sectionType?: string
 ): string | undefined {
-  if (!sectionName || !rewrites) return undefined;
-  const nameLower = sectionName.toLowerCase().trim();
+  if (!rewrites) return undefined;
+  const nameLower = (sectionName || "").toLowerCase().trim();
+  const typeLower = (sectionType || "").toLowerCase().trim();
 
-  // Direct match
-  if (rewrites[nameLower]) return rewrites[nameLower];
+  // Direct match on name or type
+  if (nameLower && rewrites[nameLower]) return rewrites[nameLower];
+  if (typeLower && rewrites[typeLower]) return rewrites[typeLower];
 
   // Fuzzy match (e.g. 'professional experience' vs 'experience' or 'work experience')
   const matchedKey = Object.keys(rewrites).find((k) => {
-    if (k === nameLower) return true;
-    if (nameLower.includes("experience") && k.includes("experience")) return true;
-    if (nameLower.includes("skills") && k.includes("skills")) return true;
-    if (nameLower.includes("summary") && k.includes("summary")) return true;
-    if (nameLower.includes("project") && k.includes("project")) return true;
-    return k.includes(nameLower) || nameLower.includes(k);
+    if (k === nameLower || k === typeLower) return true;
+    if ((nameLower.includes("experience") || typeLower.includes("experience")) && k.includes("experience")) return true;
+    if ((nameLower.includes("skill") || typeLower.includes("skill")) && k.includes("skill")) return true;
+    if ((nameLower.includes("summary") || typeLower.includes("summary")) && k.includes("summary")) return true;
+    if ((nameLower.includes("project") || typeLower.includes("project")) && k.includes("project")) return true;
+    return (nameLower && (k.includes(nameLower) || nameLower.includes(k))) ||
+           (typeLower && (k.includes(typeLower) || typeLower.includes(k)));
   });
 
   return matchedKey ? rewrites[matchedKey] : undefined;
@@ -3871,8 +3875,8 @@ export default function Home() {
                                   idx={idx}
                                   isExpanded={!!expandedSections[section.section_name]}
                                   onToggle={() => toggleSection(section.section_name)}
-                                  rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections)}
-                                  previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections)}
+                                  rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections, (section as any).section_type)}
+                                  previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections, (section as any).section_type)}
                                   onRevert={handleRevert}
                                   onUndoLastRewrite={handleUndoLastRewrite}
                                   onImproveClick={handleImproveClick}
@@ -3901,8 +3905,8 @@ export default function Home() {
                                   idx={idx}
                                   isExpanded={!!expandedSections[section.section_name]}
                                   onToggle={() => toggleSection(section.section_name)}
-                                  rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections)}
-                                  previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections)}
+                                  rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections, (section as any).section_type)}
+                                  previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections, (section as any).section_type)}
                                   onRevert={handleRevert}
                                   onUndoLastRewrite={handleUndoLastRewrite}
                                   onImproveClick={handleImproveClick}
@@ -3931,8 +3935,8 @@ export default function Home() {
                                   idx={idx}
                                   isExpanded={!!expandedSections[section.section_name]}
                                   onToggle={() => toggleSection(section.section_name)}
-                                  rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections)}
-                                  previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections)}
+                                  rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections, (section as any).section_type)}
+                                  previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections, (section as any).section_type)}
                                   onRevert={handleRevert}
                                   onUndoLastRewrite={handleUndoLastRewrite}
                                   onImproveClick={handleImproveClick}
