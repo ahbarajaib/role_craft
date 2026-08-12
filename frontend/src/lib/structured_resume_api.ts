@@ -179,13 +179,13 @@ export async function deleteProfilePhoto(): Promise<{ status: string; message: s
 }
 
 export function getTemplateDownloadUrl(template: string, format: "docx" | "pdf"): string {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem("rc_token") : null;
   const query = token ? `?token=${encodeURIComponent(token)}` : "";
   return `${API_BASE_URL}/api/v1/structured-resume/generate/${template}/${format}${query}`;
 }
 
 export async function downloadStructuredResume(template: string, format: "docx" | "pdf", customFilename?: string): Promise<void> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem("rc_token") : null;
   const response = await fetch(`${API_BASE_URL}/api/v1/structured-resume/generate/${template}/${format}`, {
     method: "GET",
     headers: {
