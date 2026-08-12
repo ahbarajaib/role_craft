@@ -403,6 +403,8 @@ function ExperienceEditor({
                   )}
                 </label>
                 <input
+                  id={`field-sections-${sectionIndex}-content-entries-${idx}-job_title`}
+                  data-field={titlePath}
                   type="text"
                   value={e.job_title || ""}
                   onChange={(evt) => updateEntry(idx, { ...e, job_title: evt.target.value })}
@@ -425,6 +427,8 @@ function ExperienceEditor({
                   )}
                 </label>
                 <input
+                  id={`field-sections-${sectionIndex}-content-entries-${idx}-company`}
+                  data-field={companyPath}
                   type="text"
                   value={e.company || ""}
                   onChange={(evt) => updateEntry(idx, { ...e, company: evt.target.value })}

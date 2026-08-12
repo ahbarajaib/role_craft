@@ -569,24 +569,24 @@ export default function ResumeBuilderPage() {
             <div className="lg:col-span-7 space-y-6">
               {/* Unparsed Fields Inspection & Quick-Jump Banner */}
               {lowConfFields.length > 0 && (
-                <div className="p-5 rounded-3xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 shadow-md space-y-3">
+                <div className="p-5 rounded-3xl bg-rose-50/95 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800/80 shadow-md space-y-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="h-8 w-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold shrink-0">
+                      <div className="h-8 w-8 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 font-bold shrink-0">
                         <AlertTriangle className="h-4.5 w-4.5" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-extrabold text-amber-950 dark:text-amber-200">
+                        <h4 className="text-xs font-extrabold text-rose-950 dark:text-rose-200">
                           {lowConfFields.length} Field{lowConfFields.length > 1 ? "s" : ""} Needing Your Completion
                         </h4>
-                        <p className="text-[11px] text-amber-800 dark:text-amber-400">
+                        <p className="text-[11px] text-rose-800 dark:text-rose-300">
                           Click any unparsed item below to jump directly to it and complete missing details:
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Interactive Quick-Jump Field Chips */}
+                  {/* Bold Red Quick-Jump Field Chips */}
                   <div className="flex flex-wrap gap-2 pt-1">
                     {lowConfFields.map((field, fIdx) => {
                       const { label, elementId } = humanizeFieldName(field);
@@ -595,19 +595,23 @@ export default function ResumeBuilderPage() {
                           key={fIdx}
                           type="button"
                           onClick={() => {
-                            const el = document.getElementById(elementId) || document.querySelector(`[data-field="${field}"]`);
+                            let el = document.getElementById(elementId) || document.querySelector(`[data-field="${field}"]`);
+                            if (!el) {
+                              const cleanPath = field.replace(/^sections\.\d+\.content\./, "");
+                              el = document.querySelector(`[data-field*="${cleanPath}"]`) || document.getElementById(`field-${cleanPath.replace(/\./g, "-")}`);
+                            }
                             if (el) {
                               el.scrollIntoView({ behavior: "smooth", block: "center" });
                               (el as HTMLElement).focus?.();
-                              el.classList.add("ring-2", "ring-rose-500", "animate-pulse");
-                              setTimeout(() => el.classList.remove("ring-2", "ring-rose-500", "animate-pulse"), 2500);
+                              el.classList.add("ring-4", "ring-rose-500", "border-rose-500", "animate-pulse");
+                              setTimeout(() => el.classList.remove("ring-4", "ring-rose-500", "border-rose-500", "animate-pulse"), 3000);
                             }
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800/80 text-amber-900 dark:text-amber-300 font-bold text-xs hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                          className="px-3 py-1.5 rounded-xl bg-white dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 font-extrabold text-xs hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:scale-105"
                         >
-                          <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
+                          <AlertTriangle className="h-3 w-3 text-rose-500 shrink-0" />
                           <span>{label}</span>
-                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono">↓</span>
+                          <span className="text-[10px] text-rose-600 dark:text-rose-400 font-mono">↓</span>
                         </button>
                       );
                     })}
