@@ -2915,6 +2915,29 @@ export default function Home() {
                       Word documents (.docx) up to 5MB
                     </p>
                   </div>
+                ) : isUploading ? (
+                  <div className="p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 shadow-md space-y-3 relative overflow-hidden">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                        <Sparkles className="h-4 w-4 animate-spin text-indigo-500 shrink-0" />
+                        <span>AI Parsing & Uploading Resume...</span>
+                      </div>
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate max-w-[160px]">
+                        {file.name}
+                      </span>
+                    </div>
+
+                    {/* Animated Shimmer Bar */}
+                    <div className="w-full bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5 border border-indigo-200 dark:border-indigo-800/60">
+                      <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 h-full rounded-full animate-pulse w-4/5 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 text-left">
+                      Extracting text, skills, experience entries, and contact info into unified Master Resume format...
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between p-3.5 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden gap-3">
@@ -2936,12 +2959,7 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        {isUploading ? (
-                          <span className="text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5 font-medium">
-                            <span className="h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-500 animate-ping" />
-                            Uploading...
-                          </span>
-                        ) : documentId ? (
+                        {documentId ? (
                           <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
                             <CheckCircle className="h-3.5 w-3.5" />
                             Ready
