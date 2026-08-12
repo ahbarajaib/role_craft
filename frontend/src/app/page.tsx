@@ -872,8 +872,8 @@ function SectionCard({
             </div>
           )}
 
-          {/* CTA Action - Available on ALL sections */}
-          {!rewrittenText && (
+          {/* CTA Action - Available on Improve & Good-As-Is sections, excluded for Reduce Emphasis */}
+          {(section.review_status as string) !== "reduce_emphasis" && !rewrittenText && (
             <button
               disabled={!!inlineLoadingSections[section.section_name]}
               onClick={(e) => {
@@ -1674,19 +1674,10 @@ export default function Home() {
         setAnalysisResult(result);
       }
 
-      const sectionsToImprove = (result.sections || []).filter(
-        (s) => s.review_status === "improve"
+      // Include both 'improve' and 'keep' sections (such as Professional Experience and Skills) for AI tailoring, excluding 'reduce_emphasis'
+      const sectionsToTailor = (result.sections || []).filter(
+        (s: any) => (s.review_status as string) !== "reduce_emphasis"
       );
-
-      // Ensure Professional Summary section is included in 1-Click Auto-Tailor
-      const summarySection = (result.sections || []).find(
-        (s) => s.section_name.toLowerCase().includes("summary") || s.section_name.toLowerCase().includes("profile")
-      );
-
-      const sectionsToTailor = [...sectionsToImprove];
-      if (summarySection && !sectionsToTailor.some(s => s.section_name.toLowerCase() === summarySection.section_name.toLowerCase())) {
-        sectionsToTailor.unshift(summarySection);
-      }
 
       console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToTailor.map((s: any) => s.section_name));
 
