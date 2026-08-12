@@ -67,11 +67,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
-      } else {
+      } else if (response.status === 401) {
+        // Only log out if token is explicitly rejected as invalid/expired
+        console.warn("Session token expired or invalid (401). Logging out.");
         logout();
+      } else {
+        console.warn(`[RoleCraft Auth] Profile fetch returned non-200 status (${response.status}). Retaining local session token.`);
       }
     } catch (err) {
-      console.error("Error loading user profile:", err);
+      console.error("Error loading user profile (network error):", err);
     } finally {
       setIsLoading(false);
     }

@@ -32,6 +32,32 @@ def init_db() -> None:
         except Exception:
             pass  # Column already exists
 
+    # Auto-migrate original_docx_path for structured_resumes table
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE structured_resumes ADD COLUMN original_docx_path VARCHAR"))
+    except Exception:
+        pass  # Column already exists
+
+    # Ensure tailored_resumes table is created
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS tailored_resumes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    job_id VARCHAR,
+                    job_title VARCHAR,
+                    job_company VARCHAR,
+                    tailored_resume_json TEXT NOT NULL,
+                    diff_json TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_tailored_resumes_user_id ON tailored_resumes (user_id)"))
+    except Exception:
+        pass
+
 
 def get_db():
     """FastAPI route dependency to provide database session."""

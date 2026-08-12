@@ -2072,26 +2072,43 @@ export default function Home() {
   };
 
 
-  // 1. File Upload Mutation
+  // 1. File Upload Mutation (Parallel upload + structured JSON parsing for maximum speed)
   const uploadMutation = useMutation({
-    mutationFn: uploadResume,
-    onSuccess: async (data) => {
+    mutationFn: async (uploadFile: File) => {
+      const [docUpload, structuredParse] = await Promise.all([
+        uploadResume(uploadFile),
+        parseAndSaveStructuredResume(uploadFile).catch((e) => {
+          console.warn("[RoleCraft] Structured parse warning:", e);
+          return null;
+        }),
+      ]);
+      return { docUpload, structuredParse, uploadFile };
+    },
+    onSuccess: async ({ docUpload, structuredParse, uploadFile }) => {
       console.log(
-        "%c 📄 [RoleCraft Audit] File Upload Succeeded ",
+        "%c 📄 [RoleCraft Audit] Parallel Upload & Parse Complete ",
         "background: #0284c7; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
-        data
+        { docUpload, structuredParse }
       );
-      setDocumentId(data.document_id);
+      setDocumentId(docUpload.document_id);
       setError(null);
       setRewrittenSections({});
       setPreviousRewrittenSections({});
       setDownloadId(null);
       setDownloadUrl(null);
       setIsPatchingApplied(false);
-      setSuccessNotification("Resume uploaded successfully.");
+      setSuccessNotification("Resume uploaded & parsed successfully.");
 
-      // Auto-save as base resume immediately (if the user is logged in)
-      if (token && file) {
+      if (structuredParse) {
+        setMasterResume(structuredParse);
+        const unparsed = structuredParse.parse_confidence?.low_confidence_fields || [];
+        if (unparsed.length > 0) {
+          setIsCompletionModalOpen(true);
+        }
+      }
+
+      // Auto-save as base resume immediately (if logged in)
+      if (token && uploadFile) {
         try {
           const resp = await fetch(`${API_BASE_URL}/api/v1/documents/set-base`, {
             method: "POST",
@@ -2099,7 +2116,7 @@ export default function Home() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ document_id: data.document_id, filename: file.name }),
+            body: JSON.stringify({ document_id: docUpload.document_id, filename: uploadFile.name }),
           });
           if (resp.ok) {
             await refreshMe();
@@ -2108,18 +2125,6 @@ export default function Home() {
         } catch (e) {
           // Non-blocking — upload still succeeded even if base-save fails
           console.warn("[RoleCraft] Auto base-save failed silently:", e);
-        }
-
-        // Parse into StructuredResume JSON for single-source-of-truth editing & completion
-        try {
-          const parsed = await parseAndSaveStructuredResume(file);
-          setMasterResume(parsed);
-          const unparsed = parsed.parse_confidence?.low_confidence_fields || [];
-          if (unparsed.length > 0) {
-            setIsCompletionModalOpen(true);
-          }
-        } catch (pe) {
-          console.warn("[RoleCraft] Structured resume parse fallback warning:", pe);
         }
       }
     },
