@@ -195,21 +195,59 @@ class StructuredResume(BaseModel):
     )
 
 
+def is_section_non_empty(sec: ResumeSection) -> bool:
+    """Return True if section contains actual non-empty content."""
+    content = sec.content or {}
+    stype = sec.section_type
+
+    if stype == "summary":
+        txt = content.get("text") or content.get("summary") or ""
+        return bool(str(txt).strip())
+    elif stype == "skills":
+        cats = content.get("categories") or []
+        if not cats:
+            return False
+        # Check if at least 1 category has non-empty skills
+        for cat in cats:
+            if isinstance(cat, dict) and cat.get("skills"):
+                if any(str(s).strip() for s in cat["skills"]):
+                    return True
+        return False
+    else:
+        entries = content.get("entries") or []
+        if not entries:
+            return False
+        # For list of entries (dicts or strings), verify at least 1 non-empty item
+        for e in entries:
+            if isinstance(e, str) and e.strip():
+                return True
+            elif isinstance(e, dict):
+                # Verify dict has non-empty values
+                if any(str(v).strip() for v in e.values() if v is not None):
+                    return True
+        return False
+
+
 def convert_parsed_to_structured(parsed: StructuredResumeParseModel) -> StructuredResume:
     """Convert AI-parsed StructuredResumeParseModel into normalized StructuredResume."""
     sections = []
+    order_idx = 0
     for s in parsed.sections:
         canonical_type = normalize_section_type(s.section_type, s.section_title)
         content_dict = s.content.to_dict(s.section_type, s.section_title)
-        sections.append(
-            ResumeSection(
-                section_type=canonical_type,
-                section_title=s.section_title,
-                order=s.order,
-                visible=s.visible,
-                content=content_dict,
-            )
+        candidate_sec = ResumeSection(
+            section_type=canonical_type,
+            section_title=s.section_title,
+            order=order_idx,
+            visible=s.visible,
+            content=content_dict,
         )
+
+        # FILTER OUT EMPTY SECTIONS: Only keep sections that contain actual content from the resume
+        if is_section_non_empty(candidate_sec):
+            candidate_sec.order = order_idx
+            sections.append(candidate_sec)
+            order_idx += 1
 
     return StructuredResume(
         contact_info=parsed.contact_info,
