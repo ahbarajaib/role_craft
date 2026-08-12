@@ -95,27 +95,56 @@ class SectionContent(BaseModel):
         """Convert SectionContent into standard dictionary format expected by UI and renderers."""
         norm_type = normalize_section_type(section_type, section_title)
 
-        # 1. Primary check based on normalized section_type
         if norm_type == "summary":
-            if self.text:
-                return {"text": self.text}
+            txt = self.text or (self.custom_entries[0] if self.custom_entries else "")
+            return {"text": txt}
+
         elif norm_type == "skills":
             if self.categories:
                 return {"categories": [c.model_dump() for c in self.categories]}
+            elif self.custom_entries:
+                return {"categories": [{"category_name": "Core Skills", "skills": self.custom_entries}]}
+            elif self.text:
+                skills = [s.strip() for s in self.text.replace("\n", ",").split(",") if s.strip()]
+                return {"categories": [{"category_name": "Core Skills", "skills": skills}]}
+
         elif norm_type == "experience":
             if self.experience_entries:
                 return {"entries": [e.model_dump() for e in self.experience_entries]}
+            elif self.custom_entries:
+                return {"entries": self.custom_entries}
+            elif self.text:
+                lines = [line.strip() for line in self.text.split("\n") if line.strip()]
+                return {"entries": lines}
+
         elif norm_type == "education":
             if self.education_entries:
                 return {"entries": [e.model_dump() for e in self.education_entries]}
+            elif self.custom_entries:
+                return {"entries": self.custom_entries}
+            elif self.text:
+                lines = [line.strip() for line in self.text.split("\n") if line.strip()]
+                return {"entries": lines}
+
         elif norm_type == "projects":
             if self.project_entries:
                 return {"entries": [e.model_dump() for e in self.project_entries]}
+            elif self.custom_entries:
+                return {"entries": self.custom_entries}
+            elif self.text:
+                lines = [line.strip() for line in self.text.split("\n") if line.strip()]
+                return {"entries": lines}
+
         elif norm_type == "certifications":
             if self.certification_entries:
                 return {"entries": [e.model_dump() for e in self.certification_entries]}
+            elif self.custom_entries:
+                return {"entries": self.custom_entries}
+            elif self.text:
+                lines = [line.strip() for line in self.text.split("\n") if line.strip()]
+                return {"entries": lines}
 
-        # 2. Smart fallback if AI populated a specific entry list regardless of section_type string
+        # Fallback for any custom or unrecognized section type
         if self.experience_entries:
             return {"entries": [e.model_dump() for e in self.experience_entries]}
         elif self.education_entries:
@@ -126,10 +155,12 @@ class SectionContent(BaseModel):
             return {"entries": [e.model_dump() for e in self.certification_entries]}
         elif self.categories:
             return {"categories": [c.model_dump() for c in self.categories]}
+        elif self.custom_entries:
+            return {"entries": self.custom_entries}
         elif self.text:
             return {"text": self.text}
         else:
-            return {"entries": self.custom_entries or []}
+            return {"entries": []}
 
 
 class ResumeSectionParseModel(BaseModel):
@@ -198,43 +229,44 @@ class StructuredResume(BaseModel):
 def is_section_non_empty(sec: ResumeSection) -> bool:
     """Return True if section contains actual non-empty content."""
     content = sec.content or {}
-    stype = sec.section_type
 
-    if stype == "summary":
-        txt = content.get("text") or content.get("summary") or ""
-        return bool(str(txt).strip())
-    elif stype == "skills":
-        cats = content.get("categories") or []
-        if not cats:
-            return False
-        # Check if at least 1 category has non-empty skills
-        for cat in cats:
-            if isinstance(cat, dict) and cat.get("skills"):
-                if any(str(s).strip() for s in cat["skills"]):
-                    return True
-        return False
-    else:
-        entries = content.get("entries") or []
-        if not entries:
-            return False
-        # For list of entries (dicts or strings), verify at least 1 non-empty item
-        for e in entries:
-            if isinstance(e, str) and e.strip():
+    # Check text / summary
+    txt = content.get("text") or content.get("summary")
+    if txt and str(txt).strip():
+        return True
+
+    # Check categories
+    cats = content.get("categories") or []
+    for cat in cats:
+        if isinstance(cat, dict) and cat.get("skills"):
+            if any(str(s).strip() for s in cat["skills"]):
                 return True
-            elif isinstance(e, dict):
-                # Verify dict has non-empty values
-                if any(str(v).strip() for v in e.values() if v is not None):
-                    return True
-        return False
+
+    # Check entries
+    entries = content.get("entries") or []
+    for e in entries:
+        if isinstance(e, str) and e.strip():
+            return True
+        elif isinstance(e, dict):
+            if any(str(v).strip() for v in e.values() if v is not None and str(v).strip() and str(v) != "[]"):
+                return True
+
+    return False
 
 
 def convert_parsed_to_structured(parsed: StructuredResumeParseModel) -> StructuredResume:
     """Convert AI-parsed StructuredResumeParseModel into normalized StructuredResume."""
     sections = []
     order_idx = 0
+    has_summary_section = False
+
     for s in parsed.sections:
         canonical_type = normalize_section_type(s.section_type, s.section_title)
         content_dict = s.content.to_dict(s.section_type, s.section_title)
+
+        if canonical_type == "summary":
+            has_summary_section = True
+
         candidate_sec = ResumeSection(
             section_type=canonical_type,
             section_title=s.section_title,
@@ -249,9 +281,23 @@ def convert_parsed_to_structured(parsed: StructuredResumeParseModel) -> Structur
             sections.append(candidate_sec)
             order_idx += 1
 
+    # Synthesize Professional Summary section if parsed.summary exists at top-level but wasn't in sections
+    summary_text = (parsed.summary or "").strip()
+    if summary_text and not has_summary_section:
+        summary_sec = ResumeSection(
+            section_type="summary",
+            section_title="Professional Summary",
+            order=0,
+            visible=True,
+            content={"text": summary_text},
+        )
+        sections.insert(0, summary_sec)
+        for idx, sec in enumerate(sections):
+            sec.order = idx
+
     return StructuredResume(
         contact_info=parsed.contact_info,
-        summary=parsed.summary,
+        summary=parsed.summary or (sections[0].content.get("text") if sections and sections[0].section_type == "summary" else None),
         profile_photo_url=parsed.profile_photo_url,
         sections=sections,
         parse_confidence=parsed.parse_confidence,
