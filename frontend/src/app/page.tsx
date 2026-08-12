@@ -1695,6 +1695,9 @@ export default function Home() {
             job_title: customTargetRole || result?.overall_summary?.job_title || "Target Position",
           });
           setTailorResult(tailoredRes);
+          if (tailoredRes?.tailored_resume) {
+            setMasterResume(tailoredRes.tailored_resume);
+          }
           setIsTailorPreviewOpen(true);
         } catch (te) {
           console.warn("[RoleCraft] Structured tailor warning:", te);

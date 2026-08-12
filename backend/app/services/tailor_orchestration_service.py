@@ -96,15 +96,17 @@ class TailorOrchestrationService:
                     bullets = entry.get("bullets", [])
                     if not bullets:
                         continue
+                    role_title = entry.get("job_title", "")
+                    company = entry.get("company", "")
                     rewritten_bullets = self._rewrite_experience_bullets(
-                        bullets, job_description, job_title
+                        bullets, job_description, job_title, role_title=role_title, company=company
                     )
                     if rewritten_bullets and rewritten_bullets != bullets:
                         diff[f"sections[{i}].experience[{j}].bullets"] = {
                             "original": "\n".join(bullets),
                             "tailored": "\n".join(rewritten_bullets),
-                            "company": entry.get("company", ""),
-                            "role": entry.get("job_title", ""),
+                            "company": company,
+                            "role": role_title,
                         }
                         tailored.sections[i].content["entries"][j]["bullets"] = rewritten_bullets
 
@@ -165,16 +167,20 @@ class TailorOrchestrationService:
             return original
 
     def _rewrite_experience_bullets(
-        self, bullets: list, jd: str, job_title: str
+        self, bullets: list, jd: str, job_title: str, role_title: str = "", company: str = ""
     ) -> list:
         if not bullets:
             return bullets
         bullets_text = "\n".join(bullets)
+        role_ctx = f"{role_title} @ {company}" if role_title or company else "Experience Role"
         user_prompt = (
-            f"Target Role: {job_title}\n\n"
-            f"Job Description:\n{jd[:2000]}\n\n"
-            f"Original Bullets ({len(bullets)} bullets):\n{bullets_text}\n\n"
-            f"Rewrite these {len(bullets)} bullets (one per line, no bullet symbols):"
+            f"Candidate Specific Role: {role_ctx}\n"
+            f"Target Applied Role: {job_title}\n\n"
+            f"Target Job Description:\n{jd[:2500]}\n\n"
+            f"Original Bullets for {role_ctx} ({len(bullets)} bullets):\n{bullets_text}\n\n"
+            f"Rewrite these {len(bullets)} bullets specifically for the candidate's experience as {role_ctx}, "
+            f"seamlessly weaving in matching technical keywords, action verbs, and impact metrics from the target Job Description. "
+            f"Output EXACTLY {len(bullets)} bullets (one per line, no bullet symbols):"
         )
         try:
             response = self._ai.generate_text(TAILOR_EXPERIENCE_SYSTEM, user_prompt, temperature=0.3)
@@ -183,7 +189,6 @@ class TailorOrchestrationService:
                 for line in response.strip().split("\n")
                 if line.strip()
             ]
-            # Ensure same count as original
             if len(lines) < len(bullets):
                 lines.extend(bullets[len(lines):])
             return lines[: len(bullets)]

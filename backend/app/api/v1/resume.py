@@ -309,6 +309,15 @@ def apply_rewrites(
 
             rewrites_as_dicts = [{"section": rw.section, "rewritten_text": rw.rewritten_text} for rw in body.accepted_rewrites]
 
+            # Update DB structured resume JSON
+            try:
+                resume = _update_structured_resume_from_rewrites(resume, rewrites_as_dicts)
+                structured_record.resume_json = resume.model_dump_json()
+                structured_record.version += 1
+                db.commit()
+            except Exception as e_up:
+                logger.warning("Failed to update structured record json from rewrites", error=str(e_up))
+
             renderer = ATSTemplateRenderer()
             renderer.render_with_rewrites(
                 resume=resume,
