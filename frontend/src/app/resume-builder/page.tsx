@@ -271,28 +271,67 @@ export default function ResumeBuilderPage() {
     setSaveStatus("unsaved");
   };
 
-  // Dynamically compute remaining unparsed fields based on current input values
+  // Dynamically compute remaining unparsed fields based on current input values across contact_info and active sections
   const getActiveUnparsedFields = useCallback((res: StructuredResume | null): string[] => {
     if (!res?.parse_confidence?.low_confidence_fields) return [];
     const rawList = res.parse_confidence.low_confidence_fields;
 
     return rawList.filter((fieldPath) => {
       const f = fieldPath.toLowerCase();
+
+      // 1. Contact Info Fields
       if (f.includes("full_name")) return !res.contact_info?.full_name?.trim();
       if (f.includes("job_title") && (f.includes("contact") || (!f.includes("entries") && !f.includes("experience")))) {
         return !res.contact_info?.job_title?.trim();
       }
       if (f.includes("email")) return !res.contact_info?.email?.trim();
       if (f.includes("phone")) return !res.contact_info?.phone?.trim();
-      if (f.includes("location") && (f.includes("contact") || !f.includes("entries"))) {
+      if (
+        f.includes("location") &&
+        (f.includes("contact") || (!f.includes("entries") && !f.includes("experience") && !f.includes("education") && !f.includes("projects")))
+      ) {
         return !res.contact_info?.location?.trim();
       }
       if (f.includes("linkedin")) return !res.contact_info?.linkedin_url?.trim();
       if (f.includes("portfolio")) return !res.contact_info?.portfolio_url?.trim();
       if (f.includes("github")) return !res.contact_info?.github_url?.trim();
 
-      // Check nested objects (e.g. experience.0.company)
+      // 2. Section Entry Fields (education.0.location, experience.1.company, sections.3.content.entries.0.graduation_date, etc.)
+      let sectionType = "";
+      if (f.includes("education")) sectionType = "education";
+      else if (f.includes("experience")) sectionType = "experience";
+      else if (f.includes("project")) sectionType = "projects";
+      else if (f.includes("certification")) sectionType = "certifications";
+      else if (f.includes("skill")) sectionType = "skills";
+
       const parts = fieldPath.split(".");
+      let entryIdx = 0;
+      for (const p of parts) {
+        if (!isNaN(Number(p))) {
+          entryIdx = Number(p);
+          break;
+        }
+      }
+
+      const propKey = parts[parts.length - 1];
+
+      if (sectionType && res.sections) {
+        const sec = res.sections.find((s) => s.section_type === sectionType);
+        if (sec && sec.content && Array.isArray(sec.content.entries)) {
+          const entry = sec.content.entries[entryIdx];
+          if (entry && typeof entry === "object") {
+            const val = entry[propKey];
+            if (typeof val === "string" && val.trim().length > 0) {
+              return false; // RESOLVED! Value is non-empty!
+            }
+            if (Array.isArray(val) && val.length > 0) {
+              return false; // RESOLVED! Non-empty array!
+            }
+          }
+        }
+      }
+
+      // 3. Fallback direct object lookup
       let target: any = res;
       for (const p of parts) {
         if (target === undefined || target === null) break;
@@ -300,6 +339,7 @@ export default function ResumeBuilderPage() {
       }
       if (typeof target === "string") return !target.trim();
       if (Array.isArray(target)) return target.length === 0;
+
       return !target;
     });
   }, []);
