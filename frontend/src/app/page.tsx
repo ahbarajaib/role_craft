@@ -234,6 +234,122 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
   );
 }
 
+// ─── Helper: parse raw section lines into segregated role entries ──────────────
+interface StructuredRoleEntry {
+  title: string;
+  companyAndDates?: string;
+  bullets: string[];
+}
+
+function parseTextIntoStructuredEntries(lines: string[]): StructuredRoleEntry[] {
+  const result: StructuredRoleEntry[] = [];
+  let currentEntry: StructuredRoleEntry | null = null;
+
+  const bulletSymbols = ["•", "-", "*", "–", "—", "▪", "▸"];
+  const titleKeywords = [
+    "developer", "engineer", "architect", "manager", "lead", "designer",
+    "consultant", "analyst", "executive", "specialist", "director", "officer",
+    "administrator", "associate", "intern", "head", "founder", "co-founder", "cto", "vp", "programmer"
+  ];
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const trimmed = rawLine.trim();
+    if (!trimmed) continue;
+
+    const lower = trimmed.toLowerCase();
+    const isExplicitBullet = bulletSymbols.some((s) => trimmed.startsWith(s));
+    const hasDatePattern = /\b(19|20)\d{2}\b/.test(trimmed) || lower.includes("present");
+
+    const isTitleLine = !isExplicitBullet && (
+      titleKeywords.some((k) => lower.includes(k)) ||
+      (trimmed.length < 75 && !trimmed.endsWith(".") && i + 1 < lines.length && (
+        /\b(19|20)\d{2}\b/.test(lines[i + 1]) || lines[i + 1].includes("|") || lines[i + 1].includes(",")
+      ))
+    );
+
+    const isCompanyLine = !isExplicitBullet && !isTitleLine && (
+      trimmed.includes("|") || hasDatePattern || (trimmed.length < 90 && (trimmed.includes(",") || trimmed.includes("–") || trimmed.includes("-")))
+    );
+
+    if (isTitleLine) {
+      if (currentEntry) result.push(currentEntry);
+      currentEntry = { title: trimmed, bullets: [] };
+    } else if (isCompanyLine && currentEntry && !currentEntry.companyAndDates) {
+      currentEntry.companyAndDates = trimmed;
+    } else {
+      let bulletContent = trimmed;
+      const matchSymbol = bulletSymbols.find((s) => trimmed.startsWith(s));
+      if (matchSymbol) {
+        bulletContent = trimmed.substring(matchSymbol.length).trim();
+      }
+      if (!currentEntry) {
+        currentEntry = { title: "Overview / Highlights", bullets: [] };
+      }
+      currentEntry.bullets.push(bulletContent);
+    }
+  }
+
+  if (currentEntry) result.push(currentEntry);
+  return result;
+}
+
+function RenderSegregatedContent({ lines }: { lines: string[] }) {
+  if (!lines || lines.length === 0) return null;
+
+  const entries = parseTextIntoStructuredEntries(lines);
+
+  // If only 1 entry with title "Overview / Highlights", render clean paragraph list
+  if (entries.length === 1 && entries[0].title === "Overview / Highlights") {
+    return (
+      <div className="space-y-2 bg-white/90 dark:bg-slate-900/80 p-3.5 rounded-xl border border-rose-100 dark:border-rose-900/30 text-xs text-slate-800 dark:text-slate-200 font-medium">
+        {lines.map((l, i) => (
+          <p key={i} className="leading-relaxed border-b border-slate-200/50 dark:border-slate-800/50 last:border-b-0 pb-1.5 last:pb-0 select-all">
+            {l}
+          </p>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {entries.map((entry, eIdx) => (
+        <div
+          key={eIdx}
+          className="p-3.5 bg-white dark:bg-slate-900/90 rounded-xl border border-rose-200/80 dark:border-rose-900/50 shadow-2xs space-y-2 hover:border-rose-300 dark:hover:border-rose-700 transition-all"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-1.5 border-b border-rose-100 dark:border-rose-900/40">
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-[10px] shrink-0">
+                💼
+              </div>
+              <span className="font-extrabold text-slate-900 dark:text-white text-xs">
+                {entry.title}
+              </span>
+            </div>
+            {entry.companyAndDates && (
+              <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-md bg-rose-50/80 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-800/40">
+                {entry.companyAndDates}
+              </span>
+            )}
+          </div>
+          {entry.bullets.length > 0 && (
+            <ul className="space-y-1.5 pt-0.5">
+              {entry.bullets.map((bullet, bIdx) => (
+                <li key={bIdx} className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start gap-2 select-all">
+                  <span className="text-rose-500 shrink-0 mt-0.5 font-bold">•</span>
+                  <span>{bullet}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── Helper: parse bullet lines from a rewritten text block ───────────────────
 function parseBulletsFromText(text: string): { line: string; isBullet: boolean; isHeader?: boolean; isCompany?: boolean }[] {
   if (!text) return [];
@@ -253,12 +369,12 @@ function parseBulletsFromText(text: string): { line: string; isBullet: boolean; 
         !isExplicitBullet &&
         trimmed.length < 90 &&
         !trimmed.endsWith(".") &&
-        (isDateHeader || ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst"].some(r => lowerLine.includes(r)));
+        (isDateHeader || ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "executive", "specialist", "director"].some(r => lowerLine.includes(r)));
 
       const isCompanyHeader =
         !isExplicitBullet &&
         trimmed.length < 80 &&
-        (trimmed.includes(",") || trimmed.endsWith(".")) &&
+        (trimmed.includes(",") || trimmed.includes("|") || trimmed.endsWith(".")) &&
         ["inc", "ltd", "llc", "fze", "pvt", "corp", "dubai", "uae", "usa", "uk", "india", "bangalore", "remote", "freelance"].some(loc => lowerLine.includes(loc));
 
       if (isJobRoleHeader) {
@@ -690,13 +806,7 @@ function SectionCard({
                   (Text extracted from your uploaded resume)
                 </span>
               </div>
-              <div className="space-y-1.5 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 font-medium">
-                {section.evidence_used.map((ev, i) => (
-                  <p key={i} className="leading-relaxed border-b border-slate-200/60 dark:border-slate-800/60 last:border-b-0 pb-1.5 last:pb-0 select-all">
-                    {ev}
-                  </p>
-                ))}
-              </div>
+              <RenderSegregatedContent lines={section.evidence_used} />
             </div>
           )}
 
