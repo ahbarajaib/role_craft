@@ -670,12 +670,17 @@ function SectionCard({
           </span>
           <h3 className="font-black text-slate-900 dark:text-white text-base md:text-lg flex items-center gap-2">
             {section.section_name}
-            {rewrittenText && (
+            {inlineLoadingSections[section.section_name] ? (
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-950/90 border border-indigo-300 dark:border-indigo-700 px-2.5 py-0.5 rounded-full animate-pulse">
+                <div className="h-2.5 w-2.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin shrink-0" />
+                ✨ AI Tailoring Section...
+              </span>
+            ) : rewrittenText ? (
               <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/90 border border-emerald-300 dark:border-emerald-700 px-2 py-0.5 rounded-full animate-fade-in-up">
                 <Sparkles className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" />
                 Tailored
               </span>
-            )}
+            ) : null}
           </h3>
         </div>
 
@@ -696,6 +701,28 @@ function SectionCard({
       {/* Expanded Content */}
       {isExpanded && (
         <div className="px-5 pb-5 pt-1 space-y-4 border-t border-slate-100 dark:border-slate-800/60">
+
+          {/* Inline AI Loading Cue */}
+          {inlineLoadingSections[section.section_name] && (
+            <div className="p-5 bg-gradient-to-r from-indigo-50/70 via-purple-50/50 to-emerald-50/70 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-emerald-950/40 rounded-2xl border border-indigo-200 dark:border-indigo-800 space-y-3.5 animate-pulse">
+              <div className="flex items-center justify-between border-b border-indigo-200/80 dark:border-indigo-800/60 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400 animate-spin" />
+                  <span className="text-xs font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-wider">
+                    AI Tailoring {section.section_name}...
+                  </span>
+                </div>
+                <span className="text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 rounded-md border border-indigo-200">
+                  Google XYZ Action-Impact Formula
+                </span>
+              </div>
+              <div className="space-y-2 pt-1">
+                <div className="h-3 bg-indigo-200/60 dark:bg-indigo-900/40 rounded-md w-3/4" />
+                <div className="h-3 bg-indigo-200/40 dark:bg-indigo-900/30 rounded-md w-full" />
+                <div className="h-3 bg-indigo-200/50 dark:bg-indigo-900/35 rounded-md w-5/6" />
+              </div>
+            </div>
+          )}
 
           {/* Rewritten Preview Text with Side-by-Side Comparison */}
           {rewrittenText && (
@@ -1669,6 +1696,16 @@ export default function Home() {
         return;
       }
 
+      // Set instant inline loading cue on all target section cards right away
+      const loadingMap: Record<string, boolean> = {};
+      const expandedMap: Record<string, boolean> = { ...expandedSections };
+      sectionsToTailor.forEach((sec: any) => {
+        loadingMap[sec.section_name] = true;
+        expandedMap[sec.section_name] = true;
+      });
+      setInlineLoadingSections((prev) => ({ ...prev, ...loadingMap }));
+      setExpandedSections(expandedMap);
+
       const newRewrites: Record<string, string> = {};
 
       // 1. Apply Target Job Title to Header
@@ -1676,7 +1713,7 @@ export default function Home() {
         newRewrites["header"] = result.overall_summary.job_title;
       }
 
-      // 2. Rewrite improve-status sections using their section gap recommendations
+      // 2. Rewrite sections in parallel and stream results to section cards immediately as they finish
       await Promise.all(
         sectionsToTailor.map(async (sec: any) => {
           try {
@@ -1687,9 +1724,18 @@ export default function Home() {
               recommendations: sec.recommendations || [],
             });
             console.log(`✨ [RoleCraft Audit] Auto-Tailored section "${sec.section_name}":`, res.rewritten_text);
-            newRewrites[sec.section_name.toLowerCase()] = res.rewritten_text;
+            const lowerKey = sec.section_name.toLowerCase();
+            newRewrites[lowerKey] = res.rewritten_text;
+
+            // Stream update directly to UI section card right away
+            setRewrittenSections((prev) => ({
+              ...prev,
+              [lowerKey]: res.rewritten_text,
+            }));
           } catch (err) {
             console.error(`❌ [RoleCraft Audit] Failed auto rewrite for ${sec.section_name}:`, err);
+          } finally {
+            setInlineLoadingSections((prev) => ({ ...prev, [sec.section_name]: false }));
           }
         })
       );
