@@ -126,6 +126,41 @@ def get_structured_resume(
         raise BadRequestError(f"Corrupted resume data in database: {str(exc)}")
 
 
+def _clean_low_confidence_fields(resume: StructuredResume) -> StructuredResume:
+    if not resume.parse_confidence:
+        return resume
+    raw_fields = resume.parse_confidence.low_confidence_fields or []
+    cleaned_fields = []
+    ci = resume.contact_info
+    for f in raw_fields:
+        f_lower = f.lower()
+        if "full_name" in f_lower and ci and ci.full_name and ci.full_name.strip():
+            continue
+        if "email" in f_lower and ci and ci.email and ci.email.strip():
+            continue
+        if "phone" in f_lower and ci and ci.phone and ci.phone.strip():
+            continue
+        if "location" in f_lower and ci and ci.location and ci.location.strip():
+            continue
+        if "linkedin" in f_lower and ci and ci.linkedin_url and ci.linkedin_url.strip():
+            continue
+        if "portfolio" in f_lower and ci and ci.portfolio_url and ci.portfolio_url.strip():
+            continue
+        if "github" in f_lower and ci and ci.github_url and ci.github_url.strip():
+            continue
+        if "job_title" in f_lower and ("contact" in f_lower or "section" not in f_lower) and ci and ci.job_title and ci.job_title.strip():
+            continue
+        if "summary" in f_lower and resume.summary and resume.summary.strip():
+            continue
+        cleaned_fields.append(f)
+
+    resume.parse_confidence.low_confidence_fields = cleaned_fields
+    if not cleaned_fields:
+        resume.parse_confidence.needs_user_review = False
+        resume.parse_confidence.overall_score = 1.0
+    return resume
+
+
 @router.put("", response_model=StructuredResume)
 def update_structured_resume(
     resume: StructuredResume,
@@ -133,6 +168,7 @@ def update_structured_resume(
     current_user: User = Depends(get_current_user),
 ):
     """Full update of structured resume JSON in DB."""
+    resume = _clean_low_confidence_fields(resume)
     record = db.query(StructuredResumeModel).filter(StructuredResumeModel.user_id == current_user.id).first()
     resume_json_str = resume.model_dump_json()
 

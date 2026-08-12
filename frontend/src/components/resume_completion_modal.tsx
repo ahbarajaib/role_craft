@@ -162,16 +162,57 @@ export default function ResumeCompletionModal({
 
   const scrollToField = (fieldPath: string) => {
     const key = fieldPath.toLowerCase();
+
+    // 1. Check for input by exact or cleaned ID
+    const cleanId = fieldPath.replace(/\[/g, "_").replace(/\]/g, "").replace(/\./g, "_");
+    const targetInput =
+      document.getElementById(`input-${fieldPath}`) ||
+      document.getElementById(`input-${cleanId}`) ||
+      document.getElementById(fieldPath);
+
+    if (targetInput) {
+      targetInput.scrollIntoView({ behavior: "smooth", block: "center" });
+      targetInput.focus();
+      targetInput.classList.add("ring-4", "ring-rose-500", "animate-pulse");
+      setTimeout(() => {
+        targetInput.classList.remove("ring-4", "ring-rose-500", "animate-pulse");
+      }, 2000);
+      return;
+    }
+
+    // 2. Section fallback
     if (
       key.includes("full_name") || key.includes("email") || key.includes("phone") ||
       key.includes("location") || key.includes("linkedin") || key.includes("portfolio") ||
       key.includes("github") || (key.includes("job_title") && key.includes("contact"))
     ) {
-      sectionRefs.current["contact"]?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const contactEl = sectionRefs.current["contact"];
+      if (contactEl) {
+        contactEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        const input = contactEl.querySelector("input");
+        if (input) {
+          input.focus();
+          input.classList.add("ring-4", "ring-rose-500", "animate-pulse");
+          setTimeout(() => {
+            input.classList.remove("ring-4", "ring-rose-500", "animate-pulse");
+          }, 2000);
+        }
+      }
     } else {
       const secMatch = key.match(/sections?\[(\d+)\]/);
       if (secMatch) {
-        sectionRefs.current[`section-${secMatch[1]}`]?.scrollIntoView({ behavior: "smooth", block: "center" });
+        const secEl = sectionRefs.current[`section-${secMatch[1]}`];
+        if (secEl) {
+          secEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          const input = secEl.querySelector("input, textarea");
+          if (input) {
+            (input as HTMLElement).focus();
+            input.classList.add("ring-4", "ring-rose-500", "animate-pulse");
+            setTimeout(() => {
+              input.classList.remove("ring-4", "ring-rose-500", "animate-pulse");
+            }, 2000);
+          }
+        }
       }
     }
   };
@@ -225,29 +266,26 @@ export default function ResumeCompletionModal({
           </div>
         </div>
 
-        {/* Unparsed Fields Alert Card (Vivid Red Highlight) */}
+        {/* Unparsed Fields Alert Card (Bold Red Banner at VERY TOP) */}
         {activeUnparsed.length > 0 && (
-          <div className="px-6 py-3.5 bg-rose-50/90 dark:bg-rose-950/40 border-b border-rose-200 dark:border-rose-800/80 shrink-0">
-            <div className="flex items-center gap-2 mb-2 text-xs font-bold text-rose-800 dark:text-rose-300">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
-              <span>Fields Needing Completion — Click chip to jump:</span>
+          <div className="px-6 py-4 bg-rose-500 text-white dark:bg-rose-950/90 dark:text-rose-100 border-b border-rose-600 dark:border-rose-800 shrink-0 shadow-sm">
+            <div className="flex items-center justify-between gap-2 mb-2 text-xs font-black uppercase tracking-wider">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-white" />
+                <span>Unparsed / Missing Fields ({activeUnparsed.length}) — Click chip to jump & edit:</span>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {activeUnparsed.slice(0, 8).map((field) => (
+              {activeUnparsed.map((field) => (
                 <button
                   key={field}
                   onClick={() => scrollToField(field)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-rose-900/60 border border-rose-300 dark:border-rose-700/80 text-rose-700 dark:text-rose-200 text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-800/80 transition-all shadow-sm cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-rose-700 dark:bg-rose-900/90 dark:text-rose-100 border border-rose-200 dark:border-rose-700 text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer"
                 >
-                  {fieldLabel(field)}
-                  <ChevronRight className="w-3.5 h-3.5 text-rose-500" />
+                  <span>{fieldLabel(field)}</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-rose-500 dark:text-rose-300" />
                 </button>
               ))}
-              {activeUnparsed.length > 8 && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full bg-rose-200/60 dark:bg-rose-900/40 text-rose-800 dark:text-rose-300 text-xs font-bold">
-                  +{activeUnparsed.length - 8} more
-                </span>
-              )}
             </div>
           </div>
         )}
@@ -304,13 +342,14 @@ export default function ResumeCompletionModal({
                     <div className="relative">
                       <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                       <input
+                        id={`input-contact_info.${key}`}
                         type="text"
                         value={val}
                         onChange={(e) => handleContactChange(key, e.target.value)}
                         placeholder={placeholder}
                         className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl text-sm font-medium transition-all outline-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500
                           ${isUnparsed
-                            ? "bg-rose-50/60 dark:bg-rose-950/30 border-2 border-rose-400 dark:border-rose-700 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
+                            ? "bg-rose-50/90 dark:bg-rose-950/40 border-2 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/30"
                             : "bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20"
                           }`}
                       />
@@ -325,6 +364,7 @@ export default function ResumeCompletionModal({
           {resume.sections.map((section, index) => (
             <div
               key={`${section.section_type}-${index}`}
+              id={`input-section-${index}`}
               ref={(el) => { sectionRefs.current[`section-${index}`] = el; }}
             >
               <ResumeSectionEditor
