@@ -8,8 +8,10 @@ AI-powered resume optimization platform. Upload a DOCX resume, provide a job des
 
 ## Project Status
 
-> **Milestone 17 – AI Resume Builder & Structured Data Engine (Complete)**
-> RoleCraft now features a full-fledged AI Resume Builder (`/resume-builder`) powered by a normalized `StructuredResume` JSON data model. Upload any DOCX or PDF resume to parse content via AI into editable sections (Summary, Skills categories, Experience, Education, Projects, Certifications, Custom). Unparsed/low-confidence fields are highlighted in red with ⚠️ badges for easy user completion. Render and export into 3 single-column ATS templates ("Clean Classic", "Modern Professional", "Executive Profile") with profile photo support and 100% font retention.
+## Project Status
+
+> **Milestone 18 – AI Master Resume Builder, Dynamic UX & Multi-Format ATS Export (Complete)**
+> RoleCraft features a unified **Master Resume JSON** engine (`StructuredResume` in DB) powering both AI job alignment analysis and the interactive Resume Builder (`/resume-builder`). Supports DOCX & PDF uploads with AI parsing into structured sections (Summary, Technical Skills, Professional Experience, Projects, Education, Certifications, Custom). Features live step-by-step parsing progress UX with shimmer progress bars, dynamic "+ Add New Section" toolbar filtering, professional headline fields, project links & bullet highlights, and dual-authenticated (Header / URL Token) PDF and DOCX single-column ATS template exports.
 
 ---
 
@@ -35,59 +37,27 @@ resume_ai/
 │       │   ├── config.py       Pydantic-Settings configuration
 │       │   ├── logging.py      Loguru setup
 │       │   └── exceptions.py   Custom exceptions + handlers
-│       ├── analyzers/
-│       │   └── section_detector.py         Rule-based section grouper (4-signal heading detection)
 │       ├── constants/
 │       │   └── resume_keywords.py          Shared constants (260 role titles, 75 soft skills, section keywords)
-│       ├── comparators/
-│       │   └── resume_comparator.py        Deterministic resume vs JD comparator
 │       ├── ai/
 │       │   ├── provider.py                 OpenAI Responses API wrapper
 │       │   ├── prompts.py                  Prompt builder for analyze endpoint
-│       │   └── review_prompts.py           Prompt builder for review-section endpoint
+│       │   └── resume_parser_prompts.py    Prompt builder for structured resume parsing
 │       ├── api/
 │       │   ├── router.py                   Top-level API router
 │       │   └── v1/
 │       │       ├── health.py                   GET /api/v1/health
-│       │       ├── documents.py                POST /upload, GET /{id}/parse, GET /{id}/sections
+│       │       ├── documents.py                POST /upload, POST /set-base, GET /{id}/parse
 │       │       ├── job_descriptions.py         POST /job-descriptions/parse
-│       │       ├── analysis.py                 POST /analyze
-│       │       ├── comparison.py               POST /compare
-│       │       ├── review.py                   POST /review-section
-│       │       └── resume.py                   POST /resume/analyze, POST /resume/apply, GET /resume/download/{id}
-│       ├── middleware/
-│       │   └── request_id.py           X-Request-ID middleware
-│       ├── dependencies/
-│       │   ├── common.py               Shared dependency factories
-│       │   ├── document.py             DocumentService factory
-│       │   ├── parser.py               ParserService factory
-│       │   ├── section.py              SectionService factory
-│       │   ├── analysis.py             AnalysisService factory
-│       │   ├── review.py               ReviewService factory
-│       │   └── resume_analysis.py      ResumeAnalysisWorkflow factory
-│       ├── parsers/
-│       │   ├── docx_parser.py          Pure DOCX reader — extracts paragraphs + bold-run detection
-│       │   └── job_description_parser.py  Multi-domain JD parser (tech + soft skill extraction)
+│       │       ├── structured_resume.py        GET/PUT/POST /structured-resume/* (Master Resume)
+│       │       └── resume.py                   POST /resume/analyze, POST /resume/rewrite, POST /resume/apply
 │       ├── schemas/
-│       │   ├── document.py                 Upload response model
-│       │   ├── parser.py                   Parse response models
-│       │   ├── section.py                  Section detection response models
-│       │   ├── job_description.py          JobDescription model
-│       │   ├── analysis.py                 AnalysisRequest + ResumeAnalysisResponse + Priority
-│       │   ├── comparison.py               CompareRequest + ComparisonResult
-│       │   ├── review.py                   ReviewRequest + SectionReview
-│       │   └── resume_analysis.py          ResumeAnalysisRequest + ResumeAnalysisResult
+│       │   └── structured_resume.py        StructuredResume Pydantic schemas + converter
 │       └── services/
-│           ├── document_service.py         Upload validation + persistence
-│           ├── parser_service.py           Parse orchestration
-│           ├── section_service.py          Section detection orchestration
-│           ├── job_description_service.py  JD parse orchestration
-│           ├── analysis_service.py         Resume vs JD gap analysis (AI)
-│           ├── comparison_service.py       Resume vs JD comparison (deterministic)
-│           ├── review_service.py           Single-section AI review
-│           ├── resume_analysis_workflow.py Orchestrates the full analysis pipeline
-│           ├── rewrite_service.py          AI section rewrite (universal section routing)
-│           └── patch_service.py            DOCX in-place text patching (OpenXML, formatting-safe)
+│           ├── resume_parser_service.py    DOCX & PDF text extraction + AI structured parsing
+│           ├── template_renderer.py        ATS DOCX rendering (Clean Classic, Modern, Executive)
+│           ├── pdf_service.py              High-fidelity DOCX → PDF conversion
+│           └── rewrite_service.py          AI section rewrite (universal section routing)
 │
 └── README.md           This file
 ```
@@ -149,16 +119,15 @@ The API will be available at **http://localhost:8000**.
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/v1/health` | Liveness probe |
-| `POST` | `/api/v1/documents/upload` | Upload a DOCX resume |
-| `GET` | `/api/v1/documents/{document_id}/parse` | Parse an uploaded DOCX |
-| `GET` | `/api/v1/documents/{document_id}/sections` | Detect resume sections |
-| `POST` | `/api/v1/job-descriptions/parse` | Parse a job description |
-| `POST` | `/api/v1/analyze` | Analyse resume against a job description (AI) |
-| `POST` | `/api/v1/compare` | Compare resume against a job description (deterministic) |
-| `POST` | `/api/v1/review-section` | AI review of a single resume section |
-| `POST` | `/api/v1/resume/analyze` | Full resume analysis workflow (primary endpoint) |
-| `POST` | `/api/v1/resume/apply` | Apply accepted rewrites to original DOCX |
-| `GET` | `/api/v1/resume/download/{download_id}` | Stream the generated patched DOCX |
+| `POST` | `/api/v1/documents/upload` | Upload a DOCX or PDF resume |
+| `POST` | `/api/v1/documents/set-base` | Set document as workspace base resume |
+| `POST` | `/api/v1/structured-resume/parse` | Parse DOCX/PDF resume into Master Resume JSON |
+| `GET` | `/api/v1/structured-resume` | Fetch active user's Master Resume JSON |
+| `PUT` | `/api/v1/structured-resume` | Update Master Resume JSON section entries |
+| `GET` | `/api/v1/structured-resume/generate/{template}/{format}` | Generate & stream ATS DOCX or PDF export |
+| `POST` | `/api/v1/resume/analyze` | Full resume vs JD gap analysis workflow (JSON-first) |
+| `POST` | `/api/v1/resume/rewrite` | AI review & rewrite single resume section |
+| `POST` | `/api/v1/resume/apply` | Merge approved section rewrites & export ATS document |
 | `GET` | `/docs` | Swagger UI (development only) |
 | `GET` | `/redoc` | ReDoc (development only) |
 
