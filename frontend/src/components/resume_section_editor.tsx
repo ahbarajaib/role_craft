@@ -212,8 +212,16 @@ export default function ResumeSectionEditor({
             />
           )}
 
-          {/* 6. Custom or Fallback List Section */}
-          {(section.section_type === "custom" || section.section_type === "certifications") && (
+          {/* 6. Certifications Section */}
+          {section.section_type === "certifications" && (
+            <CertificationsEditor
+              entries={section.content?.entries || []}
+              onChange={(newEntries) => updateContent({ ...section.content, entries: newEntries })}
+            />
+          )}
+
+          {/* 7. Custom or Fallback List Section */}
+          {section.section_type === "custom" && (
             <CustomListEditor
               entries={section.content?.entries || []}
               onChange={(newEntries) => updateContent({ ...section.content, entries: newEntries })}
@@ -721,12 +729,80 @@ function ProjectsEditor({ entries, onChange }: { entries: any[]; onChange: (e: a
   );
 }
 
+// ── Certifications Editor ─────────────────────────────────────────────────────
+function CertificationsEditor({ entries, onChange }: { entries: any[]; onChange: (e: any[]) => void }) {
+  const addEntry = () => {
+    onChange([
+      ...entries,
+      { name: "Certification Name", issuer: "Issuing Organization", date: "2023", credential_id: "" },
+    ]);
+  };
+
+  const updateEntry = (idx: number, entry: any) => {
+    const updated = [...entries];
+    updated[idx] = entry;
+    onChange(updated);
+  };
+
+  return (
+    <div className="space-y-3">
+      {entries.map((item, idx) => {
+        const e = typeof item === "string" ? { name: item, issuer: "", date: "", credential_id: "" } : item;
+        return (
+          <div key={idx} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs text-rose-600 dark:text-rose-400">Certification #{idx + 1}</span>
+              <button type="button" onClick={() => onChange(entries.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-rose-500 p-1">
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <input
+                type="text"
+                value={e.name || ""}
+                onChange={(evt) => updateEntry(idx, { ...e, name: evt.target.value })}
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                placeholder="Certification / License Name"
+              />
+              <input
+                type="text"
+                value={e.issuer || ""}
+                onChange={(evt) => updateEntry(idx, { ...e, issuer: evt.target.value })}
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                placeholder="Issuing Organization"
+              />
+              <input
+                type="text"
+                value={e.date || ""}
+                onChange={(evt) => updateEntry(idx, { ...e, date: evt.target.value })}
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                placeholder="Issue Date / Year"
+              />
+              <input
+                type="text"
+                value={e.credential_id || ""}
+                onChange={(evt) => updateEntry(idx, { ...e, credential_id: evt.target.value })}
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                placeholder="Credential ID / Verification URL"
+              />
+            </div>
+          </div>
+        );
+      })}
+      <button type="button" onClick={addEntry} className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1">
+        <Plus className="h-3.5 w-3.5" /> Add Certification
+      </button>
+    </div>
+  );
+}
+
 // ── Custom List Editor ────────────────────────────────────────────────────────
 function CustomListEditor({ entries, onChange }: { entries: any[]; onChange: (e: any[]) => void }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       {entries.map((entry, idx) => (
-        <div key={idx} className="flex items-center gap-2">
+        <div key={idx} className="flex items-start gap-2 group">
+          <span className="text-slate-400 dark:text-slate-500 font-bold text-xs pt-2 select-none">•</span>
           <textarea
             value={typeof entry === "string" ? entry : entry.text || ""}
             onChange={(e) => {
@@ -735,9 +811,14 @@ function CustomListEditor({ entries, onChange }: { entries: any[]; onChange: (e:
               onChange(updated);
             }}
             rows={2}
-            className="flex-1 p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs"
+            placeholder="Enter custom section detail, bullet point, or item..."
+            className="flex-1 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none shadow-sm transition-all"
           />
-          <button type="button" onClick={() => onChange(entries.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-rose-500 p-1">
+          <button
+            type="button"
+            onClick={() => onChange(entries.filter((_, i) => i !== idx))}
+            className="text-slate-400 hover:text-rose-500 p-1.5 cursor-pointer pt-2 transition-colors"
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -745,9 +826,9 @@ function CustomListEditor({ entries, onChange }: { entries: any[]; onChange: (e:
       <button
         type="button"
         onClick={() => onChange([...entries, "New item entry."])}
-        className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1"
+        className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
       >
-        <Plus className="h-3.5 w-3.5" /> Add Item
+        <Plus className="h-3.5 w-3.5 text-indigo-500" /> Add Custom Entry Item
       </button>
     </div>
   );

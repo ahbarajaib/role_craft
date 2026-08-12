@@ -672,63 +672,50 @@ export default function ResumeBuilderPage() {
                   />
                 ))}
 
-                {/* Add Section Menu */}
-                <div className="p-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                    + Add New Section
-                  </span>
-                  <div className="flex items-center gap-2 flex-wrap text-xs">
-                    <button
-                      type="button"
-                      onClick={() => handleAddSection("summary")}
-                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold hover:border-indigo-500 transition-all cursor-pointer flex items-center gap-1"
-                    >
-                      <FileText className="h-3.5 w-3.5 text-indigo-500" /> Summary
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAddSection("skills")}
-                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold hover:border-emerald-500 transition-all cursor-pointer flex items-center gap-1"
-                    >
-                      <Code className="h-3.5 w-3.5 text-emerald-500" /> Skills
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAddSection("experience")}
-                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold hover:border-blue-500 transition-all cursor-pointer flex items-center gap-1"
-                    >
-                      <Briefcase className="h-3.5 w-3.5 text-blue-500" /> Experience
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAddSection("education")}
-                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold hover:border-purple-500 transition-all cursor-pointer flex items-center gap-1"
-                    >
-                      <GraduationCap className="h-3.5 w-3.5 text-purple-500" /> Education
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAddSection("projects")}
-                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold hover:border-amber-500 transition-all cursor-pointer flex items-center gap-1"
-                    >
-                      <FolderGit2 className="h-3.5 w-3.5 text-amber-500" /> Projects
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAddSection("certifications")}
-                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold hover:border-rose-500 transition-all cursor-pointer flex items-center gap-1"
-                    >
-                      <Award className="h-3.5 w-3.5 text-rose-500" /> Certifications
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAddSection("custom")}
-                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold hover:border-slate-500 transition-all cursor-pointer flex items-center gap-1"
-                    >
-                      <Layers className="h-3.5 w-3.5 text-slate-500" /> Custom Section
-                    </button>
-                  </div>
-                </div>
+                {/* Add Section Menu - Only show sections NOT currently active in resume */}
+                {(() => {
+                  const existingTypes = new Set(
+                    (resume.sections || []).map((s) => s.section_type.toLowerCase())
+                  );
+                  const availableSections = [
+                    { id: "summary", label: "Summary", icon: FileText, color: "text-indigo-500", border: "hover:border-indigo-500" },
+                    { id: "skills", label: "Skills", icon: Code, color: "text-emerald-500", border: "hover:border-emerald-500" },
+                    { id: "experience", label: "Experience", icon: Briefcase, color: "text-blue-500", border: "hover:border-blue-500" },
+                    { id: "education", label: "Education", icon: GraduationCap, color: "text-purple-500", border: "hover:border-purple-500" },
+                    { id: "projects", label: "Projects", icon: FolderGit2, color: "text-amber-500", border: "hover:border-amber-500" },
+                    { id: "certifications", label: "Certifications", icon: Award, color: "text-rose-500", border: "hover:border-rose-500" },
+                  ].filter((sec) => !existingTypes.has(sec.id));
+
+                  return (
+                    <div className="p-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                        + Add New Section
+                      </span>
+                      <div className="flex items-center gap-2 flex-wrap text-xs">
+                        {availableSections.map((sec) => {
+                          const IconComponent = sec.icon;
+                          return (
+                            <button
+                              key={sec.id}
+                              type="button"
+                              onClick={() => handleAddSection(sec.id as any)}
+                              className={`px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold ${sec.border} transition-all cursor-pointer flex items-center gap-1`}
+                            >
+                              <IconComponent className={`h-3.5 w-3.5 ${sec.color}`} /> {sec.label}
+                            </button>
+                          );
+                        })}
+                        <button
+                          type="button"
+                          onClick={() => handleAddSection("custom")}
+                          className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold hover:border-slate-500 transition-all cursor-pointer flex items-center gap-1"
+                        >
+                          <Layers className="h-3.5 w-3.5 text-slate-500" /> Custom Section
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 

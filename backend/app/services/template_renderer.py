@@ -500,6 +500,8 @@ class ATSTemplateRenderer:
             for entry in entries:
                 if isinstance(entry, dict):
                     pname = entry.get("name", "")
+                    url = entry.get("url", "")
+                    desc = entry.get("description", "")
                     techs = entry.get("technologies", [])
                     bullets = entry.get("bullets", [])
 
@@ -512,11 +514,24 @@ class ATSTemplateRenderer:
                     r_p.font.size = Pt(10)
                     r_p.font.bold = True
 
+                    if url:
+                        r_u = p_proj.add_run(f" ({url})")
+                        r_u.font.name = font_name
+                        r_u.font.size = Pt(9.5)
+                        r_u.font.italic = True
+
                     if techs:
                         r_tech = p_proj.add_run(f" [{', '.join(techs)}]")
                         r_tech.font.name = font_name
                         r_tech.font.size = Pt(9.5)
                         r_tech.font.italic = True
+
+                    if desc:
+                        p_desc = doc.add_paragraph()
+                        r_desc = p_desc.add_run(desc)
+                        r_desc.font.name = font_name
+                        r_desc.font.size = Pt(9.5)
+                        p_desc.paragraph_format.space_after = Pt(1.5)
 
                     for b in bullets:
                         if b and str(b).strip():
