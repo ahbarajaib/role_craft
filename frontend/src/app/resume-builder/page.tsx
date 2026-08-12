@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Link from "next/link";
 import {
   UploadCloud,
@@ -271,27 +271,90 @@ export default function ResumeBuilderPage() {
     setSaveStatus("unsaved");
   };
 
-  const handleSaveResume = async () => {
+  // Dynamically compute remaining unparsed fields based on current input values
+  const getActiveUnparsedFields = useCallback((res: StructuredResume | null): string[] => {
+    if (!res?.parse_confidence?.low_confidence_fields) return [];
+    const rawList = res.parse_confidence.low_confidence_fields;
+
+    return rawList.filter((fieldPath) => {
+      const f = fieldPath.toLowerCase();
+      if (f.includes("full_name")) return !res.contact_info?.full_name?.trim();
+      if (f.includes("job_title") && (f.includes("contact") || (!f.includes("entries") && !f.includes("experience")))) {
+        return !res.contact_info?.job_title?.trim();
+      }
+      if (f.includes("email")) return !res.contact_info?.email?.trim();
+      if (f.includes("phone")) return !res.contact_info?.phone?.trim();
+      if (f.includes("location") && (f.includes("contact") || !f.includes("entries"))) {
+        return !res.contact_info?.location?.trim();
+      }
+      if (f.includes("linkedin")) return !res.contact_info?.linkedin_url?.trim();
+      if (f.includes("portfolio")) return !res.contact_info?.portfolio_url?.trim();
+      if (f.includes("github")) return !res.contact_info?.github_url?.trim();
+
+      // Check nested objects (e.g. experience.0.company)
+      const parts = fieldPath.split(".");
+      let target: any = res;
+      for (const p of parts) {
+        if (target === undefined || target === null) break;
+        target = target[p];
+      }
+      if (typeof target === "string") return !target.trim();
+      if (Array.isArray(target)) return target.length === 0;
+      return !target;
+    });
+  }, []);
+
+  const lowConfFields = useMemo(() => getActiveUnparsedFields(resume), [resume, getActiveUnparsedFields]);
+
+  const handleSaveResume = async (showToast = true) => {
     if (!resume) return;
     try {
       setIsSaving(true);
       setSaveStatus("saving");
-      const updated = await updateStructuredResume(resume);
+
+      // Update remaining unparsed fields array before persisting to DB
+      const updatedPayload: StructuredResume = {
+        ...resume,
+        parse_confidence: {
+          overall_confidence: resume.parse_confidence?.overall_confidence ?? 100,
+          low_confidence_fields: lowConfFields,
+        },
+      };
+
+      const updated = await updateStructuredResume(updatedPayload);
       setResume(updated);
       setSaveStatus("saved");
-      setStatusMsg({ type: "success", text: "Master Resume changes saved successfully!" });
+      if (showToast) {
+        setStatusMsg({ type: "success", text: "Master Resume & unparsed fields saved successfully to cloud!" });
+      }
     } catch (err: any) {
       console.error("Save error:", err);
       setSaveStatus("unsaved");
-      setStatusMsg({ type: "error", text: err?.message || "Failed to save resume. Please try again." });
+      if (showToast) {
+        setStatusMsg({ type: "error", text: err?.message || "Failed to save resume. Please try again." });
+      }
     } finally {
       setIsSaving(false);
     }
   };
 
+  // Debounced Auto-Save Draft (saves 3s after user stops typing)
+  useEffect(() => {
+    if (saveStatus !== "unsaved" || !resume || !token) return;
+    const timer = setTimeout(() => {
+      handleSaveResume(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [resume, saveStatus, token]);
+
   const handleDownloadFile = async (format: "docx" | "pdf") => {
     if (!resume) return;
     try {
+      // Auto-save unsaved changes before triggering export
+      if (saveStatus === "unsaved") {
+        await handleSaveResume(false);
+      }
       setIsExporting(format);
       const name = resume.contact_info?.full_name || "Resume";
       const filename = `${name} - ${selectedTemplate.replace("_", " ").toUpperCase()}.${format}`;
@@ -337,8 +400,6 @@ export default function ResumeBuilderPage() {
 
     return { label: propName, elementId: `field-${field.replace(/\./g, "-")}` };
   }
-
-  const lowConfFields = resume?.parse_confidence?.low_confidence_fields || [];
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
@@ -405,7 +466,7 @@ export default function ResumeBuilderPage() {
 
             <button
               type="button"
-              onClick={handleSaveResume}
+              onClick={() => handleSaveResume(true)}
               disabled={isSaving || saveStatus === "saved"}
               className="px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-50 transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
             >
@@ -1005,6 +1066,27 @@ export default function ResumeBuilderPage() {
           token={token}
           onProfileUpdated={loadResume}
         />
+      )}
+
+      {/* Floating Save Action Bar */}
+      {resume && saveStatus === "unsaved" && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div className="px-5 py-3 rounded-2xl bg-slate-900/95 dark:bg-white/95 backdrop-blur-md text-white dark:text-slate-900 shadow-2xl border border-slate-800 dark:border-slate-200 flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-xs font-bold">Unsaved Changes</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleSaveResume(true)}
+              disabled={isSaving}
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Save className="h-3.5 w-3.5" />
+              {isSaving ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
