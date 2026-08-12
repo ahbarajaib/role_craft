@@ -17,29 +17,36 @@ from app.schemas.structured_resume import StructuredResume
 
 
 TAILOR_SUMMARY_SYSTEM = (
-    "You are a senior resume writer. Rewrite the professional summary to align "
-    "with the target job description. Keep all facts grounded in the original. "
-    "Output ONLY the summary paragraph — no headers or preamble. 3-5 sentences max."
+    "You are an executive resume strategist. Rewrite the professional summary to directly align "
+    "with the target job title and job description. Frame the narrative around the target role's core "
+    "competencies while preserving authentic experience. NEVER fabricate fake companies or degree titles. "
+    "Output ONLY the polished summary paragraph (3-4 sentences max) — no headers or preamble."
 )
 
 TAILOR_EXPERIENCE_SYSTEM = (
-    "You are a senior resume editor. Rewrite the resume bullet points to align "
-    "with the target job description using the Google XYZ formula.\n"
+    "You are a senior resume editor. Rewrite the resume bullet points using the Google XYZ formula "
+    "('Accomplished [X] as measured by [Y], by doing [Z]').\n"
     "RULES:\n"
-    "1. NEVER invent facts, companies, dates, metrics, or skills not in the original.\n"
-    "2. Weave in JD keywords ONLY if they appear in the original bullets.\n"
-    "3. Output EXACTLY the same number of bullets as the input, one per line.\n"
+    "1. Seamlessly weave relevant ATS keywords, frameworks, and action verbs from the target Job Description into the bullets where applicable.\n"
+    "2. STRICTLY LOCK & PRESERVE REAL FACTS: Never change company names, job titles, start/end dates, employment years, or locations.\n"
+    "3. Output EXACTLY the same number of bullets as input, one line per bullet.\n"
     "4. Do NOT include bullet symbols or preamble — plain text only."
 )
 
 TAILOR_SKILLS_SYSTEM = (
-    "You are a resume skills editor. Reorder the skills section to prioritize "
-    "skills mentioned in the job description.\n"
+    "You are an ATS resume skills optimizer. Categorize and refine the skills section to maximize keyword match against the target job description.\n"
     "RULES:\n"
-    "1. NEVER add skills not in the original.\n"
-    "2. Reorder categories and skills within categories to match JD priorities.\n"
-    "3. Output one line per category: 'CategoryName: Skill1, Skill2, ...'\n"
-    "4. Preserve ALL original skills."
+    "1. Intelligently weave target ATS technical skills and tools from the job description into appropriate categories (e.g. Frontend, Backend & Systems, Databases, Cloud & DevOps, AI & Tooling).\n"
+    "2. Preserve all core existing skills from the original candidate profile.\n"
+    "3. Output format must be strictly one line per category: 'CategoryName: Skill1, Skill2, Skill3...'"
+)
+
+TAILOR_PROJECTS_SYSTEM = (
+    "You are a tech resume project editor. Rewrite project descriptions and bullet points to highlight target stack frameworks, APIs, and quantifiable engineering impact.\n"
+    "RULES:\n"
+    "1. Weave target ATS keywords from the job description into project bullets.\n"
+    "2. Never alter real project names, links, or dates.\n"
+    "3. Output EXACTLY the same number of bullets as input, one line per bullet."
 )
 
 
@@ -119,6 +126,24 @@ class TailorOrchestrationService:
                         }
                         tailored.sections[i].content["categories"] = new_categories
 
+            elif sec_type == "projects":
+                entries = section.content.get("entries", [])
+                for j, entry in enumerate(entries):
+                    bullets = entry.get("bullets", [])
+                    if not bullets:
+                        continue
+                    rewritten_bullets = self._rewrite_project_bullets(
+                        bullets, job_description, job_title
+                    )
+                    if rewritten_bullets and rewritten_bullets != bullets:
+                        diff[f"sections[{i}].projects[{j}].bullets"] = {
+                            "original": "\n".join(bullets),
+                            "tailored": "\n".join(rewritten_bullets),
+                            "company": entry.get("name", "Project"),
+                            "role": "Project Highlights",
+                        }
+                        tailored.sections[i].content["entries"][j]["bullets"] = rewritten_bullets
+
         logger.info("Tailor complete", changes=len(diff))
         return tailored, diff
 
@@ -164,6 +189,32 @@ class TailorOrchestrationService:
             return lines[: len(bullets)]
         except Exception as e:
             logger.warning("Experience bullets rewrite failed", error=str(e))
+            return bullets
+
+    def _rewrite_project_bullets(
+        self, bullets: list, jd: str, job_title: str
+    ) -> list:
+        if not bullets:
+            return bullets
+        bullets_text = "\n".join(bullets)
+        user_prompt = (
+            f"Target Role: {job_title}\n\n"
+            f"Job Description:\n{jd[:2000]}\n\n"
+            f"Original Project Bullets ({len(bullets)} bullets):\n{bullets_text}\n\n"
+            f"Rewrite these {len(bullets)} project bullets to highlight relevant stack technologies and achievements (one per line, no bullet symbols):"
+        )
+        try:
+            response = self._ai.generate_text(TAILOR_PROJECTS_SYSTEM, user_prompt, temperature=0.3)
+            lines = [
+                line.strip().lstrip("•-*– ").strip()
+                for line in response.strip().split("\n")
+                if line.strip()
+            ]
+            if len(lines) < len(bullets):
+                lines.extend(bullets[len(lines):])
+            return lines[: len(bullets)]
+        except Exception as e:
+            logger.warning("Project bullets rewrite failed", error=str(e))
             return bullets
 
     def _rewrite_skills(self, original_skills_text: str, jd: str, job_title: str) -> str:

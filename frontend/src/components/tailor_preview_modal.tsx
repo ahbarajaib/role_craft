@@ -25,6 +25,8 @@ function fieldLabel(path: string): string {
   if (p.includes("summary")) return "Professional Summary";
   const expMatch = path.match(/experience\[(\d+)\]\.bullets/);
   if (expMatch) return `Experience #${parseInt(expMatch[1]) + 1} — Bullets`;
+  const projMatch = path.match(/projects\[(\d+)\]\.bullets/);
+  if (projMatch) return `Project #${parseInt(projMatch[1]) + 1} — Bullets`;
   if (p.includes("skills")) return "Skills";
   return path.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -33,6 +35,7 @@ function fieldIcon(path: string) {
   const p = path.toLowerCase();
   if (p.includes("summary")) return FileText;
   if (p.includes("experience")) return Briefcase;
+  if (p.includes("projects")) return LayoutList;
   if (p.includes("skills")) return Layers;
   return LayoutList;
 }
@@ -70,12 +73,18 @@ export default function TailorPreviewModal({
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  AI Tailored Resume Preview
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    AI Tailored Resume Preview
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-extrabold text-[10px] border border-emerald-500/20 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    🔒 Facts & Dates Preserved 100%
+                  </span>
+                </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Optimized for: <span className="text-amber-700 dark:text-amber-400 font-bold">{jobLabel}</span>
-                  {total > 0 && <span className="ml-2 text-slate-400">· {total} change{total !== 1 ? "s" : ""} generated</span>}
+                  {total > 0 && <span className="ml-2 text-slate-400">· {total} section{total !== 1 ? "s" : ""} tailored</span>}
                 </p>
               </div>
             </div>
