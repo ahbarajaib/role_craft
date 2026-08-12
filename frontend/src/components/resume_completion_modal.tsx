@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   X, CheckCircle2, AlertCircle, Save, ChevronRight, Loader2,
-  User, Mail, Phone, MapPin, Link, GitBranch, Globe, Briefcase,
+  User, Mail, Phone, MapPin, Link, GitBranch, Globe, Briefcase, Sparkles,
 } from "lucide-react";
 import {
   StructuredResume,
@@ -33,7 +33,6 @@ function getActiveUnparsedFields(resume: StructuredResume): string[] {
     if (f.includes("portfolio")) return !ci?.portfolio_url?.trim();
     if (f.includes("github")) return !ci?.github_url?.trim();
     if (f.includes("job_title") && f.includes("contact")) return !ci?.job_title?.trim();
-    // For section fields just check if path references a section we have
     const secMatch = f.match(/sections?\[(\d+)\]/);
     if (secMatch) {
       const idx = parseInt(secMatch[1]);
@@ -97,7 +96,6 @@ export default function ResumeCompletionModal({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
-  // Sync if parent passes new resume
   useEffect(() => {
     setResume(initialResume);
   }, [initialResume]);
@@ -127,7 +125,7 @@ export default function ResumeCompletionModal({
     setSaveStatus("idle");
   }, []);
 
-  // Debounced auto-save
+  // Debounced auto-save (3s)
   useEffect(() => {
     if (saveStatus === "idle") {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -183,57 +181,70 @@ export default function ResumeCompletionModal({
   const ci = resume.contact_info;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-3xl max-h-[92vh] flex flex-col rounded-2xl bg-[#0f1117] border border-white/10 shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#111318] shrink-0">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-indigo-400" />
+            <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-sm shrink-0">
+              <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-white">Complete Your Resume</h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                Complete Master Resume Fields
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {allResolved
-                  ? "All fields verified ✓"
-                  : `${activeUnparsed.length} field${activeUnparsed.length !== 1 ? "s" : ""} need${activeUnparsed.length === 1 ? "s" : ""} attention`}
+                  ? "All fields 100% verified ✓"
+                  : `${activeUnparsed.length} field${activeUnparsed.length !== 1 ? "s" : ""} need${activeUnparsed.length === 1 ? "s" : ""} your completion`}
               </p>
             </div>
           </div>
+
           <div className="flex items-center gap-3">
-            {/* Save status indicator */}
-            <div className="text-xs text-slate-500">
+            {/* Auto-save badge */}
+            <div className="text-xs font-semibold">
               {saveStatus === "saving" && (
-                <span className="flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Auto-saving...</span>
+                <span className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Auto-saving...
+                </span>
               )}
               {saveStatus === "saved" && (
-                <span className="flex items-center gap-1 text-emerald-400"><CheckCircle2 className="w-3 h-3" />Saved</span>
+                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Saved
+                </span>
               )}
             </div>
-            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-              <X className="w-4 h-4" />
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Unparsed field chips */}
+        {/* Unparsed Fields Alert Card (Vivid Red Highlight) */}
         {activeUnparsed.length > 0 && (
-          <div className="px-6 py-3 bg-red-500/5 border-b border-red-500/10 shrink-0">
+          <div className="px-6 py-3.5 bg-rose-50/90 dark:bg-rose-950/40 border-b border-rose-200 dark:border-rose-800/80 shrink-0">
+            <div className="flex items-center gap-2 mb-2 text-xs font-bold text-rose-800 dark:text-rose-300">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+              <span>Fields Needing Completion — Click chip to jump:</span>
+            </div>
             <div className="flex flex-wrap gap-2">
               {activeUnparsed.slice(0, 8).map((field) => (
                 <button
                   key={field}
                   onClick={() => scrollToField(field)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-medium hover:bg-red-500/25 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-rose-900/60 border border-rose-300 dark:border-rose-700/80 text-rose-700 dark:text-rose-200 text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-800/80 transition-all shadow-sm cursor-pointer"
                 >
-                  <AlertCircle className="w-3 h-3" />
                   {fieldLabel(field)}
-                  <ChevronRight className="w-3 h-3" />
+                  <ChevronRight className="w-3.5 h-3.5 text-rose-500" />
                 </button>
               ))}
               {activeUnparsed.length > 8 && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-800 text-slate-400 text-xs">
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-rose-200/60 dark:bg-rose-900/40 text-rose-800 dark:text-rose-300 text-xs font-bold">
                   +{activeUnparsed.length - 8} more
                 </span>
               )}
@@ -241,65 +252,67 @@ export default function ResumeCompletionModal({
           </div>
         )}
 
-        {/* Progress bar */}
+        {/* Resolution Progress Bar */}
         {totalOriginal > 0 && (
-          <div className="px-6 py-2 bg-[#111318] shrink-0">
+          <div className="px-6 py-2.5 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div className="flex-1 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-500"
+                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 transition-all duration-500"
                   style={{ width: `${Math.round((resolved / totalOriginal) * 100)}%` }}
                 />
               </div>
-              <span className="text-xs text-slate-400 shrink-0">
-                {resolved}/{totalOriginal} resolved
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-400 shrink-0">
+                {resolved}/{totalOriginal} fields completed ({Math.round((resolved / totalOriginal) * 100)}%)
               </span>
             </div>
           </div>
         )}
 
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 bg-slate-50/30 dark:bg-slate-950/20">
 
-          {/* Contact Info */}
+          {/* Contact Details Card */}
           <div
             ref={(el) => { sectionRefs.current["contact"] = el; }}
-            className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden"
+            className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden"
           >
-            <div className="px-4 py-3 border-b border-white/10 bg-white/[0.02]">
-              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                <User className="w-4 h-4 text-indigo-400" />
+            <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 Contact Information
               </h3>
             </div>
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { key: "full_name" as const, label: "Full Name", icon: User, placeholder: "Ahmad Barajaib" },
-                { key: "job_title" as const, label: "Job Title / Headline", icon: Briefcase, placeholder: "Senior Software Engineer" },
-                { key: "email" as const, label: "Email", icon: Mail, placeholder: "ahmed@example.com" },
-                { key: "phone" as const, label: "Phone", icon: Phone, placeholder: "+1 234 567 8900" },
-                { key: "location" as const, label: "Location", icon: MapPin, placeholder: "Dubai, UAE" },
+                { key: "full_name" as const, label: "Full Name", icon: User, placeholder: "e.g. Ahmad Barajaib" },
+                { key: "job_title" as const, label: "Job Title / Headline", icon: Briefcase, placeholder: "e.g. Senior Software Engineer" },
+                { key: "email" as const, label: "Email Address", icon: Mail, placeholder: "e.g. ahmad@example.com" },
+                { key: "phone" as const, label: "Phone Number", icon: Phone, placeholder: "e.g. +971 50 123 4567" },
+                { key: "location" as const, label: "City, Country", icon: MapPin, placeholder: "e.g. Dubai, UAE" },
                 { key: "linkedin_url" as const, label: "LinkedIn URL", icon: Link, placeholder: "linkedin.com/in/..." },
                 { key: "portfolio_url" as const, label: "Portfolio / Website", icon: Globe, placeholder: "yoursite.com" },
                 { key: "github_url" as const, label: "GitHub URL", icon: GitBranch, placeholder: "github.com/username" },
               ].map(({ key, label, icon: Icon, placeholder }) => {
                 const val = (ci as any)[key] ?? "";
-                const fieldPath = `contact_info.${key}`;
                 const isUnparsed = activeUnparsed.some((f) => f.toLowerCase().includes(key.replace("_url", "").replace("_", "_")));
                 return (
                   <div key={key}>
-                    <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                       {label}
                     </label>
                     <div className="relative">
-                      <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                      <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                       <input
                         type="text"
                         value={val}
                         onChange={(e) => handleContactChange(key, e.target.value)}
                         placeholder={placeholder}
-                        className={`w-full pl-9 pr-3 py-2 rounded-lg text-sm bg-white/5 border transition-all outline-none text-white placeholder-slate-600
-                          ${isUnparsed ? "border-red-500/50 focus:border-red-400 focus:ring-1 focus:ring-red-400/30" : "border-white/10 focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20"}`}
+                        className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl text-sm font-medium transition-all outline-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500
+                          ${isUnparsed
+                            ? "bg-rose-50/60 dark:bg-rose-950/30 border-2 border-rose-400 dark:border-rose-700 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
+                            : "bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20"
+                          }`}
                       />
                     </div>
                   </div>
@@ -308,7 +321,7 @@ export default function ResumeCompletionModal({
             </div>
           </div>
 
-          {/* Resume Sections */}
+          {/* Section Editors */}
           {resume.sections.map((section, index) => (
             <div
               key={`${section.section_type}-${index}`}
@@ -330,32 +343,34 @@ export default function ResumeCompletionModal({
           ))}
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/10 bg-[#111318] shrink-0 flex items-center justify-between gap-4">
-          <div className="text-xs text-slate-500">
+        {/* Footer Actions */}
+        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 shrink-0 flex items-center justify-between gap-4">
+          <div className="text-xs font-semibold">
             {allResolved ? (
-              <span className="text-emerald-400 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                All fields complete — ready to use
+              <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                Master resume is 100% complete & verified
               </span>
             ) : (
-              <span>{activeUnparsed.length} field{activeUnparsed.length !== 1 ? "s" : ""} remaining</span>
+              <span className="text-slate-600 dark:text-slate-400">
+                {activeUnparsed.length} field{activeUnparsed.length !== 1 ? "s" : ""} remaining to complete
+              </span>
             )}
           </div>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               Close
             </button>
             <button
               onClick={handleSaveAndClose}
               disabled={isSaving}
-              className="px-5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md flex items-center gap-2 disabled:opacity-60"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md shadow-indigo-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-60"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {isSaving ? "Saving..." : allResolved ? "Save & Close" : `Save & Close (${activeUnparsed.length} remaining)`}
+              {isSaving ? "Saving..." : allResolved ? "Save Master Resume" : `Save & Close (${activeUnparsed.length} remaining)`}
             </button>
           </div>
         </div>
