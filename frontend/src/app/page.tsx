@@ -1719,7 +1719,6 @@ export default function Home() {
         setDownloadId(applyRes.download_id);
         setDownloadUrl(applyRes.download_url);
         setIsPatchingApplied(true);
-        setIsAutoTailoring(false);
 
         const parts: string[] = [];
         if (result.overall_summary?.job_title) parts.push("Target Role");
@@ -1740,9 +1739,10 @@ export default function Home() {
               ...autoRewrites,
             }));
           }
-          setIsTailorPreviewOpen(true);
         } catch (te) {
           console.warn("[RoleCraft] Structured tailor warning:", te);
+        } finally {
+          setIsAutoTailoring(false);
         }
 
         // ── Auto-generate Tailored Cover Letter asynchronously in background ──
@@ -4169,6 +4169,48 @@ export default function Home() {
             )}
           </div>
         </main>
+      )}
+
+      {/* ─── ⚡ 1-Click Auto-Tailoring Full Screen Progress Modal ────────────── */}
+      {isAutoTailoring && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6 text-center animate-scale-up">
+            <div className="relative mx-auto h-20 w-20 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-500 via-teal-400 to-emerald-500 animate-spin blur-xs opacity-75" />
+              <div className="relative h-16 w-16 rounded-full bg-slate-950 flex items-center justify-center border border-white/20 shadow-inner">
+                <Sparkles className="h-8 w-8 text-amber-300 animate-pulse" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                ⚡ Auto-Tailoring Your Resume...
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+                AI is rewriting your Work Experience, Skills, Projects, and Summary for {customTargetRole || analysisResult?.overall_summary?.job_title || "Target Role"}.
+              </p>
+            </div>
+
+            <div className="space-y-2.5 pt-2 text-left bg-slate-50 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80">
+              <div className="flex items-center gap-2.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+                <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
+                <span>Target Role & ATS Keywords Analyzed</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-indigo-600 dark:text-indigo-400 font-bold animate-pulse">
+                <div className="h-3.5 w-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin shrink-0" />
+                <span>Rewriting Bullets (Google XYZ Formula)</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-slate-400 font-semibold opacity-70">
+                <div className="h-3.5 w-3.5 rounded-full border border-slate-300 shrink-0" />
+                <span>Weaving Stack & Impact Metrics</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-slate-400 font-semibold opacity-70">
+                <div className="h-3.5 w-3.5 rounded-full border border-slate-300 shrink-0" />
+                <span>Generating Side-by-Side Comparison Cards</span>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ─── ⚡ Keyword Weave Selection Modal ───────────────────────────────── */}
