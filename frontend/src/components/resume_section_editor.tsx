@@ -359,7 +359,8 @@ function ExperienceEditor({
 
   return (
     <div className="space-y-4">
-      {entries.map((e, idx) => {
+      {entries.map((item, idx) => {
+        const e = typeof item === "string" ? { job_title: item, company: "", location: "", start_date: "", end_date: "", bullets: [] } : item;
         const titlePath = `sections.${sectionIndex}.content.entries.${idx}.job_title`;
         const companyPath = `sections.${sectionIndex}.content.entries.${idx}.company`;
         const isTitleLow = lowConfidenceFields.includes(titlePath);
@@ -424,7 +425,7 @@ function ExperienceEditor({
                       ? "border-rose-400 dark:border-rose-500 bg-rose-50/20"
                       : "border-slate-200 dark:border-slate-700"
                   }`}
-                  placeholder="e.g. Acme Corp"
+                  placeholder="e.g. Tech Corp Inc"
                 />
               </div>
 
@@ -436,13 +437,13 @@ function ExperienceEditor({
                   type="text"
                   value={e.location || ""}
                   onChange={(evt) => updateEntry(idx, { ...e, location: evt.target.value })}
-                  className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                  placeholder="e.g. Bangalore, India"
+                  className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none"
+                  placeholder="e.g. San Francisco, CA"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-1.5">
-                <div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
                   <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                     Start Date
                   </label>
@@ -450,11 +451,11 @@ function ExperienceEditor({
                     type="text"
                     value={e.start_date || ""}
                     onChange={(evt) => updateEntry(idx, { ...e, start_date: evt.target.value })}
-                    className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    placeholder="e.g. Jan 2023"
+                    className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none"
+                    placeholder="e.g. Jan 2021"
                   />
                 </div>
-                <div>
+                <div className="flex-1">
                   <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                     End Date
                   </label>
@@ -462,21 +463,18 @@ function ExperienceEditor({
                     type="text"
                     value={e.end_date || ""}
                     onChange={(evt) => updateEntry(idx, { ...e, end_date: evt.target.value })}
-                    className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none"
                     placeholder="e.g. Present"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Bullets */}
+            {/* Bullet Points */}
             <div className="space-y-1.5 pt-1">
-              <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                Bullet Points
-              </label>
+              <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Key Achievements / Bullets</label>
               {(e.bullets || []).map((bullet: string, bIdx: number) => (
-                <div key={bIdx} className="flex items-start gap-1.5">
-                  <span className="text-slate-400 pt-1.5">•</span>
+                <div key={bIdx} className="flex items-start gap-2">
                   <textarea
                     value={bullet}
                     onChange={(evt) => {
@@ -539,46 +537,49 @@ function EducationEditor({ entries, onChange }: { entries: any[]; onChange: (e: 
 
   return (
     <div className="space-y-3">
-      {entries.map((e, idx) => (
-        <div key={idx} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-xs text-purple-600 dark:text-purple-400">Education #{idx + 1}</span>
-            <button type="button" onClick={() => onChange(entries.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-rose-500 p-1">
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+      {entries.map((item, idx) => {
+        const e = typeof item === "string" ? { degree: item, institution: "", location: "", graduation_date: "" } : item;
+        return (
+          <div key={idx} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs text-purple-600 dark:text-purple-400">Education #{idx + 1}</span>
+              <button type="button" onClick={() => onChange(entries.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-rose-500 p-1">
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <input
+                type="text"
+                value={e.degree || ""}
+                onChange={(evt) => updateEntry(idx, { ...e, degree: evt.target.value })}
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                placeholder="Degree / Qualification"
+              />
+              <input
+                type="text"
+                value={e.institution || ""}
+                onChange={(evt) => updateEntry(idx, { ...e, institution: evt.target.value })}
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                placeholder="Institution / University"
+              />
+              <input
+                type="text"
+                value={e.location || ""}
+                onChange={(evt) => updateEntry(idx, { ...e, location: evt.target.value })}
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                placeholder="Location"
+              />
+              <input
+                type="text"
+                value={e.graduation_date || ""}
+                onChange={(evt) => updateEntry(idx, { ...e, graduation_date: evt.target.value })}
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                placeholder="Graduation Year / Date"
+              />
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <input
-              type="text"
-              value={e.degree || ""}
-              onChange={(evt) => updateEntry(idx, { ...e, degree: evt.target.value })}
-              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-              placeholder="Degree / Qualification"
-            />
-            <input
-              type="text"
-              value={e.institution || ""}
-              onChange={(evt) => updateEntry(idx, { ...e, institution: evt.target.value })}
-              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-              placeholder="Institution / University"
-            />
-            <input
-              type="text"
-              value={e.location || ""}
-              onChange={(evt) => updateEntry(idx, { ...e, location: evt.target.value })}
-              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-              placeholder="Location"
-            />
-            <input
-              type="text"
-              value={e.graduation_date || ""}
-              onChange={(evt) => updateEntry(idx, { ...e, graduation_date: evt.target.value })}
-              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-              placeholder="Graduation Year / Date"
-            />
-          </div>
-        </div>
-      ))}
+        );
+      })}
       <button type="button" onClick={addEntry} className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1">
         <Plus className="h-3.5 w-3.5" /> Add Education
       </button>
@@ -600,30 +601,33 @@ function ProjectsEditor({ entries, onChange }: { entries: any[]; onChange: (e: a
 
   return (
     <div className="space-y-3">
-      {entries.map((e, idx) => (
-        <div key={idx} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-xs text-amber-600 dark:text-amber-400">Project #{idx + 1}</span>
-            <button type="button" onClick={() => onChange(entries.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-rose-500 p-1">
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+      {entries.map((item, idx) => {
+        const e = typeof item === "string" ? { name: item, technologies: [], bullets: [] } : item;
+        return (
+          <div key={idx} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs text-amber-600 dark:text-amber-400">Project #{idx + 1}</span>
+              <button type="button" onClick={() => onChange(entries.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-rose-500 p-1">
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <input
+              type="text"
+              value={e.name || ""}
+              onChange={(evt) => updateEntry(idx, { ...e, name: evt.target.value })}
+              className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+              placeholder="Project Name"
+            />
+            <input
+              type="text"
+              value={Array.isArray(e.technologies) ? e.technologies.join(", ") : (e.technologies || "")}
+              onChange={(evt) => updateEntry(idx, { ...e, technologies: evt.target.value.split(",").map((s: string) => s.trim()) })}
+              className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+              placeholder="Technologies (comma separated)"
+            />
           </div>
-          <input
-            type="text"
-            value={e.name || ""}
-            onChange={(evt) => updateEntry(idx, { ...e, name: evt.target.value })}
-            className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-            placeholder="Project Name"
-          />
-          <input
-            type="text"
-            value={(e.technologies || []).join(", ")}
-            onChange={(evt) => updateEntry(idx, { ...e, technologies: evt.target.value.split(",").map((s: string) => s.trim()) })}
-            className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-            placeholder="Technologies (comma separated)"
-          />
-        </div>
-      ))}
+        );
+      })}
       <button type="button" onClick={addEntry} className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1">
         <Plus className="h-3.5 w-3.5" /> Add Project
       </button>
