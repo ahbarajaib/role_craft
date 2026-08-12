@@ -50,7 +50,7 @@ class ResumeParserService:
             raise BadRequestError("Unsupported file type. Only .docx and .pdf files are supported.")
 
     def _extract_docx_text(self, file_path: Path) -> str:
-        """Extract text from DOCX paragraphs and tables preserving structural lines."""
+        """Extract text from DOCX paragraphs and tables preserving structural lines and hyperlink URLs."""
         try:
             doc = docx.Document(file_path)
             lines: list[str] = []
@@ -59,12 +59,28 @@ class ResumeParserService:
                 txt = p.text.strip()
                 if not txt:
                     continue
-                # Add formatting hints if paragraph contains bold runs
+
+                # Extract embedded hyperlink URLs in this paragraph
+                urls: list[str] = []
+                try:
+                    for child in p._element.xpath('.//*[local-name()="hyperlink"]'):
+                        r_id = child.attrib.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id')
+                        if r_id and r_id in p.part.rels:
+                            target = p.part.rels[r_id].target_ref
+                            if target and target not in txt:
+                                urls.append(target)
+                except Exception:
+                    pass
+
+                line_content = txt
+                if urls:
+                    line_content += f" ({', '.join(urls)})"
+
                 has_bold = any(run.bold for run in p.runs if run.text.strip())
                 if has_bold and len(txt) < 80:
-                    lines.append(f"[BOLD] {txt}")
+                    lines.append(f"[BOLD] {line_content}")
                 else:
-                    lines.append(txt)
+                    lines.append(line_content)
 
             # Also extract tables
             for table in doc.tables:
@@ -79,14 +95,25 @@ class ResumeParserService:
             raise BadRequestError(f"Failed to read Word document: {str(exc)}")
 
     def _extract_pdf_text(self, file_path: Path) -> str:
-        """Extract text from PDF pages using PyMuPDF."""
+        """Extract text from PDF pages using PyMuPDF, including link annotations."""
         try:
             doc = fitz.open(file_path)
             lines: list[str] = []
             for page in doc:
                 text = page.get_text("text")
+                page_links: list[str] = []
+                try:
+                    for link in page.get_links():
+                        uri = link.get("uri")
+                        if uri and uri not in text:
+                            page_links.append(uri)
+                except Exception:
+                    pass
+
                 if text.strip():
                     lines.append(text.strip())
+                if page_links:
+                    lines.append("Links: " + ", ".join(page_links))
             doc.close()
             return "\n\n".join(lines)
         except Exception as exc:

@@ -741,7 +741,7 @@ export default function ResumeBuilderPage() {
                     />
                   </div>
 
-                  <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="font-semibold text-slate-700 dark:text-slate-300">
                         LinkedIn URL
@@ -764,12 +764,12 @@ export default function ResumeBuilderPage() {
 
                     <div>
                       <label className="font-semibold text-slate-700 dark:text-slate-300">
-                        Portfolio / GitHub URL
+                        Portfolio / Website URL
                       </label>
                       <input
                         id="field-portfolio"
                         type="text"
-                        value={resume.contact_info?.portfolio_url || resume.contact_info?.github_url || ""}
+                        value={resume.contact_info?.portfolio_url || ""}
                         onChange={(e) => {
                           setResume({
                             ...resume,
@@ -779,6 +779,26 @@ export default function ResumeBuilderPage() {
                         }}
                         className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 text-xs text-slate-900 dark:text-white"
                         placeholder="ahbarajaib.com"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 dark:text-slate-300">
+                        GitHub Profile URL
+                      </label>
+                      <input
+                        id="field-github"
+                        type="text"
+                        value={resume.contact_info?.github_url || ""}
+                        onChange={(e) => {
+                          setResume({
+                            ...resume,
+                            contact_info: { ...resume.contact_info, github_url: e.target.value },
+                          });
+                          setSaveStatus("unsaved");
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 text-xs text-slate-900 dark:text-white"
+                        placeholder="github.com/ahbarajaib"
                       />
                     </div>
                   </div>

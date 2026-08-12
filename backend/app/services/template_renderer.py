@@ -175,8 +175,10 @@ class ATSTemplateRenderer:
             contact_parts.append(c.location)
         if c.linkedin_url:
             contact_parts.append(c.linkedin_url)
-        if c.portfolio_url or c.github_url:
-            contact_parts.append(c.portfolio_url or c.github_url)
+        if c.portfolio_url:
+            contact_parts.append(c.portfolio_url)
+        if c.github_url:
+            contact_parts.append(c.github_url)
 
         if contact_parts:
             p_contact = doc.add_paragraph()
@@ -240,6 +242,10 @@ class ATSTemplateRenderer:
             contact_parts.append(c.location)
         if c.linkedin_url:
             contact_parts.append(c.linkedin_url)
+        if c.portfolio_url:
+            contact_parts.append(c.portfolio_url)
+        if c.github_url:
+            contact_parts.append(c.github_url)
 
         if contact_parts:
             p_contact = doc.add_paragraph()
@@ -312,6 +318,10 @@ class ATSTemplateRenderer:
                 contact_parts.append(c.location)
             if c.linkedin_url:
                 contact_parts.append(c.linkedin_url)
+            if c.portfolio_url:
+                contact_parts.append(c.portfolio_url)
+            if c.github_url:
+                contact_parts.append(c.github_url)
 
             if contact_parts:
                 p_c = cell_left.add_paragraph()
@@ -353,6 +363,10 @@ class ATSTemplateRenderer:
                 contact_parts.append(c.location)
             if c.linkedin_url:
                 contact_parts.append(c.linkedin_url)
+            if c.portfolio_url:
+                contact_parts.append(c.portfolio_url)
+            if c.github_url:
+                contact_parts.append(c.github_url)
 
             if contact_parts:
                 p_contact = doc.add_paragraph()
