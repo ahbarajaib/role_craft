@@ -433,6 +433,30 @@ function RenderSegregatedContent({
   );
 }
 
+// ─── Helper: get rewritten text with fuzzy key matching ──────────────────────
+function getRewrittenTextForSection(
+  sectionName: string,
+  rewrites: Record<string, string>
+): string | undefined {
+  if (!sectionName || !rewrites) return undefined;
+  const nameLower = sectionName.toLowerCase().trim();
+
+  // Direct match
+  if (rewrites[nameLower]) return rewrites[nameLower];
+
+  // Fuzzy match (e.g. 'professional experience' vs 'experience' or 'work experience')
+  const matchedKey = Object.keys(rewrites).find((k) => {
+    if (k === nameLower) return true;
+    if (nameLower.includes("experience") && k.includes("experience")) return true;
+    if (nameLower.includes("skills") && k.includes("skills")) return true;
+    if (nameLower.includes("summary") && k.includes("summary")) return true;
+    if (nameLower.includes("project") && k.includes("project")) return true;
+    return k.includes(nameLower) || nameLower.includes(k);
+  });
+
+  return matchedKey ? rewrites[matchedKey] : undefined;
+}
+
 // ─── Helper: parse bullet lines from a rewritten text block ───────────────────
 function parseBulletsFromText(text: string): { line: string; isBullet: boolean; isHeader?: boolean; isCompany?: boolean }[] {
   if (!text) return [];
@@ -3847,8 +3871,8 @@ export default function Home() {
                                   idx={idx}
                                   isExpanded={!!expandedSections[section.section_name]}
                                   onToggle={() => toggleSection(section.section_name)}
-                                  rewrittenText={rewrittenSections[section.section_name.toLowerCase()]}
-                                  previousRewrittenText={previousRewrittenSections[section.section_name.toLowerCase()]}
+                                  rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections)}
+                                  previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections)}
                                   onRevert={handleRevert}
                                   onUndoLastRewrite={handleUndoLastRewrite}
                                   onImproveClick={handleImproveClick}
@@ -3877,8 +3901,8 @@ export default function Home() {
                                   idx={idx}
                                   isExpanded={!!expandedSections[section.section_name]}
                                   onToggle={() => toggleSection(section.section_name)}
-                                  rewrittenText={rewrittenSections[section.section_name.toLowerCase()]}
-                                  previousRewrittenText={previousRewrittenSections[section.section_name.toLowerCase()]}
+                                  rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections)}
+                                  previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections)}
                                   onRevert={handleRevert}
                                   onUndoLastRewrite={handleUndoLastRewrite}
                                   onImproveClick={handleImproveClick}
@@ -3907,8 +3931,8 @@ export default function Home() {
                                   idx={idx}
                                   isExpanded={!!expandedSections[section.section_name]}
                                   onToggle={() => toggleSection(section.section_name)}
-                                  rewrittenText={rewrittenSections[section.section_name.toLowerCase()]}
-                                  previousRewrittenText={previousRewrittenSections[section.section_name.toLowerCase()]}
+                                  rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections)}
+                                  previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections)}
                                   onRevert={handleRevert}
                                   onUndoLastRewrite={handleUndoLastRewrite}
                                   onImproveClick={handleImproveClick}
