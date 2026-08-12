@@ -433,6 +433,59 @@ function RenderSegregatedContent({
   );
 }
 
+// ─── Helper: convert StructuredResume object into rewrites text dictionary ────
+function convertTailoredResumeToRewrites(tailoredResume: any): Record<string, string> {
+  const rewrites: Record<string, string> = {};
+  if (!tailoredResume || !tailoredResume.sections) return rewrites;
+
+  for (const sec of tailoredResume.sections) {
+    const titleLower = (sec.section_title || "").toLowerCase().trim();
+    const typeLower = (sec.section_type || "").toLowerCase().trim();
+
+    let textBlock = "";
+    if (sec.section_type === "summary") {
+      textBlock = sec.content?.text || "";
+    } else if (sec.section_type === "skills") {
+      const cats = sec.content?.categories || [];
+      textBlock = cats.map((c: any) => `${c.category_name}: ${(c.skills || []).join(", ")}`).join("\n");
+    } else if (sec.section_type === "experience") {
+      const entries = sec.content?.entries || [];
+      const lines: string[] = [];
+      for (const e of entries) {
+        if (e.job_title) lines.push(e.job_title);
+        let meta = e.company || "";
+        if (e.location) meta += `, ${e.location}`;
+        if (e.start_date) meta += ` | ${e.start_date} - ${e.end_date || "Present"}`;
+        if (meta) lines.push(meta);
+        if (e.bullets && e.bullets.length > 0) {
+          lines.push(...e.bullets.map((b: string) => `• ${b}`));
+        }
+      }
+      textBlock = lines.join("\n");
+    } else if (sec.section_type === "projects") {
+      const entries = sec.content?.entries || [];
+      const lines: string[] = [];
+      for (const e of entries) {
+        if (e.name) lines.push(e.name);
+        if (e.technologies && e.technologies.length > 0) {
+          lines.push(`Technologies: ${e.technologies.join(", ")}`);
+        }
+        if (e.bullets && e.bullets.length > 0) {
+          lines.push(...e.bullets.map((b: string) => `• ${b}`));
+        }
+      }
+      textBlock = lines.join("\n");
+    }
+
+    if (textBlock.trim()) {
+      if (titleLower) rewrites[titleLower] = textBlock;
+      if (typeLower) rewrites[typeLower] = textBlock;
+    }
+  }
+
+  return rewrites;
+}
+
 // ─── Helper: get rewritten text with fuzzy key & sectionType matching ────────
 function getRewrittenTextForSection(
   sectionName: string,
@@ -1681,7 +1734,11 @@ export default function Home() {
           });
           setTailorResult(tailoredRes);
           if (tailoredRes?.tailored_resume) {
-            setMasterResume(tailoredRes.tailored_resume);
+            const autoRewrites = convertTailoredResumeToRewrites(tailoredRes.tailored_resume);
+            setRewrittenSections((prev) => ({
+              ...prev,
+              ...autoRewrites,
+            }));
           }
           setIsTailorPreviewOpen(true);
         } catch (te) {
