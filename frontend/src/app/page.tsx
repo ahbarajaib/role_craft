@@ -872,8 +872,8 @@ function SectionCard({
             </div>
           )}
 
-          {/* CTA Action */}
-          {section.review_status === "improve" && !rewrittenText && (
+          {/* CTA Action - Available on ALL sections */}
+          {!rewrittenText && (
             <button
               disabled={!!inlineLoadingSections[section.section_name]}
               onClick={(e) => {
@@ -886,7 +886,9 @@ function SectionCard({
               }}
               className={`mt-2 w-full py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2.5 shadow-md transition-all duration-200 select-none ${inlineLoadingSections[section.section_name]
                   ? "bg-slate-900 dark:bg-slate-950 text-white border border-slate-700 shadow-slate-900/30 cursor-wait"
-                  : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20 cursor-pointer"
+                  : section.review_status === "improve"
+                    ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20 cursor-pointer"
+                    : "bg-slate-800 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white shadow-slate-900/20 cursor-pointer"
                 }`}
             >
               {inlineLoadingSections[section.section_name] ? (
@@ -896,8 +898,8 @@ function SectionCard({
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-                  Improve with AI
+                  <Sparkles className="h-3.5 w-3.5 animate-pulse text-amber-300" />
+                  <span>{section.review_status === "improve" ? "Improve with AI" : "Tailor Section with AI"}</span>
                 </>
               )}
             </button>
