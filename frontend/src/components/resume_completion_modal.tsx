@@ -122,28 +122,7 @@ export default function ResumeCompletionModal({
       sections[index] = updated;
       return { ...prev, sections };
     });
-    setSaveStatus("idle");
   }, []);
-
-  // Debounced auto-save (3s)
-  useEffect(() => {
-    if (saveStatus === "idle") {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(async () => {
-        try {
-          setSaveStatus("saving");
-          const updated = await updateStructuredResume(resume);
-          setResume(updated);
-          setSaveStatus("saved");
-        } catch {
-          setSaveStatus("idle");
-        }
-      }, 3000);
-    }
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [resume, saveStatus]);
 
   const handleSaveAndClose = async () => {
     try {
@@ -151,7 +130,6 @@ export default function ResumeCompletionModal({
       const updated = await updateStructuredResume(resume);
       setResume(updated);
       onSaved(updated);
-      setSaveStatus("saved");
       onClose();
     } catch (err: any) {
       alert("Failed to save: " + (err.message || "Unknown error"));
@@ -244,19 +222,6 @@ export default function ResumeCompletionModal({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Auto-save badge */}
-            <div className="text-xs font-semibold">
-              {saveStatus === "saving" && (
-                <span className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Auto-saving...
-                </span>
-              )}
-              {saveStatus === "saved" && (
-                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Saved
-                </span>
-              )}
-            </div>
             <button
               onClick={onClose}
               className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
