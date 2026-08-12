@@ -156,8 +156,7 @@ def _clean_low_confidence_fields(resume: StructuredResume) -> StructuredResume:
 
     resume.parse_confidence.low_confidence_fields = cleaned_fields
     if not cleaned_fields:
-        resume.parse_confidence.needs_user_review = False
-        resume.parse_confidence.overall_score = 1.0
+        resume.parse_confidence.overall_confidence = 1.0
     return resume
 
 
