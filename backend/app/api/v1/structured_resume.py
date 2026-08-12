@@ -6,16 +6,19 @@ and stream generated DOCX/PDF template files.
 """
 
 import json
+import shutil
+from io import BytesIO
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, Depends, File, Form, UploadFile, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.exceptions import BadRequestError, NotFoundError
-from app.models import User, StructuredResumeModel
+from app.models import User, StructuredResumeModel, TailoredResumeModel
 from app.schemas.structured_resume import StructuredResume
 from app.services.resume_parser_service import ResumeParserService
 from app.services.template_renderer import ATSTemplateRenderer
@@ -62,6 +65,17 @@ async def parse_and_save_resume(
     with open(temp_path, "wb") as f:
         f.write(content)
 
+    # Permanently store the original DOCX before it's deleted (used for content injection export)
+    original_docx_path: Optional[str] = None
+    if ext == ".docx":
+        originals_dir = Path(settings.UPLOAD_DIR) / "originals"
+        originals_dir.mkdir(parents=True, exist_ok=True)
+        dest = originals_dir / f"user_{current_user.id}_original.docx"
+        if dest.exists():
+            dest.unlink()  # re-upload overwrites old original
+        shutil.copy2(temp_path, dest)
+        original_docx_path = str(dest)
+
     try:
         structured_resume = parser_service.parse_document(temp_path, file.filename)
     finally:
@@ -76,6 +90,7 @@ async def parse_and_save_resume(
         existing.resume_json = resume_json_str
         existing.source_format = structured_resume.source_format
         existing.preferred_template = structured_resume.preferred_template
+        existing.original_docx_path = original_docx_path
         existing.version += 1
     else:
         new_record = StructuredResumeModel(
@@ -83,6 +98,7 @@ async def parse_and_save_resume(
             resume_json=resume_json_str,
             source_format=structured_resume.source_format,
             preferred_template=structured_resume.preferred_template,
+            original_docx_path=original_docx_path,
         )
         db.add(new_record)
 
@@ -275,4 +291,203 @@ def generate_resume_pdf(
         path=out_pdf,
         filename=filename,
         media_type="application/pdf",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Export with original design (content injection into uploaded DOCX)
+# ---------------------------------------------------------------------------
+
+class ExportOriginalRequest(BaseModel):
+    tailored_resume_id: Optional[int] = None  # None = export master StructuredResume
+
+
+@router.post("/export-original")
+def export_original_design(
+    request: ExportOriginalRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Export resume using the user's original uploaded DOCX design with current content injected.
+
+    If tailored_resume_id is provided, the AI-tailored content is used instead of master.
+    Requires the user to have uploaded a DOCX file (not available for PDF uploads).
+    """
+    record = db.query(StructuredResumeModel).filter(StructuredResumeModel.user_id == current_user.id).first()
+    if not record:
+        raise NotFoundError("No structured resume found.")
+
+    if not record.original_docx_path or not Path(record.original_docx_path).exists():
+        raise BadRequestError(
+            "Original DOCX design not available. "
+            "Please re-upload your resume as a .docx file to enable this export option."
+        )
+
+    # Determine which resume content to use
+    if request.tailored_resume_id is not None:
+        tailored = db.query(TailoredResumeModel).filter(
+            TailoredResumeModel.id == request.tailored_resume_id,
+            TailoredResumeModel.user_id == current_user.id,
+        ).first()
+        if not tailored:
+            raise NotFoundError(f"Tailored resume {request.tailored_resume_id} not found.")
+        resume_data = json.loads(tailored.tailored_resume_json)
+        label = f"{tailored.job_company or tailored.job_title or 'Tailored'}"
+    else:
+        resume_data = json.loads(record.resume_json)
+        label = "Master"
+
+    resume = StructuredResume.model_validate(resume_data)
+
+    # Use the structured-resume text service to build plain-text section content
+    # and inject it into the original DOCX via the existing patch_service approach.
+    # We do this by converting StructuredResume → section text strings, then
+    # calling a lightweight injection that replaces text in the original doc.
+    from app.services.structured_resume_injection_service import StructuredResumeInjectionService
+    injection_service = StructuredResumeInjectionService(upload_dir=Path(settings.UPLOAD_DIR))
+
+    try:
+        output_bytes = injection_service.inject_into_original(
+            original_docx_path=Path(record.original_docx_path),
+            resume=resume,
+        )
+    except Exception as exc:
+        raise BadRequestError(
+            f"Content injection failed for this resume layout: {str(exc)}. "
+            "Please use one of the ATS templates instead."
+        )
+
+    full_name = resume.contact_info.full_name or "Resume"
+    filename = f"{full_name} - {label} - Original Design.docx"
+
+    return StreamingResponse(
+        BytesIO(output_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+# ---------------------------------------------------------------------------
+# Tailored Resume endpoints
+# ---------------------------------------------------------------------------
+
+class TailoredResumeSummary(BaseModel):
+    id: int
+    job_title: Optional[str] = None
+    job_company: Optional[str] = None
+    job_id: Optional[str] = None
+    created_at: str
+
+
+@router.get("/tailored", response_model=List[TailoredResumeSummary])
+def list_tailored_resumes(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List all AI-tailored resume versions for current user (newest first)."""
+    records = (
+        db.query(TailoredResumeModel)
+        .filter(TailoredResumeModel.user_id == current_user.id)
+        .order_by(TailoredResumeModel.created_at.desc())
+        .all()
+    )
+    return [
+        TailoredResumeSummary(
+            id=r.id,
+            job_title=r.job_title,
+            job_company=r.job_company,
+            job_id=r.job_id,
+            created_at=r.created_at.isoformat(),
+        )
+        for r in records
+    ]
+
+
+@router.get("/tailored/{tailored_id}", response_model=StructuredResume)
+def get_tailored_resume(
+    tailored_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get a specific tailored resume by ID."""
+    record = db.query(TailoredResumeModel).filter(
+        TailoredResumeModel.id == tailored_id,
+        TailoredResumeModel.user_id == current_user.id,
+    ).first()
+    if not record:
+        raise NotFoundError(f"Tailored resume {tailored_id} not found.")
+    data = json.loads(record.tailored_resume_json)
+    return StructuredResume.model_validate(data)
+
+
+@router.get("/generate/{template}/pdf-tailored/{tailored_id}")
+def generate_tailored_resume_pdf(
+    template: str,
+    tailored_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Generate PDF for a tailored resume using a specified ATS template."""
+    tailored = db.query(TailoredResumeModel).filter(
+        TailoredResumeModel.id == tailored_id,
+        TailoredResumeModel.user_id == current_user.id,
+    ).first()
+    if not tailored:
+        raise NotFoundError(f"Tailored resume {tailored_id} not found.")
+
+    master = db.query(StructuredResumeModel).filter(StructuredResumeModel.user_id == current_user.id).first()
+    data = json.loads(tailored.tailored_resume_json)
+    resume = StructuredResume.model_validate(data)
+
+    photo_path = Path(master.profile_photo_path) if master and master.profile_photo_path else None
+    renderer = ATSTemplateRenderer()
+
+    out_dir = Path(settings.UPLOAD_DIR) / "builder_generated"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_docx = out_dir / f"tailored_{current_user.id}_{tailored_id}_{template}.docx"
+    out_pdf = out_dir / f"tailored_{current_user.id}_{tailored_id}_{template}.pdf"
+
+    renderer.render_docx(resume=resume, output_path=out_docx, template_name=template, profile_photo_abs_path=photo_path)
+    pdf_service = PDFService(upload_dir=Path(settings.UPLOAD_DIR))
+    pdf_service.convert_docx_to_pdf(out_docx, out_pdf)
+
+    label = f"{tailored.job_company or tailored.job_title or 'Tailored'}"
+    filename = f"{resume.contact_info.full_name or 'Resume'} - {label} - {template.replace('_', ' ').title()}.pdf"
+    return FileResponse(path=out_pdf, filename=filename, media_type="application/pdf")
+
+
+@router.get("/generate/{template}/docx-tailored/{tailored_id}")
+def generate_tailored_resume_docx(
+    template: str,
+    tailored_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Generate DOCX for a tailored resume using a specified ATS template."""
+    tailored = db.query(TailoredResumeModel).filter(
+        TailoredResumeModel.id == tailored_id,
+        TailoredResumeModel.user_id == current_user.id,
+    ).first()
+    if not tailored:
+        raise NotFoundError(f"Tailored resume {tailored_id} not found.")
+
+    master = db.query(StructuredResumeModel).filter(StructuredResumeModel.user_id == current_user.id).first()
+    data = json.loads(tailored.tailored_resume_json)
+    resume = StructuredResume.model_validate(data)
+
+    photo_path = Path(master.profile_photo_path) if master and master.profile_photo_path else None
+    renderer = ATSTemplateRenderer()
+
+    out_dir = Path(settings.UPLOAD_DIR) / "builder_generated"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_docx = out_dir / f"tailored_{current_user.id}_{tailored_id}_{template}.docx"
+
+    renderer.render_docx(resume=resume, output_path=out_docx, template_name=template, profile_photo_abs_path=photo_path)
+
+    label = f"{tailored.job_company or tailored.job_title or 'Tailored'}"
+    filename = f"{resume.contact_info.full_name or 'Resume'} - {label} - {template.replace('_', ' ').title()}.docx"
+    return FileResponse(
+        path=out_docx,
+        filename=filename,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )

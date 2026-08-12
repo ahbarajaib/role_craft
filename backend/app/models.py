@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import String, Integer, DateTime
+from sqlalchemy import String, Integer, DateTime, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 class Base(DeclarativeBase):
@@ -62,11 +62,26 @@ class StructuredResumeModel(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    resume_json: Mapped[str] = mapped_column(String, nullable=False)  # JSON string of StructuredResume schema
+    resume_json: Mapped[str] = mapped_column(Text, nullable=False)  # JSON string of StructuredResume schema
     profile_photo_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     source_document_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     source_format: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # "docx" | "pdf" | "manual"
     preferred_template: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # "clean_classic" | "modern_professional" | "executive_profile"
+    original_docx_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # Permanent path to original uploaded DOCX (None if PDF)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class TailoredResumeModel(Base):
+    """Stores AI-tailored versions of the master StructuredResume, one per job application."""
+    __tablename__ = "tailored_resumes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
+    job_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)   # link to workspace job if applicable
+    job_title: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    job_company: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    tailored_resume_json: Mapped[str] = mapped_column(Text, nullable=False)  # StructuredResume JSON with AI-tailored content
+    diff_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)   # { field_path: {original, tailored} }
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 

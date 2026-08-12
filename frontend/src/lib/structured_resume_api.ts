@@ -208,3 +208,133 @@ export async function downloadStructuredResume(template: string, format: "docx" 
   window.URL.revokeObjectURL(url);
   document.body.removeChild(a);
 }
+
+// ---------------------------------------------------------------------------
+// Export with original design (content injection into original DOCX)
+// ---------------------------------------------------------------------------
+
+export async function exportOriginalResume(tailoredResumeId?: number, customFilename?: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/structured-resume/export-original`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ tailored_resume_id: tailoredResumeId ?? null }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || "Failed to export with original design");
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = customFilename || `Resume_Original_Design.docx`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+
+// ---------------------------------------------------------------------------
+// AI Tailoring
+// ---------------------------------------------------------------------------
+
+export interface DiffEntry {
+  original: string;
+  tailored: string;
+  company?: string;
+  role?: string;
+}
+
+export type DiffMap = Record<string, DiffEntry>;
+
+export interface TailoredResumeSummary {
+  id: number;
+  job_title?: string | null;
+  job_company?: string | null;
+  job_id?: string | null;
+  created_at: string;
+}
+
+export interface TailorResponse {
+  tailored_resume_id: number;
+  tailored_resume: StructuredResume;
+  diff: DiffMap;
+  changes_count: number;
+}
+
+export async function tailorResume(params: {
+  job_description: string;
+  job_title: string;
+  job_company?: string;
+  job_id?: string;
+}): Promise<TailorResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/tailor`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || "Failed to tailor resume");
+  }
+
+  return response.json();
+}
+
+export async function getTailoredResumes(): Promise<TailoredResumeSummary[]> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/structured-resume/tailored`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || "Failed to fetch tailored resumes");
+  }
+
+  return response.json();
+}
+
+export async function downloadTailoredResume(
+  tailoredId: number,
+  template: string,
+  format: "docx" | "pdf",
+  customFilename?: string
+): Promise<void> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("rc_token") : null;
+  const endpoint = `${API_BASE_URL}/api/v1/structured-resume/generate/${template}/${format}-tailored/${tailoredId}`;
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || `Failed to generate tailored ${format.toUpperCase()}`);
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = customFilename || `Resume_Tailored_${template}.${format}`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+
+export async function deleteTailoredResume(tailoredId: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/tailor/${tailoredId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || "Failed to delete tailored resume");
+  }
+}

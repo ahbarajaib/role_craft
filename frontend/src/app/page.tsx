@@ -54,6 +54,16 @@ import TestimonialsSection from "@/components/testimonials_section";
 import FaqSection from "@/components/faq_section";
 import { ProfileModal } from "@/components/profile_modal";
 import { WordLogoIcon, PdfLogoIcon } from "@/components/file_format_icons";
+import ResumeCompletionModal from "@/components/resume_completion_modal";
+import TailorPreviewModal from "@/components/tailor_preview_modal";
+import ResumeDownloadPanel from "@/components/resume_download_panel";
+import {
+  StructuredResume,
+  parseAndSaveStructuredResume,
+  fetchStructuredResume,
+  tailorResume,
+  TailorResponse,
+} from "@/lib/structured_resume_api";
 
 interface DiffToken {
   value: string;
@@ -1140,6 +1150,12 @@ export default function Home() {
   // ── History & Goals State ───────────────────────────────────────────────
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
+  // ── Unified Structured Resume & Tailor State ───────────────────────────
+  const [masterResume, setMasterResume] = useState<StructuredResume | null>(null);
+  const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
+  const [isTailorPreviewOpen, setIsTailorPreviewOpen] = useState(false);
+  const [tailorResult, setTailorResult] = useState<TailorResponse | null>(null);
+
   const handleRestoreSession = (
     analysisResultData: any,
     jobDescriptionText: string,
@@ -1539,6 +1555,18 @@ export default function Home() {
         if (result.overall_summary?.job_title) parts.push("Target Role");
         if (sectionsToTailor.length > 0) parts.push(`${sectionsToTailor.length} section${sectionsToTailor.length > 1 ? "s" : ""}`);
         setSuccessNotification(`⚡ 1-Click Auto-Tailored: Resume Ready! (${parts.join(", ")})`);
+
+        // Trigger full structured resume AI tailoring for preview & download
+        try {
+          const tailoredRes = await tailorResume({
+            job_description: jobDescription,
+            job_title: customTargetRole || result?.overall_summary?.job_title || "Target Position",
+          });
+          setTailorResult(tailoredRes);
+          setIsTailorPreviewOpen(true);
+        } catch (te) {
+          console.warn("[RoleCraft] Structured tailor warning:", te);
+        }
 
         // ── Auto-generate Tailored Cover Letter asynchronously in background ──
         console.log("📝 [RoleCraft Audit] Auto-generating Tailored Cover Letter in background...");
@@ -2080,6 +2108,18 @@ export default function Home() {
         } catch (e) {
           // Non-blocking — upload still succeeded even if base-save fails
           console.warn("[RoleCraft] Auto base-save failed silently:", e);
+        }
+
+        // Parse into StructuredResume JSON for single-source-of-truth editing & completion
+        try {
+          const parsed = await parseAndSaveStructuredResume(file);
+          setMasterResume(parsed);
+          const unparsed = parsed.parse_confidence?.low_confidence_fields || [];
+          if (unparsed.length > 0) {
+            setIsCompletionModalOpen(true);
+          }
+        } catch (pe) {
+          console.warn("[RoleCraft] Structured resume parse fallback warning:", pe);
         }
       }
     },
@@ -4818,6 +4858,30 @@ export default function Home() {
           onProfileUpdated={() => {
             refreshMe().catch(() => { });
           }}
+        />
+      )}
+
+      {/* Structured Resume Completion Modal */}
+      {masterResume && (
+        <ResumeCompletionModal
+          resume={masterResume}
+          isOpen={isCompletionModalOpen}
+          onClose={() => setIsCompletionModalOpen(false)}
+          onSaved={(updated) => setMasterResume(updated)}
+        />
+      )}
+
+      {/* AI Tailor Preview Modal */}
+      {tailorResult && (
+        <TailorPreviewModal
+          isOpen={isTailorPreviewOpen}
+          onClose={() => setIsTailorPreviewOpen(false)}
+          tailoredResumeId={tailorResult.tailored_resume_id}
+          tailoredResume={tailorResult.tailored_resume}
+          diff={tailorResult.diff}
+          jobTitle={customTargetRole || analysisResult?.overall_summary?.job_title || "Target Position"}
+          sourceFormat={masterResume?.source_format || "docx"}
+          fullName={masterResume?.contact_info?.full_name || undefined}
         />
       )}
     </div>

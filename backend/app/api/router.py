@@ -12,7 +12,7 @@ Convention
 """
 from fastapi import APIRouter
 
-from app.api.v1 import analysis, comparison, documents, health, job_descriptions, resume, review, auth, payment, history, structured_resume
+from app.api.v1 import analysis, comparison, documents, health, job_descriptions, resume, review, auth, payment, history, structured_resume, tailor
 
 api_router = APIRouter()
 
@@ -28,5 +28,6 @@ api_router.include_router(review.router)
 api_router.include_router(resume.router)
 api_router.include_router(history.router)
 api_router.include_router(structured_resume.router)
+api_router.include_router(tailor.router)
 
 
