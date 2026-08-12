@@ -20,7 +20,7 @@ class ContactInfo(BaseModel):
 
 
 class SkillCategory(BaseModel):
-    category_name: str = Field(..., description="Category header, e.g., Languages, Frameworks")
+    category_name: Optional[str] = Field(None, description="Category header, e.g., Languages, Frameworks")
     skills: list[str] = Field(default_factory=list, description="List of skill names in this category")
 
 
@@ -43,7 +43,7 @@ class EducationEntry(BaseModel):
 
 
 class ProjectEntry(BaseModel):
-    name: str = Field(..., description="Project name")
+    name: Optional[str] = Field(None, description="Project name")
     description: Optional[str] = Field(None, description="Brief description")
     technologies: list[str] = Field(default_factory=list, description="Technologies used")
     bullets: list[str] = Field(default_factory=list, description="Bullet points detailing achievements")
@@ -51,7 +51,7 @@ class ProjectEntry(BaseModel):
 
 
 class CertificationEntry(BaseModel):
-    name: str = Field(..., description="Certification or license title")
+    name: Optional[str] = Field(None, description="Certification or license title")
     issuer: Optional[str] = Field(None, description="Issuing organization")
     date: Optional[str] = Field(None, description="Issue date or expiration")
     credential_id: Optional[str] = Field(None, description="Credential ID or verification link")
@@ -255,18 +255,50 @@ def is_section_non_empty(sec: ResumeSection) -> bool:
 
 
 def convert_parsed_to_structured(parsed: StructuredResumeParseModel) -> StructuredResume:
-    """Convert AI-parsed StructuredResumeParseModel into normalized StructuredResume."""
-    sections = []
+    """Convert AI-parsed StructuredResumeParseModel into normalized StructuredResume.
+    
+    Auto-extracts any experience, project, education, or certification entries that AI 
+    might have nested inside another section object so no content is ever lost.
+    """
+    sections: list[ResumeSection] = []
     order_idx = 0
+
+    exp_entries_to_split: list[dict[str, Any]] = []
+    proj_entries_to_split: list[dict[str, Any]] = []
+    edu_entries_to_split: list[dict[str, Any]] = []
+    cert_entries_to_split: list[dict[str, Any]] = []
+
     has_summary_section = False
+    has_exp_section = False
+    has_proj_section = False
+    has_edu_section = False
+    has_cert_section = False
 
     for s in parsed.sections:
         canonical_type = normalize_section_type(s.section_type, s.section_title)
-        content_dict = s.content.to_dict(s.section_type, s.section_title)
+
+        # Check if AI nested experience, project, education, or certification entries into a non-matching section
+        if canonical_type != "experience" and s.content.experience_entries:
+            exp_entries_to_split.extend([e.model_dump() for e in s.content.experience_entries])
+        if canonical_type != "projects" and s.content.project_entries:
+            proj_entries_to_split.extend([p.model_dump() for p in s.content.project_entries])
+        if canonical_type != "education" and s.content.education_entries:
+            edu_entries_to_split.extend([e.model_dump() for e in s.content.education_entries])
+        if canonical_type != "certifications" and s.content.certification_entries:
+            cert_entries_to_split.extend([c.model_dump() for c in s.content.certification_entries])
 
         if canonical_type == "summary":
             has_summary_section = True
+        elif canonical_type == "experience":
+            has_exp_section = True
+        elif canonical_type == "projects":
+            has_proj_section = True
+        elif canonical_type == "education":
+            has_edu_section = True
+        elif canonical_type == "certifications":
+            has_cert_section = True
 
+        content_dict = s.content.to_dict(s.section_type, s.section_title)
         candidate_sec = ResumeSection(
             section_type=canonical_type,
             section_title=s.section_title,
@@ -281,7 +313,7 @@ def convert_parsed_to_structured(parsed: StructuredResumeParseModel) -> Structur
             sections.append(candidate_sec)
             order_idx += 1
 
-    # Synthesize Professional Summary section if parsed.summary exists at top-level but wasn't in sections
+    # 1. Synthesize Professional Summary section if parsed.summary exists at top-level but wasn't in sections
     summary_text = (parsed.summary or "").strip()
     if summary_text and not has_summary_section:
         summary_sec = ResumeSection(
@@ -292,8 +324,78 @@ def convert_parsed_to_structured(parsed: StructuredResumeParseModel) -> Structur
             content={"text": summary_text},
         )
         sections.insert(0, summary_sec)
-        for idx, sec in enumerate(sections):
-            sec.order = idx
+
+    # 2. Auto-split nested Experience entries
+    if exp_entries_to_split:
+        if has_exp_section:
+            for sec in sections:
+                if sec.section_type == "experience":
+                    existing = sec.content.get("entries", [])
+                    sec.content["entries"] = existing + exp_entries_to_split
+        else:
+            exp_sec = ResumeSection(
+                section_type="experience",
+                section_title="Professional Experience",
+                order=len(sections),
+                visible=True,
+                content={"entries": exp_entries_to_split},
+            )
+            sections.append(exp_sec)
+
+    # 3. Auto-split nested Project entries
+    if proj_entries_to_split:
+        if has_proj_section:
+            for sec in sections:
+                if sec.section_type == "projects":
+                    existing = sec.content.get("entries", [])
+                    sec.content["entries"] = existing + proj_entries_to_split
+        else:
+            proj_sec = ResumeSection(
+                section_type="projects",
+                section_title="Projects",
+                order=len(sections),
+                visible=True,
+                content={"entries": proj_entries_to_split},
+            )
+            sections.append(proj_sec)
+
+    # 4. Auto-split nested Education entries
+    if edu_entries_to_split:
+        if has_edu_section:
+            for sec in sections:
+                if sec.section_type == "education":
+                    existing = sec.content.get("entries", [])
+                    sec.content["entries"] = existing + edu_entries_to_split
+        else:
+            edu_sec = ResumeSection(
+                section_type="education",
+                section_title="Education",
+                order=len(sections),
+                visible=True,
+                content={"entries": edu_entries_to_split},
+            )
+            sections.append(edu_sec)
+
+    # 5. Auto-split nested Certification entries
+    if cert_entries_to_split:
+        if has_cert_section:
+            for sec in sections:
+                if sec.section_type == "certifications":
+                    existing = sec.content.get("entries", [])
+                    sec.content["entries"] = existing + cert_entries_to_split
+        else:
+            cert_sec = ResumeSection(
+                section_type="certifications",
+                section_title="Certifications",
+                order=len(sections),
+                visible=True,
+                content={"entries": cert_entries_to_split},
+            )
+            sections.append(cert_sec)
+
+    # Re-index all section orders cleanly
+    for idx, sec in enumerate(sections):
+        sec.order = idx
 
     return StructuredResume(
         contact_info=parsed.contact_info,
