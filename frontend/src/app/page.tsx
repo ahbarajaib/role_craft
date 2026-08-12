@@ -246,10 +246,11 @@ function parseTextIntoStructuredEntries(lines: string[]): StructuredRoleEntry[] 
   let currentEntry: StructuredRoleEntry | null = null;
 
   const bulletSymbols = ["•", "-", "*", "–", "—", "▪", "▸"];
-  const titleKeywords = [
-    "developer", "engineer", "architect", "manager", "lead", "designer",
-    "consultant", "analyst", "executive", "specialist", "director", "officer",
-    "administrator", "associate", "intern", "head", "founder", "co-founder", "cto", "vp", "programmer"
+  const actionVerbStarters = [
+    "engineered", "spearheaded", "achieved", "optimized", "designed", "developed",
+    "implemented", "configured", "conducted", "streamlined", "automated", "collaborated",
+    "resolved", "handled", "delivered", "maintained", "consistently", "assisted", "created",
+    "built", "provided", "utilized", "authors", "authored", "increased", "reduced", "led"
   ];
 
   for (let i = 0; i < lines.length; i++) {
@@ -259,18 +260,24 @@ function parseTextIntoStructuredEntries(lines: string[]): StructuredRoleEntry[] 
 
     const lower = trimmed.toLowerCase();
     const isExplicitBullet = bulletSymbols.some((s) => trimmed.startsWith(s));
+    const startsWithVerb = actionVerbStarters.some((v) => lower.startsWith(v));
     const hasDatePattern = /\b(19|20)\d{2}\b/.test(trimmed) || lower.includes("present");
 
-    const isTitleLine = !isExplicitBullet && (
-      titleKeywords.some((k) => lower.includes(k)) ||
-      (trimmed.length < 75 && !trimmed.endsWith(".") && i + 1 < lines.length && (
-        /\b(19|20)\d{2}\b/.test(lines[i + 1]) || lines[i + 1].includes("|") || lines[i + 1].includes(",")
-      ))
-    );
+    // A true Title Line must be short (< 55 chars), not end with period, not start with an action verb
+    const isTitleLine =
+      !isExplicitBullet &&
+      !startsWithVerb &&
+      trimmed.length < 55 &&
+      !trimmed.endsWith(".") &&
+      (
+        i + 1 < lines.length && (lines[i + 1].includes("|") || lines[i + 1].includes(",") || /\b(19|20)\d{2}\b/.test(lines[i + 1]))
+      );
 
-    const isCompanyLine = !isExplicitBullet && !isTitleLine && (
-      trimmed.includes("|") || hasDatePattern || (trimmed.length < 90 && (trimmed.includes(",") || trimmed.includes("–") || trimmed.includes("-")))
-    );
+    const isCompanyLine =
+      !isExplicitBullet &&
+      !startsWithVerb &&
+      !isTitleLine &&
+      (trimmed.includes("|") || (hasDatePattern && trimmed.length < 90 && (trimmed.includes(",") || trimmed.includes("–") || trimmed.includes("-"))));
 
     if (isTitleLine) {
       if (currentEntry) result.push(currentEntry);
@@ -294,12 +301,65 @@ function parseTextIntoStructuredEntries(lines: string[]): StructuredRoleEntry[] 
   return result;
 }
 
-function RenderSegregatedContent({ lines }: { lines: string[] }) {
+function RenderSegregatedContent({ lines, masterResume, sectionName }: { lines: string[]; masterResume?: StructuredResume | null; sectionName?: string }) {
   if (!lines || lines.length === 0) return null;
 
+  // Try retrieving structured entries directly from masterResume if available
+  if (masterResume && sectionName) {
+    const secNameLower = sectionName.toLowerCase();
+    const matchingSec = masterResume.sections.find(
+      (s) => s.section_title.toLowerCase().includes(secNameLower) || s.section_type.toLowerCase().includes(secNameLower)
+    );
+    if (matchingSec && matchingSec.section_type === "experience" && matchingSec.content?.entries?.length > 0) {
+      return (
+        <div className="space-y-3.5">
+          {matchingSec.content.entries.map((entry: any, eIdx: number) => {
+            const companyPart = entry.company || "";
+            const locationPart = entry.location ? `, ${entry.location}` : "";
+            const datePart = entry.start_date ? ` | ${entry.start_date} - ${entry.end_date || "Present"}` : "";
+            const metaStr = `${companyPart}${locationPart}${datePart}`;
+
+            return (
+              <div
+                key={eIdx}
+                className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-rose-200/80 dark:border-rose-900/50 shadow-2xs space-y-2.5 hover:border-rose-300 dark:hover:border-rose-700 transition-all"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-rose-100 dark:border-rose-900/40">
+                  <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs shrink-0">
+                      💼
+                    </div>
+                    <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm">
+                      {entry.job_title || "Experience Role"}
+                    </span>
+                  </div>
+                  {metaStr && (
+                    <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 px-2.5 py-1 rounded-md bg-rose-50/80 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-800/40">
+                      {metaStr}
+                    </span>
+                  )}
+                </div>
+                {entry.bullets && entry.bullets.length > 0 && (
+                  <ul className="space-y-1.5 pt-1">
+                    {entry.bullets.map((bullet: string, bIdx: number) => (
+                      <li key={bIdx} className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start gap-2 select-all">
+                        <span className="text-rose-500 shrink-0 mt-0.5 font-bold">•</span>
+                        <span>{bullet}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+  }
+
+  // Fallback to intelligent line parser
   const entries = parseTextIntoStructuredEntries(lines);
 
-  // If only 1 entry with title "Overview / Highlights", render clean paragraph list
   if (entries.length === 1 && entries[0].title === "Overview / Highlights") {
     return (
       <div className="space-y-2 bg-white/90 dark:bg-slate-900/80 p-3.5 rounded-xl border border-rose-100 dark:border-rose-900/30 text-xs text-slate-800 dark:text-slate-200 font-medium">
@@ -313,29 +373,29 @@ function RenderSegregatedContent({ lines }: { lines: string[] }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3.5">
       {entries.map((entry, eIdx) => (
         <div
           key={eIdx}
-          className="p-3.5 bg-white dark:bg-slate-900/90 rounded-xl border border-rose-200/80 dark:border-rose-900/50 shadow-2xs space-y-2 hover:border-rose-300 dark:hover:border-rose-700 transition-all"
+          className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-rose-200/80 dark:border-rose-900/50 shadow-2xs space-y-2.5 hover:border-rose-300 dark:hover:border-rose-700 transition-all"
         >
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-1.5 border-b border-rose-100 dark:border-rose-900/40">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-rose-100 dark:border-rose-900/40">
             <div className="flex items-center gap-2">
-              <div className="h-5 w-5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-[10px] shrink-0">
+              <div className="h-6 w-6 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs shrink-0">
                 💼
               </div>
-              <span className="font-extrabold text-slate-900 dark:text-white text-xs">
+              <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm">
                 {entry.title}
               </span>
             </div>
             {entry.companyAndDates && (
-              <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-md bg-rose-50/80 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-800/40">
+              <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 px-2.5 py-1 rounded-md bg-rose-50/80 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-800/40">
                 {entry.companyAndDates}
               </span>
             )}
           </div>
           {entry.bullets.length > 0 && (
-            <ul className="space-y-1.5 pt-0.5">
+            <ul className="space-y-1.5 pt-1">
               {entry.bullets.map((bullet, bIdx) => (
                 <li key={bIdx} className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start gap-2 select-all">
                   <span className="text-rose-500 shrink-0 mt-0.5 font-bold">•</span>
@@ -412,6 +472,7 @@ interface SectionCardProps {
   triggerInlineRewrite?: (name: string, recs: string[]) => void;
   onBulletExclusionChange?: (sectionName: string, excludedIndexes: Set<number>) => void;
   isPatchingApplied?: boolean;
+  masterResume?: StructuredResume | null;
 }
 
 function SectionCard({
@@ -428,6 +489,7 @@ function SectionCard({
   triggerInlineRewrite,
   onBulletExclusionChange,
   isPatchingApplied = false,
+  masterResume = null,
 }: SectionCardProps) {
   // Per-bullet checkbox state: set of line indexes that are UNCHECKED (excluded)
   const [uncheckedBullets, setUncheckedBullets] = useState<Set<number>>(new Set());
@@ -806,7 +868,7 @@ function SectionCard({
                   (Text extracted from your uploaded resume)
                 </span>
               </div>
-              <RenderSegregatedContent lines={section.evidence_used} />
+              <RenderSegregatedContent lines={section.evidence_used} masterResume={masterResume} sectionName={section.section_name} />
             </div>
           )}
 
@@ -878,6 +940,7 @@ function renderSectionCard(
       triggerInlineRewrite={triggerInlineRewrite}
       onBulletExclusionChange={onBulletExclusionChange}
       isPatchingApplied={isPatchingApplied}
+      masterResume={null}
     />
   );
 }
@@ -3882,24 +3945,26 @@ export default function Home() {
                                 )}
                               </button>
                             </div>
-                            <div className="space-y-4">
-                              {sectionsToImprove.map((section, idx) =>
-                                renderSectionCard(
-                                  section,
-                                  idx,
-                                  !!expandedSections[section.section_name],
-                                  () => toggleSection(section.section_name),
-                                  rewrittenSections[section.section_name.toLowerCase()],
-                                  previousRewrittenSections[section.section_name.toLowerCase()],
-                                  handleRevert,
-                                  handleUndoLastRewrite,
-                                  handleImproveClick,
-                                  inlineLoadingSections,
-                                  triggerInlineRewrite,
-                                  (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded })),
-                                  isPatchingApplied
-                                )
-                              )}
+                             <div className="space-y-4">
+                              {sectionsToImprove.map((section, idx) => (
+                                <SectionCard
+                                  key={`${section.section_name}-${idx}`}
+                                  section={section}
+                                  idx={idx}
+                                  isExpanded={!!expandedSections[section.section_name]}
+                                  onToggle={() => toggleSection(section.section_name)}
+                                  rewrittenText={rewrittenSections[section.section_name.toLowerCase()]}
+                                  previousRewrittenText={previousRewrittenSections[section.section_name.toLowerCase()]}
+                                  onRevert={handleRevert}
+                                  onUndoLastRewrite={handleUndoLastRewrite}
+                                  onImproveClick={handleImproveClick}
+                                  inlineLoadingSections={inlineLoadingSections}
+                                  triggerInlineRewrite={triggerInlineRewrite}
+                                  onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
+                                  isPatchingApplied={isPatchingApplied}
+                                  masterResume={masterResume}
+                                />
+                              ))}
                             </div>
                           </div>
                         )}
@@ -3911,23 +3976,25 @@ export default function Home() {
                               <span>🟢 Keep As-Is ({sectionsToKeep.length})</span>
                             </h3>
                             <div className="space-y-4">
-                              {sectionsToKeep.map((section, idx) =>
-                                renderSectionCard(
-                                  section,
-                                  idx,
-                                  !!expandedSections[section.section_name],
-                                  () => toggleSection(section.section_name),
-                                  rewrittenSections[section.section_name.toLowerCase()],
-                                  previousRewrittenSections[section.section_name.toLowerCase()],
-                                  handleRevert,
-                                  handleUndoLastRewrite,
-                                  handleImproveClick,
-                                  inlineLoadingSections,
-                                  triggerInlineRewrite,
-                                  (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded })),
-                                  isPatchingApplied
-                                )
-                              )}
+                              {sectionsToKeep.map((section, idx) => (
+                                <SectionCard
+                                  key={`${section.section_name}-${idx}`}
+                                  section={section}
+                                  idx={idx}
+                                  isExpanded={!!expandedSections[section.section_name]}
+                                  onToggle={() => toggleSection(section.section_name)}
+                                  rewrittenText={rewrittenSections[section.section_name.toLowerCase()]}
+                                  previousRewrittenText={previousRewrittenSections[section.section_name.toLowerCase()]}
+                                  onRevert={handleRevert}
+                                  onUndoLastRewrite={handleUndoLastRewrite}
+                                  onImproveClick={handleImproveClick}
+                                  inlineLoadingSections={inlineLoadingSections}
+                                  triggerInlineRewrite={triggerInlineRewrite}
+                                  onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
+                                  isPatchingApplied={isPatchingApplied}
+                                  masterResume={masterResume}
+                                />
+                              ))}
                             </div>
                           </div>
                         )}
@@ -3939,23 +4006,25 @@ export default function Home() {
                               <span>⚪ Reduce Emphasis ({sectionsToReduce.length})</span>
                             </h3>
                             <div className="space-y-4">
-                              {sectionsToReduce.map((section, idx) =>
-                                renderSectionCard(
-                                  section,
-                                  idx,
-                                  !!expandedSections[section.section_name],
-                                  () => toggleSection(section.section_name),
-                                  rewrittenSections[section.section_name.toLowerCase()],
-                                  previousRewrittenSections[section.section_name.toLowerCase()],
-                                  handleRevert,
-                                  handleUndoLastRewrite,
-                                  handleImproveClick,
-                                  inlineLoadingSections,
-                                  triggerInlineRewrite,
-                                  (sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded })),
-                                  isPatchingApplied
-                                )
-                              )}
+                              {sectionsToReduce.map((section, idx) => (
+                                <SectionCard
+                                  key={`${section.section_name}-${idx}`}
+                                  section={section}
+                                  idx={idx}
+                                  isExpanded={!!expandedSections[section.section_name]}
+                                  onToggle={() => toggleSection(section.section_name)}
+                                  rewrittenText={rewrittenSections[section.section_name.toLowerCase()]}
+                                  previousRewrittenText={previousRewrittenSections[section.section_name.toLowerCase()]}
+                                  onRevert={handleRevert}
+                                  onUndoLastRewrite={handleUndoLastRewrite}
+                                  onImproveClick={handleImproveClick}
+                                  inlineLoadingSections={inlineLoadingSections}
+                                  triggerInlineRewrite={triggerInlineRewrite}
+                                  onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
+                                  isPatchingApplied={isPatchingApplied}
+                                  masterResume={masterResume}
+                                />
+                              ))}
                             </div>
                           </div>
                         )}
