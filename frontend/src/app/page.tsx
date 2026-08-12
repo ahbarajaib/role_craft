@@ -2437,69 +2437,14 @@ export default function Home() {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-end md:self-auto">
-          <button
-            type="button"
-            onClick={handleOpenMasterResume}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-sm transition-all cursor-pointer"
-            title="View & Edit Master Resume Fields"
-          >
-            <Edit className="h-3.5 w-3.5 text-indigo-500" />
-            <span>Master Resume</span>
-          </button>
           <Link
             href="/resume-builder"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all cursor-pointer"
             title="Create & Edit Structured Resume with ATS Templates"
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span>Resume Builder</span>
           </Link>
-          {/* Profile & Base Docs Button */}
-          {(!user || calculateProfileCompletion(user).totalPercentage < 100) && (
-            <button
-              type="button"
-              onClick={() => {
-                if (!token) {
-                  setShowAuthModal(true);
-                } else {
-                  setIsProfileModalOpen(true);
-                }
-              }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-sm transition-all cursor-pointer"
-              title="Manage Profile Contact Info & Base Master Templates"
-            >
-              <User className="h-3.5 w-3.5 text-indigo-500" />
-              <span className="hidden sm:inline">Profile & Base Docs</span>
-              {user && (
-                <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] border border-indigo-500/20">
-                  {calculateProfileCompletion(user).totalPercentage}%
-                </span>
-              )}
-            </button>
-          )}
-          {/* History & Goals Button */}
-          {(!user || !dailyGoal || dailyGoal.progress_percentage < 100) && (
-            <button
-              type="button"
-              onClick={() => {
-                if (!token) {
-                  setShowAuthModal(true);
-                } else {
-                  setIsHistoryModalOpen(true);
-                }
-              }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-sm transition-all cursor-pointer"
-              title="View Application History & Daily Goals"
-            >
-              <History className="h-3.5 w-3.5 text-indigo-500" />
-              <span className="hidden sm:inline">History & Goals</span>
-              {user && dailyGoal && (
-                <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px] border border-emerald-500/20 animate-pulse">
-                  {dailyGoal.progress_percentage}%
-                </span>
-              )}
-            </button>
-          )}
 
           {/* Launch / Switch Workspace Button */}
           <button
@@ -2519,15 +2464,15 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm text-xs transition-all cursor-pointer select-none"
+                className="flex items-center gap-2 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs transition-all cursor-pointer select-none"
               >
                 <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 shadow-sm">
                   {(user.name || user.email)[0].toUpperCase()}
                 </div>
-                <span className="font-bold text-slate-800 max-w-[70px] sm:max-w-[120px] truncate">
+                <span className="font-bold text-slate-800 dark:text-slate-200 max-w-[70px] sm:max-w-[120px] truncate">
                   {user.name || user.email.split("@")[0]}
                 </span>
-                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 font-extrabold text-[10px] border border-emerald-500/20">
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-extrabold text-[10px] border border-emerald-500/20">
                   {user.credits} CR
                 </span>
                 <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`} />
@@ -2540,28 +2485,28 @@ export default function Home() {
                     className="fixed inset-0 z-40"
                     onClick={() => setIsProfileMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-72 z-50 bg-white rounded-2xl border border-slate-200 shadow-2xl p-4 space-y-4 animate-fade-in-up">
+                  <div className="absolute right-0 mt-2 w-72 z-50 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-3.5 animate-fade-in-up">
                     {/* User Header */}
-                    <div className="flex items-center gap-3 pb-3 border-b border-slate-200">
+                    <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
                       <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-indigo-600/30 shrink-0">
                         {(user.name || user.email)[0].toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-slate-900 truncate">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                           {user.name || "User Account"}
                         </p>
-                        <p className="text-xs text-slate-500 truncate">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                           {user.email}
                         </p>
                       </div>
                     </div>
 
                     {/* Account Status Details */}
-                    <div className="space-y-2.5 text-xs">
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                        <span className="text-slate-500 font-medium">Plan</span>
+                    <div className="space-y-2 text-xs">
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Plan</span>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-700 border border-indigo-500/20 font-black uppercase text-[10px] tracking-wider">
+                          <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 font-black uppercase text-[10px] tracking-wider">
                             {user.plan_type}
                           </span>
                           {user.plan_type === "free" && (
@@ -2578,67 +2523,73 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                        <span className="text-slate-500 font-medium">Credits Available</span>
-                        <span className="font-extrabold text-emerald-600">
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Credits Available</span>
+                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
                           {user.credits} Credits
                         </span>
                       </div>
-
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/40">
-                        <span className="text-slate-600 dark:text-slate-300 font-bold">Profile Completion</span>
-                        <span className="font-extrabold text-indigo-600 dark:text-indigo-400">
-                          {calculateProfileCompletion(user).totalPercentage}%
-                        </span>
-                      </div>
-
-                      {user.base_resume_filename && (
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                          <span className="text-slate-500 font-medium">Base Resume</span>
-                          <span className="font-semibold text-slate-700 truncate max-w-[110px]" title={user.base_resume_filename}>
-                            {user.base_resume_filename}
-                          </span>
-                        </div>
-                      )}
-
-                      {user?.missing_skills_tracker && Object.keys(user.missing_skills_tracker).length > 0 && (
-                        <div className="p-2.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/40 space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1 text-[11px]">
-                              <Target className="h-3 w-3 text-rose-500 shrink-0" />
-                              Tracked Red Skill Gaps
-                            </span>
-                            <span className="px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-700 dark:text-rose-300 font-black text-[10px]">
-                              {Object.keys(user.missing_skills_tracker).length} Skills
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1 flex-wrap max-h-16 overflow-hidden">
-                            {Object.entries(user.missing_skills_tracker as Record<string, number>).slice(0, 5).map(([skill, count]) => (
-                              <span key={skill} className="px-1.5 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 text-[10px] font-extrabold text-rose-700 dark:text-rose-300">
-                                {skill} {count > 1 ? `(×${count})` : ""}
-                              </span>
-                            ))}
-                            {Object.keys(user.missing_skills_tracker).length > 5 && (
-                              <span className="text-[10px] text-slate-400 font-bold">
-                                +{Object.keys(user.missing_skills_tracker).length - 5} more
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        handleOpenMasterResume();
-                      }}
-                      className="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm mb-2"
-                    >
-                      <Edit className="h-3.5 w-3.5" />
-                      View & Edit Master Resume
-                    </button>
+                    {/* Quick Access Menu Items */}
+                    <div className="space-y-1.5 pt-1 border-t border-slate-200 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          handleOpenMasterResume();
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 font-bold text-xs transition-all flex items-center justify-between cursor-pointer shadow-2xs"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Edit className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                          Master Resume
+                        </span>
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-200/60 dark:bg-indigo-900/80 text-indigo-800 dark:text-indigo-200">
+                          JSON
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          if (!token) setShowAuthModal(true);
+                          else setIsHistoryModalOpen(true);
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60 font-bold text-xs transition-all flex items-center justify-between cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <History className="h-3.5 w-3.5 text-indigo-500" />
+                          History & Daily Goals
+                        </span>
+                        {dailyGoal && (
+                          <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            {dailyGoal.progress_percentage}%
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          if (!token) setShowAuthModal(true);
+                          else setIsProfileModalOpen(true);
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60 font-bold text-xs transition-all flex items-center justify-between cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <User className="h-3.5 w-3.5 text-indigo-500" />
+                          Profile & Base Docs
+                        </span>
+                        {user && (
+                          <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                            {calculateProfileCompletion(user).totalPercentage}%
+                          </span>
+                        )}
+                      </button>
+                    </div>
 
                     <button
                       type="button"
