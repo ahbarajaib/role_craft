@@ -301,8 +301,31 @@ function parseTextIntoStructuredEntries(lines: string[]): StructuredRoleEntry[] 
   return result;
 }
 
-function RenderSegregatedContent({ lines, masterResume, sectionName }: { lines: string[]; masterResume?: StructuredResume | null; sectionName?: string }) {
+function RenderSegregatedContent({
+  lines,
+  masterResume,
+  sectionName,
+  variant = "rose",
+}: {
+  lines: string[];
+  masterResume?: StructuredResume | null;
+  sectionName?: string;
+  variant?: "rose" | "emerald";
+}) {
   if (!lines || lines.length === 0) return null;
+
+  const isEmerald = variant === "emerald";
+  const borderStyle = isEmerald
+    ? "border-emerald-200/80 dark:border-emerald-900/50 hover:border-emerald-300 dark:hover:border-emerald-700"
+    : "border-rose-200/80 dark:border-rose-900/50 hover:border-rose-300 dark:hover:border-rose-700";
+  const iconStyle = isEmerald
+    ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400"
+    : "bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400";
+  const badgeStyle = isEmerald
+    ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/50 border-emerald-200/60 dark:border-emerald-800/40"
+    : "text-rose-700 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/50 border-rose-200/60 dark:border-rose-800/40";
+  const bulletDotStyle = isEmerald ? "text-emerald-500 font-bold" : "text-rose-500 font-bold";
+  const dividerStyle = isEmerald ? "border-emerald-100 dark:border-emerald-900/40" : "border-rose-100 dark:border-rose-900/40";
 
   // Try retrieving structured entries directly from masterResume if available
   if (masterResume && sectionName) {
@@ -322,11 +345,11 @@ function RenderSegregatedContent({ lines, masterResume, sectionName }: { lines: 
             return (
               <div
                 key={eIdx}
-                className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-rose-200/80 dark:border-rose-900/50 shadow-2xs space-y-2.5 hover:border-rose-300 dark:hover:border-rose-700 transition-all"
+                className={`p-4 bg-white dark:bg-slate-900 rounded-xl border ${borderStyle} shadow-2xs space-y-2.5 transition-all`}
               >
-                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-rose-100 dark:border-rose-900/40">
+                <div className={`flex flex-wrap items-center justify-between gap-2 pb-2 border-b ${dividerStyle}`}>
                   <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs shrink-0">
+                    <div className={`h-6 w-6 rounded-lg ${iconStyle} flex items-center justify-center font-bold text-xs shrink-0`}>
                       💼
                     </div>
                     <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm">
@@ -334,7 +357,7 @@ function RenderSegregatedContent({ lines, masterResume, sectionName }: { lines: 
                     </span>
                   </div>
                   {metaStr && (
-                    <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 px-2.5 py-1 rounded-md bg-rose-50/80 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-800/40">
+                    <span className={`text-[11px] font-bold ${badgeStyle} px-2.5 py-1 rounded-md border`}>
                       {metaStr}
                     </span>
                   )}
@@ -343,7 +366,7 @@ function RenderSegregatedContent({ lines, masterResume, sectionName }: { lines: 
                   <ul className="space-y-1.5 pt-1">
                     {entry.bullets.map((bullet: string, bIdx: number) => (
                       <li key={bIdx} className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start gap-2 select-all">
-                        <span className="text-rose-500 shrink-0 mt-0.5 font-bold">•</span>
+                        <span className={`${bulletDotStyle} shrink-0 mt-0.5`}>•</span>
                         <span>{bullet}</span>
                       </li>
                     ))}
@@ -362,7 +385,7 @@ function RenderSegregatedContent({ lines, masterResume, sectionName }: { lines: 
 
   if (entries.length === 1 && entries[0].title === "Overview / Highlights") {
     return (
-      <div className="space-y-2 bg-white/90 dark:bg-slate-900/80 p-3.5 rounded-xl border border-rose-100 dark:border-rose-900/30 text-xs text-slate-800 dark:text-slate-200 font-medium">
+      <div className={`space-y-2 bg-white/90 dark:bg-slate-900/80 p-3.5 rounded-xl border ${borderStyle} text-xs text-slate-800 dark:text-slate-200 font-medium`}>
         {lines.map((l, i) => (
           <p key={i} className="leading-relaxed border-b border-slate-200/50 dark:border-slate-800/50 last:border-b-0 pb-1.5 last:pb-0 select-all">
             {l}
@@ -377,11 +400,11 @@ function RenderSegregatedContent({ lines, masterResume, sectionName }: { lines: 
       {entries.map((entry, eIdx) => (
         <div
           key={eIdx}
-          className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-rose-200/80 dark:border-rose-900/50 shadow-2xs space-y-2.5 hover:border-rose-300 dark:hover:border-rose-700 transition-all"
+          className={`p-4 bg-white dark:bg-slate-900 rounded-xl border ${borderStyle} shadow-2xs space-y-2.5 transition-all`}
         >
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-rose-100 dark:border-rose-900/40">
+          <div className={`flex flex-wrap items-center justify-between gap-2 pb-2 border-b ${dividerStyle}`}>
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs shrink-0">
+              <div className={`h-6 w-6 rounded-lg ${iconStyle} flex items-center justify-center font-bold text-xs shrink-0`}>
                 💼
               </div>
               <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm">
@@ -389,7 +412,7 @@ function RenderSegregatedContent({ lines, masterResume, sectionName }: { lines: 
               </span>
             </div>
             {entry.companyAndDates && (
-              <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300 px-2.5 py-1 rounded-md bg-rose-50/80 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-800/40">
+              <span className={`text-[11px] font-bold ${badgeStyle} px-2.5 py-1 rounded-md border`}>
                 {entry.companyAndDates}
               </span>
             )}
@@ -398,7 +421,7 @@ function RenderSegregatedContent({ lines, masterResume, sectionName }: { lines: 
             <ul className="space-y-1.5 pt-1">
               {entry.bullets.map((bullet, bIdx) => (
                 <li key={bIdx} className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed flex items-start gap-2 select-all">
-                  <span className="text-rose-500 shrink-0 mt-0.5 font-bold">•</span>
+                  <span className={`${bulletDotStyle} shrink-0 mt-0.5`}>•</span>
                   <span>{bullet}</span>
                 </li>
               ))}
@@ -661,161 +684,39 @@ function SectionCard({
               {/* Side-by-side Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Left Column: Original Resume Text */}
-                <div className="bg-rose-50/60 dark:bg-rose-950/30 p-4 rounded-xl border border-rose-200/80 dark:border-rose-900/50 space-y-2 flex flex-col">
+                <div className="bg-rose-50/60 dark:bg-rose-950/30 p-4 rounded-xl border border-rose-200/80 dark:border-rose-900/50 space-y-3 flex flex-col">
                   <div className="flex items-center justify-between border-b border-rose-200 dark:border-rose-900/50 pb-2">
                     <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-rose-500 inline-block" />
                       Original Resume Text (Before)
                     </span>
                   </div>
-                  <div className="pt-1 space-y-2 flex-1 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                    {originalTextRaw ? (
-                      hasOriginalBullets ? (
-                        parsedOriginalBullets.map((item, origIdx) => {
-                          const bulletSymbols = ["•", "-", "*", "–", "—", "▪", "▸"];
-                          const bulletMatch = bulletSymbols.find((s) => item.line.startsWith(s));
-                          const content = bulletMatch ? item.line.substring(bulletMatch.length).trim() : item.line;
-
-                          if (item.isHeader) {
-                            return (
-                              <div key={origIdx} className="font-extrabold text-slate-900 dark:text-white text-xs pt-2 pb-1 flex items-center justify-between border-b border-rose-200 dark:border-rose-800/80 mt-1">
-                                <span className="flex items-center gap-1.5 text-rose-950 dark:text-rose-200">
-                                  <Briefcase className="h-3.5 w-3.5 text-rose-600 shrink-0" />
-                                  {item.line}
-                                </span>
-                              </div>
-                            );
-                          }
-
-                          if (item.isCompany) {
-                            return (
-                              <div key={origIdx} className="font-semibold text-rose-700 dark:text-rose-400 text-[11px] italic mb-1.5 pl-5">
-                                {item.line}
-                              </div>
-                            );
-                          }
-
-                          if (!item.isBullet) {
-                            return (
-                              <p key={origIdx} className="bg-white/90 dark:bg-slate-900/80 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/30 text-[12px] text-slate-800 dark:text-slate-200 leading-relaxed select-all">
-                                {item.line}
-                              </p>
-                            );
-                          }
-
-                          return (
-                            <div
-                              key={origIdx}
-                              className="flex items-start gap-2.5 rounded-lg px-2.5 py-1.5 bg-white/90 dark:bg-slate-900/80 border border-rose-100 dark:border-rose-900/30 shadow-xs"
-                            >
-                              <span className="mt-1 shrink-0 h-2 w-2 rounded-full bg-rose-400 dark:bg-rose-500" />
-                              <p className="flex-1 text-[12px] leading-relaxed text-slate-800 dark:text-slate-200 font-medium select-all">
-                                {content}
-                              </p>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        section.evidence_used.map((evText, evIdx) => (
-                          <p key={evIdx} className="bg-white/90 dark:bg-slate-900/80 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/30 text-[12px] text-slate-800 dark:text-slate-200 select-all">
-                            {evText}
-                          </p>
-                        ))
-                      )
-                    ) : (
-                      <div className="p-3 bg-white/90 dark:bg-slate-900/80 rounded-lg border border-rose-200 dark:border-rose-900/40 text-[12px] text-slate-700 dark:text-slate-300 font-medium">
-                        <p className="font-bold text-rose-900 dark:text-rose-200 mb-1">{section.section_name}</p>
-                        <p className="text-[11px] text-slate-500 italic">Original section content recorded from document.</p>
-                      </div>
-                    )}
+                  <div className="pt-1 space-y-2 flex-1">
+                    <RenderSegregatedContent
+                      lines={section.evidence_used && section.evidence_used.length > 0 ? section.evidence_used : [section.section_name]}
+                      masterResume={masterResume}
+                      sectionName={section.section_name}
+                      variant="rose"
+                    />
                   </div>
                 </div>
 
                 {/* Right Column: AI Tailored Rewritten Text */}
-                <div className="bg-emerald-50/60 dark:bg-emerald-950/30 p-4 rounded-xl border border-emerald-200/80 dark:border-emerald-900/50 space-y-2 flex flex-col">
+                <div className="bg-emerald-50/60 dark:bg-emerald-950/30 p-4 rounded-xl border border-emerald-200/80 dark:border-emerald-900/50 space-y-3 flex flex-col">
                   <div className="flex items-center justify-between border-b border-emerald-200 dark:border-emerald-900/50 pb-2">
                     <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                      AI Tailored & Rewritten Text
+                      AI Tailored & Rewritten Text (After)
                     </span>
                   </div>
-
-                  {/* Bullet list with checkboxes, or plain text */}
-                  <div className="pt-1 space-y-1.5 flex-1">
-                    {hasBullets ? (
-                      parsedBullets.map((item, lineIdx) => {
-                        const isUnchecked = uncheckedBullets.has(lineIdx);
-                        const bulletSymbols = ["•", "-", "*", "–", "—", "▪", "▸"];
-                        const bulletMatch = bulletSymbols.find((s) => item.line.startsWith(s));
-                        const content = bulletMatch ? item.line.substring(bulletMatch.length).trim() : item.line;
-
-                        if (item.isHeader) {
-                          return (
-                            <div key={lineIdx} className="font-extrabold text-slate-900 dark:text-white text-xs pt-2 pb-1 flex items-center justify-between border-b border-emerald-200 dark:border-emerald-800/80 mt-1">
-                              <span className="flex items-center gap-1.5 text-emerald-950 dark:text-emerald-200">
-                                <Briefcase className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                                {item.line}
-                              </span>
-                            </div>
-                          );
-                        }
-
-                        if (item.isCompany) {
-                          return (
-                            <div key={lineIdx} className="font-semibold text-emerald-700 dark:text-emerald-400 text-[11px] italic mb-1.5 pl-5">
-                              {item.line}
-                            </div>
-                          );
-                        }
-
-                        if (!item.isBullet) {
-                          return (
-                            <p key={lineIdx} className="text-[12px] text-slate-800 dark:text-slate-200 leading-relaxed select-all">
-                              {item.line}
-                            </p>
-                          );
-                        }
-
-                        return (
-                          <div
-                            key={lineIdx}
-                            className={`flex items-start gap-2.5 group rounded-lg px-2 py-1 transition-all duration-150 ${isUnchecked ? "opacity-40 bg-slate-100/60" : "hover:bg-emerald-100/40"}`}
-                          >
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleBulletToggle(lineIdx);
-                              }}
-                              className={`mt-0.5 shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-all duration-150 cursor-pointer ${isUnchecked
-                                  ? "border-slate-300 bg-white"
-                                  : "border-emerald-500 bg-emerald-500"
-                                }`}
-                              title={isUnchecked ? "Click to include in resume" : "Click to exclude from resume"}
-                            >
-                              {!isUnchecked && (
-                                <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 10" fill="none">
-                                  <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              )}
-                            </button>
-                            <p className={`flex-1 text-[12px] leading-relaxed select-all ${isUnchecked ? "line-through text-slate-400" : "text-slate-800 dark:text-slate-200 font-medium"}`}>
-                              {content}
-                            </p>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <FormattedSectionText text={rewrittenText} />
-                    )}
+                  <div className="pt-1 space-y-2 flex-1">
+                    <RenderSegregatedContent
+                      lines={rewrittenText.split("\n")}
+                      masterResume={masterResume}
+                      sectionName={section.section_name}
+                      variant="emerald"
+                    />
                   </div>
-
-                  {uncheckedBullets.size > 0 && (
-                    <p className="text-[10px] text-amber-600 font-semibold mt-1 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3 shrink-0" />
-                      {uncheckedBullets.size} bullet{uncheckedBullets.size > 1 ? "s" : ""} will be excluded from the applied resume
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
