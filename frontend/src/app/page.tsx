@@ -2912,7 +2912,7 @@ export default function Home() {
                       Drag & drop or click to upload
                     </p>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                      Word documents (.docx) up to 5MB
+                      Word (.docx) & PDF (.pdf) documents up to 5MB
                     </p>
                   </div>
                 ) : isUploading ? (
