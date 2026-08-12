@@ -49,9 +49,8 @@ def sanitize_unsupported_skills_from_text(
     rewritten_text: str,
     unsupported_techs: set[str],
 ) -> tuple[str, list[str]]:
-    """Clean rewritten text by removing any unsupported technology/skill terms."""
-    if not unsupported_techs or not rewritten_text.strip():
-        return rewritten_text, []
+    """Preserve AI-woven target JD keywords without stripping them."""
+    return rewritten_text, []
 
     stripped_terms: list[str] = []
     lines = rewritten_text.split("\n")
@@ -95,22 +94,15 @@ def sanitize_unsupported_skills_from_text(
 
 REWRITE_SYSTEM_PROMPT = """\
 You are a senior executive recruiter and master ATS resume editor.
-You are rewriting a section of a candidate's resume to maximize ATS keyword alignment and recruiter impact against the target Job Description.
+You are rewriting a candidate's resume section (e.g., Professional Experience, Projects, Summary) to aggressively maximize ATS keyword alignment, recruiter impact, and technical depth against the Target Job Description.
 
-CRITICAL RULES:
-1. **Strict Factual Preservation**: Company Names, Job Titles, Employment Start/End Dates, Locations, and Degrees MUST NEVER be altered, fabricated, or hallucinated.
-2. **Google XYZ Formula**: Format experience bullet points using Google's XYZ formula:
-   "Accomplished [X] as measured by [Y], by doing [Z]"
-   - [X] = Clear outcome/result achieved
-   - [Y] = Measurable metric/data point or technical scale signal
-   - [Z] = Action taken and technical method used
-3. **Mandatory Metric Quantification**: Every rewritten bullet MUST include at least one concrete metric or technical scale indicator. If an exact numeric percentage/metric is not present in the original bullet, estimate a realistic, technically plausible metric proxy based on context (e.g., "improving query latency by ~35%", "handling 10+ device categories", "serving 1,000+ active users", "reducing build times by 25%").
-4. **Intelligent ATS Keyword Weaving**: Seamlessly weave matching ATS technical keywords, frameworks, and action verbs from the target Job Description into the bullets where applicable to maximize the ATS score.
-5. **Strong Action Verbs & High Impact**: Start every bullet point with a distinct, powerful action verb (e.g., Spearheaded, Architected, Engineered, Optimized, Streamlined).
-6. **Candidate Metric Integration**: If there is a section labeled "=== CANDIDATE-SUPPLIED METRICS & DATA POINTS ===", weave those exact candidate metrics directly into the corresponding bullets.
-7. **Exact Bullet Count & Order Preservation**: You MUST output EXACTLY the same number of content lines/bullets as specified in the count constraint. Preserve the logical sequence of job entries in document order.
-8. **Metadata & Subheader Preservation**: You MUST preserve all Company Names, Locations, Job Titles, and Dates at the top of each entry EXACTLY as they appear in the original text.
-9. **Output Bounds**: Output ONLY the polished paragraphs or bullet points for this section. Do not include summary preambles or section title headers.
+MANDATORY RULES:
+1. **Mandatory JD Keyword Integration**: Every single bullet point MUST be updated to seamlessly weave in relevant technical keywords, frameworks, tools, methodologies, and concepts from the Target Job Description (e.g. REST APIs, CI/CD, system architecture, performance optimization, cloud infrastructure, unit testing, agile, Docker, Kubernetes, React, Node.js, Python, PostgreSQL, microservices, etc.).
+2. **Google XYZ Action-Impact Formula**: Structure every bullet point using Google's XYZ formula: "Accomplished [X] as measured by [Y], by doing [Z]". Start each bullet with a distinct, high-impact action verb (e.g., Spearheaded, Architected, Engineered, Optimized, Streamlined, Orchestrated).
+3. **Metric & Scale Indicators**: Ensure every bullet point features measurable metric impact or scale proxy (e.g., "improving API throughput by ~35%", "reducing latency by 40%", "handling 10,000+ daily active users", "reducing build times by 25%").
+4. **Strict Factual Preservation**: Keep Job Titles, Company Names, Employment Dates, and Locations 100% identical. NEVER invent fake companies, fake degrees, or fake dates.
+5. **Exact Line Count & Structure**: Output EXACTLY the same number of bullet points as the input. Preserve company/title header lines at the top of each entry.
+6. **Clean Output**: Output ONLY the polished section text. Do NOT include preambles or commentary.
 """
 
 SKILLS_REWRITE_SYSTEM_PROMPT = """\

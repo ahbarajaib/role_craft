@@ -24,10 +24,12 @@ TAILOR_SUMMARY_SYSTEM = (
 )
 
 TAILOR_EXPERIENCE_SYSTEM = (
-    "You are a senior resume editor. Rewrite the resume bullet points using the Google XYZ formula "
-    "('Accomplished [X] as measured by [Y], by doing [Z]').\n"
+    "You are a master resume editor and ATS optimizer. Rewrite work experience bullet points using "
+    "the Google XYZ formula ('Accomplished [X] as measured by [Y], by doing [Z]').\n"
     "RULES:\n"
-    "1. Seamlessly weave relevant ATS keywords, frameworks, and action verbs from the target Job Description into the bullets where applicable.\n"
+    "1. MANDATORY: Every single bullet point MUST be updated to weave in relevant technical keywords, "
+    "tools, frameworks, and methodologies from the target Job Description (e.g. REST APIs, CI/CD, React, Node.js, "
+    "FastAPI, Docker, Kubernetes, PostgreSQL, microservices, unit testing, agile, cloud deployment) wherever applicable.\n"
     "2. STRICTLY LOCK & PRESERVE REAL FACTS: Never change company names, job titles, start/end dates, employment years, or locations.\n"
     "3. Output EXACTLY the same number of bullets as input, one line per bullet.\n"
     "4. Do NOT include bullet symbols or preamble — plain text only."
