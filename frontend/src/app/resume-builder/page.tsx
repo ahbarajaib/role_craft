@@ -45,6 +45,7 @@ import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import { ProfileModal } from "@/components/profile_modal";
 import { WordLogoIcon, PdfLogoIcon } from "@/components/file_format_icons";
+import { ParsingProgressCard } from "@/components/parsing_progress_card";
 
 export default function ResumeBuilderPage() {
   const { user, token, isLoading: authLoading, setShowAuthModal } = useAuth();
@@ -854,24 +855,8 @@ export default function ResumeBuilderPage() {
             <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Loading Master Resume...</p>
           </div>
         ) : isParsing ? (
-          /* Parsing State */
-          <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800/60 shadow-xl shadow-indigo-500/5 text-center max-w-xl mx-auto space-y-6 my-12 relative overflow-hidden">
-            <div className="h-16 w-16 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white mx-auto shadow-lg shadow-indigo-500/30 animate-pulse">
-              <Sparkles className="h-8 w-8" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center justify-center gap-2">
-                <RefreshCw className="h-4 w-4 animate-spin text-indigo-500" />
-                AI Parsing Resume into Structured Sections...
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                Extracting contact info, skills categories, work experience, and education into your unified Master Resume format.
-              </p>
-            </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden max-w-sm mx-auto">
-              <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 h-full w-3/4 animate-pulse rounded-full" />
-            </div>
-          </div>
+          /* Dynamic Step-by-Step AI Parsing Progress UX */
+          <ParsingProgressCard />
         ) : (
           /* Empty Initial State Card */
           <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center max-w-xl mx-auto space-y-6 my-8">
