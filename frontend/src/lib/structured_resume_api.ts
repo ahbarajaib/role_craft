@@ -179,5 +179,32 @@ export async function deleteProfilePhoto(): Promise<{ status: string; message: s
 }
 
 export function getTemplateDownloadUrl(template: string, format: "docx" | "pdf"): string {
-  return `${API_BASE_URL}/api/v1/structured-resume/generate/${template}/${format}`;
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const query = token ? `?token=${encodeURIComponent(token)}` : "";
+  return `${API_BASE_URL}/api/v1/structured-resume/generate/${template}/${format}${query}`;
+}
+
+export async function downloadStructuredResume(template: string, format: "docx" | "pdf", customFilename?: string): Promise<void> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const response = await fetch(`${API_BASE_URL}/api/v1/structured-resume/generate/${template}/${format}`, {
+    method: "GET",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || `Failed to generate ${format.toUpperCase()} export file`);
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = customFilename || `Resume_${template}.${format}`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
 }

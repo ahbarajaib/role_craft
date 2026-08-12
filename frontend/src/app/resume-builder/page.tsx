@@ -37,6 +37,7 @@ import {
   uploadProfilePhoto,
   deleteProfilePhoto,
   getTemplateDownloadUrl,
+  downloadStructuredResume,
 } from "@/lib/structured_resume_api";
 import TemplateSelector, { TEMPLATES } from "@/components/template_selector";
 import ResumeSectionEditor from "@/components/resume_section_editor";
@@ -51,6 +52,7 @@ export default function ResumeBuilderPage() {
   const [resume, setResume] = useState<StructuredResume | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isExporting, setIsExporting] = useState<"pdf" | "docx" | null>(null);
   const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving">("saved");
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
   const [isLoadingResume, setIsLoadingResume] = useState(true);
@@ -266,6 +268,39 @@ export default function ResumeBuilderPage() {
     setSaveStatus("unsaved");
   };
 
+  const handleSaveResume = async () => {
+    if (!resume) return;
+    try {
+      setIsSaving(true);
+      setSaveStatus("saving");
+      const updated = await updateStructuredResume(resume);
+      setResume(updated);
+      setSaveStatus("saved");
+      setStatusMsg({ type: "success", text: "Master Resume changes saved successfully!" });
+    } catch (err: any) {
+      console.error("Save error:", err);
+      setSaveStatus("unsaved");
+      setStatusMsg({ type: "error", text: err?.message || "Failed to save resume. Please try again." });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDownloadFile = async (format: "docx" | "pdf") => {
+    if (!resume) return;
+    try {
+      setIsExporting(format);
+      const name = resume.contact_info?.full_name || "Resume";
+      const filename = `${name} - ${selectedTemplate.replace("_", " ").toUpperCase()}.${format}`;
+      await downloadStructuredResume(selectedTemplate, format, filename);
+    } catch (err: any) {
+      console.error("Download error:", err);
+      setStatusMsg({ type: "error", text: err?.message || "Failed to download file. Please try again." });
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
   const lowConfFields = resume?.parse_confidence?.low_confidence_fields || [];
 
   return (
@@ -330,63 +365,68 @@ export default function ResumeBuilderPage() {
                 Sign In
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={handleSaveResume}
+              disabled={isSaving || saveStatus === "saved"}
+              className="px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-50 transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+            >
+              <Save className="h-3.5 w-3.5" /> Save Changes
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Main Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 space-y-6">
-        {/* Status Message Banner */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {/* Status Toast */}
         {statusMsg && (
           <div
-            className={`p-3.5 rounded-2xl border flex items-center justify-between text-xs font-medium ${
+            className={`p-4 rounded-2xl border text-xs font-semibold flex items-center justify-between gap-3 shadow-md transition-all ${
               statusMsg.type === "error"
-                ? "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300"
+                ? "bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300"
                 : statusMsg.type === "success"
-                ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
-                : "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300"
+                ? "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
+                : "bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
             }`}
           >
             <div className="flex items-center gap-2">
               {statusMsg.type === "error" ? (
-                <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
-              ) : statusMsg.type === "success" ? (
-                <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
+                <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0" />
               ) : (
-                <Sparkles className="h-4 w-4 shrink-0 text-indigo-500" />
+                <Check className="h-4 w-4 text-emerald-500 shrink-0" />
               )}
               <span>{statusMsg.text}</span>
             </div>
             <button
               type="button"
               onClick={() => setStatusMsg(null)}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 cursor-pointer"
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold text-sm px-1 cursor-pointer"
             >
               ×
             </button>
           </div>
         )}
 
-        {/* Hidden File Input for Re-import / Upload */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          accept=".docx,.pdf"
-          className="hidden"
-          onChange={(e) => {
-            if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
-          }}
-        />
-
-        {/* Top Action Bar (shown ONLY when resume is loaded) */}
-        {resume && !isParsing && (
-          <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Action Toolbar */}
+        {resume && (
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".docx,.pdf"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
+                }}
+              />
+
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isParsing}
-                className="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all cursor-pointer border border-slate-200 dark:border-slate-700 flex items-center gap-2"
+                className="px-3.5 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <UploadCloud className="h-4 w-4 text-indigo-500" />
                 Re-import Resume (DOCX / PDF)
@@ -399,21 +439,23 @@ export default function ResumeBuilderPage() {
 
             {token && (
               <div className="flex items-center gap-2">
-                <a
-                  href={getTemplateDownloadUrl(selectedTemplate, "docx")}
-                  download
-                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
+                <button
+                  type="button"
+                  onClick={() => handleDownloadFile("docx")}
+                  disabled={isExporting !== null}
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
-                  <WordLogoIcon className="h-4 w-4" /> Download DOCX
-                </a>
+                  <WordLogoIcon className="h-4 w-4" /> {isExporting === "docx" ? "Generating DOCX..." : "Download DOCX"}
+                </button>
 
-                <a
-                  href={getTemplateDownloadUrl(selectedTemplate, "pdf")}
-                  download
-                  className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-sm shadow-indigo-500/20"
+                <button
+                  type="button"
+                  onClick={() => handleDownloadFile("pdf")}
+                  disabled={isExporting !== null}
+                  className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-sm shadow-indigo-500/20 disabled:opacity-50"
                 >
-                  <PdfLogoIcon className="h-4 w-4" /> Download PDF
-                </a>
+                  <PdfLogoIcon className="h-4 w-4" /> {isExporting === "pdf" ? "Generating PDF..." : "Download PDF"}
+                </button>
               </div>
             )}
           </div>
@@ -773,21 +815,23 @@ export default function ResumeBuilderPage() {
                 {/* Download Actions */}
                 {token ? (
                   <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <a
-                      href={getTemplateDownloadUrl(selectedTemplate, "pdf")}
-                      download
-                      className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-indigo-500/20"
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadFile("pdf")}
+                      disabled={isExporting !== null}
+                      className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-indigo-500/20 disabled:opacity-50"
                     >
-                      <PdfLogoIcon className="h-4 w-4" /> Export as PDF ({TEMPLATES.find((t) => t.id === selectedTemplate)?.title})
-                    </a>
+                      <PdfLogoIcon className="h-4 w-4" /> {isExporting === "pdf" ? "Exporting PDF..." : `Export as PDF (${TEMPLATES.find((t) => t.id === selectedTemplate)?.title})`}
+                    </button>
 
-                    <a
-                      href={getTemplateDownloadUrl(selectedTemplate, "docx")}
-                      download
-                      className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadFile("docx")}
+                      disabled={isExporting !== null}
+                      className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
-                      <WordLogoIcon className="h-4 w-4" /> Export as DOCX
-                    </a>
+                      <WordLogoIcon className="h-4 w-4" /> {isExporting === "docx" ? "Exporting DOCX..." : "Export as DOCX"}
+                    </button>
                   </div>
                 ) : (
                   <button
