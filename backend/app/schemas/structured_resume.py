@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 class ContactInfo(BaseModel):
     full_name: Optional[str] = Field(None, description="Candidate full name")
+    job_title: Optional[str] = Field(None, description="Professional headline or target job title")
     email: Optional[str] = Field(None, description="Email address")
     phone: Optional[str] = Field(None, description="Phone number")
     location: Optional[str] = Field(None, description="City, Country / Location")

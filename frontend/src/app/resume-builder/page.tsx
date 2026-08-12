@@ -513,6 +513,25 @@ export default function ResumeBuilderPage() {
                   </div>
 
                   <div>
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">
+                      Professional Headline / Target Role
+                    </label>
+                    <input
+                      type="text"
+                      value={resume.contact_info?.job_title || ""}
+                      onChange={(e) => {
+                        setResume({
+                          ...resume,
+                          contact_info: { ...resume.contact_info, job_title: e.target.value },
+                        });
+                        setSaveStatus("unsaved");
+                      }}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none"
+                      placeholder="e.g. AI Application Engineer | Full Stack Developer"
+                    />
+                  </div>
+
+                  <div>
                     <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                       Email Address
                       {lowConfFields.includes("contact_info.email") && (

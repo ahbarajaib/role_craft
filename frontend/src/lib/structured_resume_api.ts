@@ -2,6 +2,7 @@ import { API_BASE_URL } from "./api";
 
 export interface ContactInfo {
   full_name?: string | null;
+  job_title?: string | null;
   email?: string | null;
   phone?: string | null;
   location?: string | null;
