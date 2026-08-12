@@ -304,6 +304,40 @@ export default function ResumeBuilderPage() {
     }
   };
 
+  function humanizeFieldName(field: string): { label: string; elementId: string } {
+    const f = field.toLowerCase();
+    if (f.includes("full_name")) return { label: "Contact Full Name", elementId: "field-full_name" };
+    if (f.includes("job_title") && (f.includes("contact") || (!f.includes("entries") && !f.includes("experience")))) {
+      return { label: "Professional Headline", elementId: "field-job_title" };
+    }
+    if (f.includes("email")) return { label: "Email Address", elementId: "field-email" };
+    if (f.includes("phone")) return { label: "Phone Number", elementId: "field-phone" };
+    if (f.includes("location") && (f.includes("contact") || !f.includes("entries"))) {
+      return { label: "Location / Address", elementId: "field-location" };
+    }
+    if (f.includes("linkedin")) return { label: "LinkedIn Link", elementId: "field-linkedin" };
+    if (f.includes("portfolio")) return { label: "Portfolio URL", elementId: "field-portfolio" };
+    if (f.includes("github")) return { label: "GitHub Link", elementId: "field-github" };
+
+    const parts = field.split(".");
+    let itemNum = "";
+    for (const p of parts) {
+      if (!isNaN(Number(p))) {
+        itemNum = ` #${Number(p) + 1}`;
+        break;
+      }
+    }
+
+    let propName = parts[parts.length - 1].replace(/_/g, " ");
+    propName = propName.charAt(0).toUpperCase() + propName.slice(1);
+
+    if (f.includes("experience")) return { label: `Experience${itemNum}: ${propName}`, elementId: `field-${field.replace(/\./g, "-")}` };
+    if (f.includes("education")) return { label: `Education${itemNum}: ${propName}`, elementId: `field-${field.replace(/\./g, "-")}` };
+    if (f.includes("projects")) return { label: `Project${itemNum}: ${propName}`, elementId: `field-${field.replace(/\./g, "-")}` };
+
+    return { label: propName, elementId: `field-${field.replace(/\./g, "-")}` };
+  }
+
   const lowConfFields = resume?.parse_confidence?.low_confidence_fields || [];
 
   return (
@@ -472,6 +506,54 @@ export default function ResumeBuilderPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Panel (7 Cols): Section Editor */}
             <div className="lg:col-span-7 space-y-6">
+              {/* Unparsed Fields Inspection & Quick-Jump Banner */}
+              {lowConfFields.length > 0 && (
+                <div className="p-5 rounded-3xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 shadow-md space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold shrink-0">
+                        <AlertTriangle className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-extrabold text-amber-950 dark:text-amber-200">
+                          {lowConfFields.length} Field{lowConfFields.length > 1 ? "s" : ""} Needing Your Completion
+                        </h4>
+                        <p className="text-[11px] text-amber-800 dark:text-amber-400">
+                          Click any unparsed item below to jump directly to it and complete missing details:
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Interactive Quick-Jump Field Chips */}
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {lowConfFields.map((field, fIdx) => {
+                      const { label, elementId } = humanizeFieldName(field);
+                      return (
+                        <button
+                          key={fIdx}
+                          type="button"
+                          onClick={() => {
+                            const el = document.getElementById(elementId) || document.querySelector(`[data-field="${field}"]`);
+                            if (el) {
+                              el.scrollIntoView({ behavior: "smooth", block: "center" });
+                              (el as HTMLElement).focus?.();
+                              el.classList.add("ring-2", "ring-rose-500", "animate-pulse");
+                              setTimeout(() => el.classList.remove("ring-2", "ring-rose-500", "animate-pulse"), 2500);
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800/80 text-amber-900 dark:text-amber-300 font-bold text-xs hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                        >
+                          <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
+                          <span>{label}</span>
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono">↓</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* ATS Template Picker */}
               <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
                 <TemplateSelector
@@ -542,6 +624,7 @@ export default function ResumeBuilderPage() {
                       )}
                     </label>
                     <input
+                      id="field-full_name"
                       type="text"
                       value={resume.contact_info?.full_name || ""}
                       onChange={(e) => {
@@ -565,6 +648,7 @@ export default function ResumeBuilderPage() {
                       Professional Headline / Target Role
                     </label>
                     <input
+                      id="field-job_title"
                       type="text"
                       value={resume.contact_info?.job_title || ""}
                       onChange={(e) => {
@@ -589,6 +673,7 @@ export default function ResumeBuilderPage() {
                       )}
                     </label>
                     <input
+                      id="field-email"
                       type="text"
                       value={resume.contact_info?.email || ""}
                       onChange={(e) => {
@@ -617,6 +702,7 @@ export default function ResumeBuilderPage() {
                       )}
                     </label>
                     <input
+                      id="field-phone"
                       type="text"
                       value={resume.contact_info?.phone || ""}
                       onChange={(e) => {
@@ -640,6 +726,7 @@ export default function ResumeBuilderPage() {
                       Location / Address
                     </label>
                     <input
+                      id="field-location"
                       type="text"
                       value={resume.contact_info?.location || ""}
                       onChange={(e) => {
@@ -660,6 +747,7 @@ export default function ResumeBuilderPage() {
                         LinkedIn URL
                       </label>
                       <input
+                        id="field-linkedin"
                         type="text"
                         value={resume.contact_info?.linkedin_url || ""}
                         onChange={(e) => {
@@ -679,6 +767,7 @@ export default function ResumeBuilderPage() {
                         Portfolio / GitHub URL
                       </label>
                       <input
+                        id="field-portfolio"
                         type="text"
                         value={resume.contact_info?.portfolio_url || resume.contact_info?.github_url || ""}
                         onChange={(e) => {
