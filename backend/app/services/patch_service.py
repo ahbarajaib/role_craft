@@ -459,6 +459,35 @@ class PatchService:
         # 3. Apply each accepted rewrite.
         for rewrite_item in accepted_items:
             norm_sec_name = _normalize(rewrite_item.section)
+
+            # Special Case: Patching Candidate Job Title in Header Section (run unconditionally)
+            if norm_sec_name in ["header", "job title", "target role", "title"]:
+                lines = (rewrite_item.rewritten_text or "").strip().split("\n")
+                new_title_text = lines[0] if lines else ""
+
+                if new_title_text:
+                    role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance"]
+                    top_paras = all_paras[:min(6, len(all_paras))]
+                    title_para = next(
+                        (p for i, p in enumerate(top_paras) if i > 0 and any(r in p.text.lower() for r in role_titles)),
+                        None,
+                    )
+                    if title_para:
+                        _set_paragraph_text_preserve_fmt(title_para, new_title_text, default_font=doc_font)
+                        sections_updated += 1
+                    elif len(all_paras) > 0:
+                        # Candidate DOCX does not have an existing title subtitle line under name.
+                        # Insert a new target job title subtitle paragraph right below candidate name (all_paras[0]).
+                        name_para = all_paras[0]
+                        new_p_elem = etree.Element(qn("w:p"))
+                        name_para._p.addnext(new_p_elem)
+                        new_p = docx.text.paragraph.Paragraph(new_p_elem, doc)
+                        _set_paragraph_text_preserve_fmt(new_p, new_title_text, default_font=doc_font)
+                        for run in new_p.runs:
+                            run.font.bold = True
+                        sections_updated += 1
+                continue
+
             target_sec = next(
                 (s for s in sections if _normalize(s.title) == norm_sec_name or (norm_sec_name in ["header", "job title", "target role", "title"] and s.normalized_name == "header")),
                 None,
@@ -482,35 +511,6 @@ class PatchService:
                     index=first_idx,
                     total_paras=len(all_paras),
                 )
-                continue
-
-            # Special Case: Patching Candidate Job Title in Header Section
-            if target_sec.normalized_name == "header" or norm_sec_name in ["header", "job title", "target role", "title"]:
-                # Inspect top 6 paragraphs of document (pre-summary header area) for existing job title
-                role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance"]
-                top_paras = all_paras[:min(6, len(all_paras))]
-                title_para = next(
-                    (p for i, p in enumerate(top_paras) if i > 0 and any(r in p.text.lower() for r in role_titles)),
-                    None,
-                )
-                lines = (rewrite_item.rewritten_text or "").strip().split("\n")
-                new_title_text = lines[0] if lines else ""
-
-                if new_title_text:
-                    if title_para:
-                        _set_paragraph_text_preserve_fmt(title_para, new_title_text, default_font=doc_font)
-                        sections_updated += 1
-                    elif len(all_paras) > 0:
-                        # Candidate DOCX does not have an existing title subtitle line under name.
-                        # Insert a new target job title subtitle paragraph right below candidate name (all_paras[0]).
-                        name_para = all_paras[0]
-                        new_p_elem = etree.Element(qn("w:p"))
-                        name_para._p.addnext(new_p_elem)
-                        new_p = docx.text.paragraph.Paragraph(new_p_elem, doc)
-                        _set_paragraph_text_preserve_fmt(new_p, new_title_text, default_font=doc_font)
-                        for run in new_p.runs:
-                            run.font.bold = True
-                        sections_updated += 1
                 continue
 
             # The first index is the section heading — we never touch its text.
