@@ -1683,9 +1683,9 @@ export default function Home() {
         setAnalysisResult(result);
       }
 
-      // Tailor ONLY safe improvement sections ('improve'), strictly excluding 'reduce_emphasis' and 'keep' sections from automatic updating
+      // Queue sections categorized under 'Recommendations to Improve' (Experience, Projects, Summary, Skills) for 1-Click Auto-Tailor
       const sectionsToTailor = (result.sections || []).filter(
-        (s: any) => s.review_status === "improve" && s.review_status !== "reduce_emphasis" && s.review_status !== "keep"
+        (s: any) => (s.review_status === "improve" || (s.recommendations && s.recommendations.length > 0)) && s.review_status !== "reduce_emphasis"
       );
 
       console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToTailor.map((s: any) => s.section_name));
@@ -3949,14 +3949,14 @@ export default function Home() {
                 <div className="space-y-6">
                   {(() => {
                     const sectionsToImprove = (analysisResult.sections || [])
-                      .filter((s) => s.review_status === "improve")
+                      .filter((s) => s.review_status === "improve" || (s.recommendations && s.recommendations.length > 0))
                       .sort((a, b) => {
                         const priorityMap = { high: 3, medium: 2, low: 1 };
                         return (priorityMap[b.priority] || 0) - (priorityMap[a.priority] || 0);
                       });
 
                     const sectionsToKeep = (analysisResult.sections || [])
-                      .filter((s) => s.review_status === "keep");
+                      .filter((s) => s.review_status === "keep" && (!s.recommendations || s.recommendations.length === 0));
 
                     const sectionsToReduce = (analysisResult.sections || [])
                       .filter((s) => s.review_status === "reduce_emphasis");
