@@ -413,34 +413,7 @@ def apply_rewrites(
 
 
 @router.get(
-    "/download/{download_id}",
-    summary="Download a generated patched resume document",
-    description="Streams the modified resume document as a file attachment.",
-)
-def download_patched_resume(
-    download_id: str,
-    settings: Annotated[Settings, Depends(get_settings)],
-    filename: str = "resume_updated.docx",
-) -> FileResponse:
-    """Stream the generated patched DOCX file with the given filename."""
-    file_path = Path(settings.UPLOAD_DIR) / "generated" / f"{download_id}.docx"
-    if not file_path.exists():
-        raise NotFoundError(f"Generated download file for ID '{download_id}' not found.")
-
-    # Sanitise the filename — strip path separators and enforce .docx extension
-    safe_name = filename.replace("/", "").replace("\\", "").strip() or "resume_updated.docx"
-    if not safe_name.lower().endswith(".docx"):
-        safe_name += ".docx"
-
-    return FileResponse(
-        path=file_path,
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        filename=safe_name,
-    )
-
-
-@router.get(
-    "/download/{download_id}/pdf",
+    "/download/{download_id:path}/pdf",
     summary="Download or stream PDF version of the resume",
     description="Converts and streams the specified resume document as a PDF.",
 )
@@ -451,8 +424,8 @@ def download_patched_resume_pdf(
 ) -> FileResponse:
     """Stream the generated resume as a PDF file."""
     from app.services.pdf_service import PDFService
-
     from app.utils.path_resolver import resolve_document_path
+
     upload_dir = Path(settings.UPLOAD_DIR)
 
     if download_id.startswith("base/"):
@@ -461,9 +434,12 @@ def download_patched_resume_pdf(
         pdf_path = upload_dir / "base" / f"{user_id}.pdf"
     else:
         docx_path = upload_dir / "generated" / f"{download_id}.docx"
-        if not docx_path.exists():
+        if not docx_path or not docx_path.exists():
             docx_path = resolve_document_path(upload_dir, download_id)
         pdf_path = upload_dir / "generated" / f"{download_id}.pdf"
+
+    if not docx_path or not docx_path.exists():
+        raise NotFoundError(f"Resume document for ID '{download_id}' not found.")
 
     pdf_service = PDFService(upload_dir=upload_dir)
     pdf_service.convert_docx_to_pdf(docx_path, pdf_path)
@@ -481,6 +457,43 @@ def download_patched_resume_pdf(
         path=pdf_path,
         media_type="application/pdf",
         headers=headers,
+    )
+
+
+@router.get(
+    "/download/{download_id:path}",
+    summary="Download a generated patched resume document",
+    description="Streams the modified resume document as a file attachment.",
+)
+def download_patched_resume(
+    download_id: str,
+    settings: Annotated[Settings, Depends(get_settings)],
+    filename: str = "resume_updated.docx",
+) -> FileResponse:
+    """Stream the generated patched DOCX file with the given filename."""
+    from app.utils.path_resolver import resolve_document_path
+
+    upload_dir = Path(settings.UPLOAD_DIR)
+
+    if download_id.startswith("base/"):
+        file_path = resolve_document_path(upload_dir, download_id)
+    else:
+        file_path = upload_dir / "generated" / f"{download_id}.docx"
+        if not file_path or not file_path.exists():
+            file_path = resolve_document_path(upload_dir, download_id)
+
+    if not file_path or not file_path.exists():
+        raise NotFoundError(f"Generated download file for ID '{download_id}' not found.")
+
+    # Sanitise the filename — strip path separators and enforce .docx extension
+    safe_name = filename.replace("/", "").replace("\\", "").strip() or "resume_updated.docx"
+    if not safe_name.lower().endswith(".docx"):
+        safe_name += ".docx"
+
+    return FileResponse(
+        path=file_path,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        filename=safe_name,
     )
 
 
