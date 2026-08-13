@@ -495,26 +495,52 @@ function getRewrittenTextForSection(
   rewrites: Record<string, string>,
   sectionType?: string
 ): string | undefined {
-  if (!rewrites) return undefined;
+  if (!rewrites || !sectionName) return undefined;
   const nameLower = (sectionName || "").toLowerCase().trim();
   const typeLower = (sectionType || "").toLowerCase().trim();
 
-  // Direct match on name or type
-  if (nameLower && rewrites[nameLower]) return rewrites[nameLower];
+  // 1. Direct match on exact normalized section name
+  if (rewrites[nameLower]) return rewrites[nameLower];
   if (typeLower && rewrites[typeLower]) return rewrites[typeLower];
 
-  // Fuzzy match (e.g. 'professional experience' vs 'experience' or 'work experience')
-  const matchedKey = Object.keys(rewrites).find((k) => {
-    if (k === nameLower || k === typeLower) return true;
-    if ((nameLower.includes("experience") || typeLower.includes("experience")) && k.includes("experience")) return true;
-    if ((nameLower.includes("skill") || typeLower.includes("skill")) && k.includes("skill")) return true;
-    if ((nameLower.includes("summary") || typeLower.includes("summary")) && k.includes("summary")) return true;
-    if ((nameLower.includes("project") || typeLower.includes("project")) && k.includes("project")) return true;
-    return (nameLower && (k.includes(nameLower) || nameLower.includes(k))) ||
-           (typeLower && (k.includes(typeLower) || typeLower.includes(k)));
-  });
+  // 2. Direct match on key contained in sectionName or vice-versa
+  for (const [key, val] of Object.entries(rewrites)) {
+    const kLower = key.toLowerCase().trim();
+    if (kLower === nameLower) return val;
+    if (kLower.length > 3 && (nameLower.includes(kLower) || kLower.includes(nameLower))) {
+      return val;
+    }
+  }
 
-  return matchedKey ? rewrites[matchedKey] : undefined;
+  // 3. Sub-role matching inside multi-entry experience / project text blocks
+  const cleanTitleWords = nameLower.split(/[\t\-\|\,\–\—\:]/)[0].trim().split(" ").filter((w) => w.length > 2);
+  for (const [key, textVal] of Object.entries(rewrites)) {
+    if (!textVal || typeof textVal !== "string") continue;
+    const blocks = textVal.split(/\n\n+/);
+    for (const block of blocks) {
+      const blockLower = block.toLowerCase();
+      const matchesTitle = cleanTitleWords.length > 0 && cleanTitleWords.every((word) => blockLower.includes(word));
+      if (matchesTitle) {
+        return block.trim();
+      }
+    }
+  }
+
+  // 4. Overall section type fallback
+  if (typeLower === "experience" || nameLower.includes("experience") || nameLower.includes("work")) {
+    const expKey = Object.keys(rewrites).find((k) => k.includes("experience") || k.includes("work") || k === "experience");
+    if (expKey && rewrites[expKey]) return rewrites[expKey];
+  }
+  if (typeLower === "skills" || nameLower.includes("skill")) {
+    const skillKey = Object.keys(rewrites).find((k) => k.includes("skill"));
+    if (skillKey && rewrites[skillKey]) return rewrites[skillKey];
+  }
+  if (typeLower === "summary" || nameLower.includes("summary")) {
+    const sumKey = Object.keys(rewrites).find((k) => k.includes("summary"));
+    if (sumKey && rewrites[sumKey]) return rewrites[sumKey];
+  }
+
+  return undefined;
 }
 
 // ─── Helper: parse bullet lines from a rewritten text block ───────────────────
