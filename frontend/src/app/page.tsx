@@ -1787,7 +1787,7 @@ export default function Home() {
       }
 
       // 2. Prepare fast batch items with structured memory for server-side 16-worker parallel execution
-      const batchItems = sectionsToTailor.map((sec: any) => {
+      const batchItems: any[] = sectionsToTailor.map((sec: any) => {
         let secContent: any = undefined;
         let secType: any = sec.section_type;
         if (masterResume && masterResume.sections) {
@@ -1809,6 +1809,17 @@ export default function Home() {
           recommendations: sec.recommendations || [],
         };
       });
+
+      // Explicitly include target job title header in batch payload so backend patches DOCX header immediately
+      if (targetHeaderTitle) {
+        batchItems.unshift({
+          section_name: "header",
+          section_type: "header",
+          section_content: targetHeaderTitle,
+          recommendations: [`Set target job title designation to "${targetHeaderTitle}"`],
+          user_instructions: targetHeaderTitle,
+        });
+      }
 
       const { batchRewriteSections } = require("@/lib/api");
       console.log("🚀 [RoleCraft Audit] Dispatching 16-worker Batch Parallel Tailor Request:", batchItems);

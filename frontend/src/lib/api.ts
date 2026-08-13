@@ -162,6 +162,8 @@ export interface BatchRewriteItem {
   section_type?: string;
   section_content?: any;
   recommendations?: string[];
+  user_instructions?: string;
+  metric_inputs?: Record<string, string>;
 }
 
 export interface BatchRewriteRequest {
