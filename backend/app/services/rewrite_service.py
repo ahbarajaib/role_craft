@@ -18,7 +18,7 @@ from app.constants.resume_keywords import (
 )
 from app.core.exceptions import BadRequestError
 from app.parsers.job_description_parser import _KNOWN_TECHNOLOGIES
-from app.schemas.rewrite import RewriteSectionResponse
+from app.schemas.rewrite import RewriteSectionResponse, RewriteChangeItem, RewriteChangeType
 from app.services.section_service import SectionService
 
 
@@ -557,7 +557,12 @@ class RewriteService:
                 original_text=full_original,
                 rewritten_text=full_rewritten,
                 reasoning="All experience entries tailored with Google XYZ formula & target ATS keywords.",
-                changes=["Preserved all role entries and tailored bullet points with target job keywords."],
+                changes=[
+                    RewriteChangeItem(
+                        type=RewriteChangeType.KEYWORD,
+                        description="Preserved all role entries and tailored bullet points with target job keywords."
+                    )
+                ],
             )
 
         elif section_type == "projects":
@@ -620,7 +625,12 @@ class RewriteService:
                 original_text=full_original,
                 rewritten_text=full_rewritten,
                 reasoning="All project entries tailored with stack technologies & target ATS keywords.",
-                changes=["Preserved all project entries and tailored bullet points with target job keywords."],
+                changes=[
+                    RewriteChangeItem(
+                        type=RewriteChangeType.KEYWORD,
+                        description="Preserved all project entries and tailored bullet points with target job keywords."
+                    )
+                ],
             )
 
         # Fallback for summary, skills, certifications, custom sections
