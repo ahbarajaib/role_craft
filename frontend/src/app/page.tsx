@@ -1235,36 +1235,8 @@ function buildResumeFilename(
     }
   }
 
-  // 3. Company Name
-  const companyPatterns = [
-    /(?:^|\n)\s*Company\s*[:\-]\s*([^\n,]+)/i,
-    /(?:^|\n)\s*Organization\s*[:\-]\s*([^\n,]+)/i,
-    /(?:^|[.\n])\s*About\s+([A-Z][A-Za-z0-9&\s]{1,40})(?:\s*[,\n]|\sis\b)/,
-    /\bjoining\s+([A-Z][A-Za-z0-9&\s]{1,40})(?:\s*[,\n]|\sis\b)/i,
-    /\bworking\s+(?:at|with|for)\s+([A-Z][A-Za-z0-9&\s]{1,40})(?:\s*[,\n]|\.)/i,
-    /\bat\s+([A-Z][A-Za-z0-9&\s]{1,40})(?:\s*[,\n]|\.)/,
-    /\bjoin\s+([A-Z][A-Za-z0-9&\s]{1,40})(?:\s*[,\n]|\.)/,
-  ];
-
-  let companyName: string | null = null;
-  if (jobDescription) {
-    for (const pattern of companyPatterns) {
-      const match = jobDescription.match(pattern);
-      if (match && match[1]) {
-        const candidate = match[1].trim().replace(/[^a-zA-Z0-9& ]/g, "").trim();
-        if (
-          candidate.length > 2 &&
-          !/^(full job description|job description|description|company|about|organization|role|target company)$/i.test(candidate)
-        ) {
-          companyName = candidate;
-          break;
-        }
-      }
-    }
-  }
-
-  // Combine: [name] - [designation if exist] - [company if exist]
-  const parts = [candidateName, designation, companyName].filter(Boolean);
+  // Format: [Candidate Name] - [Targeted Role]
+  const parts = [candidateName, designation].filter(Boolean);
   const baseName = parts.join(" - ").replace(/[/\\?%*:|"<>]/g, "");
   return `${baseName}.docx`;
 }
@@ -5140,7 +5112,7 @@ export default function Home() {
                     buildResumeFilename(
                       jobDescription,
                       user?.name,
-                      analysisResult?.overall_summary?.job_title,
+                      customTargetRole || rewrittenSections["header"] || analysisResult?.overall_summary?.job_title,
                       file?.name
                     )
                   )}`}
@@ -5157,7 +5129,7 @@ export default function Home() {
                     buildResumeFilename(
                       jobDescription,
                       user?.name,
-                      analysisResult?.overall_summary?.job_title,
+                      customTargetRole || rewrittenSections["header"] || analysisResult?.overall_summary?.job_title,
                       file?.name
                     ).replace(/\.docx$/i, ".pdf")
                   )}`}
@@ -5316,7 +5288,7 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <a
                   href={`${API_BASE_URL}/api/v1/resume/download/${downloadId || documentId}/pdf?filename=${encodeURIComponent(
-                    buildResumeFilename(jobDescription, user?.name, analysisResult?.overall_summary?.job_title, file?.name).replace(/\.docx$/i, ".pdf")
+                    buildResumeFilename(jobDescription, user?.name, customTargetRole || rewrittenSections["header"] || analysisResult?.overall_summary?.job_title, file?.name).replace(/\.docx$/i, ".pdf")
                   )}`}
                   download
                   className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
