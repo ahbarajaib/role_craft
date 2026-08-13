@@ -43,7 +43,9 @@ import {
   Plus,
   Copy,
   Check,
-  CheckCircle2
+  CheckCircle2,
+  Zap,
+  SlidersHorizontal
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
@@ -578,6 +580,8 @@ interface SectionCardProps {
   onBulletExclusionChange?: (sectionName: string, excludedIndexes: Set<number>) => void;
   isPatchingApplied?: boolean;
   masterResume?: StructuredResume | null;
+  isTailoringEnabled?: boolean;
+  onToggleTailoring?: (name: string) => void;
 }
 
 function SectionCard({
@@ -595,6 +599,8 @@ function SectionCard({
   onBulletExclusionChange,
   isPatchingApplied = false,
   masterResume = null,
+  isTailoringEnabled = true,
+  onToggleTailoring,
 }: SectionCardProps) {
   // Per-bullet checkbox state: set of line indexes that are UNCHECKED (excluded)
   const [uncheckedBullets, setUncheckedBullets] = useState<Set<number>>(new Set());
@@ -686,6 +692,34 @@ function SectionCard({
         </div>
 
         <div className="flex items-center gap-3">
+          {onToggleTailoring && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleTailoring(section.section_name);
+              }}
+              className={`px-3 py-1 rounded-full text-[11px] font-extrabold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs select-none ${
+                isTailoringEnabled
+                  ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-500/20 ring-2 ring-indigo-400/30"
+                  : "bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700"
+              }`}
+              title={isTailoringEnabled ? "AI Tailoring ENABLED for this section. Click to LOCK / DISABLE." : "AI Tailoring DISABLED for this section. Click to ENABLE."}
+            >
+              {isTailoringEnabled ? (
+                <>
+                  <Zap className="h-3.5 w-3.5 text-amber-300 fill-amber-300" />
+                  <span>AI Tailor ON</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="h-3.5 w-3.5 text-slate-400" />
+                  <span>AI Tailor OFF</span>
+                </>
+              )}
+            </button>
+          )}
+
           <span
             className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md border uppercase tracking-wider ${priorityStyles[section.priority]}`}
           >
@@ -1308,6 +1342,19 @@ export default function Home() {
   const [baseResumeLoaded, setBaseResumeLoaded] = useState(false);
   const [isSavingBase, setIsSavingBase] = useState(false);
   const [isAutoTailoring, setIsAutoTailoring] = useState(false);
+  const [tailoringSectionToggles, setTailoringSectionToggles] = useState<Record<string, boolean>>({});
+
+  const handleToggleSectionTailoring = (sectionName: string) => {
+    setTailoringSectionToggles((prev) => {
+      const normName = sectionName.toLowerCase();
+      const isFixed = normName.includes("education") || normName.includes("certification");
+      const current = prev[sectionName] !== undefined ? prev[sectionName] : !isFixed;
+      const nextState = !current;
+      console.log(`⚡ [RoleCraft Tailor] Section '${sectionName}' AI tailoring toggled to:`, nextState ? "ON (Tailor)" : "OFF (Locked)");
+      return { ...prev, [sectionName]: nextState };
+    });
+  };
+
   const [isWeavingKeywords, setIsWeavingKeywords] = useState(false);
   const [appliedWovenKeywords, setAppliedWovenKeywords] = useState<string[]>([]);
   const [isKeywordsWoven, setIsKeywordsWoven] = useState(false);
@@ -1684,10 +1731,18 @@ export default function Home() {
         setAnalysisResult(result);
       }
 
-      // Queue sections categorized under 'Recommendations to Improve' (Experience, Projects, Summary, Skills) for 1-Click Auto-Tailor
-      const sectionsToTailor = (result.sections || []).filter(
-        (s: any) => (s.review_status === "improve" || (s.recommendations && s.recommendations.length > 0)) && s.review_status !== "reduce_emphasis"
-      );
+      // Queue sections for 1-Click Auto-Tailor respecting user's section AI tailoring toggle preferences
+      const sectionsToTailor = (result.sections || []).filter((s: any) => {
+        const norm = s.section_name.toLowerCase();
+        const isExplicitOff = tailoringSectionToggles[s.section_name] === false;
+        const isExplicitOn = tailoringSectionToggles[s.section_name] === true;
+        if (isExplicitOff) return false;
+        if (isExplicitOn) return true;
+        if (norm.includes("education") || norm.includes("certification")) {
+          return false;
+        }
+        return (s.review_status === "improve" || (s.recommendations && s.recommendations.length > 0)) && s.review_status !== "reduce_emphasis";
+      });
 
       console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToTailor.map((s: any) => s.section_name));
 
@@ -4043,6 +4098,12 @@ export default function Home() {
                                   onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
                                   isPatchingApplied={isPatchingApplied}
                                   masterResume={masterResume}
+                                  isTailoringEnabled={
+                                    tailoringSectionToggles[section.section_name] !== undefined
+                                      ? tailoringSectionToggles[section.section_name]
+                                      : !(section.section_name.toLowerCase().includes("education") || section.section_name.toLowerCase().includes("certification"))
+                                  }
+                                  onToggleTailoring={handleToggleSectionTailoring}
                                 />
                               ))}
                             </div>
@@ -4073,6 +4134,12 @@ export default function Home() {
                                   onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
                                   isPatchingApplied={isPatchingApplied}
                                   masterResume={masterResume}
+                                  isTailoringEnabled={
+                                    tailoringSectionToggles[section.section_name] !== undefined
+                                      ? tailoringSectionToggles[section.section_name]
+                                      : !(section.section_name.toLowerCase().includes("education") || section.section_name.toLowerCase().includes("certification"))
+                                  }
+                                  onToggleTailoring={handleToggleSectionTailoring}
                                 />
                               ))}
                             </div>
