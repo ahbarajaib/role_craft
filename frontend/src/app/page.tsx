@@ -1630,9 +1630,27 @@ export default function Home() {
     try {
       const { rewriteSection } = require("@/lib/api");
       const startTime = performance.now();
+      let secContent: any = undefined;
+      let secType: any = undefined;
+
+      if (masterResume && masterResume.sections) {
+        const matchSec = masterResume.sections.find((s: any) => {
+          const sName = (s.section_title || "").toLowerCase();
+          const tName = sectionName.toLowerCase();
+          return sName === tName || sName.includes(tName) || tName.includes(sName) ||
+            (s.section_type === "experience" && (tName.includes("experience") || tName.includes("work")));
+        });
+        if (matchSec) {
+          secContent = matchSec.content;
+          secType = matchSec.section_type;
+        }
+      }
+
       const data = await rewriteSection({
         document_id: documentId,
         section_name: sectionName,
+        section_type: secType,
+        section_content: secContent,
         job_description_text: jobDescription,
         recommendations: recommendations
       });

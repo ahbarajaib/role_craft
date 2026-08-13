@@ -175,9 +175,24 @@ class RewriteService:
             clean_t = t.replace("[", "").replace("]", "").strip()
             return " ".join(clean_t.lower().split())
 
-        # 2. Find target section
+        def _section_matches(s_title: str, target_name: str) -> bool:
+            n1 = _normalize_title(s_title)
+            n2 = _normalize_title(target_name)
+            if n1 == n2:
+                return True
+            if n1.rstrip("s") == n2.rstrip("s"):
+                return True
+            if n1 in n2 or n2 in n1:
+                return True
+            is_exp1 = any(kw in n1 for kw in ["experience", "work", "employment", "career"])
+            is_exp2 = any(kw in n2 for kw in ["experience", "work", "employment", "career"])
+            if is_exp1 and is_exp2:
+                return True
+            return False
+
+        # 2. Find target section with fuzzy matching
         target_sec = next(
-            (s for s in sections if _normalize_title(s.title) == _normalize_title(section_name)),
+            (s for s in sections if _section_matches(s.title, section_name)),
             None,
         )
         if not target_sec:
