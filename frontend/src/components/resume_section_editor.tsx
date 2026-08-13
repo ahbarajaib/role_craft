@@ -17,6 +17,8 @@ import {
   Code,
   FileText,
   Layers,
+  Zap,
+  Lock,
 } from "lucide-react";
 import { ResumeSection } from "@/lib/structured_resume_api";
 
@@ -130,14 +132,24 @@ export default function ResumeSectionEditor({
           <button
             type="button"
             onClick={() => onChange({ ...section, visible: !section.visible })}
-            className={`p-1.5 rounded-xl transition-all cursor-pointer ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 border select-none ${
               section.visible
-                ? "text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
-                : "text-slate-400 bg-slate-100 dark:bg-slate-800"
+                ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/20"
+                : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border-slate-300 dark:border-slate-700"
             }`}
-            title={section.visible ? "Hide section in output" : "Show section in output"}
+            title={section.visible ? "AI Tailoring ENABLED for this section. Click to Lock/Disable." : "AI Tailoring DISABLED for this section. Click to Enable."}
           >
-            {section.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            {section.visible ? (
+              <>
+                <Zap className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />
+                <span>AI Tailor ON</span>
+              </>
+            ) : (
+              <>
+                <Lock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                <span>AI Tailor OFF</span>
+              </>
+            )}
           </button>
 
           <button

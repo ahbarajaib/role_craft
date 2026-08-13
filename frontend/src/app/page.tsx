@@ -3318,6 +3318,65 @@ export default function Home() {
                 )}
               </div>
 
+              {/* Pre-Analysis Section AI Tailoring Controls Box (on parsed content before analyze) */}
+              {masterResume && masterResume.sections && masterResume.sections.length > 0 && (
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950/80 to-slate-950 border border-indigo-500/30 text-white space-y-3 shadow-lg">
+                  <div className="flex items-center justify-between border-b border-indigo-500/20 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <SlidersHorizontal className="h-4 w-4 text-indigo-400 animate-pulse" />
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-200">
+                        Pre-Analysis AI Section Controls
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleOpenMasterResume}
+                      className="text-[10px] font-extrabold text-indigo-300 hover:text-white bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/30 px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      <Edit className="h-3 w-3" />
+                      <span>Edit Master</span>
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {masterResume.sections.map((sec, secIdx) => {
+                      const isEnabled = tailoringSectionToggles[sec.section_title] !== undefined
+                        ? tailoringSectionToggles[sec.section_title]
+                        : sec.visible !== false && !(sec.section_title.toLowerCase().includes("education") || sec.section_title.toLowerCase().includes("certification"));
+
+                      return (
+                        <button
+                          key={`${sec.section_title}-${secIdx}`}
+                          type="button"
+                          onClick={() => handleToggleSectionTailoring(sec.section_title)}
+                          className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border select-none ${
+                            isEnabled
+                              ? "bg-indigo-600 text-white border-indigo-400/50 shadow-md shadow-indigo-600/30 hover:bg-indigo-500"
+                              : "bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700 hover:text-slate-200 opacity-75"
+                          }`}
+                          title={isEnabled ? `AI Tailoring ENABLED for ${sec.section_title}. Click to Lock/Disable.` : `AI Tailoring DISABLED for ${sec.section_title}. Click to Enable.`}
+                        >
+                          {isEnabled ? (
+                            <>
+                              <Zap className="h-3 w-3 text-amber-300 fill-amber-300 shrink-0" />
+                              <span>{sec.section_title}: ON</span>
+                            </>
+                          ) : (
+                            <>
+                              <Lock className="h-3 w-3 text-slate-500 shrink-0" />
+                              <span>{sec.section_title}: OFF</span>
+                            </>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-slate-400 italic">
+                    💡 Toggle sections OFF before analyzing to lock them 100% untouched as original text.
+                  </p>
+                </div>
+              )}
+
               {/* Job Description Input Container */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
