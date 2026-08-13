@@ -31,6 +31,9 @@ from app.services.section_service import SectionService
 from app.services.structured_resume_text_service import serialize_to_sections
 
 
+from app.services.analysis_cache import global_analysis_cache
+
+
 class ResumeAnalysisWorkflow:
     """Orchestrates the full recruiter-centric resume analysis pipeline."""
 
@@ -86,6 +89,22 @@ class ResumeAnalysisWorkflow:
         document_id: str,
         job_description_text: str,
     ) -> ResumeAnalysisResult:
+        # Build cache key from full resume content + JD
+        full_resume_text = "\n".join(
+            " ".join(p.text for p in s.paragraphs) for s in sections
+        )
+        cache_key = global_analysis_cache.compute_key(full_resume_text, job_description_text)
+        cached_result = global_analysis_cache.get(cache_key)
+        if cached_result:
+            logger.info("⚡ Returning instant cached analysis result in ~5ms")
+            # Maintain document_id for caller
+            return ResumeAnalysisResult(
+                document_id=document_id,
+                overall_summary=cached_result.overall_summary,
+                sections=cached_result.sections,
+                top_strengths=cached_result.top_strengths,
+                top_improvements=cached_result.top_improvements,
+            )
 
         # Step 2 – Parse job description
         job_description = self._jd.parse(job_description_text)
@@ -362,6 +381,7 @@ class ResumeAnalysisWorkflow:
             overall_coverage=result.overall_summary.overall_coverage_percentage,
         )
 
+        global_analysis_cache.set(cache_key, result)
         return result
 
 

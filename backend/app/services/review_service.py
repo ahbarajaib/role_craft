@@ -43,6 +43,7 @@ class ReviewService:
             instructions=REVIEW_INSTRUCTIONS,
             input_text=input_text,
             response_format=UnifiedReviewResult,
+            max_output_tokens=800,
         )
 
         logger.info(

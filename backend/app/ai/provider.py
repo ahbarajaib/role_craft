@@ -68,41 +68,30 @@ class OpenAIProvider:
         instructions: str,
         input_text: str,
         response_format: type[T],
+        max_output_tokens: int | None = None,
     ) -> T:
-        """Call the Responses API and return a validated Pydantic model.
-
-        Parameters
-        ----------
-        instructions:
-            System-level instructions (role, rules, output contract).
-        input_text:
-            User message containing the data to analyse.
-        response_format:
-            A Pydantic model class.  The SDK uses its JSON schema to
-            constrain the model's output and parses the result automatically.
-
-        Raises
-        ------
-        AIProviderError
-            Wraps any ``openai.APIError`` so callers do not need to import
-            the openai package.
-        """
+        """Call the Responses API and return a validated Pydantic model."""
         logger.debug(
             "Calling OpenAI Responses API",
             model=self._model,
             response_format=response_format.__name__,
+            max_output_tokens=max_output_tokens,
         )
 
+        kwargs = {
+            "model": self._model,
+            "instructions": instructions,
+            "input": input_text,
+            "text_format": response_format,
+            "temperature": 0,
+            "store": False,
+            "timeout": self._timeout,
+        }
+        if max_output_tokens is not None:
+            kwargs["max_output_tokens"] = max_output_tokens
+
         try:
-            response = self._client.responses.parse(
-                model=self._model,
-                instructions=instructions,
-                input=input_text,
-                text_format=response_format,
-                temperature=0,  # Minimise variability for consistent analysis
-                store=False,    # Do not store conversation data on OpenAI servers
-                timeout=self._timeout,
-            )
+            response = self._client.responses.parse(**kwargs)
         except APITimeoutError as exc:
             logger.error(f"OpenAI API request timed out: {exc}")
             raise AIProviderError(
