@@ -470,28 +470,7 @@ class RewriteService:
         user_instructions: str | None = None,
         metric_inputs: dict[str, str] | None = None,
     ) -> "RewriteSectionResponse":
-        """Rewrite a single section using JSON content instead of a DOCX file.
-
-        This is the JSON-first path for the unified architecture. Section content
-        comes directly from the StructuredResume JSON — no DOCX file needed on disk.
-
-        ``evidence_text`` is the full resume as plain text (for evidence gating).
-        """
-        # Serialize section content to plain text for AI processing
-        lines: list[str] = []
-
-        if section_type == "summary":
-            text = section_content.get("text") or ""
-            if text.strip():
-                lines.append(text.strip())
-
-        elif section_type == "skills":
-            categories = section_content.get("categories") or []
-            for cat in categories:
-                cat_name = cat.get("category_name") or ""
-                skills = cat.get("skills") or []
-                if cat_name and skills:
-                    lines.append(f"{cat_name}: {', '.join(skills)}")
+        """Rewrite a single section using JSON content instead of a DOCX file."""
 
         if section_type == "experience":
             entries = section_content.get("entries") or []
@@ -504,10 +483,7 @@ class RewriteService:
                     changes=[],
                 )
 
-            orig_blocks: list[str] = []
-            rewritten_blocks: list[str] = []
-
-            for entry in entries:
+            def _process_exp_entry(entry):
                 job_title = entry.get("job_title", "Experience Role")
                 company = entry.get("company", "")
                 loc = entry.get("location", "")
@@ -526,7 +502,7 @@ class RewriteService:
                 if meta:
                     entry_orig_lines.append(meta)
                 entry_orig_lines.extend([f"• {b}" for b in bullets])
-                orig_blocks.append("\n".join(entry_orig_lines))
+                orig_block = "\n".join(entry_orig_lines)
 
                 if bullets:
                     entry_text = "\n".join([f"• {b}" for b in bullets])
@@ -545,22 +521,26 @@ class RewriteService:
                     if meta:
                         rewritten_entry_lines.append(meta)
                     rewritten_entry_lines.append(entry_res.rewritten_text)
-                    rewritten_blocks.append("\n".join(rewritten_entry_lines))
+                    rewritten_block = "\n".join(rewritten_entry_lines)
                 else:
-                    rewritten_blocks.append("\n".join(entry_orig_lines))
+                    rewritten_block = orig_block
+                return orig_block, rewritten_block
 
-            full_original = "\n\n".join(orig_blocks)
-            full_rewritten = "\n\n".join(rewritten_blocks)
+            with ThreadPoolExecutor(max_workers=8) as executor:
+                results = list(executor.map(_process_exp_entry, entries))
+
+            full_original = "\n\n".join([r[0] for r in results])
+            full_rewritten = "\n\n".join([r[1] for r in results])
 
             return RewriteSectionResponse(
                 section=section_name,
                 original_text=full_original,
                 rewritten_text=full_rewritten,
-                reasoning="All experience entries tailored with Google XYZ formula & target ATS keywords.",
+                reasoning="All experience entries tailored concurrently.",
                 changes=[
                     RewriteChangeItem(
                         type=RewriteChangeType.KEYWORD,
-                        description="Preserved all role entries and tailored bullet points with target job keywords."
+                        description="Preserved all role entries and tailored bullet points concurrently."
                     )
                 ],
             )
@@ -576,10 +556,7 @@ class RewriteService:
                     changes=[],
                 )
 
-            orig_blocks: list[str] = []
-            rewritten_blocks: list[str] = []
-
-            for entry in entries:
+            def _process_proj_entry(entry):
                 pname = entry.get("name", "Project")
                 url = entry.get("url", "")
                 techs = entry.get("technologies") or []
@@ -594,7 +571,7 @@ class RewriteService:
                 if tech_line:
                     entry_orig_lines.append(tech_line)
                 entry_orig_lines.extend([f"• {b}" for b in bullets])
-                orig_blocks.append("\n".join(entry_orig_lines))
+                orig_block = "\n".join(entry_orig_lines)
 
                 if bullets:
                     entry_text = "\n".join([f"• {b}" for b in bullets])
@@ -613,22 +590,26 @@ class RewriteService:
                     if tech_line:
                         rewritten_entry_lines.append(tech_line)
                     rewritten_entry_lines.append(entry_res.rewritten_text)
-                    rewritten_blocks.append("\n".join(rewritten_entry_lines))
+                    rewritten_block = "\n".join(rewritten_entry_lines)
                 else:
-                    rewritten_blocks.append("\n".join(entry_orig_lines))
+                    rewritten_block = orig_block
+                return orig_block, rewritten_block
 
-            full_original = "\n\n".join(orig_blocks)
-            full_rewritten = "\n\n".join(rewritten_blocks)
+            with ThreadPoolExecutor(max_workers=8) as executor:
+                results = list(executor.map(_process_proj_entry, entries))
+
+            full_original = "\n\n".join([r[0] for r in results])
+            full_rewritten = "\n\n".join([r[1] for r in results])
 
             return RewriteSectionResponse(
                 section=section_name,
                 original_text=full_original,
                 rewritten_text=full_rewritten,
-                reasoning="All project entries tailored with stack technologies & target ATS keywords.",
+                reasoning="All project entries tailored concurrently.",
                 changes=[
                     RewriteChangeItem(
                         type=RewriteChangeType.KEYWORD,
-                        description="Preserved all project entries and tailored bullet points with target job keywords."
+                        description="Preserved all project entries and tailored bullet points concurrently."
                     )
                 ],
             )
