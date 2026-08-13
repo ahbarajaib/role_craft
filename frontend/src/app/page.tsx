@@ -1683,9 +1683,9 @@ export default function Home() {
         setAnalysisResult(result);
       }
 
-      // Include both 'improve' and 'keep' sections (such as Professional Experience and Skills) for AI tailoring, excluding 'reduce_emphasis'
+      // Tailor ONLY sections classified as needing improvement ('improve'), keeping 'keep' as-is sections untouched unless explicitly rewritten by the user
       const sectionsToTailor = (result.sections || []).filter(
-        (s: any) => (s.review_status as string) !== "reduce_emphasis"
+        (s: any) => s.review_status === "improve" || (s.recommendations && s.recommendations.length > 0)
       );
 
       console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToTailor.map((s: any) => s.section_name));
