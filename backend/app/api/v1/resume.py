@@ -265,10 +265,14 @@ def batch_rewrite_sections(
     download_url = None
     if rewrites_map:
         try:
-            accepted_items = [
-                ApplyRewriteItem(section=sec_name, rewritten_text=text)
-                for sec_name, text in rewrites_map.items()
-            ]
+            seen_keys = set()
+            accepted_items = []
+            for sec_name, text in rewrites_map.items():
+                norm_k = sec_name.lower().strip()
+                if norm_k not in seen_keys and text and text.strip():
+                    seen_keys.add(norm_k)
+                    accepted_items.append(ApplyRewriteItem(section=sec_name, rewritten_text=text))
+
             patch_res = patch_service.apply_rewrites(
                 document_id=doc_id,
                 accepted_rewrites=accepted_items,

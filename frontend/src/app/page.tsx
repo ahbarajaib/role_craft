@@ -5123,11 +5123,11 @@ export default function Home() {
               </button>
             )}
 
-            {/* Download buttons — shown after successful apply */}
-            {isPatchingApplied && downloadUrl && (
+            {/* Download buttons — shown after successful apply or batch tailor */}
+            {isPatchingApplied && (downloadUrl || downloadId || documentId) && (
               <>
                 <a
-                  href={`${API_BASE_URL}${downloadUrl}?filename=${encodeURIComponent(
+                  href={`${API_BASE_URL}${downloadUrl || `/api/v1/resume/download/${downloadId || documentId}`}?filename=${encodeURIComponent(
                     buildResumeFilename(
                       jobDescription,
                       user?.name,
@@ -5144,7 +5144,7 @@ export default function Home() {
                 </a>
 
                 <a
-                  href={`${API_BASE_URL}${downloadUrl}/pdf?filename=${encodeURIComponent(
+                  href={`${API_BASE_URL}${downloadUrl ? `${downloadUrl}/pdf` : `/api/v1/resume/download/${downloadId || documentId}/pdf`}?filename=${encodeURIComponent(
                     buildResumeFilename(
                       jobDescription,
                       user?.name,
