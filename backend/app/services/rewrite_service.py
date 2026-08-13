@@ -6,6 +6,7 @@ are invented unless explicitly supported by evidence elsewhere in the document.
 """
 
 import re
+from concurrent.futures import ThreadPoolExecutor
 from loguru import logger
 
 from app.ai.provider import OpenAIProvider
