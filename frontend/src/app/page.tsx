@@ -1813,63 +1813,49 @@ export default function Home() {
         newRewrites["header"] = result.overall_summary.job_title;
       }
 
-      // 2. Rewrite sections in parallel and stream results to section cards immediately as they finish
-      await Promise.all(
-        sectionsToTailor.map(async (sec: any) => {
-          try {
-            const res = await rewriteSection({
-              document_id: documentId,
-              section_name: sec.section_name,
-              job_description_text: jobDescription,
-              recommendations: sec.recommendations || [],
-            });
-            console.log(`✨ [RoleCraft Audit] Auto-Tailored section "${sec.section_name}":`, res.rewritten_text);
-            const lowerKey = sec.section_name.toLowerCase();
-            newRewrites[lowerKey] = res.rewritten_text;
-
-            // Stream update directly to UI section card right away
-            setRewrittenSections((prev) => ({
-              ...prev,
-              [lowerKey]: res.rewritten_text,
-            }));
-          } catch (err) {
-            console.error(`❌ [RoleCraft Audit] Failed auto rewrite for ${sec.section_name}:`, err);
-          } finally {
-            setInlineLoadingSections((prev) => ({ ...prev, [sec.section_name]: false }));
+      // 2. Prepare fast batch items with structured memory for server-side 16-worker parallel execution
+      const batchItems = sectionsToTailor.map((sec: any) => {
+        let secContent: any = undefined;
+        let secType: any = sec.section_type;
+        if (masterResume && masterResume.sections) {
+          const matchedSec = masterResume.sections.find((ms: any) => {
+            const msTitle = (ms.section_title || "").toLowerCase();
+            const sTitle = sec.section_name.toLowerCase();
+            return msTitle === sTitle || msTitle.includes(sTitle) || sTitle.includes(msTitle) ||
+              (ms.section_type === "experience" && (sTitle.includes("experience") || sTitle.includes("work")));
+          });
+          if (matchedSec) {
+            secContent = matchedSec.content;
+            secType = matchedSec.section_type;
           }
-        })
-      );
+        }
+        return {
+          section_name: sec.section_name,
+          section_type: secType,
+          section_content: secContent,
+          recommendations: sec.recommendations || [],
+        };
+      });
 
-      if (Object.keys(newRewrites).length > 0) {
-        setRewrittenSections(newRewrites);
+      const { batchRewriteSections } = require("@/lib/api");
+      console.log("🚀 [RoleCraft Audit] Dispatching 16-worker Batch Parallel Tailor Request:", batchItems);
+      const batchRes = await batchRewriteSections({
+        document_id: documentId,
+        job_description_text: jobDescription,
+        sections: batchItems,
+      });
 
-        const acceptedItems = Object.entries(newRewrites).map(([secKey, text]) => {
-          const origSec = (result.sections || []).find(
-            (s: any) => s.section_name.toLowerCase() === secKey
-          );
-          return {
-            section: origSec ? origSec.section_name : (secKey === "header" ? "header" : secKey),
-            rewritten_text: text,
-          };
-        });
-
-        console.log("💾 [RoleCraft Audit] Submitting DOCX Patch Payload:", acceptedItems);
-
-        const applyRes = await applyMutation.mutateAsync({
-          document_id: documentId,
-          accepted_rewrites: acceptedItems,
-        });
-
-        console.log("🎉 [RoleCraft Audit] DOCX Patch Applied Successfully! Download ID:", applyRes.download_id);
-
-        setDownloadId(applyRes.download_id);
-        setDownloadUrl(applyRes.download_url);
+      if (batchRes.rewrites && Object.keys(batchRes.rewrites).length > 0) {
+        setRewrittenSections((prev) => ({ ...prev, ...newRewrites, ...batchRes.rewrites }));
+        if (batchRes.download_id) setDownloadId(batchRes.download_id);
+        if (batchRes.download_url) setDownloadUrl(batchRes.download_url);
         setIsPatchingApplied(true);
 
         const parts: string[] = [];
         if (result.overall_summary?.job_title) parts.push("Target Role");
         if (sectionsToTailor.length > 0) parts.push(`${sectionsToTailor.length} section${sectionsToTailor.length > 1 ? "s" : ""}`);
-        setSuccessNotification(`⚡ 1-Click Auto-Tailored: Resume Ready! (${parts.join(", ")})`);
+        setSuccessNotification(`⚡ 1-Click Auto-Tailored in ~2s: Resume Ready! (${parts.join(", ")})`);
+      }
 
         // Trigger full structured resume AI tailoring for preview & download
         try {
@@ -1887,8 +1873,6 @@ export default function Home() {
           }
         } catch (te) {
           console.warn("[RoleCraft] Structured tailor warning:", te);
-        } finally {
-          setIsAutoTailoring(false);
         }
 
         // ── Auto-generate Tailored Cover Letter asynchronously in background ──
@@ -1937,7 +1921,6 @@ export default function Home() {
             setIsGeneratingCoverLetter(false);
           }
         })();
-      }
     } catch (err: any) {
       console.error("❌ [RoleCraft Audit] Auto-tailor error:", err);
       setError(err?.message || "Auto-tailor failed. Please try again.");

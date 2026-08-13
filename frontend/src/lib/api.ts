@@ -157,6 +157,44 @@ export async function rewriteSection(
   return response.json();
 }
 
+export interface BatchRewriteItem {
+  section_name: string;
+  section_type?: string;
+  section_content?: any;
+  recommendations?: string[];
+}
+
+export interface BatchRewriteRequest {
+  document_id?: string;
+  job_description_text: string;
+  sections: BatchRewriteItem[];
+  user_instructions?: string;
+  metric_inputs?: Record<string, string>;
+}
+
+export interface BatchRewriteResponse {
+  rewrites: Record<string, string>;
+  download_id?: string;
+  download_url?: string;
+}
+
+export async function batchRewriteSections(
+  request: BatchRewriteRequest
+): Promise<BatchRewriteResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/resume/batch-rewrite`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || "Failed to execute batch rewrite");
+  }
+
+  return response.json();
+}
+
 export interface ApplyRewriteItem {
   section: string;
   rewritten_text: string;

@@ -27,7 +27,8 @@ from app.core.database import get_db
 from app.dependencies.common import get_settings
 from app.dependencies.resume_analysis import get_resume_analysis_workflow, get_rewrite_service, get_patch_service, get_cover_letter_service
 from app.schemas.resume_analysis import ResumeAnalysisRequest, ResumeAnalysisResult
-from app.schemas.rewrite import RewriteSectionRequest, RewriteSectionResponse
+from app.schemas.rewrite import RewriteSectionRequest, RewriteSectionResponse, BatchRewriteRequest, BatchRewriteResponse
+from app.schemas.patch import ApplyRewriteItem
 from app.schemas.patch import ApplyRewriteRequest, ApplyRewriteResponse
 from app.schemas.cover_letter import CoverLetterRequest, CoverLetterResponse, UpdateCoverLetterRequest
 from app.services.resume_analysis_workflow import ResumeAnalysisWorkflow
@@ -235,6 +236,52 @@ def rewrite_section(
         recommendations=body.recommendations,
         user_instructions=body.user_instructions,
         metric_inputs=body.metric_inputs,
+    )
+
+
+@router.post(
+    "/batch-rewrite",
+    response_model=BatchRewriteResponse,
+    summary="Rewrite multiple sections concurrently in parallel",
+    dependencies=[Depends(verify_premium_permission)],
+)
+def batch_rewrite_sections(
+    body: BatchRewriteRequest,
+    service: Annotated[RewriteService, Depends(get_rewrite_service)],
+    patch_service: Annotated[PatchService, Depends(get_patch_service)],
+    user: Annotated[User, Depends(get_current_user)],
+) -> BatchRewriteResponse:
+    """Batch parallel section tailoring endpoint. Executes rewrites concurrently across worker threads."""
+    doc_id = body.document_id or f"base/{user.id}"
+    rewrites_map = service.batch_rewrite(
+        document_id=doc_id,
+        job_description_text=body.job_description_text,
+        sections=body.sections,
+        user_instructions=body.user_instructions,
+        metric_inputs=body.metric_inputs,
+    )
+
+    download_id = None
+    download_url = None
+    if rewrites_map:
+        try:
+            accepted_items = [
+                ApplyRewriteItem(section=sec_name, rewritten_text=text)
+                for sec_name, text in rewrites_map.items()
+            ]
+            patch_res = patch_service.apply_rewrites(
+                document_id=doc_id,
+                accepted_rewrites=accepted_items,
+            )
+            download_id = patch_res.download_id
+            download_url = patch_res.download_url
+        except Exception as patch_err:
+            logger.error(f"Batch patch error: {patch_err}")
+
+    return BatchRewriteResponse(
+        rewrites=rewrites_map,
+        download_id=download_id,
+        download_url=download_url,
     )
 
 

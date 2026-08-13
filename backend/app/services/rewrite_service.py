@@ -777,3 +777,59 @@ class RewriteService:
         result.original_text = original_text
         result.section = section_name
         return result
+
+    def batch_rewrite(
+        self,
+        document_id: str | None,
+        job_description_text: str,
+        sections: list,
+        user_instructions: str | None = None,
+        metric_inputs: dict[str, str] | None = None,
+    ) -> dict[str, str]:
+        """Execute parallel batch AI tailoring across multiple sections concurrently."""
+        results_map: dict[str, str] = {}
+
+        def _process_item(item):
+            sec_name = item.section_name
+            sec_type = item.section_type
+            sec_content = item.section_content
+            recs = item.recommendations or []
+
+            try:
+                if sec_content is not None and sec_type is not None:
+                    res = self.rewrite_from_json(
+                        section_name=sec_name,
+                        section_type=sec_type,
+                        section_content=sec_content,
+                        evidence_text="",
+                        job_description_text=job_description_text,
+                        recommendations=recs,
+                        user_instructions=user_instructions,
+                        metric_inputs=metric_inputs,
+                    )
+                elif document_id:
+                    res = self.rewrite(
+                        document_id=document_id,
+                        section_name=sec_name,
+                        job_description_text=job_description_text,
+                        recommendations=recs,
+                        user_instructions=user_instructions,
+                        metric_inputs=metric_inputs,
+                    )
+                else:
+                    return sec_name, ""
+
+                return sec_name, res.rewritten_text
+            except Exception as err:
+                logger.error(f"Batch rewrite error for '{sec_name}': {err}")
+                return sec_name, ""
+
+        with ThreadPoolExecutor(max_workers=16) as executor:
+            batch_results = list(executor.map(_process_item, sections))
+
+        for sec_name, text in batch_results:
+            if text:
+                results_map[sec_name.lower()] = text
+                results_map[sec_name] = text
+
+        return results_map

@@ -102,3 +102,38 @@ class RewriteSectionResponse(BaseModel):
     changes: list[RewriteChangeItem] = Field(
         description="Categorized changes explaining keyword insertions or wording refinements."
     )
+
+
+class BatchRewriteItemRequest(BaseModel):
+    """Detail for a single section to rewrite in a batch payload."""
+
+    section_name: str
+    section_type: Optional[str] = None
+    section_content: Optional[Any] = None
+    recommendations: list[str] = Field(default=[])
+
+
+class BatchRewriteRequest(BaseModel):
+    """Request body for POST /resume/batch-rewrite."""
+
+    document_id: Optional[str] = None
+    job_description_text: str
+    sections: list[BatchRewriteItemRequest]
+    user_instructions: Optional[str] = None
+    metric_inputs: Optional[dict[str, str]] = None
+
+
+class BatchRewriteResponse(BaseModel):
+    """Structured response returned by POST /resume/batch-rewrite."""
+
+    rewrites: dict[str, str] = Field(
+        description="Dictionary mapping section names to their rewritten text."
+    )
+    download_id: Optional[str] = Field(
+        default=None,
+        description="Generated DOCX download ID if patching was applied."
+    )
+    download_url: Optional[str] = Field(
+        default=None,
+        description="Download URL for the patched DOCX file."
+    )
