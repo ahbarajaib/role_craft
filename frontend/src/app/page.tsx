@@ -42,7 +42,8 @@ import {
   History,
   Plus,
   Copy,
-  Check
+  Check,
+  CheckCircle2
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
@@ -3130,9 +3131,10 @@ export default function Home() {
                   >
                     <input
                       type="file"
+                      title=""
                       accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
                       onChange={handleFileChange}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     />
                     <UploadCloud className="h-10 w-10 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 mx-auto mb-3 transition-colors" />
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
@@ -3143,27 +3145,61 @@ export default function Home() {
                     </p>
                   </div>
                 ) : isUploading ? (
-                  <div className="p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 shadow-md space-y-3 relative overflow-hidden">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                        <Sparkles className="h-4 w-4 animate-spin text-indigo-500 shrink-0" />
-                        <span>AI Parsing & Uploading Resume...</span>
+                  <div className="relative overflow-hidden p-5 rounded-2xl bg-slate-900/95 border border-indigo-500/30 shadow-2xl space-y-4 text-white">
+                    {/* Ambient Glow Background Effect */}
+                    <div className="absolute -top-10 -right-10 w-36 h-36 bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-emerald-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" />
+                    <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-gradient-to-tr from-purple-500/15 via-indigo-500/15 to-teal-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" />
+
+                    {/* Header & Stage Chip */}
+                    <div className="flex items-start justify-between gap-3 relative z-10">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/30 ring-2 ring-indigo-400/20">
+                          <Sparkles className="h-5 w-5 text-white animate-spin" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-black tracking-tight text-white flex items-center gap-2">
+                            <span>AI Resume Extraction</span>
+                          </h4>
+                          <p className="text-[11px] text-slate-400 font-medium truncate max-w-[170px]" title={file.name}>
+                            {file.name}
+                          </p>
+                        </div>
                       </div>
-                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate max-w-[160px]">
-                        {file.name}
-                      </span>
+
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-[10px] font-extrabold text-indigo-300 uppercase tracking-wider shrink-0 shadow-sm animate-pulse">
+                        <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-ping shrink-0" />
+                        <span>Parsing Resume</span>
+                      </div>
                     </div>
 
-                    {/* Animated Shimmer Bar */}
-                    <div className="w-full bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5 border border-indigo-200 dark:border-indigo-800/60">
-                      <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 h-full rounded-full animate-pulse w-4/5 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                    {/* Animated Shimmer Bar with Glowing Leading Beam */}
+                    <div className="space-y-1.5 relative z-10">
+                      <div className="w-full bg-slate-800/90 h-3 rounded-full overflow-hidden p-0.5 border border-indigo-500/30 shadow-inner">
+                        <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full rounded-full animate-pulse w-5/6 relative overflow-hidden shadow-[0_0_15px_rgba(99,102,241,0.75)]">
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                        <span>Extracting text, skills & experience</span>
+                        <span className="text-indigo-400">Processing...</span>
                       </div>
                     </div>
 
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 text-left">
-                      Extracting text, skills, experience entries, and contact info into unified Master Resume format...
-                    </p>
+                    {/* AI Pipeline Step Indicator Badges */}
+                    <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-800/80 relative z-10">
+                      <div className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-1 rounded-lg">
+                        <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-400" />
+                        <span className="truncate">DOCX Text</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] font-semibold text-indigo-300 bg-indigo-950/60 border border-indigo-500/40 px-2 py-1 rounded-lg animate-pulse">
+                        <Cpu className="h-3 w-3 shrink-0 text-indigo-400 animate-spin" />
+                        <span className="truncate">Roles & Skills</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 bg-slate-800/50 border border-slate-700/50 px-2 py-1 rounded-lg">
+                        <Sparkles className="h-3 w-3 shrink-0 text-slate-500" />
+                        <span className="truncate">Master JSON</span>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
