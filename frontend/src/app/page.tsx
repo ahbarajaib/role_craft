@@ -4054,6 +4054,77 @@ export default function Home() {
 
                     return (
                       <>
+                        {/* AI Section Tailoring Master Controls Bar */}
+                        {analysisResult?.sections && analysisResult.sections.length > 0 && (
+                          <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/90 via-slate-900 to-purple-950/90 border border-indigo-500/30 text-white shadow-xl space-y-3">
+                            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-indigo-500/20 pb-2.5">
+                              <div className="flex items-center gap-2">
+                                <SlidersHorizontal className="h-4 w-4 text-indigo-400 animate-pulse" />
+                                <span className="text-xs font-black tracking-tight text-white uppercase">
+                                  ⚡ AI Section Controls (Toggle ON/OFF for Auto-Tailor)
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const allOn: Record<string, boolean> = {};
+                                    (analysisResult.sections || []).forEach((s) => { allOn[s.section_name] = true; });
+                                    setTailoringSectionToggles(allOn);
+                                  }}
+                                  className="text-[10px] font-extrabold text-indigo-300 hover:text-white bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/30 px-2 py-0.5 rounded-md transition-all cursor-pointer"
+                                >
+                                  Enable All
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const allOff: Record<string, boolean> = {};
+                                    (analysisResult.sections || []).forEach((s) => { allOff[s.section_name] = false; });
+                                    setTailoringSectionToggles(allOff);
+                                  }}
+                                  className="text-[10px] font-extrabold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 py-0.5 rounded-md transition-all cursor-pointer"
+                                >
+                                  Disable All
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Section Toggle Chips */}
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              {(analysisResult.sections || []).map((sec) => {
+                                const isEnabled = tailoringSectionToggles[sec.section_name] !== undefined
+                                  ? tailoringSectionToggles[sec.section_name]
+                                  : !(sec.section_name.toLowerCase().includes("education") || sec.section_name.toLowerCase().includes("certification"));
+                                return (
+                                  <button
+                                    key={sec.section_name}
+                                    type="button"
+                                    onClick={() => handleToggleSectionTailoring(sec.section_name)}
+                                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none border ${
+                                      isEnabled
+                                        ? "bg-indigo-600 text-white border-indigo-400/50 shadow-md shadow-indigo-600/30 hover:bg-indigo-500"
+                                        : "bg-slate-800/80 text-slate-400 border-slate-700 hover:bg-slate-700 hover:text-slate-200"
+                                    }`}
+                                  >
+                                    {isEnabled ? (
+                                      <>
+                                        <Zap className="h-3 w-3 text-amber-300 fill-amber-300" />
+                                        <span>{sec.section_name}: ON</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Lock className="h-3 w-3 text-slate-500" />
+                                        <span>{sec.section_name}: OFF</span>
+                                      </>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Improve Sections (🟡) */}
                         {sectionsToImprove.length > 0 && (
                           <div className="space-y-3">
