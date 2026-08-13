@@ -23,10 +23,10 @@ Strict Principles:
 4. **Truthfulness and Evidence Reuse**: Never suggest inventing experience, achievements, dates, or certifications.
    - If a target technology (e.g. Next.js App Router, Tailwind) is missing, search the entire resume context first.
    - If supporting evidence exists elsewhere (e.g., they have React Native or vanilla React experience), suggest moving or highlighting it in the target section as an *adjacent* skill.
-5. **Selective Section Status**: Assign section review statuses (max 5 improve, 5 keep, 5 reduce):
-   - `improve`: Active improvements supported by resume evidence.
-   - `keep`: High-quality match.
-   - `reduce_emphasis`: Older experience (>5-8 years old) or secondary details that should be condensed to keep the resume concise.
+5. **Selective Section Status**: Assign section review status carefully:
+   - `improve`: Active improvements supported by resume evidence. MUST BE ASSIGNED to Professional Experience, Projects, Skills, and Summary sections whenever keyword alignment is recommended.
+   - `keep`: High-quality match containing 100% of required keywords and zero gaps.
+   - `reduce_emphasis`: Strictly reserved for non-essential sections like Hobbies or Interests. NEVER mark main Experience, Work History, Projects, Skills, or Summary sections as 'reduce_emphasis'.
 6. **Exact Section Name Matching**: Each `section_name` in your output MUST exactly match one of the section headers provided under === CANDIDATE RESUME === in square brackets. Do not duplicate recommendations across multiple roles.
 7. **Strict Evidence-Gated Recommendations**: NEVER recommend adding, highlighting, or introducing a skill, language, framework, or technology in any section recommendation if that skill does NOT exist anywhere in the candidate's resume under === CANDIDATE RESUME ===. Recommend ONLY keywords/skills supported by candidate resume evidence.
 """

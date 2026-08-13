@@ -235,10 +235,17 @@ class ResumeAnalysisWorkflow:
             processed_section_ids.add(section_item.title)
             section_comparison = _find_comparison(section_item, comparison_by_name)
 
+            def _sanitize_status(title: str, status: ReviewStatus) -> ReviewStatus:
+                norm = title.lower()
+                is_core = any(kw in norm for kw in ["experience", "work", "employment", "career", "role", "developer", "engineer", "executive", "project", "skill", "summary", "profile"])
+                if is_core and status == ReviewStatus.REDUCE_EMPHASIS:
+                    return ReviewStatus.IMPROVE
+                return status
+
             reviewed_sections.append(
                 ReviewedSection(
                     section_name=section_item.title,
-                    review_status=s_review.review_status,
+                    review_status=_sanitize_status(section_item.title, s_review.review_status),
                     rewrite_worthwhile=s_review.rewrite_worthwhile,
                     priority=s_review.priority,
                     reason=s_review.reason,
@@ -263,7 +270,7 @@ class ResumeAnalysisWorkflow:
                         reviewed_sections.append(
                             ReviewedSection(
                                 section_name=s.title,
-                                review_status=exp_review.review_status,
+                                review_status=_sanitize_status(s.title, exp_review.review_status),
                                 rewrite_worthwhile=exp_review.rewrite_worthwhile,
                                 priority=exp_review.priority,
                                 reason=exp_review.reason,
