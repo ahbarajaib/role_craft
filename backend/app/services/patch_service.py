@@ -493,17 +493,24 @@ class PatchService:
                     (p for i, p in enumerate(top_paras) if i > 0 and any(r in p.text.lower() for r in role_titles)),
                     None,
                 )
-                if title_para:
-                    lines = (rewrite_item.rewritten_text or "").strip().split("\n")
-                    new_title_text = lines[0] if lines else ""
-                    if new_title_text:
+                lines = (rewrite_item.rewritten_text or "").strip().split("\n")
+                new_title_text = lines[0] if lines else ""
+
+                if new_title_text:
+                    if title_para:
                         _set_paragraph_text_preserve_fmt(title_para, new_title_text, default_font=doc_font)
                         sections_updated += 1
-                else:
-                    logger.info(
-                        "Skipping header title patch: no existing role/title paragraph found in top area. "
-                        "Refusing to overwrite candidate name."
-                    )
+                    elif len(all_paras) > 0:
+                        # Candidate DOCX does not have an existing title subtitle line under name.
+                        # Insert a new target job title subtitle paragraph right below candidate name (all_paras[0]).
+                        name_para = all_paras[0]
+                        new_p_elem = etree.Element(qn("w:p"))
+                        name_para._p.addnext(new_p_elem)
+                        new_p = docx.text.paragraph.Paragraph(new_p_elem, doc)
+                        _set_paragraph_text_preserve_fmt(new_p, new_title_text, default_font=doc_font)
+                        for run in new_p.runs:
+                            run.font.bold = True
+                        sections_updated += 1
                 continue
 
             # The first index is the section heading — we never touch its text.
