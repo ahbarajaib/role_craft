@@ -797,6 +797,13 @@ class RewriteService:
             recs = item.recommendations or []
 
             try:
+                # Direct header pass-through: target job title designation does not require LLM call
+                if sec_name.lower().strip() in ["header", "job title", "target role", "title"]:
+                    if isinstance(sec_content, str) and sec_content.strip():
+                        return sec_name, sec_content.strip()
+                    elif hasattr(item, "user_instructions") and item.user_instructions and item.user_instructions.strip():
+                        return sec_name, item.user_instructions.strip()
+
                 if sec_content is not None and sec_type is not None:
                     res = self.rewrite_from_json(
                         section_name=sec_name,
