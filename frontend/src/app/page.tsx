@@ -1683,9 +1683,9 @@ export default function Home() {
         setAnalysisResult(result);
       }
 
-      // Tailor ONLY sections classified as needing improvement ('improve'), keeping 'keep' as-is sections untouched unless explicitly rewritten by the user
+      // Tailor ONLY safe improvement sections ('improve'), strictly excluding 'reduce_emphasis' and 'keep' sections from automatic updating
       const sectionsToTailor = (result.sections || []).filter(
-        (s: any) => s.review_status === "improve" || (s.recommendations && s.recommendations.length > 0)
+        (s: any) => s.review_status === "improve" && s.review_status !== "reduce_emphasis" && s.review_status !== "keep"
       );
 
       console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToTailor.map((s: any) => s.section_name));
