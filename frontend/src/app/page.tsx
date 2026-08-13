@@ -54,7 +54,7 @@ import TestimonialsSection from "@/components/testimonials_section";
 import FaqSection from "@/components/faq_section";
 import { ProfileModal } from "@/components/profile_modal";
 import { WordLogoIcon, PdfLogoIcon } from "@/components/file_format_icons";
-import ResumeCompletionModal from "@/components/resume_completion_modal";
+import ResumeCompletionModal, { getFullProfilePhotoUrl } from "@/components/resume_completion_modal";
 import TailorPreviewModal from "@/components/tailor_preview_modal";
 import ResumeDownloadPanel from "@/components/resume_download_panel";
 import {
@@ -3355,7 +3355,6 @@ export default function Home() {
                         </p>
                       </div>
                     </div>
-
                     <button
                       type="button"
                       onClick={handleAutoTailor}
@@ -3380,56 +3379,76 @@ export default function Home() {
                 {/* Summary Dashboard Card */}
                 <div className="glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-r from-white/90 via-indigo-500/5 to-white/90 dark:from-slate-900/90 dark:via-indigo-950/20 dark:to-slate-900/90 shadow-xl">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 dark:border-indigo-500/30 uppercase tracking-wider">
-                          Target Role Detected
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        {(() => {
-                          const rawJobTitle = analysisResult.overall_summary.job_title || "";
-                          const isGenericTitle = !rawJobTitle || ["full job description", "job description", "about the role", "overview", "target role", "description"].includes(rawJobTitle.toLowerCase().trim());
-                          const displayTitle = rewrittenSections["header"] || (!isGenericTitle ? rawJobTitle : "Target Role");
-                          const canApply = !isGenericTitle;
+                    <div className="flex items-center gap-4">
+                      {masterResume?.profile_photo_url && (
+                        <div
+                          onClick={() => setIsCompletionModalOpen(true)}
+                          className="relative group shrink-0 cursor-pointer"
+                          title="Click to view/change profile photo"
+                        >
+                          <img
+                            src={getFullProfilePhotoUrl(masterResume.profile_photo_url) || ""}
+                            alt="Candidate Avatar"
+                            className="w-14 h-14 rounded-2xl object-cover ring-2 ring-indigo-500/40 shadow-md bg-white dark:bg-slate-800 hover:scale-105 transition-transform"
+                          />
+                        </div>
+                      )}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 dark:border-indigo-500/30 uppercase tracking-wider">
+                            Target Role Detected
+                          </span>
+                          {masterResume?.contact_info?.full_name && (
+                            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                              • {masterResume.contact_info.full_name}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          {(() => {
+                            const rawJobTitle = analysisResult.overall_summary.job_title || "";
+                            const isGenericTitle = !rawJobTitle || ["full job description", "job description", "about the role", "overview", "target role", "description"].includes(rawJobTitle.toLowerCase().trim());
+                            const displayTitle = rewrittenSections["header"] || (!isGenericTitle ? rawJobTitle : "Target Role");
+                            const canApply = !isGenericTitle;
 
-                          return (
-                            <>
-                              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                                {displayTitle}
-                              </h3>
-                              {canApply && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleApplyTargetTitle(rawJobTitle)}
-                                  disabled={isApplyingTitle || applyMutation.isPending}
-                                  className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${rewrittenSections["header"] === rawJobTitle && isPatchingApplied
-                                      ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
-                                      : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white border-emerald-500/30 shadow-emerald-500/20 hover:scale-105"
-                                    }`}
-                                  title="Apply this target job title directly to your resume header and DOCX file"
-                                >
-                                  {isApplyingTitle ? (
-                                    <>
-                                      <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin shrink-0" />
-                                      <span>Applying Title...</span>
-                                    </>
-                                  ) : rewrittenSections["header"] === rawJobTitle && isPatchingApplied ? (
-                                    <>
-                                      <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                                      <span>Title Applied & Saved</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <CheckCircle className="h-3.5 w-3.5 text-white shrink-0" />
-                                      <span>Apply Job Title</span>
-                                    </>
-                                  )}
-                                </button>
-                              )}
-                            </>
-                          );
-                        })()}
+                            return (
+                              <>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                                  {displayTitle}
+                                </h3>
+                                {canApply && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleApplyTargetTitle(rawJobTitle)}
+                                    disabled={isApplyingTitle || applyMutation.isPending}
+                                    className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${rewrittenSections["header"] === rawJobTitle && isPatchingApplied
+                                        ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
+                                        : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white border-emerald-500/30 shadow-emerald-500/20 hover:scale-105"
+                                      }`}
+                                    title="Apply this target job title directly to your resume header and DOCX file"
+                                  >
+                                    {isApplyingTitle ? (
+                                      <>
+                                        <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin shrink-0" />
+                                        <span>Applying Title...</span>
+                                      </>
+                                    ) : rewrittenSections["header"] === rawJobTitle && isPatchingApplied ? (
+                                      <>
+                                        <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                                        <span>Title Applied & Saved</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle className="h-3.5 w-3.5 text-white shrink-0" />
+                                        <span>Apply Job Title</span>
+                                      </>
+                                    )}
+                                  </button>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
                       </div>
                     </div>
 

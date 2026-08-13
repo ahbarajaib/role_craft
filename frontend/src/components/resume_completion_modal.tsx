@@ -3,14 +3,23 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   X, CheckCircle2, AlertCircle, Save, ChevronRight, Loader2,
-  User, Mail, Phone, MapPin, Link, GitBranch, Globe, Briefcase, Sparkles,
+  User, Mail, Phone, MapPin, Link, GitBranch, Globe, Briefcase, Sparkles, Camera, Trash2,
 } from "lucide-react";
 import {
   StructuredResume,
   ContactInfo,
   updateStructuredResume,
+  uploadProfilePhoto,
+  deleteProfilePhoto,
 } from "@/lib/structured_resume_api";
 import ResumeSectionEditor from "@/components/resume_section_editor";
+
+export function getFullProfilePhotoUrl(url?: string | null): string | null {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+  const apiHost = process.env.NEXT_PUBLIC_API_URL || (typeof window !== "undefined" && window.location.hostname === "localhost" ? "http://localhost:8000" : "https://api.rolecraft.tech");
+  return `${apiHost.replace(/\/$/, "")}${url.startsWith("/") ? "" : "/"}${url}`;
+}
 
 interface ResumeCompletionModalProps {
   resume: StructuredResume;
@@ -95,6 +104,40 @@ export default function ResumeCompletionModal({
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingPhoto(true);
+    try {
+      const res = await uploadProfilePhoto(file);
+      const updated = { ...resume, profile_photo_url: res.photo_url };
+      setResume(updated);
+      onSaved(updated);
+    } catch (err: any) {
+      alert("Failed to upload photo: " + (err.message || "Unknown error"));
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handlePhotoDelete = async () => {
+    if (!confirm("Are you sure you want to remove your profile photo?")) return;
+    setIsUploadingPhoto(true);
+    try {
+      await deleteProfilePhoto();
+      const updated = { ...resume, profile_photo_url: null };
+      setResume(updated);
+      onSaved(updated);
+    } catch (err: any) {
+      alert("Failed to remove photo: " + (err.message || "Unknown error"));
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
 
   useEffect(() => {
     setResume(initialResume);
@@ -286,6 +329,73 @@ export default function ResumeCompletionModal({
                 Contact Information
               </h3>
             </div>
+
+            {/* Profile Photo Uploader Box */}
+            <div className="p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 flex flex-col sm:flex-row items-center gap-5">
+              <div className="relative group shrink-0">
+                {resume.profile_photo_url ? (
+                  <img
+                    src={getFullProfilePhotoUrl(resume.profile_photo_url) || ""}
+                    alt="Profile Avatar"
+                    className="w-20 h-20 rounded-2xl object-cover ring-4 ring-indigo-500/20 shadow-md bg-white dark:bg-slate-800"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-2 border-dashed border-indigo-300 dark:border-indigo-700 flex flex-col items-center justify-center gap-1 shadow-inner">
+                    <User className="w-8 h-8 opacity-80" />
+                    <span className="text-[9px] font-bold uppercase tracking-wider">No Photo</span>
+                  </div>
+                )}
+                {isUploadingPhoto && (
+                  <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs rounded-2xl flex items-center justify-center text-white">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1.5 text-center sm:text-left flex-1">
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-center sm:justify-start gap-2">
+                  Candidate Profile Photo
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    Executive Profile Compatible
+                  </span>
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Uploaded photos display cleanly on your UI workspace cards & automatically render in Executive Profile DOCX/PDF downloads.
+                </p>
+
+                <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/jpg"
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    disabled={isUploadingPhoto}
+                    onClick={() => photoInputRef.current?.click()}
+                    className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    {resume.profile_photo_url ? "Change Photo" : "Upload Photo"}
+                  </button>
+
+                  {resume.profile_photo_url && (
+                    <button
+                      type="button"
+                      disabled={isUploadingPhoto}
+                      onClick={handlePhotoDelete}
+                      className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 { key: "full_name" as const, label: "Full Name", icon: User, placeholder: "e.g. Ahmad Barajaib" },

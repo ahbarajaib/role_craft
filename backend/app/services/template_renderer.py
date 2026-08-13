@@ -435,7 +435,7 @@ class ATSTemplateRenderer:
 
         elif stype == "experience":
             entries = content.get("entries", [])
-            for entry in entries:
+            for e_idx, entry in enumerate(entries):
                 if isinstance(entry, dict):
                     title = entry.get("job_title", "")
                     company = entry.get("company", "")
@@ -446,8 +446,8 @@ class ATSTemplateRenderer:
 
                     # Header line: Job Title - Company | Dates
                     p_head = doc.add_paragraph()
-                    p_head.paragraph_format.space_before = Pt(4)
-                    p_head.paragraph_format.space_after = Pt(1)
+                    p_head.paragraph_format.space_before = Pt(10 if e_idx > 0 else 4)
+                    p_head.paragraph_format.space_after = Pt(1.5)
 
                     r_t = p_head.add_run(title)
                     r_t.font.name = font_name
@@ -470,19 +470,19 @@ class ATSTemplateRenderer:
                         r_d.font.size = Pt(9.5)
                         r_d.font.italic = True
 
-                    # Bullets
-                    for b in bullets:
-                        if b and str(b).strip():
-                            p_b = doc.add_paragraph(style="List Bullet")
-                            r_b = p_b.add_run(str(b).strip())
-                            r_b.font.name = font_name
-                            r_b.font.size = Pt(9.5)
-                            p_b.paragraph_format.space_after = Pt(1.5)
-                            p_b.paragraph_format.line_spacing = 1.15
+                    # Bullets with clean entry separation
+                    valid_bullets = [b for b in bullets if b and str(b).strip()]
+                    for b_idx, b in enumerate(valid_bullets):
+                        p_b = doc.add_paragraph(style="List Bullet")
+                        r_b = p_b.add_run(str(b).strip())
+                        r_b.font.name = font_name
+                        r_b.font.size = Pt(9.5)
+                        p_b.paragraph_format.space_after = Pt(6 if b_idx == len(valid_bullets) - 1 else 2)
+                        p_b.paragraph_format.line_spacing = 1.15
 
         elif stype == "education":
             entries = content.get("entries", [])
-            for entry in entries:
+            for e_idx, entry in enumerate(entries):
                 if isinstance(entry, dict):
                     deg = entry.get("degree", "")
                     inst = entry.get("institution", "")
@@ -490,8 +490,8 @@ class ATSTemplateRenderer:
                     loc = entry.get("location", "")
 
                     p_edu = doc.add_paragraph()
-                    p_edu.paragraph_format.space_before = Pt(3)
-                    p_edu.paragraph_format.space_after = Pt(2)
+                    p_edu.paragraph_format.space_before = Pt(6 if e_idx > 0 else 3)
+                    p_edu.paragraph_format.space_after = Pt(4)
 
                     r_d = p_edu.add_run(deg)
                     r_d.font.name = font_name
@@ -511,7 +511,7 @@ class ATSTemplateRenderer:
 
         elif stype == "projects":
             entries = content.get("entries", [])
-            for entry in entries:
+            for e_idx, entry in enumerate(entries):
                 if isinstance(entry, dict):
                     pname = entry.get("name", "")
                     url = entry.get("url", "")
@@ -520,8 +520,8 @@ class ATSTemplateRenderer:
                     bullets = entry.get("bullets", [])
 
                     p_proj = doc.add_paragraph()
-                    p_proj.paragraph_format.space_before = Pt(3)
-                    p_proj.paragraph_format.space_after = Pt(1)
+                    p_proj.paragraph_format.space_before = Pt(10 if e_idx > 0 else 4)
+                    p_proj.paragraph_format.space_after = Pt(1.5)
 
                     r_p = p_proj.add_run(pname)
                     r_p.font.name = font_name
@@ -545,15 +545,16 @@ class ATSTemplateRenderer:
                         r_desc = p_desc.add_run(desc)
                         r_desc.font.name = font_name
                         r_desc.font.size = Pt(9.5)
-                        p_desc.paragraph_format.space_after = Pt(1.5)
+                        p_desc.paragraph_format.space_after = Pt(2)
 
-                    for b in bullets:
-                        if b and str(b).strip():
-                            p_b = doc.add_paragraph(style="List Bullet")
-                            r_b = p_b.add_run(str(b).strip())
-                            r_b.font.name = font_name
-                            r_b.font.size = Pt(9.5)
-                            p_b.paragraph_format.space_after = Pt(1.5)
+                    valid_bullets = [b for b in bullets if b and str(b).strip()]
+                    for b_idx, b in enumerate(valid_bullets):
+                        p_b = doc.add_paragraph(style="List Bullet")
+                        r_b = p_b.add_run(str(b).strip())
+                        r_b.font.name = font_name
+                        r_b.font.size = Pt(9.5)
+                        p_b.paragraph_format.space_after = Pt(6 if b_idx == len(valid_bullets) - 1 else 2)
+                        p_b.paragraph_format.line_spacing = 1.15
 
         else:
             # Custom section: list of text entries
