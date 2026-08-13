@@ -1859,7 +1859,11 @@ export default function Home() {
         if (refreshMe) refreshMe();
       }
 
-        // Trigger full structured resume AI tailoring for preview & download
+      // Close auto-tailor loading modal immediately so candidate gets instant ~2s response!
+      setIsAutoTailoring(false);
+
+      // Trigger full structured resume AI tailoring asynchronously in background (non-blocking)
+      (async () => {
         try {
           const tailoredRes = await tailorResume({
             job_description: jobDescription,
@@ -1876,6 +1880,7 @@ export default function Home() {
         } catch (te) {
           console.warn("[RoleCraft] Structured tailor warning:", te);
         }
+      })();
 
         // ── Auto-generate Tailored Cover Letter asynchronously in background ──
         console.log("📝 [RoleCraft Audit] Auto-generating Tailored Cover Letter in background...");
