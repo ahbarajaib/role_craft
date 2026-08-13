@@ -25,6 +25,8 @@ from app.models import User, StructuredResumeModel, TailoredResumeModel
 from app.schemas.structured_resume import StructuredResume
 from app.services.tailor_orchestration_service import TailorOrchestrationService
 
+from app.dependencies.limits import verify_user_credits, deduct_user_credits
+
 router = APIRouter(prefix="/tailor", tags=["AI Resume Tailor"])
 settings = get_settings()
 
@@ -66,6 +68,7 @@ def tailor_resume(
 
     The master StructuredResume is NEVER modified.
     """
+    verify_user_credits(current_user, 1)
     if not request.job_description or not request.job_description.strip():
         raise BadRequestError("job_description is required.")
     if not request.job_title or not request.job_title.strip():
@@ -107,6 +110,8 @@ def tailor_resume(
     db.add(tailored_model)
     db.commit()
     db.refresh(tailored_model)
+
+    deduct_user_credits(db, current_user, 1)
 
     return TailorResponse(
         tailored_resume_id=tailored_model.id,

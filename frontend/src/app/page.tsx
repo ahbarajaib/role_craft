@@ -1855,6 +1855,8 @@ export default function Home() {
         if (result.overall_summary?.job_title) parts.push("Target Role");
         if (sectionsToTailor.length > 0) parts.push(`${sectionsToTailor.length} section${sectionsToTailor.length > 1 ? "s" : ""}`);
         setSuccessNotification(`⚡ 1-Click Auto-Tailored in ~2s: Resume Ready! (${parts.join(", ")})`);
+
+        if (refreshMe) refreshMe();
       }
 
         // Trigger full structured resume AI tailoring for preview & download

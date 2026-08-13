@@ -37,7 +37,13 @@ from app.services.patch_service import PatchService
 from app.services.cover_letter_service import CoverLetterService
 from sqlalchemy.orm import Session
 from app.models import User, AnalysisHistory, StructuredResumeModel
-from app.dependencies.limits import verify_analysis_permission, verify_premium_permission, deduct_analysis_credit
+from app.dependencies.limits import (
+    verify_analysis_permission,
+    verify_premium_permission,
+    deduct_analysis_credit,
+    verify_user_credits,
+    deduct_user_credits,
+)
 from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/resume", tags=["resume"])
@@ -196,6 +202,8 @@ def rewrite_section(
 
     Falls back to legacy DOCX-based rewrite if document_id is provided.
     """
+    verify_user_credits(user, 1)
+
     # JSON-first path: section content is passed directly from the structured resume
     if body.section_content is not None and body.section_type is not None:
         evidence_text = body.evidence_text or ""
@@ -217,7 +225,7 @@ def rewrite_section(
                 except Exception:
                     pass
 
-        return service.rewrite_from_json(
+        res = service.rewrite_from_json(
             section_name=body.section_name,
             section_type=body.section_type,
             section_content=body.section_content,
@@ -227,9 +235,11 @@ def rewrite_section(
             user_instructions=body.user_instructions,
             metric_inputs=body.metric_inputs,
         )
+        deduct_user_credits(db, user, 1)
+        return res
 
     # Legacy DOCX path
-    return service.rewrite(
+    res = service.rewrite(
         document_id=body.document_id or f"base/{user.id}",
         section_name=body.section_name,
         job_description_text=body.job_description_text,
@@ -237,6 +247,8 @@ def rewrite_section(
         user_instructions=body.user_instructions,
         metric_inputs=body.metric_inputs,
     )
+    deduct_user_credits(db, user, 1)
+    return res
 
 
 @router.post(
@@ -250,8 +262,11 @@ def batch_rewrite_sections(
     service: Annotated[RewriteService, Depends(get_rewrite_service)],
     patch_service: Annotated[PatchService, Depends(get_patch_service)],
     user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
 ) -> BatchRewriteResponse:
     """Batch parallel section tailoring endpoint. Executes rewrites concurrently across worker threads."""
+    verify_user_credits(user, 3)
+
     doc_id = body.document_id or f"base/{user.id}"
     rewrites_map = service.batch_rewrite(
         document_id=doc_id,
@@ -281,6 +296,8 @@ def batch_rewrite_sections(
             download_url = patch_res.download_url
         except Exception as patch_err:
             logger.error(f"Batch patch error: {patch_err}")
+
+    deduct_user_credits(db, user, 3)
 
     return BatchRewriteResponse(
         rewrites=rewrites_map,
@@ -509,9 +526,14 @@ def download_patched_resume(
 def generate_cover_letter(
     body: CoverLetterRequest,
     service: Annotated[CoverLetterService, Depends(get_cover_letter_service)],
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
 ) -> CoverLetterResponse:
     """Generate a tailored 3-paragraph cover letter based on resume & job description."""
-    return service.generate_cover_letter(body)
+    verify_user_credits(user, 1)
+    res = service.generate_cover_letter(body)
+    deduct_user_credits(db, user, 1)
+    return res
 
 
 @router.put(
