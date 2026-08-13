@@ -493,29 +493,151 @@ class RewriteService:
                 if cat_name and skills:
                     lines.append(f"{cat_name}: {', '.join(skills)}")
 
-        elif section_type == "experience":
+        if section_type == "experience":
             entries = section_content.get("entries") or []
+            if not entries:
+                return RewriteSectionResponse(
+                    section=section_name,
+                    original_text="",
+                    rewritten_text="",
+                    reasoning="Section contains no experience entries to rewrite.",
+                    changes=[],
+                )
+
+            orig_blocks: list[str] = []
+            rewritten_blocks: list[str] = []
+
             for entry in entries:
-                if entry.get("job_title"):
-                    lines.append(entry["job_title"])
-                if entry.get("company"):
-                    meta = entry["company"]
-                    if entry.get("location"):
-                        meta += f", {entry['location']}"
-                    if entry.get("start_date"):
-                        meta += f" | {entry['start_date']} - {entry.get('end_date', 'Present')}"
-                    lines.append(meta)
-                lines.extend(entry.get("bullets") or [])
+                job_title = entry.get("job_title", "Experience Role")
+                company = entry.get("company", "")
+                loc = entry.get("location", "")
+                sdate = entry.get("start_date", "")
+                edate = entry.get("end_date", "")
+                bullets = entry.get("bullets") or []
+
+                entry_header = job_title
+                meta = company
+                if loc:
+                    meta += f", {loc}"
+                if sdate:
+                    meta += f" | {sdate} - {edate or 'Present'}"
+
+                entry_orig_lines = [entry_header]
+                if meta:
+                    entry_orig_lines.append(meta)
+                entry_orig_lines.extend([f"• {b}" for b in bullets])
+                orig_blocks.append("\n".join(entry_orig_lines))
+
+                if bullets:
+                    entry_text = "\n".join([f"• {b}" for b in bullets])
+                    entry_res = self._rewrite_section_text(
+                        section_name=f"{job_title} @ {company}",
+                        original_text=entry_text,
+                        evidence_context=evidence_text,
+                        job_description_text=job_description_text,
+                        recommendations=recommendations,
+                        user_instructions=user_instructions,
+                        metric_inputs=metric_inputs,
+                        is_skills_section=False,
+                        is_summary_section=False,
+                    )
+                    rewritten_entry_lines = [entry_header]
+                    if meta:
+                        rewritten_entry_lines.append(meta)
+                    rewritten_entry_lines.append(entry_res.rewritten_text)
+                    rewritten_blocks.append("\n".join(rewritten_entry_lines))
+                else:
+                    rewritten_blocks.append("\n".join(entry_orig_lines))
+
+            full_original = "\n\n".join(orig_blocks)
+            full_rewritten = "\n\n".join(rewritten_blocks)
+
+            return RewriteSectionResponse(
+                section=section_name,
+                original_text=full_original,
+                rewritten_text=full_rewritten,
+                reasoning="All experience entries tailored with Google XYZ formula & target ATS keywords.",
+                changes=["Preserved all role entries and tailored bullet points with target job keywords."],
+            )
 
         elif section_type == "projects":
             entries = section_content.get("entries") or []
+            if not entries:
+                return RewriteSectionResponse(
+                    section=section_name,
+                    original_text="",
+                    rewritten_text="",
+                    reasoning="Section contains no project entries to rewrite.",
+                    changes=[],
+                )
+
+            orig_blocks: list[str] = []
+            rewritten_blocks: list[str] = []
+
             for entry in entries:
-                if entry.get("name"):
-                    lines.append(entry["name"])
+                pname = entry.get("name", "Project")
+                url = entry.get("url", "")
                 techs = entry.get("technologies") or []
-                if techs:
-                    lines.append(f"Technologies: {', '.join(techs)}")
-                lines.extend(entry.get("bullets") or [])
+                bullets = entry.get("bullets") or []
+
+                p_header = pname
+                if url:
+                    p_header += f" ({url})"
+                tech_line = f"Technologies: {', '.join(techs)}" if techs else ""
+
+                entry_orig_lines = [p_header]
+                if tech_line:
+                    entry_orig_lines.append(tech_line)
+                entry_orig_lines.extend([f"• {b}" for b in bullets])
+                orig_blocks.append("\n".join(entry_orig_lines))
+
+                if bullets:
+                    entry_text = "\n".join([f"• {b}" for b in bullets])
+                    entry_res = self._rewrite_section_text(
+                        section_name=f"Project: {pname}",
+                        original_text=entry_text,
+                        evidence_context=evidence_text,
+                        job_description_text=job_description_text,
+                        recommendations=recommendations,
+                        user_instructions=user_instructions,
+                        metric_inputs=metric_inputs,
+                        is_skills_section=False,
+                        is_summary_section=False,
+                    )
+                    rewritten_entry_lines = [p_header]
+                    if tech_line:
+                        rewritten_entry_lines.append(tech_line)
+                    rewritten_entry_lines.append(entry_res.rewritten_text)
+                    rewritten_blocks.append("\n".join(rewritten_entry_lines))
+                else:
+                    rewritten_blocks.append("\n".join(entry_orig_lines))
+
+            full_original = "\n\n".join(orig_blocks)
+            full_rewritten = "\n\n".join(rewritten_blocks)
+
+            return RewriteSectionResponse(
+                section=section_name,
+                original_text=full_original,
+                rewritten_text=full_rewritten,
+                reasoning="All project entries tailored with stack technologies & target ATS keywords.",
+                changes=["Preserved all project entries and tailored bullet points with target job keywords."],
+            )
+
+        # Fallback for summary, skills, certifications, custom sections
+        lines: list[str] = []
+
+        if section_type == "summary":
+            text = section_content.get("text") or ""
+            if text.strip():
+                lines.append(text.strip())
+
+        elif section_type == "skills":
+            categories = section_content.get("categories") or []
+            for cat in categories:
+                cat_name = cat.get("category_name") or ""
+                skills = cat.get("skills") or []
+                if cat_name and skills:
+                    lines.append(f"{cat_name}: {', '.join(skills)}")
 
         elif section_type == "certifications":
             entries = section_content.get("entries") or []
@@ -528,7 +650,6 @@ class RewriteService:
                 lines.append(" ".join(cert_parts).strip())
 
         else:
-            # Custom / unknown section type — try entries list
             entries = section_content.get("entries") or []
             lines.extend([str(e) for e in entries if e])
 
