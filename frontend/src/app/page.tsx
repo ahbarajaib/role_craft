@@ -1795,19 +1795,55 @@ export default function Home() {
       const parseJobTitleFromJD = (jdText: string): string => {
         if (!jdText) return "";
         const lines = jdText.split("\n").map((l) => l.trim()).filter(Boolean);
-        for (const line of lines.slice(0, 8)) {
-          const match = line.match(/(?:role|title|position|job title)\s*:\s*([A-Za-z0-9\s\-\/\&]{3,60})/i);
-          if (match && match[1]) return match[1].trim();
-          if (
-            line.length >= 4 &&
-            line.length <= 60 &&
-            !line.includes("http") &&
-            !line.includes("@") &&
-            !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(line)
-          ) {
-            return line.replace(/^#+\s*/, "").trim();
+
+        // 1. Explicit label "Job Title: <Role>" or "Role: <Role>"
+        for (const line of lines.slice(0, 15)) {
+          const match = line.match(/(?:job title|title|role|position)\s*[:–-]\s*([A-Za-z0-9\s\-\/\&]{3,60})/i);
+          if (match && match[1]) {
+            const val = match[1].trim();
+            if (val && !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(val)) {
+              return val;
+            }
           }
         }
+
+        // 2. Line containing a role title keyword
+        const roleKeywords = [
+          "developer", "engineer", "architect", "manager", "lead", "designer",
+          "consultant", "analyst", "specialist", "administrator", "executive",
+          "fullstack", "full stack", "backend", "frontend", "devops", "sre", "scientist",
+          "director", "head", "vp", "associate", "intern", "product"
+        ];
+
+        for (const line of lines.slice(0, 15)) {
+          const clean = line.replace(/^#+\s*/, "").trim();
+          const lower = clean.toLowerCase();
+          if (
+            clean.length >= 4 &&
+            clean.length <= 80 &&
+            !clean.includes("http") &&
+            !clean.includes("@") &&
+            !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(clean) &&
+            roleKeywords.some((r) => lower.includes(r))
+          ) {
+            return clean;
+          }
+        }
+
+        // 3. Preamble line
+        for (const line of lines.slice(0, 5)) {
+          const clean = line.replace(/^#+\s*/, "").trim();
+          if (
+            clean.length >= 4 &&
+            clean.length <= 60 &&
+            !clean.includes("http") &&
+            !clean.includes("@") &&
+            !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(clean)
+          ) {
+            return clean;
+          }
+        }
+
         return "";
       };
 
@@ -1819,6 +1855,10 @@ export default function Home() {
         result?.overall_summary?.job_title ||
         parseJobTitleFromJD(jobDescription) ||
         "Target Position";
+
+      if (targetHeaderTitle && targetHeaderTitle !== "Target Position") {
+        setCustomTargetRole(targetHeaderTitle);
+      }
 
       if (targetHeaderTitle) {
         newRewrites["header"] = targetHeaderTitle;
@@ -1872,13 +1912,13 @@ export default function Home() {
           setCustomTargetRole(finalAppliedTitle);
         }
 
-        setRewrittenSections((prev) => ({ ...prev, ...newRewrites, ...batchRes.rewrites }));
+        setRewrittenSections((prev) => ({ ...prev, header: finalAppliedTitle, ...newRewrites, ...batchRes.rewrites }));
         if (batchRes.download_id) setDownloadId(batchRes.download_id);
         if (batchRes.download_url) setDownloadUrl(batchRes.download_url);
         setIsPatchingApplied(true);
 
         const parts: string[] = [];
-        if (result.overall_summary?.job_title) parts.push("Target Role");
+        if (result?.overall_summary?.job_title || finalAppliedTitle) parts.push("Target Role");
         if (sectionsToTailor.length > 0) parts.push(`${sectionsToTailor.length} section${sectionsToTailor.length > 1 ? "s" : ""}`);
         setSuccessNotification(`⚡ 1-Click Auto-Tailored in ~2s: Resume Ready! (${parts.join(", ")})`);
 
@@ -1893,14 +1933,16 @@ export default function Home() {
         try {
           const tailoredRes = await tailorResume({
             job_description: jobDescription,
-            job_title: customTargetRole || result?.overall_summary?.job_title || "Target Position",
+            job_title: targetHeaderTitle,
           });
           setTailorResult(tailoredRes);
           if (tailoredRes?.tailored_resume) {
             const autoRewrites = convertTailoredResumeToRewrites(tailoredRes.tailored_resume);
             setRewrittenSections((prev) => ({
+              header: targetHeaderTitle,
               ...prev,
               ...autoRewrites,
+              header: targetHeaderTitle,
             }));
           }
         } catch (te) {
