@@ -321,6 +321,17 @@ def _is_metadata_line(text: str, para=None) -> bool:
     words = t_lower.split()
     first_word = words[0] if words else ""
 
+    # Prose paragraphs, long summary text (> 90 chars), or sentences with action verbs are NOT metadata headers
+    if len(t) > 90:
+        return False
+
+    is_achievement_sentence = (
+        first_word in ACTION_VERBS
+        and (len(t) > 40 or t.endswith(".") or t.endswith(";"))
+    )
+    if is_achievement_sentence:
+        return False
+
     # --- Rule 1: structural signals (checked BEFORE action-verb early-exit) ---
     months = [
         "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec",
@@ -354,7 +365,6 @@ def _is_metadata_line(text: str, para=None) -> bool:
     has_location = any(re.search(r'\b' + re.escape(loc) + r'\b', t_lower) for loc in locations)
 
     role_titles = list(UNIVERSAL_ROLE_TITLES) + [
-        # Extra short single-word titles not in the universal list
         "doctor", "nurse", "chef", "teacher", "pilot", "driver",
         "baker", "plumber", "mechanic", "electrician", "carpenter",
         "secretary", "receptionist", "attendant", "steward", "captain",
@@ -362,25 +372,15 @@ def _is_metadata_line(text: str, para=None) -> bool:
     ]
     has_role = any(re.search(r'\b' + re.escape(r) + r'\b', t_lower) for r in role_titles)
 
-    # Structural signal → definite metadata regardless of action verbs
-    if has_date or has_company or has_location or has_role:
+    # Structural signal → definite metadata header line ONLY if text is short (< 80 chars)
+    if (has_date or has_company or has_location or has_role) and len(t) < 80:
         return True
 
-    # --- Rule 2: heuristic for unlabelled short non-sentence lines ---
-    # An achievement sentence starts with an action verb AND is long or ends with punctuation.
-    is_achievement_sentence = (
-        first_word in ACTION_VERBS
-        and (len(t) > 50 or t.endswith(".") or t.endswith(";"))
-    )
-    if is_achievement_sentence:
-        return False
-
-    # Rule 2 tightened: only treat as metadata if it has NO bullet prefix AND NO action verb.
-    # This prevents short bullet content from being falsely protected.
+    # Rule 2: unlabelled short non-sentence lines
     has_bullet_prefix = any(t.startswith(s) for s in ["•", "-", "*", "–", "—", "▪", "▸"])
     has_action_verb = first_word in ACTION_VERBS
     if (
-        len(t) < 85
+        len(t) < 70
         and not t.endswith(".")
         and not has_bullet_prefix
         and not has_action_verb
@@ -445,16 +445,34 @@ class PatchService:
         sections_response = self._sections.detect_document_sections(doc_id)
         sections = sections_response.sections
 
-        sections_updated = 0
-
         def _normalize(t: str) -> str:
-            return " ".join(t.replace("[", "").replace("]", "").strip().lower().split())
+            return " ".join((t or "").replace("[", "").replace("]", "").strip().lower().split())
+
+        def _canonical_section_key(name: str) -> str:
+            n = _normalize(name)
+            if any(k in n for k in ["experience", "employment", "work", "history", "positions", "job", "career"]):
+                return "experience"
+            if any(k in n for k in ["skill", "competenc", "technolog", "stack", "tool"]):
+                return "skills"
+            if any(k in n for k in ["summary", "profile", "overview", "about"]):
+                return "summary"
+            if any(k in n for k in ["project", "portfolio"]):
+                return "projects"
+            if any(k in n for k in ["education", "academic", "degree", "qualification"]):
+                return "education"
+            if any(k in n for k in ["certif", "license", "course"]):
+                return "certifications"
+            if any(k in n for k in ["header", "title", "designation", "role"]):
+                return "header"
+            return n
 
         # Deduplicate accepted_rewrites by section name (keep latest rewrite per section)
         unique_rewrites: dict[str, Any] = {}
         for item in request.accepted_rewrites:
             unique_rewrites[_normalize(item.section)] = item
         accepted_items = list(unique_rewrites.values())
+
+        sections_updated = 0
 
         # 3. Apply each accepted rewrite.
         for rewrite_item in accepted_items:
@@ -466,10 +484,13 @@ class PatchService:
                 new_title_text = lines[0] if lines else ""
 
                 if new_title_text:
-                    role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance"]
+                    role_titles = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "executive", "intern", "freelance", "full stack", "frontend", "backend", "head", "director", "administrator", "scientist", "practitioner"]
                     top_paras = all_paras[:min(6, len(all_paras))]
                     title_para = next(
-                        (p for i, p in enumerate(top_paras) if i > 0 and any(r in p.text.lower() for r in role_titles)),
+                        (p for i, p in enumerate(top_paras) if i > 0 and (
+                            any(r in p.text.lower() for r in role_titles) or
+                            (len(p.text.strip()) > 2 and len(p.text.strip()) < 80 and "@" not in p.text and "http" not in p.text and not any(k in p.text.lower() for k in ["summary", "experience", "education", "skills"]))
+                        )),
                         None,
                     )
                     if title_para:
@@ -488,10 +509,25 @@ class PatchService:
                         sections_updated += 1
                 continue
 
-            target_sec = next(
-                (s for s in sections if _normalize(s.title) == norm_sec_name or (norm_sec_name in ["header", "job title", "target role", "title"] and s.normalized_name == "header")),
-                None,
-            )
+            item_canon = _canonical_section_key(rewrite_item.section)
+
+            # Priority 1: Exact normalized title match
+            target_sec = next((s for s in sections if _normalize(s.title) == norm_sec_name), None)
+
+            # Priority 2: Canonical category match (e.g. "Work Experience" matches "Professional Experiences")
+            if not target_sec and item_canon:
+                target_sec = next(
+                    (s for s in sections if (s.normalized_name and _canonical_section_key(s.normalized_name) == item_canon) or _canonical_section_key(s.title) == item_canon),
+                    None,
+                )
+
+            # Priority 3: Fuzzy substring match
+            if not target_sec:
+                target_sec = next(
+                    (s for s in sections if norm_sec_name in _normalize(s.title) or _normalize(s.title) in norm_sec_name),
+                    None,
+                )
+
             if not target_sec:
                 logger.warning(
                     "Skipping section rewrite: section not found",
@@ -526,10 +562,12 @@ class PatchService:
             norm_l = (target_sec.normalized_name or "").lower()
             is_experience_sec = (
                 norm_l == "experience"
-                or any(kw in title_l or kw in norm_l for kw in EXPERIENCE_SECTION_KEYWORDS)
-                or any(rk in title_l for rk in UNIVERSAL_ROLE_TITLES)
-                or re.search(r"\b(19|20)\d{2}\b", title_l) is not None
-                or "present" in title_l
+                or (norm_l not in ["summary", "skills", "education", "projects", "certifications", "header"] and (
+                    any(kw in title_l or kw in norm_l for kw in EXPERIENCE_SECTION_KEYWORDS)
+                    or any(rk in title_l for rk in UNIVERSAL_ROLE_TITLES)
+                    or re.search(r"\b(19|20)\d{2}\b", title_l) is not None
+                    or "present" in title_l
+                ))
             )
 
             # --- SPECIAL CASE: "Professional Experiences" is a heading-only section ---
