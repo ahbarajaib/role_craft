@@ -36,7 +36,7 @@ class ApplyRewriteRequest(BaseModel):
     accepted_rewrites: list[ApplyRewriteItem] = Field(
         description="List of user-accepted section rewrites."
     )
-    preferred_template: str = Field(
+    preferred_template: Optional[str] = Field(
         default="clean_classic",
         description="ATS template to use for JSON-mode generation: 'clean_classic' | 'modern_professional' | 'executive_profile'"
     )

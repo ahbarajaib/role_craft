@@ -289,11 +289,14 @@ def batch_rewrite_sections(
                     accepted_items.append(ApplyRewriteItem(section=sec_name, rewritten_text=text))
 
             patch_res = patch_service.apply_rewrites(
-                document_id=doc_id,
-                accepted_rewrites=accepted_items,
+                ApplyRewriteRequest(
+                    document_id=doc_id,
+                    accepted_rewrites=accepted_items,
+                )
             )
             download_id = patch_res.download_id
             download_url = patch_res.download_url
+            logger.info(f"⚡ [RoleCraft Audit] Batch auto-tailor generated patched file: download_id={download_id}, sections_updated={patch_res.sections_updated}")
         except Exception as patch_err:
             logger.error(f"Batch patch error: {patch_err}")
 

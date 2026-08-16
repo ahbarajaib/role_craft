@@ -418,8 +418,24 @@ class PatchService:
         self._upload_dir = upload_dir
         self._sections = section_service
 
-    def apply_rewrites(self, request: ApplyRewriteRequest) -> ApplyRewriteResponse:
+    def apply_rewrites(
+        self,
+        request: Optional[ApplyRewriteRequest] = None,
+        *,
+        document_id: Optional[str] = None,
+        accepted_rewrites: Optional[list[ApplyRewriteItem]] = None,
+        preferred_template: Optional[str] = None,
+    ) -> ApplyRewriteResponse:
         """Apply accepted rewrites to the original document and save the result."""
+        if request is None:
+            if accepted_rewrites is None:
+                raise ValueError("Must provide either request or accepted_rewrites")
+            request = ApplyRewriteRequest(
+                document_id=document_id,
+                accepted_rewrites=accepted_rewrites,
+                preferred_template=preferred_template or "clean_classic",
+            )
+
         logger.info(
             "Starting DOCX patch application",
             document_id=request.document_id,
