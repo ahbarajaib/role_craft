@@ -813,10 +813,23 @@ class RewriteService:
             try:
                 # Direct header pass-through: target job title designation does not require LLM call
                 if sec_name.lower().strip() in ["header", "job title", "target role", "title"]:
+                    title_text = ""
                     if isinstance(sec_content, str) and sec_content.strip():
-                        return sec_name, sec_content.strip()
+                        title_text = sec_content.strip()
                     elif hasattr(item, "user_instructions") and item.user_instructions and item.user_instructions.strip():
-                        return sec_name, item.user_instructions.strip()
+                        title_text = item.user_instructions.strip()
+
+                    if not title_text:
+                        import re
+                        for line in job_description_text.split("\n")[:8]:
+                            line_str = line.strip()
+                            if line_str and len(line_str) < 60 and not line_str.startswith("http") and "@" not in line_str:
+                                m = re.search(r'(?:role|title|position)\s*:\s*([A-Za-z0-9\s\-\/\&]{3,60})', line_str, re.IGNORECASE)
+                                title_text = m.group(1).strip() if m else line_str.replace("#", "").strip()
+                                if title_text and not any(k in title_text.lower() for k in ["about", "description", "requirements", "responsibilities"]):
+                                    break
+
+                    return sec_name, title_text or "Target Position"
 
                 if sec_content is not None and sec_type is not None:
                     res = self.rewrite_from_json(

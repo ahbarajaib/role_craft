@@ -1792,10 +1792,34 @@ export default function Home() {
       setInlineLoadingSections((prev) => ({ ...prev, ...loadingMap }));
       setExpandedSections(expandedMap);
 
+      const parseJobTitleFromJD = (jdText: string): string => {
+        if (!jdText) return "";
+        const lines = jdText.split("\n").map((l) => l.trim()).filter(Boolean);
+        for (const line of lines.slice(0, 8)) {
+          const match = line.match(/(?:role|title|position|job title)\s*:\s*([A-Za-z0-9\s\-\/\&]{3,60})/i);
+          if (match && match[1]) return match[1].trim();
+          if (
+            line.length >= 4 &&
+            line.length <= 60 &&
+            !line.includes("http") &&
+            !line.includes("@") &&
+            !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(line)
+          ) {
+            return line.replace(/^#+\s*/, "").trim();
+          }
+        }
+        return "";
+      };
+
       const newRewrites: Record<string, string> = {};
 
       // 1. Apply Target Job Title to Header
-      const targetHeaderTitle = customTargetRole || result?.overall_summary?.job_title;
+      const targetHeaderTitle =
+        customTargetRole.trim() ||
+        result?.overall_summary?.job_title ||
+        parseJobTitleFromJD(jobDescription) ||
+        "Target Position";
+
       if (targetHeaderTitle) {
         newRewrites["header"] = targetHeaderTitle;
       }
@@ -1825,18 +1849,16 @@ export default function Home() {
       });
 
       // Explicitly include target job title header in batch payload so backend patches DOCX header immediately
-      if (targetHeaderTitle) {
-        batchItems.unshift({
-          section_name: "header",
-          section_type: "header",
-          section_content: targetHeaderTitle,
-          recommendations: [`Set target job title designation to "${targetHeaderTitle}"`],
-          user_instructions: targetHeaderTitle,
-        });
-      }
+      batchItems.unshift({
+        section_name: "header",
+        section_type: "header",
+        section_content: targetHeaderTitle,
+        recommendations: [`Set target job title designation to "${targetHeaderTitle}"`],
+        user_instructions: targetHeaderTitle,
+      });
 
       const { batchRewriteSections } = require("@/lib/api");
-      console.log("🚀 [RoleCraft Audit] Dispatching 16-worker Batch Parallel Tailor Request:", batchItems);
+      console.log("🚀 [RoleCraft Audit] Dispatching 16-worker Batch Parallel Tailor Request with Job Title Header:", batchItems);
       const batchRes = await batchRewriteSections({
         document_id: documentId,
         job_description_text: jobDescription,
@@ -1844,6 +1866,12 @@ export default function Home() {
       });
 
       if (batchRes.rewrites && Object.keys(batchRes.rewrites).length > 0) {
+        const finalAppliedTitle = batchRes.rewrites["header"] || targetHeaderTitle;
+        if (finalAppliedTitle) {
+          newRewrites["header"] = finalAppliedTitle;
+          setCustomTargetRole(finalAppliedTitle);
+        }
+
         setRewrittenSections((prev) => ({ ...prev, ...newRewrites, ...batchRes.rewrites }));
         if (batchRes.download_id) setDownloadId(batchRes.download_id);
         if (batchRes.download_url) setDownloadUrl(batchRes.download_url);
