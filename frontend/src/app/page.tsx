@@ -1942,7 +1942,6 @@ export default function Home() {
           if (tailoredRes?.tailored_resume) {
             const autoRewrites = convertTailoredResumeToRewrites(tailoredRes.tailored_resume);
             setRewrittenSections((prev) => ({
-              header: targetHeaderTitle,
               ...prev,
               ...autoRewrites,
               header: targetHeaderTitle,
@@ -1958,7 +1957,7 @@ export default function Home() {
         setIsGeneratingCoverLetter(true);
         (async () => {
           try {
-            const originalMatched = (result.top_strengths || []).map((s: any) =>
+            const originalMatched = (result?.top_strengths || []).map((s: any) =>
               typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
             );
             const updatedConfirmedMatchedSkills = Array.from(
@@ -1976,7 +1975,7 @@ export default function Home() {
             ].filter(Boolean);
             const contactInfoStr = contactInfoParts.length > 0 ? contactInfoParts.join(" | ") : undefined;
 
-            const effectiveTargetRole = newRewrites["header"] || customTargetRole || result.overall_summary?.job_title || undefined;
+            const effectiveTargetRole = newRewrites["header"] || customTargetRole || result?.overall_summary?.job_title || undefined;
             const clRes = await generateCoverLetter({
               document_id: documentId,
               job_description_text: jobDescription,
