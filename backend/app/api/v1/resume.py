@@ -465,18 +465,14 @@ def download_patched_resume_pdf(
     pdf_service.convert_docx_to_pdf(docx_path, pdf_path)
 
     safe_name = filename.replace("/", "").replace("\\", "").strip() or "resume_updated.pdf"
+    safe_name = safe_name.replace("—", "-").replace("–", "-").replace("“", '"').replace("”", '"').replace("’", "'")
     if not safe_name.lower().endswith(".pdf"):
         safe_name = safe_name.rsplit(".", 1)[0] + ".pdf" if "." in safe_name else safe_name + ".pdf"
-
-    headers = {
-        "Content-Disposition": f'attachment; filename="{safe_name}"',
-        "Access-Control-Allow-Origin": "*",
-    }
 
     return FileResponse(
         path=pdf_path,
         media_type="application/pdf",
-        headers=headers,
+        filename=safe_name,
     )
 
 
@@ -507,6 +503,7 @@ def download_patched_resume(
 
     # Sanitise the filename — strip path separators and enforce .docx extension
     safe_name = filename.replace("/", "").replace("\\", "").strip() or "resume_updated.docx"
+    safe_name = safe_name.replace("—", "-").replace("–", "-").replace("“", '"').replace("”", '"').replace("’", "'")
     if not safe_name.lower().endswith(".docx"):
         safe_name += ".docx"
 

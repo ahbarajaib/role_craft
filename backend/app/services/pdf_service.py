@@ -244,6 +244,19 @@ class PDFService:
             spaceAfter=1.5,
         )
 
+        style_bullet = ParagraphStyle(
+            "ResumeBullet",
+            parent=styles["Normal"],
+            fontName=font_regular,
+            fontSize=9,
+            leading=12.5,
+            textColor=colors.HexColor("#334155"),
+            spaceBefore=1,
+            spaceAfter=1,
+            leftIndent=12,
+            firstLineIndent=-12,
+        )
+
         def _is_docx_bullet(p, text: str) -> bool:
             bullet_symbols = ["•", "-", "*", "–", "—", "▪", "▸", "\u2022"]
             if any(text.startswith(s) for s in bullet_symbols):
