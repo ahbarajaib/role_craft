@@ -158,6 +158,7 @@ class RewriteService:
         recommendations: list[str],
         user_instructions: str | None = None,
         metric_inputs: dict[str, str] | None = None,
+        preloaded_sections: list | None = None,
     ) -> RewriteSectionResponse:
         """Rewrite a single section of the resume using OpenAI structured outputs."""
         logger.info(
@@ -168,9 +169,12 @@ class RewriteService:
             has_metric_inputs=metric_inputs is not None,
         )
 
-        # 1. Load document sections
-        sections_response = self._sections.detect_document_sections(document_id)
-        sections = sections_response.sections
+        # 1. Load document sections (use preloaded if available to save disk I/O & XML parsing)
+        if preloaded_sections is not None:
+            sections = preloaded_sections
+        else:
+            sections_response = self._sections.detect_document_sections(document_id)
+            sections = sections_response.sections
 
         def _normalize_title(t: str) -> str:
             clean_t = t.replace("[", "").replace("]", "").strip()
@@ -403,6 +407,7 @@ class RewriteService:
             instructions=system_prompt,
             input_text=input_text,
             response_format=RewriteSectionResponse,
+            max_output_tokens=700,
         )
 
         # Python Shield 1: Sanitize any unsupported JD skills hallucinated by LLM
@@ -769,6 +774,7 @@ class RewriteService:
                 instructions=system_prompt,
                 input_text=full_input,
                 response_format=RewriteSectionResponse,
+                max_output_tokens=700,
             )
         except Exception as exc:
             raise BadRequestError(f"AI rewrite failed: {str(exc)}")
@@ -789,6 +795,14 @@ class RewriteService:
     ) -> dict[str, str]:
         """Execute parallel batch AI tailoring across multiple sections concurrently."""
         results_map: dict[str, str] = {}
+
+        # Pre-cache document sections once upfront to avoid repeating file I/O & XML parsing per thread
+        cached_sections = None
+        if document_id:
+            try:
+                cached_sections = self._sections.detect_document_sections(document_id).sections
+            except Exception as e:
+                logger.warning(f"Could not pre-cache document sections for batch rewrite: {e}")
 
         def _process_item(item):
             sec_name = item.section_name
@@ -823,6 +837,7 @@ class RewriteService:
                         recommendations=recs,
                         user_instructions=user_instructions,
                         metric_inputs=metric_inputs,
+                        preloaded_sections=cached_sections,
                     )
                 else:
                     return sec_name, ""

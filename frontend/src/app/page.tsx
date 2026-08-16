@@ -1742,19 +1742,33 @@ export default function Home() {
     try {
       let result = analysisResult;
       if (!result) {
-        console.log("🔍 [RoleCraft Audit] No existing analysis found – triggering analyzeResume first");
-        result = await analyzeResume(jobDescription, documentId || undefined);
-        setAnalysisResult(result);
+        console.log("🔍 [RoleCraft Audit] Triggering analyzeResume concurrently in background for non-blocking tailoring");
+        analyzeResume(jobDescription, documentId || undefined)
+          .then((res) => setAnalysisResult(res))
+          .catch((err) => console.error("Background analysis error:", err));
+      }
+
+      // Determine sections to tailor: from analysisResult if ready, or directly from masterResume
+      let baseSections: any[] = [];
+      if (result && result.sections && result.sections.length > 0) {
+        baseSections = result.sections;
+      } else if (masterResume && masterResume.sections) {
+        baseSections = masterResume.sections.map((s: any) => ({
+          section_name: s.section_title,
+          section_type: s.section_type,
+          review_status: "improve",
+          recommendations: [`Tailor ${s.section_title} for target job keywords and Google XYZ impact metrics`],
+        }));
       }
 
       // Queue sections for 1-Click Auto-Tailor respecting user's section AI tailoring toggle preferences
-      const sectionsToTailor = (result.sections || []).filter((s: any) => {
-        const norm = s.section_name.toLowerCase();
+      const sectionsToTailor = baseSections.filter((s: any) => {
+        const norm = (s.section_name || "").toLowerCase();
         const isExplicitOff = tailoringSectionToggles[s.section_name] === false;
         const isExplicitOn = tailoringSectionToggles[s.section_name] === true;
         if (isExplicitOff) return false;
         if (isExplicitOn) return true;
-        if (norm.includes("education") || norm.includes("certification")) {
+        if (norm.includes("education") || norm.includes("certification") || norm.includes("header")) {
           return false;
         }
         return (s.review_status === "improve" || (s.recommendations && s.recommendations.length > 0)) && s.review_status !== "reduce_emphasis";
@@ -1762,7 +1776,7 @@ export default function Home() {
 
       console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToTailor.map((s: any) => s.section_name));
 
-      if (sectionsToTailor.length === 0 && !result.overall_summary?.job_title) {
+      if (sectionsToTailor.length === 0 && !result?.overall_summary?.job_title && !customTargetRole) {
         setSuccessNotification("Your resume is already highly optimized for this role!");
         setIsAutoTailoring(false);
         return;
@@ -1781,7 +1795,7 @@ export default function Home() {
       const newRewrites: Record<string, string> = {};
 
       // 1. Apply Target Job Title to Header
-      const targetHeaderTitle = customTargetRole || result.overall_summary?.job_title;
+      const targetHeaderTitle = customTargetRole || result?.overall_summary?.job_title;
       if (targetHeaderTitle) {
         newRewrites["header"] = targetHeaderTitle;
       }
