@@ -98,7 +98,7 @@ export default function ResumeDownloadPanel({
         }
       }
       setSuccessTemplate(templateId);
-      setTimeout(() => setSuccessTemplate(null), 2500);
+      setTimeout(() => setSuccessTemplate(null), 1000);
     } catch (err: any) {
       if (templateId === "original" && err.message?.includes("injection")) {
         // Graceful fallback to Clean Classic

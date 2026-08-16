@@ -470,7 +470,7 @@ export function ProfileModal({
                         onClick={() => {
                           navigator.clipboard.writeText(skill);
                           setCopiedSkill(skill);
-                          setTimeout(() => setCopiedSkill(null), 2000);
+                          setTimeout(() => setCopiedSkill(null), 1000);
                         }}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer shadow-sm ${
                           isCopied

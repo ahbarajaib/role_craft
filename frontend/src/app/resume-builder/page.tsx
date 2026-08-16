@@ -59,6 +59,15 @@ export default function ResumeBuilderPage() {
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
   const [isLoadingResume, setIsLoadingResume] = useState(true);
 
+  useEffect(() => {
+    if (statusMsg) {
+      const timer = setTimeout(() => {
+        setStatusMsg(null);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [statusMsg]);
+
   const [selectedTemplate, setSelectedTemplate] = useState<"clean_classic" | "modern_professional" | "executive_profile">("clean_classic");
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);

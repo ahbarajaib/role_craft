@@ -1441,7 +1441,7 @@ export default function Home() {
     setSuccessNotification("📋 Entire Cover Letter text copied to clipboard!");
     setTimeout(() => {
       setIsCoverLetterCopied(false);
-    }, 2500);
+    }, 1000);
   };
 
   const handleGenerateCoverLetter = async () => {
@@ -1573,7 +1573,7 @@ export default function Home() {
     if (successNotification) {
       const timer = setTimeout(() => {
         setSuccessNotification(null);
-      }, 4000);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [successNotification]);
