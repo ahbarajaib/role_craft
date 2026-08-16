@@ -164,9 +164,6 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
         # Populate name from Google if not already set
         if not user.name and google_name:
             user.name = google_name
-        # Grant 200 credits for VIP account
-        if email_clean in vip_emails and user.credits < 200:
-            user.credits = 200
         db.commit()
         db.refresh(user)
 
@@ -177,11 +174,6 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserResponse)
 def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Retrieve details of the active authenticated session."""
-    vip_emails = ["absarajaib@gmail.com", "ahbarajaib@gmail.com"]
-    if user.email.strip().lower() in vip_emails and user.credits < 200:
-        user.credits = 200
-        db.commit()
-        db.refresh(user)
     return serialize_user_response(user)
 
 @router.patch("/profile", response_model=UserResponse)

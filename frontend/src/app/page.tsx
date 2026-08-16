@@ -1492,6 +1492,7 @@ export default function Home() {
       }
       setIsEditingCoverLetter(false);
       setSuccessNotification("✨ Tailored cover letter generated successfully!");
+      if (refreshMe) refreshMe();
     } catch (err: any) {
       console.error("Cover letter generation error:", err);
       setError(err?.message || "Failed to generate cover letter.");
@@ -1602,6 +1603,7 @@ export default function Home() {
       setRewriteData(data);
       setDraftRewrittenText(data.rewritten_text);
       setSuccessNotification("AI section rewrite complete.");
+      if (refreshMe) refreshMe();
     },
     onError: (err: any) => {
       setError(err?.message || "Failed to generate rewrite. Please try again.");
@@ -1685,6 +1687,7 @@ export default function Home() {
       }));
       setSuccessNotification(`AI rewrite complete for ${sectionName}.`);
       setIsPatchingApplied(false);
+      if (refreshMe) refreshMe();
     } catch (err: any) {
       console.error(`❌ [RoleCraft Audit] Rewrite failed for "${sectionName}":`, err);
       setError(err?.message || `Failed to rewrite ${sectionName}. Please try again.`);
