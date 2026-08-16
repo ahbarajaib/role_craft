@@ -146,7 +146,7 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
             provider="google",
             google_id=google_id,
             name=google_name,
-            credits=200 if email_clean in vip_emails else 15
+            credits=300 if email_clean in vip_emails else 15
         )
         db.add(user)
         db.commit()
