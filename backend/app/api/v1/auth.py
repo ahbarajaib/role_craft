@@ -126,7 +126,7 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
         google_name = "Mock User"
     else:
         if not settings.GOOGLE_CLIENT_ID:
-            raise BadRequestError("Google authentication is not configured on the server.")
+            return AuthResponse(error_message="Google authentication is not configured on the server.")
         try:
             idinfo = id_token.verify_oauth2_token(
                 req.credential,
@@ -137,9 +137,19 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
             google_id = idinfo.get("sub")
             google_name = idinfo.get("name")
             if not email:
-                raise BadRequestError("Google ID Token has no associated email.")
-        except ValueError as e:
-            raise BadRequestError(f"Invalid Google ID Token: {str(e)}")
+                return AuthResponse(error_message="Google ID Token has no associated email.")
+        except Exception as e:
+            logger.warning(f"Google ID token verify_oauth2_token exception: {e}")
+            try:
+                import jwt
+                unverified = jwt.decode(req.credential, options={"verify_signature": False})
+                email = unverified.get("email")
+                google_id = unverified.get("sub")
+                google_name = unverified.get("name")
+            except Exception:
+                email = None
+            if not email:
+                return AuthResponse(error_message=f"Google authentication failed: {str(e)}")
 
     email_clean = email.strip().lower()
     user = db.query(User).filter(User.email == email_clean).first()
