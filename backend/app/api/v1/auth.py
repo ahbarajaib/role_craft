@@ -107,12 +107,6 @@ def login(req: UserLoginRequest, db: Session = Depends(get_db)):
     if not verify_password(req.password, user.password_hash):
         return AuthResponse(error_message="Incorrect password. Please try again or click 'Forgot Password?'.")
 
-    vip_emails = ["absarajaib@gmail.com", "ahbarajaib@gmail.com"]
-    if email_clean in vip_emails and user.credits < 300:
-        user.credits = 300
-        db.commit()
-        db.refresh(user)
-
     token = create_access_token({"sub": user.email})
     return AuthResponse(access_token=token, user=serialize_user_response(user))
 
@@ -180,8 +174,6 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
         # Populate name from Google if not already set
         if not user.name and google_name:
             user.name = google_name
-        if email_clean in vip_emails and user.credits < 300:
-            user.credits = 300
         db.commit()
         db.refresh(user)
 
@@ -190,13 +182,8 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserResponse)
-def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def me(user: User = Depends(get_current_user)):
     """Retrieve details of the active authenticated session."""
-    vip_emails = ["absarajaib@gmail.com", "ahbarajaib@gmail.com"]
-    if user.email.strip().lower() in vip_emails and user.credits < 300:
-        user.credits = 300
-        db.commit()
-        db.refresh(user)
     return serialize_user_response(user)
 
 @router.patch("/profile", response_model=UserResponse)
