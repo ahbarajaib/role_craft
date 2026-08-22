@@ -21,7 +21,7 @@ export const TEMPLATES: TemplateOption[] = [
     font: "Times New Roman",
     badge: "100% ATS Safe",
     hasPhotoSupport: false,
-    colorScheme: "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900",
+    colorScheme: "border-slate-300 bg-white",
   },
   {
     id: "modern_professional",
@@ -30,7 +30,7 @@ export const TEMPLATES: TemplateOption[] = [
     font: "Calibri",
     badge: "Popular",
     hasPhotoSupport: false,
-    colorScheme: "border-indigo-200 dark:border-indigo-900 bg-indigo-50/20 dark:bg-indigo-950/20",
+    colorScheme: "border-blue-200 bg-blue-50/20",
   },
   {
     id: "executive_profile",
@@ -39,7 +39,7 @@ export const TEMPLATES: TemplateOption[] = [
     font: "Aptos / Calibri",
     badge: "Supports Photo",
     hasPhotoSupport: true,
-    colorScheme: "border-blue-300 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/30",
+    colorScheme: "border-blue-300 bg-blue-50/30",
   },
 ];
 
@@ -57,17 +57,17 @@ export default function TemplateSelector({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-          <Layout className="h-3.5 w-3.5 text-indigo-500" />
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+          <Layout className="h-3.5 w-3.5 text-blue-600" />
           Select ATS Template
         </h3>
         {sourceFormat === "docx" && (
-          <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
-            <Sparkles className="h-3 w-3" /> Auto-Matched from Upload
+          <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+            <Sparkles className="h-3 w-3 text-emerald-500" /> Auto-Matched from Upload
           </span>
         )}
         {sourceFormat === "pdf" && (
-          <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">
+          <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
             PDF Uploaded — Choose ATS Template
           </span>
         )}
@@ -83,33 +83,33 @@ export default function TemplateSelector({
               onClick={() => onSelectTemplate(tmpl.id)}
               className={`relative text-left p-3.5 rounded-2xl border transition-all cursor-pointer shadow-sm flex flex-col justify-between ${
                 isSelected
-                  ? "border-indigo-600 dark:border-indigo-400 ring-2 ring-indigo-500/20 bg-indigo-50/40 dark:bg-indigo-950/40"
-                  : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900"
+                  ? "border-blue-600 ring-2 ring-blue-500/20 bg-blue-50/50"
+                  : "border-slate-200 hover:border-blue-300 bg-white"
               }`}
             >
               <div>
                 <div className="flex items-center justify-between gap-1 mb-1">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                  <span className="text-xs font-bold text-slate-900 flex items-center gap-1">
                     {tmpl.title}
                   </span>
                   {isSelected && (
-                    <span className="h-4 w-4 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                    <span className="h-4 w-4 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0">
                       <Check className="h-2.5 w-2.5" />
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mb-2">
+                <p className="text-[11px] text-slate-500 leading-tight mb-2">
                   {tmpl.subtitle}
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] font-medium text-slate-400">
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] font-medium text-slate-400">
                 <span>Font: {tmpl.font}</span>
                 <span
                   className={`px-1.5 py-0.5 rounded-md font-bold text-[9px] ${
                     tmpl.hasPhotoSupport
-                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-slate-100 text-slate-600"
                   }`}
                 >
                   {tmpl.badge}

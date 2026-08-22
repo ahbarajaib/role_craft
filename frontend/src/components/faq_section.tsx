@@ -40,24 +40,26 @@ export default function FaqSection() {
         return (
           <div
             key={idx}
-            className="rounded-xl border border-slate-200 bg-white transition-all overflow-hidden shadow-sm hover:border-slate-300"
+            className={`rounded-2xl border transition-all overflow-hidden shadow-sm ${
+              isOpen ? "border-blue-300 bg-white ring-1 ring-blue-500/10 shadow-md" : "border-slate-200 bg-white hover:border-blue-200"
+            }`}
           >
             <button
               onClick={() => setOpenIndex(isOpen ? null : idx)}
               className="w-full p-5 text-left font-bold text-sm sm:text-base text-slate-900 flex items-center justify-between gap-4 cursor-pointer select-none"
             >
               <span className="flex items-center gap-2.5">
-                <HelpCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                <HelpCircle className={`h-4 w-4 shrink-0 transition-colors ${isOpen ? "text-blue-600" : "text-blue-500"}`} />
                 {faq.q}
               </span>
               <ChevronDown
                 className={`h-4 w-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-                  isOpen ? "rotate-180 text-emerald-600" : ""
+                  isOpen ? "rotate-180 text-blue-600" : ""
                 }`}
               />
             </button>
             {isOpen && (
-              <div className="px-5 pb-5 pt-0 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
+              <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-blue-50 pt-3">
                 {faq.a}
               </div>
             )}

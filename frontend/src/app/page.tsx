@@ -2749,24 +2749,29 @@ export default function Home() {
   const isUploading = uploadMutation.isPending;
 
   return (
-    <div className="relative min-h-screen bg-slate-50 text-slate-900 bg-grid p-6 lg:p-12 overflow-x-hidden transition-colors duration-300">
-      {/* Decorative Glow Elements */}
-      <div className="glow-effect bg-emerald-500/20 w-[550px] h-[550px] -top-40 -left-40" />
-      <div className="glow-effect bg-amber-500/20 w-[450px] h-[450px] top-[35%] -right-20" />
+    <div className="relative min-h-screen text-slate-900 bg-grid p-6 lg:p-12 overflow-x-hidden">
+      {/* Decorative Glow Orbs */}
+      <div className="glow-effect bg-blue-500 w-[600px] h-[600px] -top-48 -left-48" />
+      <div className="glow-effect bg-cyan-400 w-[400px] h-[400px] top-[40%] -right-32" />
+      <div className="glow-effect bg-indigo-400 w-[300px] h-[300px] top-[70%] left-[20%]" style={{opacity: 0.08}} />
 
       {/* Header */}
-      <header className="relative z-30 max-w-[1440px] mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 sm:mb-12 pb-4 border-b border-slate-200/80">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => switchNavTab("landing")}>
-          <img
-            src="/logo.png"
-            alt="Role Craft Logo"
-            className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-xl bg-white p-1 border border-slate-200/80 shadow-md transition-all shrink-0"
-          />
+      <header className="relative z-30 max-w-[1440px] mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 sm:mb-12 pb-4 border-b border-blue-100">
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => switchNavTab("landing")}>
+          {/* Logo with glow ring */}
+          <div className="relative shrink-0">
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-400 opacity-20 blur-md group-hover:opacity-35 transition-opacity" />
+            <img
+              src="/logo.png"
+              alt="RoleCraft Logo"
+              className="relative h-10 w-10 sm:h-11 sm:w-11 object-contain rounded-xl bg-white p-0.5 shadow-sm ring-1 ring-blue-100 transition-all"
+            />
+          </div>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
-              <span>Role Craft</span>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight leading-none">
+              <span className="text-gradient">RoleCraft</span>
             </h1>
-            <p className="text-xs text-slate-600 font-semibold truncate">
+            <p className="text-[11px] text-slate-500 font-semibold truncate mt-0.5">
               Craft every resume for the role.
             </p>
           </div>
@@ -2774,25 +2779,17 @@ export default function Home() {
 
         {/* Navigation Bar Links (Shown on landing page) */}
         {activeNavTab === "landing" && (
-          <nav className="hidden lg:flex items-center gap-1 sm:gap-2 text-xs font-bold text-slate-700">
-            <a
-              href="#features"
-              className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
-            >
-              Features
-            </a>
-            <a
-              href="#pricing"
-              className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
-            >
-              Pricing
-            </a>
-            <a
-              href="#faq"
-              className="px-3 py-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer text-slate-700 whitespace-nowrap"
-            >
-              FAQ
-            </a>
+          <nav className="hidden lg:flex items-center gap-0.5 text-xs font-bold text-slate-600">
+            {[{label: "Features", href: "#features"}, {label: "Pricing", href: "#pricing"}, {label: "FAQ", href: "#faq"}].map(({label, href}) => (
+              <a
+                key={label}
+                href={href}
+                className="relative px-3.5 py-2 rounded-lg text-slate-600 hover:text-blue-700 transition-colors cursor-pointer whitespace-nowrap group/nav"
+              >
+                {label}
+                <span className="absolute bottom-1 left-3.5 right-3.5 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full scale-x-0 group-hover/nav:scale-x-100 transition-transform origin-left duration-200" />
+              </a>
+            ))}
           </nav>
         )}
 
@@ -2800,10 +2797,10 @@ export default function Home() {
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-end md:self-auto">
           <Link
             href="/resume-builder"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-blue-50 text-blue-700 border border-blue-200 hover:border-blue-400 shadow-sm transition-all cursor-pointer"
             title="Create & Edit Structured Resume with ATS Templates"
           >
-            <Sparkles className="h-3.5 w-3.5" />
+            <Sparkles className="h-3.5 w-3.5 text-blue-500" />
             <span>Resume Builder</span>
           </Link>
 
@@ -2811,9 +2808,10 @@ export default function Home() {
           <button
             type="button"
             onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${activeNavTab === "workspace"
-                ? "bg-slate-900 text-white ring-2 ring-emerald-500"
-                : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${
+                activeNavTab === "workspace"
+                  ? "bg-slate-900 text-white ring-2 ring-blue-500"
+                  : "btn-primary"
               }`}
           >
             <Sparkles className="h-3.5 w-3.5 text-amber-300" />
@@ -2983,7 +2981,7 @@ export default function Home() {
           ) : (
             <button
               onClick={() => setShowAuthModal(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all cursor-pointer"
+              className="px-4 py-2 btn-primary text-xs cursor-pointer"
             >
               Sign In
             </button>
@@ -2995,30 +2993,33 @@ export default function Home() {
         <div className="relative max-w-[1440px] mx-auto space-y-24 py-4 animate-fade-in">
           {/* HERO BANNER SECTION */}
           <section className="text-center space-y-8 max-w-4xl mx-auto pt-6 pb-10">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 font-extrabold text-xs shadow-sm">
-              <Sparkles className="h-4 w-4 text-emerald-600 animate-pulse" />
+            <div className="section-eyebrow animate-badge-float">
+              <Sparkles className="h-3.5 w-3.5 text-blue-600" />
               <span>Recruiter-Grade AI Resume Optimization Engine</span>
             </div>
 
-            <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-[1.15]">
-              Tailor Your Resume to Any Role in <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-indigo-600">1-Click</span>
+            <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-[1.12]">
+              Tailor Your Resume to{" "}
+              <br className="hidden sm:block" />
+              Any Role in{" "}
+              <span className="text-gradient">1&#8209;Click</span>
             </h1>
 
             <p className="text-base sm:text-xl text-slate-600 font-medium max-w-2xl mx-auto leading-relaxed">
-              Beat ATS scanners, weave missing technical keywords naturally, and triple your interview callbacks while preserving 100% of your DOCX font & layout formatting.
+              Beat ATS scanners, weave missing technical keywords naturally, and triple your interview callbacks while preserving 100% of your DOCX font &amp; layout formatting.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <button
                 onClick={() => switchNavTab("workspace")}
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-base shadow-xl shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-105"
+                className="w-full sm:w-auto px-8 py-4 btn-glow text-base flex items-center justify-center gap-2.5 cursor-pointer"
               >
-                <Sparkles className="h-5 w-5 text-amber-300" />
-                <span>⚡ Launch Optimizer Workspace — 15 Free Credits</span>
+                <Sparkles className="h-5 w-5 text-amber-300 relative z-10" />
+                <span className="relative z-10">⚡ Launch Optimizer Workspace</span>
               </button>
               <a
                 href="#how-it-works"
-                className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-800 font-bold text-base border border-slate-200 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 font-bold text-base border border-slate-200 hover:border-blue-200 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>See How It Works</span>
                 <ArrowRight className="h-4 w-4" />
@@ -3026,23 +3027,19 @@ export default function Home() {
             </div>
 
             {/* Live Trust Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-10 border-t border-slate-200/80">
-              <div className="space-y-1">
-                <div className="text-2xl font-black text-slate-900">98.4%</div>
-                <div className="text-xs font-semibold text-slate-500">ATS Pass Rate</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-2xl font-black text-slate-900">3.8x</div>
-                <div className="text-xs font-semibold text-slate-500">More Interview Calls</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-2xl font-black text-slate-900">&lt; 15s</div>
-                <div className="text-xs font-semibold text-slate-500">Full 1-Click Tailor</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-2xl font-black text-slate-900">100%</div>
-                <div className="text-xs font-semibold text-slate-500">DOCX Layout Integrity</div>
-              </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-10">
+              <div className="gradient-divider sm:hidden col-span-2 mb-2" />
+              {[
+                { value: "98.4%", label: "ATS Pass Rate" },
+                { value: "3.8×", label: "More Interview Calls" },
+                { value: "<15s", label: "Full 1-Click Tailor" },
+                { value: "100%", label: "DOCX Layout Integrity" },
+              ].map(({ value, label }) => (
+                <div key={label} className="stat-card p-4 text-center space-y-1">
+                  <div className="text-2xl font-black text-gradient">{value}</div>
+                  <div className="text-xs font-semibold text-slate-500">{label}</div>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -3058,32 +3055,38 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md space-y-4 relative overflow-hidden">
-                <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 font-black text-lg flex items-center justify-center">
+              {/* Step 1 */}
+              <div className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden group glass-card-interactive">
+                <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-600 to-cyan-400" />
+                <div className="h-11 w-11 rounded-xl icon-gradient bg-gradient-to-br from-blue-600 to-blue-500 text-white font-black text-lg flex items-center justify-center shadow-sm">
                   1
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">Upload Base Resume</h3>
-                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors">Upload Base Resume</h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Upload your existing `.docx` base resume. RoleCraft parses low-level XML tags to map structure, fonts, and styles.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md space-y-4 relative overflow-hidden">
-                <div className="h-10 w-10 rounded-xl bg-indigo-100 text-indigo-700 font-black text-lg flex items-center justify-center">
+              {/* Step 2 */}
+              <div className="rounded-2xl border border-cyan-100 bg-white p-6 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden group glass-card-interactive">
+                <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-400 to-indigo-500" />
+                <div className="h-11 w-11 rounded-xl icon-gradient bg-gradient-to-br from-cyan-600 to-blue-600 text-white font-black text-lg flex items-center justify-center shadow-sm">
                   2
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">Paste Job Description</h3>
-                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors">Paste Job Description</h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Paste the Target Job Description. Our LLM pipeline detects key skills, missing keywords, and role priorities.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md space-y-4 relative overflow-hidden">
-                <div className="h-10 w-10 rounded-xl bg-amber-100 text-amber-700 font-black text-lg flex items-center justify-center">
+              {/* Step 3 */}
+              <div className="rounded-2xl border border-amber-100 bg-white p-6 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden group glass-card-interactive">
+                <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-amber-400 to-blue-500" />
+                <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-400 text-white font-black text-lg flex items-center justify-center shadow-sm">
                   3
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">1-Click Auto-Tailor & Download</h3>
-                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors">1-Click Auto-Tailor &amp; Download</h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Click '⚡ Auto-Tailor Full Resume' to rewrite summary, weave keywords, and download your patched `.docx` resume.
                 </p>
               </div>
@@ -3129,102 +3132,102 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Free Plan Card */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md flex flex-col justify-between space-y-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-blue-200 transition-all flex flex-col justify-between space-y-6 glass-card-interactive">
                 <div className="space-y-4">
-                  <span className="text-xs font-black uppercase text-slate-500 tracking-wider">Free Tier</span>
+                  <span className="text-xs font-black uppercase text-slate-400 tracking-widest">Free Tier</span>
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-black text-slate-900">₹0</span>
-                    <span className="text-xs text-slate-500 font-bold">/ forever</span>
+                    <span className="text-xs text-slate-400 font-semibold">/ forever</span>
                   </div>
-                  <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-4 border-t border-slate-100">
+                  <ul className="space-y-2.5 text-xs text-slate-600 font-medium pt-4 border-t border-slate-100">
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span><strong>15 Credits</strong> / Month</span>
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                      <span><strong className="text-slate-800">15 Credits</strong> / Month</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
                       <span>Standard AI Resume Analysis</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
                       <span>Basic Keyword Matching</span>
                     </li>
                   </ul>
                 </div>
                 <button
                   onClick={() => setActiveNavTab("workspace")}
-                  className="w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition-all cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer border border-slate-200"
                 >
                   Start Free
                 </button>
               </div>
 
-              {/* Pro Plan Card */}
-              <div className="rounded-2xl border-2 border-emerald-600 bg-white p-6 shadow-xl flex flex-col justify-between space-y-6 relative">
-                <div className="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-emerald-600 text-white font-extrabold text-[10px] uppercase tracking-wider shadow">
-                  Most Popular
+              {/* Pro Plan Card — Featured */}
+              <div className="pricing-popular rounded-2xl p-6 flex flex-col justify-between space-y-6 relative">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold text-[10px] uppercase tracking-widest shadow-lg shadow-blue-500/30 whitespace-nowrap">
+                  ✦ Most Popular
                 </div>
                 <div className="space-y-4">
-                  <span className="text-xs font-black uppercase text-emerald-700 tracking-wider">Pro Plan</span>
+                  <span className="text-xs font-black uppercase text-blue-700 tracking-widest">Pro Plan</span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-slate-900">₹399</span>
                     <span className="text-xs text-slate-400 line-through">₹2,000</span>
-                    <span className="text-xs text-slate-500 font-bold">/ month</span>
+                    <span className="text-xs text-slate-500 font-semibold">/ month</span>
                   </div>
-                  <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-4 border-t border-slate-100">
+                  <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-4 border-t border-blue-200/60">
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span><strong>200 Credits</strong> / Month</span>
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                      <span><strong className="text-slate-900">200 Credits</strong> / Month</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
                       <span>1-Click Full Resume Auto-Tailor</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
                       <span>Google XYZ Formula Bullet Rewriter</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span>100% DOCX & PDF Downloads</span>
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                      <span>100% DOCX &amp; PDF Downloads</span>
                     </li>
                   </ul>
                 </div>
                 <button
                   onClick={() => setIsSubscriptionModalOpen(true)}
-                  className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/20 transition-all cursor-pointer"
+                  className="w-full py-3.5 rounded-xl btn-primary text-xs cursor-pointer"
                 >
                   Upgrade to Pro Plan
                 </button>
               </div>
 
               {/* Elite Plan Card */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md flex flex-col justify-between space-y-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all flex flex-col justify-between space-y-6 glass-card-interactive">
                 <div className="space-y-4">
-                  <span className="text-xs font-black uppercase text-indigo-600 tracking-wider">Elite Plan</span>
+                  <span className="text-xs font-black uppercase text-indigo-600 tracking-widest">Elite Plan</span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-slate-900">₹599</span>
                     <span className="text-xs text-slate-400 line-through">₹3,000</span>
-                    <span className="text-xs text-slate-500 font-bold">/ month</span>
+                    <span className="text-xs text-slate-500 font-semibold">/ month</span>
                   </div>
-                  <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-4 border-t border-slate-100">
+                  <ul className="space-y-2.5 text-xs text-slate-600 font-medium pt-4 border-t border-slate-100">
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span><strong>400 Credits</strong> / Month</span>
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                      <span><strong className="text-slate-900">400 Credits</strong> / Month</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
                       <span>Everything in Pro Plan</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span>Priority Support & Maximum Capacity</span>
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                      <span>Priority Support &amp; Maximum Capacity</span>
                     </li>
                   </ul>
                 </div>
                 <button
                   onClick={() => setIsSubscriptionModalOpen(true)}
-                  className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/10 transition-all cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
                 >
                   Upgrade to Elite Plan
                 </button>
@@ -3246,33 +3249,37 @@ export default function Home() {
           </section>
 
           {/* FOOTER */}
-          <footer className="pt-12 pb-8 border-t border-slate-200 text-center space-y-6">
+          <footer className="pt-12 pb-8 text-center space-y-6">
+            <div className="gradient-divider mb-8" />
             <div className="flex items-center justify-center gap-3">
-              <img src="/logo.png" alt="RoleCraft Logo" className="h-8 w-8 object-contain rounded-lg bg-white p-1 border border-slate-200 shadow-sm" />
-              <span className="text-lg font-black text-slate-900">RoleCraft</span>
+              <div className="relative">
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-400 to-cyan-400 opacity-20 blur-sm" />
+                <img src="/logo.png" alt="RoleCraft Logo" className="relative h-9 w-9 object-contain rounded-lg bg-white p-0.5 ring-1 ring-blue-100 shadow-sm" />
+              </div>
+              <span className="text-lg font-black text-gradient">RoleCraft</span>
             </div>
             <p className="text-xs text-slate-500 font-medium max-w-md mx-auto">
               Craft every resume for the role. Recruiter-grade AI tailoring with 100% visual DOCX formatting preservation.
             </p>
-            <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-600 flex-wrap">
-              <a href="#how-it-works" onClick={() => setActiveNavTab("landing")} className="hover:text-emerald-600">How It Works</a>
-              <a href="#features" onClick={() => setActiveNavTab("landing")} className="hover:text-emerald-600">Features</a>
-              <a href="#pricing" onClick={() => setActiveNavTab("landing")} className="hover:text-emerald-600">Pricing</a>
-              <button onClick={() => setActiveNavTab("workspace")} className="hover:text-emerald-600">Workspace</button>
+            <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-500 flex-wrap">
+              <a href="#how-it-works" onClick={() => setActiveNavTab("landing")} className="hover:text-blue-600 transition-colors">How It Works</a>
+              <a href="#features" onClick={() => setActiveNavTab("landing")} className="hover:text-blue-600 transition-colors">Features</a>
+              <a href="#pricing" onClick={() => setActiveNavTab("landing")} className="hover:text-blue-600 transition-colors">Pricing</a>
+              <button onClick={() => setActiveNavTab("workspace")} className="hover:text-blue-600 transition-colors cursor-pointer">Workspace</button>
             </div>
-            <p className="text-[11px] text-slate-400 font-medium pt-4">
+            <p className="text-[11px] text-slate-400 font-medium pt-2">
               © 2026 RoleCraft Inc. All rights reserved. Built for job seekers worldwide.
             </p>
           </footer>
         </div>
       ) : (
         /* Main Workspace Container */
-        <main className="relative max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <main className="relative max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in-up">
           {/* Left Form Panel */}
           <div className="lg:col-span-4 space-y-6 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
             <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
-              <h2 className="text-lg font-bold text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center gap-2">
-                <Layers className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
+              <h2 className="text-lg font-bold text-slate-800 border-b border-blue-100 pb-3 flex items-center gap-2">
+                <Layers className="h-5 w-5 text-blue-500" />
                 Configure Analysis
               </h2>
 

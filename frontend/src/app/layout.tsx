@@ -1,26 +1,27 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
   subsets: ["latin"],
-});
-//comment
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Role Craft – AI-Powered Resume Optimization",
-  description: "Craft every resume for the role.",
+  title: "RoleCraft – AI-Powered Resume Optimization",
+  description: "Craft every resume for the role. Beat ATS scanners, weave missing keywords, and triple your interview callbacks.",
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",
     apple: "/logo.png",
-  }
+  },
+  openGraph: {
+    title: "RoleCraft – AI-Powered Resume Optimization",
+    description: "Craft every resume for the role. Recruiter-grade AI tailoring with 100% visual DOCX formatting preservation.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -31,10 +32,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${plusJakarta.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
+      <body className="min-h-full flex flex-col hero-mesh text-slate-900">
         <Providers>{children}</Providers>
       </body>
     </html>
