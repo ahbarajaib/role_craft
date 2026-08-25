@@ -1481,48 +1481,59 @@ export default function Home() {
 
   const [isAutoTailorSettingsOpen, setIsAutoTailorSettingsOpen] = useState(false);
 
-  const handleToggleSectionTailoring = (sectionName: string) => {
-    setTailoringSectionToggles((prev) => {
-      const normName = sectionName.toLowerCase();
-      const isFixed = normName.includes("education") || normName.includes("certification");
-      const current = prev[sectionName] !== undefined ? prev[sectionName] : !isFixed;
-      const nextState = !current;
-      console.log(`⚡ [RoleCraft Tailor] Section '${sectionName}' AI tailoring toggled to:`, nextState ? "ON (Tailor)" : "OFF (Locked)");
-      return { ...prev, [sectionName]: nextState };
-    });
-  };
-
   const isSectionTailorEnabled = (sectionId: string, defaultOn: boolean = true) => {
     if (tailoringSectionToggles[sectionId] !== undefined) {
       return tailoringSectionToggles[sectionId];
     }
     const lower = sectionId.toLowerCase();
-    if (lower === "header" || lower.includes("header")) return true;
+    if (lower === "header" || lower.includes("header") || lower.includes("targeted role") || lower.includes("target job title")) return true;
+    if (lower === "keywords" || lower.includes("keyword") || lower.includes("matrix") || lower.includes("ats skill")) return true;
     if (lower.includes("education") || lower.includes("certification")) return false;
     return defaultOn;
   };
 
+  const handleToggleSectionTailoring = (sectionId: string, defaultOn: boolean = true) => {
+    setTailoringSectionToggles((prev) => {
+      const current = isSectionTailorEnabled(sectionId, defaultOn);
+      const nextState = !current;
+      console.log(`⚡ [RoleCraft Tailor] Item '${sectionId}' toggled to:`, nextState ? "ON (Tailor)" : "OFF (Locked)");
+      return { ...prev, [sectionId]: nextState };
+    });
+  };
+
   const getAutoTailorConfigSections = () => {
-    const list: { id: string; name: string; desc: string; icon: any; defaultOn: boolean }[] = [
+    const list: { id: string; name: string; desc: string; icon: any; defaultOn: boolean; category: string }[] = [
       {
         id: "header",
-        name: "Target Job Title & Header",
-        desc: "Set resume headline & title to match target role",
+        name: "Targeted Role & Header Designation",
+        desc: "Match resume headline & job title to the target position",
         icon: Target,
         defaultOn: true,
+        category: "Header & Role",
+      },
+      {
+        id: "keywords",
+        name: "ATS Skill & Keyword Matrix (Auto-Weave)",
+        desc: "Automatically integrate missing high-impact ATS keywords from the JD into rewrites",
+        icon: Sparkles,
+        defaultOn: true,
+        category: "ATS Optimization",
       },
     ];
 
     const seen = new Set<string>();
     seen.add("header");
-    seen.add("target job title & header");
+    seen.add("keywords");
+    seen.add("targeted role & header designation");
+    seen.add("ats skill & keyword matrix (auto-weave)");
 
     const candidateSections: { name: string; type?: string }[] = [];
 
     if (analysisResult?.sections && analysisResult.sections.length > 0) {
       analysisResult.sections.forEach((s) => {
-        if (!seen.has(s.section_name.toLowerCase())) {
-          seen.add(s.section_name.toLowerCase());
+        const lower = s.section_name.toLowerCase();
+        if (!seen.has(lower) && !lower.includes("header")) {
+          seen.add(lower);
           candidateSections.push({ name: s.section_name, type: (s as any).section_type });
         }
       });
@@ -1530,8 +1541,9 @@ export default function Home() {
 
     if (masterResume?.sections && masterResume.sections.length > 0) {
       masterResume.sections.forEach((s) => {
-        if (!seen.has(s.section_title.toLowerCase())) {
-          seen.add(s.section_title.toLowerCase());
+        const lower = s.section_title.toLowerCase();
+        if (!seen.has(lower) && !lower.includes("header")) {
+          seen.add(lower);
           candidateSections.push({ name: s.section_title, type: s.section_type });
         }
       });
@@ -1540,9 +1552,9 @@ export default function Home() {
     if (candidateSections.length === 0) {
       candidateSections.push(
         { name: "Professional Summary", type: "summary" },
-        { name: "Work Experience", type: "experience" },
-        { name: "Technical Skills", type: "skills" },
-        { name: "Projects", type: "projects" },
+        { name: "Professional Experience", type: "experience" },
+        { name: "Technical & Core Skills", type: "skills" },
+        { name: "Key Projects", type: "projects" },
         { name: "Education", type: "education" },
         { name: "Certifications", type: "certifications" }
       );
@@ -1551,7 +1563,7 @@ export default function Home() {
     candidateSections.forEach((sec) => {
       const lower = sec.name.toLowerCase();
       let icon: any = Layers;
-      let desc = "Optimize section keywords & impact";
+      let desc = "Optimize content & keywords for target role";
       let defaultOn = true;
 
       if (lower.includes("summary") || lower.includes("objective") || sec.type === "summary") {
@@ -1560,11 +1572,11 @@ export default function Home() {
         defaultOn = true;
       } else if (lower.includes("experience") || lower.includes("work") || lower.includes("employment") || sec.type === "experience") {
         icon = Briefcase;
-        desc = "Google XYZ impact metrics & active action verbs";
+        desc = "Google XYZ impact metrics (Accomplished [X] as measured by [Y] doing [Z])";
         defaultOn = true;
       } else if (lower.includes("skill") || sec.type === "skills") {
         icon = Code;
-        desc = "Weave target ATS keywords, tools & technologies";
+        desc = "Weave target ATS keywords, tools & tech stack";
         defaultOn = true;
       } else if (lower.includes("project") || sec.type === "projects") {
         icon = Layers;
@@ -1586,6 +1598,7 @@ export default function Home() {
         desc,
         icon,
         defaultOn,
+        category: "Resume Sections",
       });
     });
 
@@ -1609,7 +1622,7 @@ export default function Home() {
       newToggles[sec.id] = true;
     });
     setTailoringSectionToggles(newToggles);
-    setSuccessNotification("Enabled ALL sections for Auto-Tailoring");
+    setSuccessNotification("Enabled ALL sections & items for Auto-Tailoring");
   };
 
   const handleDisableAllSections = () => {
@@ -1619,7 +1632,7 @@ export default function Home() {
       newToggles[sec.id] = false;
     });
     setTailoringSectionToggles(newToggles);
-    setSuccessNotification("All sections locked (Auto-Tailoring will skip them)");
+    setSuccessNotification("All items locked (Auto-Tailoring will skip them)");
   };
 
   const [isWeavingKeywords, setIsWeavingKeywords] = useState(false);
@@ -4119,7 +4132,7 @@ export default function Home() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2.5 shrink-0 relative">
+                    <div className="flex items-center gap-2.5 shrink-0">
                       <button
                         type="button"
                         onClick={handleAutoTailor}
@@ -4139,174 +4152,25 @@ export default function Home() {
                         )}
                       </button>
 
-                      {/* ⚙️ 1-Click Scope Settings Button */}
-                      <div className="relative">
-                        {(() => {
-                          const configSections = getAutoTailorConfigSections();
-                          const activeCount = configSections.filter((s) => isSectionTailorEnabled(s.id, s.defaultOn)).length;
-                          return (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => setIsAutoTailorSettingsOpen(!isAutoTailorSettingsOpen)}
-                                title="Configure which sections are updated during 1-Click Auto-Tailor"
-                                className={`p-3 sm:px-3.5 sm:py-3.5 rounded-xl font-extrabold text-xs border transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-xl select-none ${
-                                  isAutoTailorSettingsOpen
-                                    ? "bg-white text-slate-900 border-white shadow-white/20 scale-[1.02]"
-                                    : "bg-slate-800/80 hover:bg-slate-800 text-white border-white/20 hover:border-white/40"
-                                }`}
-                              >
-                                <SlidersHorizontal className={`h-4 w-4 ${isAutoTailorSettingsOpen ? "text-indigo-600" : "text-amber-300"}`} />
-                                <span className="hidden md:inline">Settings</span>
-                                <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black border ${
-                                  isAutoTailorSettingsOpen
-                                    ? "bg-indigo-100 text-indigo-800 border-indigo-200"
-                                    : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-                                }`}>
-                                  {activeCount}/{configSections.length} ON
-                                </span>
-                                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isAutoTailorSettingsOpen ? "rotate-180" : ""}`} />
-                              </button>
-
-                              {/* Dropdown Modal Popover */}
-                              {isAutoTailorSettingsOpen && (
-                                <>
-                                  <div
-                                    className="fixed inset-0 z-40"
-                                    onClick={() => setIsAutoTailorSettingsOpen(false)}
-                                  />
-                                  <div className="absolute right-0 top-full mt-2.5 w-80 sm:w-[380px] z-50 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-4.5 space-y-4 text-white animate-fade-in-up">
-                                    {/* Header */}
-                                    <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                                      <div className="flex items-center gap-2.5">
-                                        <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/30 shrink-0">
-                                          <SlidersHorizontal className="h-4 w-4 text-white" />
-                                        </div>
-                                        <div>
-                                          <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5">
-                                            Auto-Tailor Scope
-                                            <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 lowercase">
-                                              {activeCount} active
-                                            </span>
-                                          </h4>
-                                          <p className="text-[10px] text-slate-400">Toggle which sections get optimized by AI</p>
-                                        </div>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => setIsAutoTailorSettingsOpen(false)}
-                                        className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </button>
-                                    </div>
-
-                                    {/* Quick Preset Buttons */}
-                                    <div className="flex items-center justify-between gap-1.5 p-1 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] font-bold">
-                                      <button
-                                        type="button"
-                                        onClick={handleEnableRecommendedSections}
-                                        className="flex-1 py-1.5 px-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all text-center shadow-sm cursor-pointer"
-                                      >
-                                        Recommended
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={handleEnableAllSections}
-                                        className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all text-center cursor-pointer"
-                                      >
-                                        Enable All
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={handleDisableAllSections}
-                                        className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all text-center cursor-pointer"
-                                      >
-                                        Lock All
-                                      </button>
-                                    </div>
-
-                                    {/* Section Item Rows */}
-                                    <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
-                                      {configSections.map((sec) => {
-                                        const isEnabled = isSectionTailorEnabled(sec.id, sec.defaultOn);
-                                        const SecIcon = sec.icon;
-                                        return (
-                                          <div
-                                            key={sec.id}
-                                            onClick={() => handleToggleSectionTailoring(sec.id)}
-                                            className={`p-2.5 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer select-none ${
-                                              isEnabled
-                                                ? "bg-slate-800/90 border-indigo-500/40 hover:border-indigo-400"
-                                                : "bg-slate-950/50 border-slate-800 hover:border-slate-700 opacity-65"
-                                            }`}
-                                          >
-                                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                              <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 border ${
-                                                isEnabled
-                                                  ? "bg-indigo-500/20 border-indigo-400/30 text-indigo-300"
-                                                  : "bg-slate-800 border-slate-700 text-slate-500"
-                                              }`}>
-                                                <SecIcon className="h-3.5 w-3.5" />
-                                              </div>
-                                              <div className="min-w-0 flex-1">
-                                                <div className="flex items-center gap-1.5">
-                                                  <p className={`text-xs font-bold truncate ${isEnabled ? "text-white" : "text-slate-400"}`}>
-                                                    {sec.name}
-                                                  </p>
-                                                  {isEnabled ? (
-                                                    <span className="text-[9px] font-extrabold px-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                                      ON
-                                                    </span>
-                                                  ) : (
-                                                    <span className="text-[9px] font-bold px-1 rounded bg-slate-800 text-slate-400 border border-slate-700">
-                                                      LOCKED
-                                                    </span>
-                                                  )}
-                                                </div>
-                                                <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                                                  {sec.desc}
-                                                </p>
-                                              </div>
-                                            </div>
-
-                                            {/* iOS Switch */}
-                                            <div
-                                              className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 ease-in-out shrink-0 ${
-                                                isEnabled ? "bg-emerald-500" : "bg-slate-700"
-                                              }`}
-                                            >
-                                              <div
-                                                className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
-                                                  isEnabled ? "translate-x-4" : "translate-x-0"
-                                                }`}
-                                              />
-                                            </div>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-
-                                    {/* Footer Info */}
-                                    <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
-                                      <span className="italic flex items-center gap-1">
-                                        <Lock className="h-3 w-3 text-slate-500" /> Locked sections stay 100% untouched
-                                      </span>
-                                      <button
-                                        type="button"
-                                        onClick={() => setIsAutoTailorSettingsOpen(false)}
-                                        className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all cursor-pointer"
-                                      >
-                                        Done
-                                      </button>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
+                      {/* ⚙️ 1-Click Scope Settings Trigger Button */}
+                      {(() => {
+                        const configSections = getAutoTailorConfigSections();
+                        const activeCount = configSections.filter((s) => isSectionTailorEnabled(s.id, s.defaultOn)).length;
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => setIsAutoTailorSettingsOpen(true)}
+                            title="Configure which sections are updated during 1-Click Auto-Tailor"
+                            className="p-3 sm:px-3.5 sm:py-3.5 rounded-xl font-extrabold text-xs border transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-xl select-none bg-slate-800/90 hover:bg-slate-800 text-white border-white/20 hover:border-white/40 hover:scale-[1.02] active:scale-[0.98]"
+                          >
+                            <SlidersHorizontal className="h-4 w-4 text-amber-300" />
+                            <span className="hidden md:inline">Settings</span>
+                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-black border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+                              {activeCount}/{configSections.length} ON
+                            </span>
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -6164,6 +6028,173 @@ export default function Home() {
           sourceFormat={masterResume?.source_format || "docx"}
           fullName={masterResume?.contact_info?.full_name || undefined}
         />
+      )}
+
+      {/* ─── ⚡ 1-Click Auto-Tailor Scope & Settings Modal ────────────────── */}
+      {isAutoTailorSettingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          {/* Backdrop click to close */}
+          <div
+            className="fixed inset-0"
+            onClick={() => setIsAutoTailorSettingsOpen(false)}
+          />
+
+          <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] z-10 text-white animate-scale-in">
+            {/* Ambient glows */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Modal Header */}
+            <div className="relative z-10 px-6 py-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 backdrop-blur">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 shrink-0 ring-1 ring-white/20">
+                  <SlidersHorizontal className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                    ⚡ Auto-Tailor Scope & Preferences
+                    {(() => {
+                      const configSections = getAutoTailorConfigSections();
+                      const activeCount = configSections.filter((s) => isSectionTailorEnabled(s.id, s.defaultOn)).length;
+                      return (
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          {activeCount} of {configSections.length} ON
+                        </span>
+                      );
+                    })()}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Click each item to turn AI optimization ON or OFF. Locked items remain 100% untouched.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAutoTailorSettingsOpen(false)}
+                className="h-9 w-9 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center border border-slate-700 transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Presets Action Bar */}
+            <div className="relative z-10 px-6 py-3 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-400 hidden sm:inline">Quick Presets:</span>
+              <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+                <button
+                  type="button"
+                  onClick={handleEnableRecommendedSections}
+                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition-all shadow-md shadow-indigo-600/30 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Sparkles className="h-3 w-3 text-amber-300" />
+                  Recommended
+                </button>
+                <button
+                  type="button"
+                  onClick={handleEnableAllSections}
+                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Check className="h-3 w-3 text-emerald-400" />
+                  Select All
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDisableAllSections}
+                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Lock className="h-3 w-3 text-slate-400" />
+                  Lock All
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Item List */}
+            <div className="relative z-10 p-6 overflow-y-auto space-y-2.5 flex-1">
+              {(() => {
+                const configSections = getAutoTailorConfigSections();
+                return configSections.map((sec) => {
+                  const isEnabled = isSectionTailorEnabled(sec.id, sec.defaultOn);
+                  const SecIcon = sec.icon;
+
+                  return (
+                    <button
+                      key={sec.id}
+                      type="button"
+                      onClick={() => handleToggleSectionTailoring(sec.id, sec.defaultOn)}
+                      className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between gap-4 cursor-pointer select-none group ${
+                        isEnabled
+                          ? "bg-slate-800/90 hover:bg-slate-800 border-indigo-500/50 hover:border-indigo-400 shadow-md shadow-indigo-950/50"
+                          : "bg-slate-950/40 hover:bg-slate-950/70 border-slate-800 hover:border-slate-700 opacity-75 hover:opacity-90"
+                      }`}
+                    >
+                      {/* Left icon & text */}
+                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                        <div
+                          className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
+                            isEnabled
+                              ? "bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-indigo-400/40 text-indigo-300 shadow-inner"
+                              : "bg-slate-800 border-slate-700 text-slate-500"
+                          }`}
+                        >
+                          <SecIcon className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-sm font-extrabold transition-colors ${isEnabled ? "text-white group-hover:text-indigo-200" : "text-slate-400"}`}>
+                              {sec.name}
+                            </span>
+                            {isEnabled ? (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                ACTIVE (ON)
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1">
+                                <Lock className="h-2.5 w-2.5" />
+                                LOCKED (OFF)
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                            {sec.desc}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Right iOS Toggle Switch */}
+                      <div
+                        className={`w-12 h-6.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out shrink-0 border ${
+                          isEnabled ? "bg-emerald-500 border-emerald-400" : "bg-slate-700 border-slate-600"
+                        }`}
+                      >
+                        <div
+                          className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
+                            isEnabled ? "translate-x-5.5" : "translate-x-0"
+                          }`}
+                        />
+                      </div>
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="relative z-10 px-6 py-4 border-t border-slate-800 bg-slate-900/90 backdrop-blur flex items-center justify-between gap-3">
+              <p className="text-xs text-slate-400 flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-slate-400" />
+                Locked items are skipped during Auto-Tailoring.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsAutoTailorSettingsOpen(false)}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
+              >
+                Save Scope & Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Issue Report & Feedback Modal */}
