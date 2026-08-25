@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 1200" width="1120" height="1200">
+<defs>
+  <linearGradient id="blueMain" x1="0.18" y1="0.08" x2="0.78" y2="0.92">
+    <stop offset="0" stop-color="#1768FF"/>
+    <stop offset=".42" stop-color="#1764F4"/>
+    <stop offset=".78" stop-color="#0840C7"/>
+    <stop offset="1" stop-color="#052B8C"/>
+  </linearGradient>
+  <linearGradient id="blueRight" x1=".25" y1=".1" x2=".9" y2=".85">
+    <stop offset="0" stop-color="#2B76FF"/>
+    <stop offset=".52" stop-color="#1764F2"/>
+    <stop offset="1" stop-color="#0A42C9"/>
+  </linearGradient>
+  <linearGradient id="blueTail" x1=".25" y1=".1" x2=".75" y2=".9">
+    <stop offset="0" stop-color="#1767F8"/>
+    <stop offset=".55" stop-color="#0D52DC"/>
+    <stop offset="1" stop-color="#0A3DB9"/>
+  </linearGradient>
+  <linearGradient id="paper" x1=".12" y1=".05" x2=".8" y2=".92">
+    <stop offset="0" stop-color="#FFFFFF"/>
+    <stop offset=".72" stop-color="#FAFBFE"/>
+    <stop offset="1" stop-color="#EEF1F7"/>
+  </linearGradient>
+  <linearGradient id="fold" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#F7F8FB"/>
+    <stop offset="1" stop-color="#DDE2EB"/>
+  </linearGradient>
+  <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#0E50D8"/>
+    <stop offset=".5" stop-color="#155FEA"/>
+    <stop offset="1" stop-color="#0641BD"/>
+  </linearGradient>
+  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="2"/>
+  </filter>
+</defs>
+
+<!-- main blue shield/speech-like body -->
+<path d="M65 72
+         Q65 42 96 42
+         L590 42
+         Q716 42 817 117
+         Q954 218 969 371
+         Q983 532 894 655
+         Q838 732 742 790
+         L506 932
+         Q393 1000 284 1071
+         Q179 1140 101 1140
+         Q65 1140 65 1102 Z"
+      fill="url(#blueMain)"/>
+
+<!-- subtle upper/right highlight -->
+<path d="M592 43 Q720 45 818 117 Q944 211 965 351
+         Q900 320 825 337 Q748 355 669 391
+         L590 42 Z"
+      fill="#2D76FF" opacity=".28"/>
+
+<!-- darker lower sweep -->
+<path d="M65 1110 Q180 1136 294 1066 L742 790
+         Q844 728 898 648 Q824 704 730 744
+         L448 883 Q264 973 65 1059 Z"
+      fill="#062F9D" opacity=".42"/>
+
+<!-- lower blue tail -->
+<path d="M501 902
+         Q535 871 577 847
+         L746 775
+         L1051 1117
+         Q1065 1133 1041 1140
+         L776 1140
+         Q735 1139 703 1108
+         Z"
+      fill="url(#blueRight)"/>
+
+<!-- tail highlight -->
+<path d="M758 790 L1047 1118 Q1055 1128 1038 1132
+         L790 1132 Q753 1130 724 1098 L574 928 Z"
+      fill="#2B77FF" opacity=".30"/>
+
+<!-- paper -->
+<path d="M207 194
+         Q207 166 236 166
+         L529 166
+         Q551 166 568 183
+         L747 364
+         Q757 374 757 395
+         L757 603
+         Q757 649 720 677
+         L261 968
+         Q207 1001 207 944 Z"
+      fill="url(#paper)"/>
+
+<!-- folded corner -->
+<path d="M529 166 L529 362 Q529 394 560 402 L747 402
+         L568 183 Q551 166 529 166 Z"
+      fill="url(#fold)"/>
+<path d="M529 362 Q529 394 560 402 L747 402"
+      fill="none" stroke="#D9DEE8" stroke-width="1.5"/>
+
+<!-- user icon -->
+<circle cx="348" cy="311" r="38" fill="url(#line)"/>
+<path d="M288 407 Q288 366 328 366 L369 366 Q409 366 409 407
+         Q409 427 389 427 L308 427 Q288 427 288 407 Z"
+      fill="url(#line)"/>
+
+<!-- document lines -->
+<rect x="288" y="501" width="382" height="30" rx="15" fill="url(#line)"/>
+<rect x="288" y="596" width="347" height="30" rx="15" fill="url(#line)"/>
+<rect x="288" y="691" width="219" height="30" rx="15" fill="url(#line)"/>
+</svg>

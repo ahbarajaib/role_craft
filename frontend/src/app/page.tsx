@@ -3366,29 +3366,30 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   return (
     <div className="relative min-h-screen text-slate-900 bg-grid p-6 lg:p-12 overflow-x-hidden">
       {/* Decorative Glow Orbs */}
-      <div className="glow-effect bg-blue-500 w-[600px] h-[600px] -top-48 -left-48" />
-      <div className="glow-effect bg-cyan-400 w-[400px] h-[400px] top-[40%] -right-32" />
-      <div className="glow-effect bg-indigo-400 w-[300px] h-[300px] top-[70%] left-[20%]" style={{opacity: 0.08}} />
+      <div className="glow-effect bg-teal-500 w-[600px] h-[600px] -top-48 -left-48" style={{ opacity: 0.12 }} />
+      <div className="glow-effect bg-cyan-400 w-[400px] h-[400px] top-[40%] -right-32" style={{ opacity: 0.08 }} />
+      <div className="glow-effect bg-[#FF6B4A] w-[300px] h-[300px] top-[70%] left-[20%]" style={{ opacity: 0.06 }} />
 
       {/* Header */}
-      <header className="relative z-30 max-w-[1440px] mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 sm:mb-12 pb-4 border-b border-blue-100">
+      <header className="relative z-30 max-w-[1440px] mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 sm:mb-12 pb-4 border-b border-slate-200/80">
         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => switchNavTab("landing")}>
           {/* Logo with glow ring */}
           <div className="relative shrink-0">
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-400 opacity-20 blur-md group-hover:opacity-35 transition-opacity" />
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#14B8A6]/30 to-[#FF6B4A]/20 opacity-20 blur-md group-hover:opacity-40 transition-opacity" />
             <img
               src="/logo.svg"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
               alt="RoleCraft Logo"
-              className="relative h-10 w-10 sm:h-11 sm:w-11 object-contain rounded-xl bg-white p-0.5 shadow-sm ring-1 ring-blue-100 transition-all"
+              className="relative h-10 w-10 sm:h-11 sm:w-11 object-contain rounded-xl bg-white p-0.5 shadow-sm ring-1 ring-teal-100 transition-all"
             />
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight leading-none">
-              <span className="text-gradient">RoleCraft</span>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight leading-none flex items-center">
+              <span className="text-[#0F172A]">Role</span>
+              <span className="text-[#14B8A6]">Craft</span>
             </h1>
-            <p className="text-[11px] text-slate-500 font-semibold truncate mt-0.5">
-              Craft every resume for the role.
+            <p className="text-[10px] text-slate-500 font-extrabold tracking-wider uppercase truncate mt-0.5">
+              TAILOR. MATCH. GET HIRED.
             </p>
           </div>
         </div>
@@ -4367,9 +4368,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 <button
                   type="submit"
                   disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing}
-                  className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${documentId && jobDescription.trim().length >= 50 && !isAnalyzing
-                      ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 cursor-pointer"
-                      : "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed"
+                  className={`w-full py-3.5 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${documentId && jobDescription.trim().length >= 50 && !isAnalyzing
+                      ? "bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:to-teal-500 text-white shadow-xl shadow-teal-500/20 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                      : "bg-slate-200 text-slate-400 cursor-not-allowed"
                     }`}
                 >
                   {isAnalyzing ? (
@@ -4379,7 +4380,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </>
                   ) : (
                     <>
-                      <Sparkles className="h-4 w-4" />
+                      <Sparkles className="h-4 w-4 text-[#FF6B4A]" />
                       Analyze Gaps & Fit
                     </>
                   )}
@@ -4393,13 +4394,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             {isAnalyzing ? (
               <LoadingState />
             ) : !analysisResult ? (
-              <div className="glass-panel rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800 min-h-[450px] flex flex-col items-center justify-center space-y-4">
-                <div className="h-16 w-16 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-800 shadow-sm animate-pulse">
-                  <Activity className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+              <div className="glass-panel rounded-2xl p-12 text-center border border-slate-200 min-h-[450px] flex flex-col items-center justify-center space-y-4">
+                <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center border border-slate-200 shadow-sm animate-pulse">
+                  <Activity className="h-8 w-8 text-teal-600" />
                 </div>
                 <div className="space-y-2 max-w-sm">
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-white">Awaiting Analysis</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                  <h3 className="text-lg font-bold text-slate-800">Awaiting Analysis</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">
                     Upload your resume and provide a target job description on the left to start detecting gaps and strengths.
                   </p>
                 </div>
@@ -4407,14 +4408,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             ) : (
               <div className="space-y-6">
                 {/* ⚡ 1-Click Auto-Tailor Hero Banner */}
-                <div className="relative overflow-hidden rounded-2xl p-5.5 border border-indigo-200/90 bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-emerald-50/80 text-slate-900 shadow-xl shadow-blue-500/5 backdrop-blur-xl animate-fade-in">
-                  <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute -left-12 -top-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="relative overflow-hidden rounded-2xl p-5.5 border border-[#99f6e4]/80 bg-gradient-to-r from-[#E6F7F4]/90 via-white to-[#F1F5F9] text-slate-900 shadow-xl shadow-teal-500/5 backdrop-blur-xl animate-fade-in">
+                  <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -left-12 -top-12 w-48 h-48 bg-[#FF6B4A]/10 rounded-full blur-3xl pointer-events-none" />
 
                   <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0 ring-1 ring-white/50">
-                        <Sparkles className="h-6 w-6 animate-pulse text-amber-200" />
+                      <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#0F172A] via-[#0F766E] to-[#14B8A6] text-white flex items-center justify-center shadow-lg shadow-teal-500/20 shrink-0 ring-1 ring-white/50">
+                        <Sparkles className="h-6 w-6 animate-pulse text-[#FF6B4A]" />
                       </div>
                       <div>
                         <h4 className="text-base font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
@@ -4430,7 +4431,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         type="button"
                         onClick={handleAutoTailor}
                         disabled={isAutoTailoring}
-                        className="px-6 py-3.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white shadow-xl shadow-emerald-600/20 hover:shadow-emerald-600/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20"
+                        className="px-6 py-3.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:to-teal-500 text-white shadow-xl shadow-teal-600/20 hover:shadow-teal-600/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20"
                       >
                         {isAutoTailoring ? (
                           <>

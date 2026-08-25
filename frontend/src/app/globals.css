@@ -19,57 +19,59 @@
 
 /* ─── Global Base Theme Variables (Single Source of Truth) ──────────────── */
 :root {
-  /* Core Brand Colors (Change here to retheme the entire site) */
-  --primary: #2563eb;          /* Brand Royal Blue (matches logo) */
-  --primary-hover: #1d4ed8;    /* Darker Blue on Hover */
-  --primary-dark: #1e3a8a;     /* Deep Navy Blue */
-  --primary-light: #60a5fa;    /* Sky/Light Blue */
-  --primary-subtle: #eff6ff;   /* Soft Ice Blue Tint (50) */
-  --primary-muted: #dbeafe;    /* Light Blue Border Tint (100) */
-  --primary-border: #bfdbfe;   /* Accent Blue Border (200) */
+  /* Core Brand Colors (RoleCraft Official Brand Style Guide) */
+  --primary: #14b8a6;              /* Teal Green (#14B8A6) */
+  --primary-hover: #0d9488;        /* Deep Teal */
+  --primary-dark: #0f172a;         /* Deep Navy (#0F172A) */
+  --primary-light: #5eead4;        /* Light Teal */
+  --primary-subtle: #e6f7f4;       /* Soft Mint (#E6F7F4) */
+  --primary-muted: #ccfbf1;        /* Mint 100 */
+  --primary-border: #99f6e4;       /* Mint Border 200 */
 
-  /* Vibrant Accent Colors */
-  --accent: #06b6d4;           /* Cyan Accent for Gradients */
-  --accent-purple: #6366f1;    /* Indigo / Secondary Accent */
-  --accent-gold: #f59e0b;      /* Gold / Amber Accent */
-  --accent-gold-light: #fbbf24;/* Bright Amber */
+  /* Vibrant Coral Accent (#FF6B4A) */
+  --accent-coral: #ff6b4a;         /* Coral Accent (#FF6B4A) */
+  --accent-coral-hover: #f95738;   /* Deep Coral */
+  --accent-coral-subtle: #fff1ee;  /* Soft Coral Tint */
+  --accent-coral-border: #ffcfc4;  /* Coral Border */
+  --accent: #14b8a6;               /* Teal Accent */
+  --accent-navy: #0f172a;          /* Deep Navy */
 
   /* Feedback / Semantic Colors */
-  --success: #10b981;          /* Emerald Green */
-  --success-subtle: #ecfdf5;   /* Emerald 50 */
-  --success-border: #a7f3d0;   /* Emerald 200 */
-  --warning: #f59e0b;          /* Amber */
-  --warning-subtle: #fffbeb;   /* Amber 50 */
-  --warning-border: #fde68a;   /* Amber 200 */
-  --danger: #ef4444;           /* Rose / Red */
-  --danger-subtle: #fef2f2;    /* Rose 50 */
-  --danger-border: #fecaca;    /* Rose 200 */
+  --success: #14b8a6;              /* Teal Green */
+  --success-subtle: #e6f7f4;       /* Soft Mint */
+  --success-border: #99f6e4;       /* Mint Border */
+  --warning: #f59e0b;              /* Amber */
+  --warning-subtle: #fffbeb;       /* Amber 50 */
+  --warning-border: #fde68a;       /* Amber 200 */
+  --danger: #ff6b4a;               /* Coral */
+  --danger-subtle: #fff1ee;        /* Coral Tint */
+  --danger-border: #ffcfc4;        /* Coral Border */
 
-  /* Page Surfaces & Backgrounds */
-  --background: #f0f4ff;       /* Crisp Atmospheric Page Canvas */
-  --background-secondary: #e8effe;
-  --foreground: #0f172a;       /* Deep Slate 900 Text */
-  --text-muted: #64748b;       /* Slate 500 Subtext */
-  --text-secondary: #334155;   /* Slate 700 Label Text */
+  /* Page Surfaces & Backgrounds (Light Gray #F8FAFC / #F1F5F9 & Soft Mint #E6F7F4) */
+  --background: #f8fafc;           /* Light Gray (#F8FAFC) */
+  --background-secondary: #f1f5f9; /* Light Gray (#F1F5F9) */
+  --foreground: #0f172a;           /* Deep Navy (#0F172A) */
+  --text-muted: #64748b;           /* Slate 500 Subtext */
+  --text-secondary: #334155;       /* Slate 700 Label Text */
 
   /* Cards & Containers */
   --card-bg: #ffffff;
   --card-bg-translucent: rgba(255, 255, 255, 0.95);
-  --card-border: #e2e8f0;      /* Slate 200 */
-  --card-border-subtle: rgba(203, 213, 225, 0.8);
-  --card-border-hover: #93c5fd;/* Blue 300 */
+  --card-border: #e2e8f0;          /* Light Gray Border */
+  --card-border-subtle: rgba(226, 232, 240, 0.9);
+  --card-border-hover: #99f6e4;    /* Mint / Teal Border */
 
   /* Inputs & Form Elements */
-  --input-bg: rgba(248, 250, 252, 0.7);
+  --input-bg: rgba(248, 250, 252, 0.85);
   --input-border: #e2e8f0;
   --input-focus-border: var(--primary);
-  --input-focus-ring: rgba(37, 99, 235, 0.15);
+  --input-focus-ring: rgba(20, 184, 166, 0.18);
 
   /* Glows & Lighting */
-  --glow-primary: rgba(37, 99, 235, 0.18);
-  --glow-primary-strong: rgba(37, 99, 235, 0.35);
-  --glow-accent: rgba(6, 182, 212, 0.14);
-  --glow-shadow: 0 10px 40px -10px rgba(37, 99, 235, 0.15);
+  --glow-primary: rgba(20, 184, 166, 0.15);
+  --glow-primary-strong: rgba(20, 184, 166, 0.30);
+  --glow-coral: rgba(255, 107, 74, 0.20);
+  --glow-shadow: 0 10px 40px -10px rgba(20, 184, 166, 0.15);
 }
 
 /* ─── Base ─────────────────────────────────────────────────────────────────── */
@@ -90,9 +92,9 @@ body {
 .hero-mesh {
   background-color: var(--background);
   background-image:
-    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(37, 99, 235, 0.13) 0px, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(6, 182, 212, 0.10) 0px, transparent 55%),
-    radial-gradient(ellipse 50% 50% at 50% 100%, rgba(99, 102, 241, 0.08) 0px, transparent 60%);
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(20, 184, 166, 0.12) 0px, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(230, 247, 244, 0.8) 0px, transparent 55%),
+    radial-gradient(ellipse 50% 50% at 50% 100%, rgba(255, 107, 74, 0.06) 0px, transparent 60%);
 }
 
 /* ─── Glass Panels ─────────────────────────────────────────────────────────── */
@@ -164,12 +166,18 @@ body {
 
 /* ─── Gradient Text ────────────────────────────────────────────────────────── */
 .text-gradient {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, var(--primary) 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #14b8a6 65%, #0d9488 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: shimmer-text 4s linear infinite;
+}
+
+.text-gradient-coral {
+  background: linear-gradient(135deg, #ff6b4a 0%, #f95738 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .text-gradient-gold {
@@ -181,7 +189,7 @@ body {
 
 /* ─── Buttons ──────────────────────────────────────────────────────────────── */
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
   color: #ffffff;
   font-weight: 800;
   border-radius: 0.875rem;
@@ -209,7 +217,7 @@ body {
 }
 
 .btn-glow {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #0f766e 55%, #14b8a6 100%);
   color: #ffffff;
   font-weight: 800;
   border-radius: 1rem;
@@ -236,12 +244,26 @@ body {
   animation-play-state: paused;
 }
 
+.btn-coral {
+  background: linear-gradient(135deg, #ff6b4a 0%, #f95738 100%);
+  color: #ffffff;
+  font-weight: 800;
+  border-radius: 0.875rem;
+  box-shadow: 0 8px 24px var(--glow-coral), 0 2px 6px rgba(255, 107, 74, 0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-coral:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 12px 32px var(--glow-coral), 0 4px 12px rgba(255, 107, 74, 0.3);
+}
+
 /* ─── Background Grid ──────────────────────────────────────────────────────── */
 .bg-grid {
   background-size: 36px 36px;
   background-image:
-    linear-gradient(to right, rgba(37, 99, 235, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(37, 99, 235, 0.05) 1px, transparent 1px);
+    linear-gradient(to right, rgba(20, 184, 166, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(20, 184, 166, 0.06) 1px, transparent 1px);
 }
 
 /* ─── Glow Effect ──────────────────────────────────────────────────────────── */
