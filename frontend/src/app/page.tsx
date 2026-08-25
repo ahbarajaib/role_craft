@@ -4394,15 +4394,114 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             {isAnalyzing ? (
               <LoadingState />
             ) : !analysisResult ? (
-              <div className="glass-panel rounded-2xl p-12 text-center border border-slate-200 min-h-[450px] flex flex-col items-center justify-center space-y-4">
-                <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center border border-slate-200 shadow-sm animate-pulse">
-                  <Activity className="h-8 w-8 text-teal-600" />
+              <div className="relative rounded-3xl bg-white border border-slate-200/90 shadow-xl shadow-teal-500/5 overflow-hidden p-6 sm:p-8 space-y-8 animate-fade-in">
+                {/* Ambient background glow */}
+                <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#FF6B4A]/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
+
+                {/* Top Header Banner */}
+                <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                  <div className="space-y-1.5">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E6F7F4] border border-[#99F6E4] text-[#0D9488] text-xs font-black uppercase tracking-wider shadow-2xs">
+                      <Sparkles className="h-3.5 w-3.5 text-[#FF6B4A]" />
+                      <span>RoleCraft Intelligence Engine</span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
+                      ATS Match, Gap Analysis &amp; 1-Click Tailor
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-xl">
+                      Upload your resume on the left and paste the target job description to run a multi-vector recruiter audit.
+                    </p>
+                  </div>
+
+                  {/* Live System Indicator */}
+                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-2xs shrink-0 self-start md:self-auto">
+                    <div className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500" />
+                    </div>
+                    <span className="text-xs font-extrabold text-[#0F172A]">AI Engine Ready</span>
+                  </div>
                 </div>
-                <div className="space-y-2 max-w-sm">
-                  <h3 className="text-lg font-bold text-slate-800">Awaiting Analysis</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">
-                    Upload your resume and provide a target job description on the left to start detecting gaps and strengths.
-                  </p>
+
+                {/* Feature Highlight Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
+                  {/* Card 1: ATS Matrix */}
+                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-teal-200 transition-all duration-300 space-y-3.5 group shadow-2xs">
+                    <div className="h-10 w-10 rounded-xl bg-[#E6F7F4] text-teal-700 flex items-center justify-center font-black text-sm border border-[#99F6E4] group-hover:scale-105 transition-transform">
+                      <Target className="h-5 w-5 text-teal-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-extrabold text-[#0F172A]">ATS Keyword Matrix</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                        Categorizes hard &amp; soft competencies with evidence verification (Confirmed, Missing, or Weak).
+                      </p>
+                    </div>
+                    <div className="pt-2 flex flex-wrap gap-1.5">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-teal-50 text-teal-700 border border-teal-200">
+                        ✓ Confirmed
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                        ⚡ In Evidence
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-[#FFF1EE] text-[#FF6B4A] border border-[#FFCFC4]">
+                        ✗ Gap Detected
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Google XYZ Formula */}
+                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-teal-200 transition-all duration-300 space-y-3.5 group shadow-2xs">
+                    <div className="h-10 w-10 rounded-xl bg-[#E6F7F4] text-teal-700 flex items-center justify-center font-black text-sm border border-[#99F6E4] group-hover:scale-105 transition-transform">
+                      <Sparkles className="h-5 w-5 text-[#FF6B4A]" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-extrabold text-[#0F172A]">Google XYZ Rewrites</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                        Converts routine duty bullets into high-impact metrics (Accomplished [X] by [Y], resulting in [Z]).
+                      </p>
+                    </div>
+                    <div className="pt-2 p-2.5 rounded-lg bg-white border border-slate-200 text-[11px] text-slate-600 font-mono">
+                      <span className="text-emerald-600 font-bold">+ 38% Metric Gain</span>
+                    </div>
+                  </div>
+
+                  {/* Card 3: DOCX XML Precision */}
+                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-teal-200 transition-all duration-300 space-y-3.5 group shadow-2xs">
+                    <div className="h-10 w-10 rounded-xl bg-[#E6F7F4] text-teal-700 flex items-center justify-center font-black text-sm border border-[#99F6E4] group-hover:scale-105 transition-transform">
+                      <FileText className="h-5 w-5 text-teal-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-extrabold text-[#0F172A]">100% DOCX Format Match</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                        Patches paragraphs and tables directly at the XML run level without template degradation.
+                      </p>
+                    </div>
+                    <div className="pt-2 flex items-center gap-1.5 text-[10px] font-extrabold text-teal-700">
+                      <CheckCircle className="h-3.5 w-3.5 text-teal-600" />
+                      <span>Zero Template Drift</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3-Step Guided Workflow Bar */}
+                <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#0F172A] text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 flex items-center justify-center shrink-0">
+                      <Zap className="h-4 w-4 fill-teal-400 text-teal-400" />
+                    </div>
+                    <div>
+                      <h5 className="text-xs font-black tracking-wide uppercase text-teal-300">How to get started</h5>
+                      <p className="text-xs text-slate-300 font-medium">
+                        1. Upload your resume &rarr; 2. Paste job description &rarr; 3. Hit &quot;Analyze Gaps &amp; Fit&quot;
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-slate-300 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10 shrink-0">
+                    <Shield className="h-3.5 w-3.5 text-teal-400" />
+                    <span>Strict Recruiter Verification</span>
+                  </div>
                 </div>
               </div>
             ) : (
