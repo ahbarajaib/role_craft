@@ -58,6 +58,27 @@ def init_db() -> None:
     except Exception:
         pass
 
+    # Ensure issue_reports table is created
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS issue_reports (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    user_email VARCHAR,
+                    issue_type VARCHAR NOT NULL DEFAULT 'bug',
+                    subject VARCHAR,
+                    description TEXT NOT NULL,
+                    context_data TEXT,
+                    status VARCHAR NOT NULL DEFAULT 'open',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_issue_reports_user_id ON issue_reports (user_id)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_issue_reports_user_email ON issue_reports (user_email)"))
+    except Exception:
+        pass
+
 
 def get_db():
     """FastAPI route dependency to provide database session."""

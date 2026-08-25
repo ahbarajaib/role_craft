@@ -85,3 +85,18 @@ class TailoredResumeModel(Base):
     diff_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)   # { field_path: {original, tailored} }
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
+
+class IssueReport(Base):
+    """Stores user-submitted bug reports, formatting issues, and general feedback."""
+    __tablename__ = "issue_reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, index=True, nullable=True)
+    user_email: Mapped[Optional[str]] = mapped_column(String, index=True, nullable=True)
+    issue_type: Mapped[str] = mapped_column(String, default="bug", nullable=False)  # "bug", "formatting", "ai_quality", "payment", "feature_request", "general"
+    subject: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    context_data: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON string containing page URL, document_id, error message, browser/device info
+    status: Mapped[str] = mapped_column(String, default="open", nullable=False)  # "open", "investigating", "resolved"
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+

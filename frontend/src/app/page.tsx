@@ -45,7 +45,8 @@ import {
   Check,
   CheckCircle2,
   Zap,
-  SlidersHorizontal
+  SlidersHorizontal,
+  LifeBuoy,
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
@@ -60,6 +61,7 @@ import { WordLogoIcon, PdfLogoIcon } from "@/components/file_format_icons";
 import ResumeCompletionModal, { getFullProfilePhotoUrl } from "@/components/resume_completion_modal";
 import TailorPreviewModal from "@/components/tailor_preview_modal";
 import ResumeDownloadPanel from "@/components/resume_download_panel";
+import IssueReportModal from "@/components/issue_report_modal";
 import {
   StructuredResume,
   parseAndSaveStructuredResume,
@@ -1385,6 +1387,20 @@ export default function Home() {
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
   const [isTailorPreviewOpen, setIsTailorPreviewOpen] = useState(false);
   const [tailorResult, setTailorResult] = useState<TailorResponse | null>(null);
+
+  // ── Issue & Bug Reporting State ─────────────────────────────────────────
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportCategory, setReportCategory] = useState<"bug" | "formatting" | "ai_quality" | "payment" | "feature_request" | "general">("bug");
+  const [reportInitialError, setReportInitialError] = useState<string | null>(null);
+
+  const openIssueReport = (
+    category: "bug" | "formatting" | "ai_quality" | "payment" | "feature_request" | "general" = "bug",
+    errorContext: string | null = null
+  ) => {
+    setReportCategory(category);
+    setReportInitialError(errorContext);
+    setIsReportModalOpen(true);
+  };
 
   const handleRestoreSession = (
     analysisResultData: any,
@@ -2936,17 +2952,29 @@ export default function Home() {
                           if (!token) setShowAuthModal(true);
                           else setIsProfileModalOpen(true);
                         }}
-                        className="w-full py-2.5 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60 font-bold text-xs transition-all flex items-center justify-between cursor-pointer"
+                        className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center justify-between cursor-pointer"
                       >
                         <span className="flex items-center gap-2">
-                          <User className="h-3.5 w-3.5 text-indigo-500" />
+                          <User className="h-3.5 w-3.5 text-blue-600" />
                           Profile & Base Docs
                         </span>
                         {user && (
-                          <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                          <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
                             {calculateProfileCompletion(user).totalPercentage}%
                           </span>
                         )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          openIssueReport("general");
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer"
+                      >
+                        <LifeBuoy className="h-3.5 w-3.5 text-blue-600" />
+                        <span>Report an Issue / Feedback</span>
                       </button>
                     </div>
 
@@ -3266,6 +3294,10 @@ export default function Home() {
               <a href="#features" onClick={() => setActiveNavTab("landing")} className="hover:text-blue-600 transition-colors">Features</a>
               <a href="#pricing" onClick={() => setActiveNavTab("landing")} className="hover:text-blue-600 transition-colors">Pricing</a>
               <button onClick={() => setActiveNavTab("workspace")} className="hover:text-blue-600 transition-colors cursor-pointer">Workspace</button>
+              <button onClick={() => openIssueReport("general")} className="hover:text-blue-600 transition-colors cursor-pointer flex items-center gap-1">
+                <LifeBuoy className="h-3 w-3" />
+                <span>Report Issue / Feedback</span>
+              </button>
             </div>
             <p className="text-[11px] text-slate-400 font-medium pt-2">
               © 2026 RoleCraft Inc. All rights reserved. Built for job seekers worldwide.
@@ -5415,8 +5447,7 @@ export default function Home() {
                   <p className="text-xs font-medium">Rendering live PDF preview...</p>
                 </div>
               ) : pdfError ? (
-                <div className="flex flex-col items-center justify-center space-y-4 max-w-md text-center p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <ShieldAlert className="h-10 w-10 text-amber-500" />
+                <div className="text-center p-8 space-y-3">
                   <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{pdfError}</p>
                   <a
                     href={`${API_BASE_URL}/api/v1/resume/download/${downloadId || documentId}/pdf`}
@@ -5492,6 +5523,29 @@ export default function Home() {
           fullName={masterResume?.contact_info?.full_name || undefined}
         />
       )}
+
+      {/* Issue Report & Feedback Modal */}
+      <IssueReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        initialCategory={reportCategory}
+        initialError={reportInitialError}
+        activeDocumentId={documentId || user?.base_resume_id || null}
+      />
+
+      {/* Floating Feedback / Issue Report Button */}
+      <div className="fixed bottom-5 right-5 z-40">
+        <button
+          type="button"
+          onClick={() => openIssueReport("bug")}
+          className="flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-blue-600 border border-slate-200 shadow-lg hover:shadow-xl transition-all cursor-pointer text-xs font-bold group select-none hover:scale-105 active:scale-95"
+          title="Encountered an issue or have feedback? Let us know!"
+        >
+          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <LifeBuoy className="h-4 w-4 text-blue-600 group-hover:rotate-12 transition-transform" />
+          <span className="hidden sm:inline">Report Issue / Feedback</span>
+        </button>
+      </div>
     </div>
   );
 }

@@ -93,6 +93,15 @@ class Settings(BaseSettings):
     RAZORPAY_PLAN_ELITE_ID: str = ""
     RAZORPAY_WEBHOOK_SECRET: str = ""
 
+    # ── Support & Email Notifications ─────────────────────────────────────────
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = "noreply@rolecraft.tech"
+    SMTP_USE_TLS: bool = True
+    SUPPORT_NOTIFICATION_EMAIL: str = "ahbarajaib@gmail.com"
+
 
 
 @lru_cache(maxsize=1)
