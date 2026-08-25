@@ -1439,6 +1439,31 @@ function AutoTailoringProgressModal({
 }
 
 
+const RECOGNIZED_TECH_WHITELIST = new Set([
+  "python", "javascript", "typescript", "react", "reactjs", "react.js",
+  "vue", "vuejs", "vue.js", "angular", "angularjs", "node", "nodejs", "node.js",
+  "nextjs", "next.js", "nuxt", "nuxtjs", "svelte", "sveltekit",
+  "java", "golang", "go", "rust", "c", "c++", "c#", ".net", "dotnet",
+  "ruby", "rails", "php", "laravel", "symfony", "django", "flask", "fastapi",
+  "spring", "springboot", "docker", "kubernetes", "k8s", "aws", "gcp", "azure",
+  "terraform", "ansible", "jenkins", "circleci", "git", "github", "gitlab",
+  "graphql", "rest", "api", "apis", "grpc", "websocket", "sql", "mysql",
+  "postgresql", "postgres", "sqlite", "oracle", "nosql", "mongodb", "redis",
+  "cassandra", "dynamodb", "couchbase", "kafka", "rabbitmq", "celery",
+  "elasticsearch", "opensearch", "solr", "splunk", "datadog", "grafana",
+  "prometheus", "snowflake", "bigquery", "redshift", "dbt", "spark", "hadoop",
+  "airflow", "pandas", "numpy", "scipy", "scikit-learn", "sklearn", "pytorch",
+  "tensorflow", "keras", "opencv", "llm", "llms", "nlp", "rag", "langchain",
+  "llamaindex", "openai", "weaviate", "pinecone", "qdrant", "chroma", "milvus",
+  "salesforce", "hubspot", "servicenow", "jira", "confluence", "figma",
+  "postman", "linux", "unix", "bash", "zsh", "powershell", "tailwind",
+  "tailwindcss", "bootstrap", "sass", "scss", "html", "html5", "css", "css3",
+  "webpack", "vite", "babel", "esbuild", "turbopack", "rollup", "b2b", "b2c",
+  "crm", "erp", "saas", "paas", "iaas", "ci/cd", "devops", "mlops", "aiops",
+  "dataops", "agile", "scrum", "kanban", "prince2", "pmp", "itil", "togaf",
+  "express", "fastify", "nestjs", "prisma", "typeorm", "sequelize", "mongoose",
+]);
+
 const ATS_STOPWORDS = new Set([
   "experience", "experiences", "project", "projects", "technique", "techniques",
   "knowledge", "understanding", "focus", "skills", "relevant", "professional",
@@ -1453,6 +1478,12 @@ const ATS_STOPWORDS = new Set([
   "deliver", "delivering", "collaborate", "collaborating", "driven", "drive",
   "results-oriented", "hands-on", "end-to-end", "proficient", "proficient in",
   "mindset", "product mindset", "able", "must", "well", "great", "excellent",
+  "assistant", "corporate", "employment", "engineer", "fast", "follow-up", "followup",
+  "hiring", "information", "integration", "integrations", "interested", "lead", "like",
+  "platforms", "platform", "reimbursement", "sales", "time", "wing", "urgency",
+  "willing", "process", "processes", "missing technologies", "clarify integration projects",
+  "extensive", "proven expertise", "building full-stack solutions", "deal progression",
+  "and deal progression", "clarify", "overview", "approach", "value", "values",
 ]);
 
 const CANONICAL_SKILL_NAMES: Record<string, string> = {
@@ -1501,12 +1532,31 @@ const CANONICAL_SKILL_NAMES: Record<string, string> = {
   "stakeholder management": "Stakeholder Management",
   "cross-functional": "Cross-Functional Collaboration",
   "internal tools development": "Internal Tools Development",
+  "b2b": "B2B Sales Strategy",
+  "data": "Data Analytics & Engineering",
+  "crm": "CRM Systems",
+  "lead": "Technical Leadership",
+  "objection handling": "Objection Handling",
+  "social media management": "Social Media Management",
+  "talent acquisition": "Talent Acquisition",
+  "team collaboration": "Team Collaboration",
+  "team management": "Team Management",
+  "agile methodologies": "Agile Methodologies",
+  "scalable system design": "Scalable System Design",
+  "api integrations": "API Integrations",
+  "rabbitmq": "RabbitMQ",
+  "servicenow": "ServiceNow",
+  "hubspot": "HubSpot",
+  "express": "Express.js",
+  "php": "PHP",
+  "git": "Git Version Control",
 };
 
 function cleanKeywordName(rawName: string): string {
   if (!rawName) return "";
   let clean = rawName
-    .replace(/^(add|include|highlight|emphasize|condense|surface|rephrase|incorporate|integrate|leverage|utilize|apply|built|experience with|proficient with|strong with|hands-on with)\s+/i, "")
+    .replace(/^[\s•\-–—*·▪▸►✓✔→\d.)\]]+/g, "") // strip leading bullets, numbers, checkmarks
+    .replace(/^(add|include|highlight|emphasize|condense|surface|rephrase|incorporate|integrate|leverage|utilize|apply|built|experience with|proficient with|strong with|hands-on with|clarify|missing)\s+/i, "")
     .replace(/\s+in\s+.*$/i, "")
     .replace(/\s+for\s+.*$/i, "")
     .replace(/\s+(usage|skills|experience|experiences|knowledge|stack|level|concepts|proficiency|background)$/i, "")
@@ -1518,6 +1568,7 @@ function cleanKeywordName(rawName: string): string {
     .replace(/^practical understanding of\s+/i, "")
     .replace(/^ability to\s+/i, "")
     .replace(/^proven track record in\s+/i, "")
+    .replace(/^and\s+/i, "")
     .trim();
 
   // Strip trailing punctuation
@@ -1528,7 +1579,7 @@ function cleanKeywordName(rawName: string): string {
     return CANONICAL_SKILL_NAMES[lower];
   }
 
-  // If it matches common words, return capitalized
+  // Capitalize nicely if not capitalized
   if (clean.length > 0 && clean === clean.toLowerCase()) {
     return clean
       .split(" ")
@@ -1542,16 +1593,24 @@ function cleanKeywordName(rawName: string): string {
 function isActualATSKeyword(kw: string): boolean {
   if (!kw) return false;
   const clean = kw.trim();
-  // Filter out sentences: > 35 chars or > 4 words or contains em-dash / commas / clauses
   if (clean.length < 2 || clean.length > 35) return false;
-  if (clean.split(" ").length > 4) return false;
-  if (/—|;|when\s|where\s|which\s|with the\s|and when|ability to/i.test(clean)) return false;
+  if (/—|;|when\s|where\s|which\s|with the\s|and when|ability to|missing technologies|clarify/i.test(clean)) return false;
 
   const lower = clean.toLowerCase();
   if (ATS_STOPWORDS.has(lower)) return false;
 
-  // Single word validation
-  if (clean.split(" ").length === 1 && (lower.length <= 2 && !["ai", "go", "r", "c", "c#", "c++", "ui", "ux", "qa", "ml", "db"].includes(lower))) {
+  const words = clean.split(/\s+/);
+  
+  // Single-word check: MUST be in recognized whitelist
+  if (words.length === 1) {
+    return RECOGNIZED_TECH_WHITELIST.has(lower) || CANONICAL_SKILL_NAMES[lower] !== undefined;
+  }
+
+  // Multi-word check (2 to 4 words):
+  if (words.length > 4) return false;
+  
+  // Ensure none of the words are illegal conjunctions or stopwords
+  if (words[0].toLowerCase() === "and" || words[0].toLowerCase() === "with" || words[0].toLowerCase() === "or") {
     return false;
   }
 
@@ -1560,19 +1619,22 @@ function isActualATSKeyword(kw: string): boolean {
 
 function getSkillCategory(skillName: string): { label: string; badgeColor: string } {
   const s = skillName.toLowerCase();
-  if (/python|typescript|javascript|react|vue|angular|node|java|golang|c\+\+|c#|ruby|php|rust|html|css|tailwind|sql|nosql|mongodb|postgres|redis|kafka|graphql|api|rest/i.test(s)) {
+  if (/python|typescript|javascript|react|vue|angular|node|java|golang|c\+\+|c#|ruby|php|rust|html|css|tailwind|sql|nosql|mongodb|postgres|redis|kafka|graphql|api|rest|git|express/i.test(s)) {
     return { label: "Core Tech", badgeColor: "bg-blue-50 text-blue-700 border-blue-200" };
   }
-  if (/aws|azure|gcp|cloud|docker|kubernetes|ci\/cd|devops|terraform|linux|microservices|architecture|serverless/i.test(s)) {
+  if (/aws|azure|gcp|cloud|docker|kubernetes|ci\/cd|devops|terraform|linux|microservices|architecture|serverless|rabbitmq/i.test(s)) {
     return { label: "Cloud & Arch", badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-200" };
+  }
+  if (/salesforce|hubspot|servicenow|crm|erp|b2b|sales|client/i.test(s)) {
+    return { label: "Enterprise & CRM", badgeColor: "bg-teal-50 text-teal-700 border-teal-200" };
   }
   if (/ai|llm|ml|machine learning|nlp|openai|prompt|gpt|data|deep learning|rag|agent/i.test(s)) {
     return { label: "AI & Data", badgeColor: "bg-purple-50 text-purple-700 border-purple-200" };
   }
-  if (/stakeholder|communication|leadership|management|cross-functional|product|agile|scrum|teamwork|strategy/i.test(s)) {
+  if (/stakeholder|communication|leadership|management|cross-functional|product|agile|scrum|teamwork|strategy|talent|social media|objection/i.test(s)) {
     return { label: "Leadership", badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200" };
   }
-  return { label: "Core Skill", badgeColor: "bg-slate-100 text-slate-700 border-slate-200" };
+  return { label: "Core Competency", badgeColor: "bg-slate-100 text-slate-700 border-slate-200" };
 }
 
 function extractStrictKeywordsFromRaw(raw: string): string[] {
@@ -4611,13 +4673,8 @@ export default function Home() {
 
                   const matchedLower = new Set(allMatched.map((s) => s.toLowerCase()));
 
-                  // Compute evidence-supported keywords
-                  const rawEvidence = [
-                    ...(analysisResult.sections || []).flatMap((s: any) => s.strengths || []),
-                    ...(analysisResult.top_improvements || [])
-                      .filter((imp: any) => imp.evidence_reused && imp.evidence_reused.trim())
-                      .map((imp: any) => (typeof imp === "string" ? imp : imp.name)),
-                  ];
+                  // Compute evidence-supported keywords (From section strengths only)
+                  const rawEvidence = (analysisResult.sections || []).flatMap((s: any) => s.strengths || []);
                   const allEvidence = Array.from(
                     new Set(
                       rawEvidence
@@ -4626,13 +4683,8 @@ export default function Home() {
                     )
                   ).filter((kw) => !matchedLower.has(kw.toLowerCase()));
 
-                  // Compute missing JD keywords
-                  const rawMissing = [
-                    ...(analysisResult.sections || []).flatMap((s: any) => s.missing_keywords || []),
-                    ...(analysisResult.top_improvements || [])
-                      .filter((imp: any) => !imp.evidence_reused || !imp.evidence_reused.trim())
-                      .map((imp: any) => (typeof imp === "string" ? imp : imp.name)),
-                  ];
+                  // Compute missing JD keywords (From section missing_keywords only)
+                  const rawMissing = (analysisResult.sections || []).flatMap((s: any) => s.missing_keywords || []);
                   const allMissing = Array.from(
                     new Set(
                       rawMissing
