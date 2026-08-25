@@ -55,6 +55,8 @@ import {
   BarChart2,
   ShieldCheck,
   GitMerge,
+  GraduationCap,
+  Award,
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
@@ -1477,6 +1479,8 @@ export default function Home() {
   const [isAutoTailoring, setIsAutoTailoring] = useState(false);
   const [tailoringSectionToggles, setTailoringSectionToggles] = useState<Record<string, boolean>>({});
 
+  const [isAutoTailorSettingsOpen, setIsAutoTailorSettingsOpen] = useState(false);
+
   const handleToggleSectionTailoring = (sectionName: string) => {
     setTailoringSectionToggles((prev) => {
       const normName = sectionName.toLowerCase();
@@ -1486,6 +1490,136 @@ export default function Home() {
       console.log(`⚡ [RoleCraft Tailor] Section '${sectionName}' AI tailoring toggled to:`, nextState ? "ON (Tailor)" : "OFF (Locked)");
       return { ...prev, [sectionName]: nextState };
     });
+  };
+
+  const isSectionTailorEnabled = (sectionId: string, defaultOn: boolean = true) => {
+    if (tailoringSectionToggles[sectionId] !== undefined) {
+      return tailoringSectionToggles[sectionId];
+    }
+    const lower = sectionId.toLowerCase();
+    if (lower === "header" || lower.includes("header")) return true;
+    if (lower.includes("education") || lower.includes("certification")) return false;
+    return defaultOn;
+  };
+
+  const getAutoTailorConfigSections = () => {
+    const list: { id: string; name: string; desc: string; icon: any; defaultOn: boolean }[] = [
+      {
+        id: "header",
+        name: "Target Job Title & Header",
+        desc: "Set resume headline & title to match target role",
+        icon: Target,
+        defaultOn: true,
+      },
+    ];
+
+    const seen = new Set<string>();
+    seen.add("header");
+    seen.add("target job title & header");
+
+    const candidateSections: { name: string; type?: string }[] = [];
+
+    if (analysisResult?.sections && analysisResult.sections.length > 0) {
+      analysisResult.sections.forEach((s) => {
+        if (!seen.has(s.section_name.toLowerCase())) {
+          seen.add(s.section_name.toLowerCase());
+          candidateSections.push({ name: s.section_name, type: (s as any).section_type });
+        }
+      });
+    }
+
+    if (masterResume?.sections && masterResume.sections.length > 0) {
+      masterResume.sections.forEach((s) => {
+        if (!seen.has(s.section_title.toLowerCase())) {
+          seen.add(s.section_title.toLowerCase());
+          candidateSections.push({ name: s.section_title, type: s.section_type });
+        }
+      });
+    }
+
+    if (candidateSections.length === 0) {
+      candidateSections.push(
+        { name: "Professional Summary", type: "summary" },
+        { name: "Work Experience", type: "experience" },
+        { name: "Technical Skills", type: "skills" },
+        { name: "Projects", type: "projects" },
+        { name: "Education", type: "education" },
+        { name: "Certifications", type: "certifications" }
+      );
+    }
+
+    candidateSections.forEach((sec) => {
+      const lower = sec.name.toLowerCase();
+      let icon: any = Layers;
+      let desc = "Optimize section keywords & impact";
+      let defaultOn = true;
+
+      if (lower.includes("summary") || lower.includes("objective") || sec.type === "summary") {
+        icon = Sparkles;
+        desc = "Tailor executive summary pitch & core competencies";
+        defaultOn = true;
+      } else if (lower.includes("experience") || lower.includes("work") || lower.includes("employment") || sec.type === "experience") {
+        icon = Briefcase;
+        desc = "Google XYZ impact metrics & active action verbs";
+        defaultOn = true;
+      } else if (lower.includes("skill") || sec.type === "skills") {
+        icon = Code;
+        desc = "Weave target ATS keywords, tools & technologies";
+        defaultOn = true;
+      } else if (lower.includes("project") || sec.type === "projects") {
+        icon = Layers;
+        desc = "Highlight relevant project architecture & tools";
+        defaultOn = true;
+      } else if (lower.includes("education") || lower.includes("academic") || sec.type === "education") {
+        icon = GraduationCap;
+        desc = "Preserve degrees & GPA (locked by default)";
+        defaultOn = false;
+      } else if (lower.includes("certification") || lower.includes("certificate") || lower.includes("license")) {
+        icon = Award;
+        desc = "Preserve credential names (locked by default)";
+        defaultOn = false;
+      }
+
+      list.push({
+        id: sec.name,
+        name: sec.name,
+        desc,
+        icon,
+        defaultOn,
+      });
+    });
+
+    return list;
+  };
+
+  const handleEnableRecommendedSections = () => {
+    const configSections = getAutoTailorConfigSections();
+    const newToggles: Record<string, boolean> = {};
+    configSections.forEach((sec) => {
+      newToggles[sec.id] = sec.defaultOn;
+    });
+    setTailoringSectionToggles(newToggles);
+    setSuccessNotification("Auto-Tailor scope set to Recommended preset");
+  };
+
+  const handleEnableAllSections = () => {
+    const configSections = getAutoTailorConfigSections();
+    const newToggles: Record<string, boolean> = {};
+    configSections.forEach((sec) => {
+      newToggles[sec.id] = true;
+    });
+    setTailoringSectionToggles(newToggles);
+    setSuccessNotification("Enabled ALL sections for Auto-Tailoring");
+  };
+
+  const handleDisableAllSections = () => {
+    const configSections = getAutoTailorConfigSections();
+    const newToggles: Record<string, boolean> = {};
+    configSections.forEach((sec) => {
+      newToggles[sec.id] = false;
+    });
+    setTailoringSectionToggles(newToggles);
+    setSuccessNotification("All sections locked (Auto-Tailoring will skip them)");
   };
 
   const [isWeavingKeywords, setIsWeavingKeywords] = useState(false);
@@ -1950,6 +2084,14 @@ export default function Home() {
 
       console.log("📋 [RoleCraft Audit] Sections queued for 1-Click Auto-Tailor:", sectionsToTailor.map((s: any) => s.section_name));
 
+      const isHeaderExplicitOff = tailoringSectionToggles["header"] === false || tailoringSectionToggles["Target Job Title & Header"] === false;
+
+      if (sectionsToTailor.length === 0 && isHeaderExplicitOff) {
+        setSuccessNotification("All sections are locked. Open Settings next to Auto-Tailor to enable sections!");
+        setIsAutoTailoring(false);
+        return;
+      }
+
       if (sectionsToTailor.length === 0 && !result?.overall_summary?.job_title && !customTargetRole) {
         setSuccessNotification("Your resume is already highly optimized for this role!");
         setIsAutoTailoring(false);
@@ -2023,18 +2165,18 @@ export default function Home() {
 
       const newRewrites: Record<string, string> = {};
 
-      // 1. Apply Target Job Title to Header
+      // 1. Apply Target Job Title to Header (if enabled)
       const targetHeaderTitle =
         customTargetRole.trim() ||
         result?.overall_summary?.job_title ||
         parseJobTitleFromJD(jobDescription) ||
         "Target Position";
 
-      if (targetHeaderTitle && targetHeaderTitle !== "Target Position") {
+      if (!isHeaderExplicitOff && targetHeaderTitle && targetHeaderTitle !== "Target Position") {
         setCustomTargetRole(targetHeaderTitle);
       }
 
-      if (targetHeaderTitle) {
+      if (!isHeaderExplicitOff && targetHeaderTitle) {
         newRewrites["header"] = targetHeaderTitle;
       }
 
@@ -2062,14 +2204,16 @@ export default function Home() {
         };
       });
 
-      // Explicitly include target job title header in batch payload so backend patches DOCX header immediately
-      batchItems.unshift({
-        section_name: "header",
-        section_type: "header",
-        section_content: targetHeaderTitle,
-        recommendations: [`Set target job title designation to "${targetHeaderTitle}"`],
-        user_instructions: targetHeaderTitle,
-      });
+      // Explicitly include target job title header in batch payload if not disabled
+      if (!isHeaderExplicitOff && targetHeaderTitle) {
+        batchItems.unshift({
+          section_name: "header",
+          section_type: "header",
+          section_content: targetHeaderTitle,
+          recommendations: [`Set target job title designation to "${targetHeaderTitle}"`],
+          user_instructions: targetHeaderTitle,
+        });
+      }
 
       const { batchRewriteSections } = require("@/lib/api");
       console.log("🚀 [RoleCraft Audit] Dispatching 16-worker Batch Parallel Tailor Request with Job Title Header:", batchItems);
@@ -3975,24 +4119,195 @@ export default function Home() {
                         </p>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleAutoTailor}
-                      disabled={isAutoTailoring}
-                      className="px-6 py-3.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20"
-                    >
-                      {isAutoTailoring ? (
-                        <>
-                          <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                          ⚡ Auto-Tailoring Resume...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-4 w-4 text-amber-200" />
-                          ⚡ Auto-Tailor Full Resume (1-Click)
-                        </>
-                      )}
-                    </button>
+                    <div className="flex items-center gap-2.5 shrink-0 relative">
+                      <button
+                        type="button"
+                        onClick={handleAutoTailor}
+                        disabled={isAutoTailoring}
+                        className="px-6 py-3.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20"
+                      >
+                        {isAutoTailoring ? (
+                          <>
+                            <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            ⚡ Auto-Tailoring Resume...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 text-amber-200" />
+                            ⚡ Auto-Tailor Full Resume (1-Click)
+                          </>
+                        )}
+                      </button>
+
+                      {/* ⚙️ 1-Click Scope Settings Button */}
+                      <div className="relative">
+                        {(() => {
+                          const configSections = getAutoTailorConfigSections();
+                          const activeCount = configSections.filter((s) => isSectionTailorEnabled(s.id, s.defaultOn)).length;
+                          return (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setIsAutoTailorSettingsOpen(!isAutoTailorSettingsOpen)}
+                                title="Configure which sections are updated during 1-Click Auto-Tailor"
+                                className={`p-3 sm:px-3.5 sm:py-3.5 rounded-xl font-extrabold text-xs border transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-xl select-none ${
+                                  isAutoTailorSettingsOpen
+                                    ? "bg-white text-slate-900 border-white shadow-white/20 scale-[1.02]"
+                                    : "bg-slate-800/80 hover:bg-slate-800 text-white border-white/20 hover:border-white/40"
+                                }`}
+                              >
+                                <SlidersHorizontal className={`h-4 w-4 ${isAutoTailorSettingsOpen ? "text-indigo-600" : "text-amber-300"}`} />
+                                <span className="hidden md:inline">Settings</span>
+                                <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black border ${
+                                  isAutoTailorSettingsOpen
+                                    ? "bg-indigo-100 text-indigo-800 border-indigo-200"
+                                    : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                                }`}>
+                                  {activeCount}/{configSections.length} ON
+                                </span>
+                                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isAutoTailorSettingsOpen ? "rotate-180" : ""}`} />
+                              </button>
+
+                              {/* Dropdown Modal Popover */}
+                              {isAutoTailorSettingsOpen && (
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-40"
+                                    onClick={() => setIsAutoTailorSettingsOpen(false)}
+                                  />
+                                  <div className="absolute right-0 top-full mt-2.5 w-80 sm:w-[380px] z-50 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-4.5 space-y-4 text-white animate-fade-in-up">
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                                      <div className="flex items-center gap-2.5">
+                                        <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/30 shrink-0">
+                                          <SlidersHorizontal className="h-4 w-4 text-white" />
+                                        </div>
+                                        <div>
+                                          <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5">
+                                            Auto-Tailor Scope
+                                            <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 lowercase">
+                                              {activeCount} active
+                                            </span>
+                                          </h4>
+                                          <p className="text-[10px] text-slate-400">Toggle which sections get optimized by AI</p>
+                                        </div>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => setIsAutoTailorSettingsOpen(false)}
+                                        className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </button>
+                                    </div>
+
+                                    {/* Quick Preset Buttons */}
+                                    <div className="flex items-center justify-between gap-1.5 p-1 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] font-bold">
+                                      <button
+                                        type="button"
+                                        onClick={handleEnableRecommendedSections}
+                                        className="flex-1 py-1.5 px-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all text-center shadow-sm cursor-pointer"
+                                      >
+                                        Recommended
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={handleEnableAllSections}
+                                        className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all text-center cursor-pointer"
+                                      >
+                                        Enable All
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={handleDisableAllSections}
+                                        className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all text-center cursor-pointer"
+                                      >
+                                        Lock All
+                                      </button>
+                                    </div>
+
+                                    {/* Section Item Rows */}
+                                    <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                                      {configSections.map((sec) => {
+                                        const isEnabled = isSectionTailorEnabled(sec.id, sec.defaultOn);
+                                        const SecIcon = sec.icon;
+                                        return (
+                                          <div
+                                            key={sec.id}
+                                            onClick={() => handleToggleSectionTailoring(sec.id)}
+                                            className={`p-2.5 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer select-none ${
+                                              isEnabled
+                                                ? "bg-slate-800/90 border-indigo-500/40 hover:border-indigo-400"
+                                                : "bg-slate-950/50 border-slate-800 hover:border-slate-700 opacity-65"
+                                            }`}
+                                          >
+                                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                              <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 border ${
+                                                isEnabled
+                                                  ? "bg-indigo-500/20 border-indigo-400/30 text-indigo-300"
+                                                  : "bg-slate-800 border-slate-700 text-slate-500"
+                                              }`}>
+                                                <SecIcon className="h-3.5 w-3.5" />
+                                              </div>
+                                              <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-1.5">
+                                                  <p className={`text-xs font-bold truncate ${isEnabled ? "text-white" : "text-slate-400"}`}>
+                                                    {sec.name}
+                                                  </p>
+                                                  {isEnabled ? (
+                                                    <span className="text-[9px] font-extrabold px-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                                      ON
+                                                    </span>
+                                                  ) : (
+                                                    <span className="text-[9px] font-bold px-1 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                                                      LOCKED
+                                                    </span>
+                                                  )}
+                                                </div>
+                                                <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                                                  {sec.desc}
+                                                </p>
+                                              </div>
+                                            </div>
+
+                                            {/* iOS Switch */}
+                                            <div
+                                              className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 ease-in-out shrink-0 ${
+                                                isEnabled ? "bg-emerald-500" : "bg-slate-700"
+                                              }`}
+                                            >
+                                              <div
+                                                className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
+                                                  isEnabled ? "translate-x-4" : "translate-x-0"
+                                                }`}
+                                              />
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+
+                                    {/* Footer Info */}
+                                    <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
+                                      <span className="italic flex items-center gap-1">
+                                        <Lock className="h-3 w-3 text-slate-500" /> Locked sections stay 100% untouched
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => setIsAutoTailorSettingsOpen(false)}
+                                        className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all cursor-pointer"
+                                      >
+                                        Done
+                                      </button>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
