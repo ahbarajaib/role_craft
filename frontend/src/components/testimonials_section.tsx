@@ -41,7 +41,7 @@ export default function TestimonialsSection() {
             <div className="text-2xl sm:text-3xl font-black text-gradient tracking-tight">
               {st.val}
             </div>
-            <div className="text-xs font-extrabold text-blue-700 uppercase tracking-wider mt-1">
+            <div className="text-xs font-extrabold text-teal-700 uppercase tracking-wider mt-1">
               {st.label}
             </div>
             <p className="text-[11px] text-slate-500 mt-2 font-medium leading-relaxed">
@@ -54,7 +54,7 @@ export default function TestimonialsSection() {
       {/* Candidate Testimonial Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {testimonials.map((t, i) => (
-          <div key={i} className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 glass-card-interactive">
+          <div key={i} className="rounded-2xl border border-teal-100 bg-white p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 glass-card-interactive">
             <div className="space-y-3">
               <div className="flex items-center gap-1 text-amber-400">
                 {[...Array(t.rating)].map((_, idx) => (
@@ -66,7 +66,7 @@ export default function TestimonialsSection() {
               </p>
             </div>
             <div className="pt-3 border-t border-slate-100 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 text-white font-bold flex items-center justify-center text-xs shadow-sm">
+              <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-teal-600 to-teal-500 text-white font-bold flex items-center justify-center text-xs shadow-sm">
                 {t.name[0]}
               </div>
               <div>

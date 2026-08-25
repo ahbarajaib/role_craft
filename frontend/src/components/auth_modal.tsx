@@ -101,7 +101,7 @@ export default function AuthModal() {
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in-up">
-      <div className="relative w-full max-w-md rounded-2xl p-5 sm:p-8 border border-blue-100 bg-white shadow-2xl flex flex-col space-y-5 sm:space-y-6 max-h-[92vh] overflow-y-auto">
+      <div className="relative w-full max-w-md rounded-2xl p-5 sm:p-8 border border-teal-100 bg-white shadow-2xl flex flex-col space-y-5 sm:space-y-6 max-h-[92vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={() => setShowAuthModal(false)}
@@ -112,7 +112,7 @@ export default function AuthModal() {
 
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="h-12 w-12 rounded-xl icon-gradient bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center mx-auto shadow-md">
+          <div className="h-12 w-12 rounded-xl icon-gradient bg-gradient-to-br from-teal-600 to-teal-500 flex items-center justify-center mx-auto shadow-md">
             <Sparkles className="h-6 w-6 text-white animate-pulse" />
           </div>
           <h2 className="text-xl font-bold text-slate-900">
@@ -160,7 +160,7 @@ export default function AuthModal() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Mohammed Ahbar"
-                  className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-blue-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
+                  className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-teal-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
                   disabled={isSubmitting}
                 />
               </div>
@@ -179,7 +179,7 @@ export default function AuthModal() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-blue-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
+                className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-teal-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
                 disabled={isSubmitting}
                 required
               />
@@ -201,7 +201,7 @@ export default function AuthModal() {
                       setError(null);
                       setSuccessMessage(null);
                     }}
-                    className="text-xs text-blue-600 hover:underline font-medium cursor-pointer"
+                    className="text-xs text-teal-600 hover:underline font-medium cursor-pointer"
                   >
                     Forgot Password?
                   </button>
@@ -214,7 +214,7 @@ export default function AuthModal() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-blue-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
+                  className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-teal-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
                   disabled={isSubmitting}
                   required
                 />
@@ -235,7 +235,7 @@ export default function AuthModal() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-blue-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
+                  className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-teal-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-all"
                   disabled={isSubmitting}
                   required
                 />
@@ -246,7 +246,7 @@ export default function AuthModal() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 rounded-xl btn-primary text-sm shadow-lg shadow-blue-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+            className="w-full py-3 rounded-xl btn-primary text-sm shadow-lg shadow-teal-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <RefreshCw className="h-4 w-4 animate-spin" />
@@ -293,7 +293,7 @@ export default function AuthModal() {
                 setError(null);
                 setSuccessMessage(null);
               }}
-              className="font-bold text-blue-600 hover:underline cursor-pointer focus:outline-none"
+              className="font-bold text-teal-600 hover:underline cursor-pointer focus:outline-none"
             >
               ← Back to Sign In
             </button>
@@ -306,7 +306,7 @@ export default function AuthModal() {
                   setError(null);
                   setSuccessMessage(null);
                 }}
-                className="font-bold text-blue-600 hover:underline cursor-pointer focus:outline-none"
+                className="font-bold text-teal-600 hover:underline cursor-pointer focus:outline-none"
               >
                 Sign In
               </button>
@@ -320,7 +320,7 @@ export default function AuthModal() {
                   setError(null);
                   setSuccessMessage(null);
                 }}
-                className="font-bold text-blue-600 hover:underline cursor-pointer focus:outline-none"
+                className="font-bold text-teal-600 hover:underline cursor-pointer focus:outline-none"
               >
                 Create Account
               </button>

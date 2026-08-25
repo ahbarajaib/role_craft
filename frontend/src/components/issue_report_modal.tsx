@@ -131,7 +131,7 @@ export default function IssueReportModal({
 
   return (
     <div className="fixed inset-0 z-[1050] flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg rounded-3xl p-5 sm:p-7 border border-blue-100 bg-white shadow-2xl flex flex-col space-y-5 max-h-[92vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg rounded-3xl p-5 sm:p-7 border border-teal-100 bg-white shadow-2xl flex flex-col space-y-5 max-h-[92vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -156,7 +156,7 @@ export default function IssueReportModal({
           <>
             {/* Header */}
             <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-extrabold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-50 border border-teal-200 text-teal-700 text-[10px] font-extrabold uppercase tracking-wider">
                 <HelpCircle className="h-3 w-3" />
                 Support &amp; Feedback
               </div>
@@ -193,11 +193,11 @@ export default function IssueReportModal({
                         onClick={() => setCategory(cat.id)}
                         className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer select-none ${
                           isSelected
-                            ? "border-blue-600 bg-blue-50/70 text-blue-900 ring-1 ring-blue-500/30 shadow-xs"
-                            : "border-slate-200 bg-white hover:border-blue-200 text-slate-600 hover:bg-slate-50/50"
+                            ? "border-teal-600 bg-teal-50/70 text-[#0F172A] ring-1 ring-teal-500/30 shadow-xs"
+                            : "border-slate-200 bg-white hover:border-teal-200 text-slate-600 hover:bg-slate-50/50"
                         }`}
                       >
-                        <Icon className={`h-4 w-4 mb-1 ${isSelected ? "text-blue-600" : "text-slate-400"}`} />
+                        <Icon className={`h-4 w-4 mb-1 ${isSelected ? "text-teal-600" : "text-slate-400"}`} />
                         <span className="text-xs font-bold leading-tight truncate">{cat.label}</span>
                       </button>
                     );
@@ -215,7 +215,7 @@ export default function IssueReportModal({
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="e.g. DOCX alignment issue in summary"
-                  className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-blue-500 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none transition-all"
+                  className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-teal-500 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none transition-all"
                   disabled={isSubmitting}
                 />
               </div>
@@ -230,7 +230,7 @@ export default function IssueReportModal({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe what happened, what you were doing, or your suggestion..."
-                  className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-blue-500 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none transition-all resize-none leading-relaxed"
+                  className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-teal-500 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none transition-all resize-none leading-relaxed"
                   disabled={isSubmitting}
                   required
                 />
@@ -246,14 +246,14 @@ export default function IssueReportModal({
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-blue-500 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none transition-all"
+                  className="w-full bg-slate-50 text-slate-900 border border-slate-200 focus:border-teal-500 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none transition-all"
                   disabled={isSubmitting}
                 />
               </div>
 
               {/* Auto-captured diagnostics info notice */}
               <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-500 flex items-center gap-2">
-                <Sparkles className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                <Sparkles className="h-3.5 w-3.5 text-teal-500 shrink-0" />
                 <span>Technical details (browser, active document, error codes) will be attached automatically.</span>
               </div>
 

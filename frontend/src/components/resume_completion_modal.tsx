@@ -249,7 +249,7 @@ export default function ResumeCompletionModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-sm shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-[#E6F7F4] dark:bg-slate-900/40 text-teal-600 dark:text-teal-400 flex items-center justify-center shadow-sm shrink-0">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
@@ -325,7 +325,7 @@ export default function ResumeCompletionModal({
           >
             <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <User className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                 Contact Information
               </h3>
             </div>
@@ -337,10 +337,10 @@ export default function ResumeCompletionModal({
                   <img
                     src={getFullProfilePhotoUrl(resume.profile_photo_url) || ""}
                     alt="Profile Avatar"
-                    className="w-20 h-20 rounded-2xl object-cover ring-4 ring-indigo-500/20 shadow-md bg-white dark:bg-slate-800"
+                    className="w-20 h-20 rounded-2xl object-cover ring-4 ring-teal-500/20 shadow-md bg-white dark:bg-slate-800"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-2 border-dashed border-indigo-300 dark:border-indigo-700 flex flex-col items-center justify-center gap-1 shadow-inner">
+                  <div className="w-20 h-20 rounded-2xl bg-[#E6F7F4] dark:bg-slate-900/60 text-teal-600 dark:text-teal-400 border-2 border-dashed border-teal-300 dark:border-teal-700 flex flex-col items-center justify-center gap-1 shadow-inner">
                     <User className="w-8 h-8 opacity-80" />
                     <span className="text-[9px] font-bold uppercase tracking-wider">No Photo</span>
                   </div>
@@ -375,7 +375,7 @@ export default function ResumeCompletionModal({
                     type="button"
                     disabled={isUploadingPhoto}
                     onClick={() => photoInputRef.current?.click()}
-                    className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs shadow-md shadow-teal-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     {resume.profile_photo_url ? "Change Photo" : "Upload Photo"}
@@ -425,7 +425,7 @@ export default function ResumeCompletionModal({
                         className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl text-sm font-medium transition-all outline-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500
                           ${isUnparsed
                             ? "bg-rose-50/90 dark:bg-rose-950/40 border-2 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/30"
-                            : "bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20"
+                            : "bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-500/20"
                           }`}
                       />
                     </div>
@@ -482,7 +482,7 @@ export default function ResumeCompletionModal({
             <button
               onClick={handleSaveAndClose}
               disabled={isSaving}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md shadow-indigo-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-60"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white transition-all shadow-md shadow-teal-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-60"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {isSaving ? "Saving..." : allResolved ? "Save Master Resume" : `Save & Close (${activeUnparsed.length} remaining)`}

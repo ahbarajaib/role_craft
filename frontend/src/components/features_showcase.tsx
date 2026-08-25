@@ -8,8 +8,8 @@ const features = [
     title: "1-Click Full Resume Auto-Tailor",
     desc: "Simultaneously rewrites your Professional Summary, weaves missing ATS keywords into your Technical Skills, and tailors Work Experience bullets in under 15 seconds.",
     tag: "1-Click AI Engine",
-    gradient: "from-blue-600 to-cyan-500",
-    tagColor: "text-blue-700 bg-blue-50 border-blue-200",
+    gradient: "from-teal-600 to-teal-500",
+    tagColor: "text-teal-700 bg-teal-50 border-teal-200",
   },
   {
     icon: Cpu,
@@ -17,7 +17,7 @@ const features = [
     desc: "Automatically restructures achievement bullets into high-impact format: 'Accomplished [X] as measured by [Y], by doing [Z]', maximizing recruiter evaluation scores.",
     tag: "Recruiter Formula",
     gradient: "from-indigo-600 to-blue-500",
-    tagColor: "text-indigo-700 bg-indigo-50 border-indigo-200",
+    tagColor: "text-teal-700 bg-teal-50 border-teal-200",
   },
   {
     icon: Layers,
@@ -33,14 +33,14 @@ const features = [
     desc: "Enforces strict grounding guidelines. Never invents fake degrees or credentials, keeping all rewritten content 100% grounded in your actual background.",
     tag: "Zero Hallucinations",
     gradient: "from-blue-700 to-blue-500",
-    tagColor: "text-blue-700 bg-blue-50 border-blue-200",
+    tagColor: "text-teal-700 bg-teal-50 border-teal-200",
   },
   {
     icon: Zap,
     title: "Real-Time ATS Keyword Matrix",
     desc: "Scans job description text to detect confirmed matched skills, supported evidence keywords, and missing high-priority keywords ready for instant 1-click insertion.",
     tag: "ATS Keyword Weaver",
-    gradient: "from-cyan-600 to-blue-600",
+    gradient: "from-cyan-600 to-teal-600",
     tagColor: "text-cyan-700 bg-cyan-50 border-cyan-200",
   },
   {
@@ -49,7 +49,7 @@ const features = [
     desc: "Export your final tailored resume instantly as an editable Word `.docx` file or as a clean `.pdf` document ready to submit directly to job portals.",
     tag: "Instant Export",
     gradient: "from-blue-600 to-indigo-600",
-    tagColor: "text-indigo-700 bg-indigo-50 border-indigo-200",
+    tagColor: "text-teal-700 bg-teal-50 border-teal-200",
   },
 ];
 
@@ -70,14 +70,14 @@ export default function FeaturesShowcase() {
                   {f.tag}
                 </span>
               </div>
-              <h3 className="text-[15px] font-bold text-slate-900 group-hover:text-blue-700 transition-colors leading-snug">
+              <h3 className="text-[15px] font-bold text-slate-900 group-hover:text-teal-700 transition-colors leading-snug">
                 {f.title}
               </h3>
               <p className="text-xs text-slate-500 font-medium leading-relaxed">
                 {f.desc}
               </p>
             </div>
-            <div className="pt-3 border-t border-slate-100 flex items-center gap-1 text-xs font-bold text-blue-600 group-hover:text-blue-700">
+            <div className="pt-3 border-t border-slate-100 flex items-center gap-1 text-xs font-bold text-teal-600 group-hover:text-teal-700">
               <span>Explore Capability</span>
               <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1.5 transition-transform duration-200" />
             </div>

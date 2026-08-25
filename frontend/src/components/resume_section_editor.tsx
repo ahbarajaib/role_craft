@@ -52,11 +52,11 @@ export default function ResumeSectionEditor({
   const getSectionIcon = (type: string) => {
     switch (type) {
       case "summary":
-        return <FileText className="h-4 w-4 text-indigo-500" />;
+        return <FileText className="h-4 w-4 text-teal-500" />;
       case "skills":
         return <Code className="h-4 w-4 text-emerald-500" />;
       case "experience":
-        return <Briefcase className="h-4 w-4 text-blue-500" />;
+        return <Briefcase className="h-4 w-4 text-teal-500" />;
       case "education":
         return <GraduationCap className="h-4 w-4 text-purple-500" />;
       case "projects":
@@ -117,7 +117,7 @@ export default function ResumeSectionEditor({
             type="text"
             value={section.section_title}
             onChange={(e) => onChange({ ...section, section_title: e.target.value })}
-            className="font-bold text-sm text-slate-900 dark:text-white bg-transparent border-b border-transparent hover:border-slate-300 dark:hover:border-slate-700 focus:border-indigo-500 focus:outline-none px-1 py-0.5 transition-all flex-1 min-w-0"
+            className="font-bold text-sm text-slate-900 dark:text-white bg-transparent border-b border-transparent hover:border-slate-300 dark:hover:border-slate-700 focus:border-teal-500 focus:outline-none px-1 py-0.5 transition-all flex-1 min-w-0"
             placeholder="Section Title"
           />
 
@@ -134,7 +134,7 @@ export default function ResumeSectionEditor({
             onClick={() => onChange({ ...section, visible: !section.visible })}
             className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 border select-none ${
               section.visible
-                ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/20"
+                ? "bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30 hover:bg-teal-500/20"
                 : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border-slate-300 dark:border-slate-700"
             }`}
             title={section.visible ? "AI Tailoring ENABLED for this section. Click to Lock/Disable." : "AI Tailoring DISABLED for this section. Click to Enable."}
@@ -184,7 +184,7 @@ export default function ResumeSectionEditor({
                 value={section.content?.text || section.content?.summary || ""}
                 onChange={(e) => updateContent({ ...section.content, text: e.target.value })}
                 rows={4}
-                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all leading-relaxed"
+                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none transition-all leading-relaxed"
                 placeholder="Write your professional summary..."
               />
             </div>
@@ -286,7 +286,7 @@ function SkillsEditor({
               type="text"
               value={cat.category_name || ""}
               onChange={(e) => updateCategory(idx, { ...cat, category_name: e.target.value })}
-              className="font-bold text-xs text-slate-800 dark:text-slate-200 bg-transparent border-b border-slate-300 dark:border-slate-700 focus:border-indigo-500 focus:outline-none px-1"
+              className="font-bold text-xs text-slate-800 dark:text-slate-200 bg-transparent border-b border-slate-300 dark:border-slate-700 focus:border-teal-500 focus:outline-none px-1"
               placeholder="Category Name (e.g. Languages)"
             />
             <button
@@ -329,7 +329,7 @@ function SkillsEditor({
             <button
               type="button"
               onClick={() => updateCategory(idx, { ...cat, skills: [...(cat.skills || []), "New Skill"] })}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 text-xs font-semibold hover:bg-indigo-100 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-teal-50 dark:bg-slate-900/50 border border-teal-200 dark:border-slate-800 text-teal-600 dark:text-teal-400 text-xs font-semibold hover:bg-[#E6F7F4] transition-all cursor-pointer"
             >
               <Plus className="h-3 w-3" /> Add Skill
             </button>
@@ -399,7 +399,7 @@ function ExperienceEditor({
             className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3"
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="font-bold text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+              <span className="font-bold text-xs text-teal-600 dark:text-teal-400 uppercase tracking-wider">
                 Experience #{idx + 1}
               </span>
               <button
@@ -531,7 +531,7 @@ function ExperienceEditor({
               <button
                 type="button"
                 onClick={() => updateEntry(idx, { ...e, bullets: [...(e.bullets || []), "New achievement bullet point."] })}
-                className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer pt-1"
+                className="text-[11px] font-semibold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer pt-1"
               >
                 <Plus className="h-3 w-3" /> Add Bullet Point
               </button>
@@ -925,7 +925,7 @@ function CustomListEditor({
             }}
             rows={2}
             placeholder="Enter custom section detail, bullet point, or item..."
-            className="flex-1 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none shadow-sm transition-all"
+            className="flex-1 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none shadow-sm transition-all"
           />
           <button
             type="button"
@@ -941,7 +941,7 @@ function CustomListEditor({
         onClick={() => onChange([...entries, "New item entry."])}
         className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
       >
-        <Plus className="h-3.5 w-3.5 text-indigo-500" /> Add Custom Entry Item
+        <Plus className="h-3.5 w-3.5 text-teal-500" /> Add Custom Entry Item
       </button>
     </div>
   );

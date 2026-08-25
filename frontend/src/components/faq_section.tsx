@@ -42,7 +42,7 @@ export default function FaqSection() {
           <div
             key={idx}
             className={`rounded-2xl border transition-all overflow-hidden shadow-sm ${
-              isOpen ? "border-blue-300 bg-white ring-1 ring-blue-500/10 shadow-md" : "border-slate-200 bg-white hover:border-blue-200"
+              isOpen ? "border-teal-300 bg-white ring-1 ring-teal-500/10 shadow-md" : "border-slate-200 bg-white hover:border-teal-200"
             }`}
           >
             <button
@@ -50,12 +50,12 @@ export default function FaqSection() {
               className="w-full p-5 text-left font-bold text-sm sm:text-base text-slate-900 flex items-center justify-between gap-4 cursor-pointer select-none"
             >
               <span className="flex items-center gap-2.5">
-                <HelpCircle className={`h-4 w-4 shrink-0 transition-colors ${isOpen ? "text-blue-600" : "text-blue-500"}`} />
+                <HelpCircle className={`h-4 w-4 shrink-0 transition-colors ${isOpen ? "text-teal-600" : "text-teal-500"}`} />
                 {faq.q}
               </span>
               <ChevronDown
                 className={`h-4 w-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-                  isOpen ? "rotate-180 text-blue-600" : ""
+                  isOpen ? "rotate-180 text-teal-600" : ""
                 }`}
               />
             </button>

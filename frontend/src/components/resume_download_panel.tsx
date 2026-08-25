@@ -39,8 +39,8 @@ const TEMPLATES = [
     label: "Clean Classic",
     desc: "Minimal ATS-optimised",
     icon: FileText,
-    bgLight: "bg-blue-50/80 hover:bg-blue-100/80 border-blue-200 text-blue-950",
-    iconColor: "text-blue-600",
+    bgLight: "bg-teal-50/80 hover:bg-[#E6F7F4]/80 border-teal-200 text-[#0F172A]",
+    iconColor: "text-teal-600",
     requiresDocx: false,
   },
   {
@@ -133,7 +133,7 @@ export default function ResumeDownloadPanel({
               onClick={() => setFormat(f)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 format === f
-                  ? "bg-white text-blue-600 shadow-sm border border-slate-200"
+                  ? "bg-white text-teal-600 shadow-sm border border-slate-200"
                   : "text-slate-500 hover:text-slate-900"
               }`}
             >
@@ -167,7 +167,7 @@ export default function ResumeDownloadPanel({
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0
                 ${disabled ? "bg-slate-200" : "bg-white/80 shadow-xs"}`}>
                 {isDownloading ? (
-                  <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+                  <Loader2 className="w-4 h-4 text-teal-600 animate-spin" />
                 ) : isSuccess ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 ) : (

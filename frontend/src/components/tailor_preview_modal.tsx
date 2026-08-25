@@ -115,7 +115,7 @@ export default function TailorPreviewModal({
                     onClick={() => setViewMode("step")}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       viewMode === "step"
-                        ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                        ? "bg-white dark:bg-slate-900 text-teal-600 dark:text-teal-400 shadow-sm"
                         : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
@@ -126,7 +126,7 @@ export default function TailorPreviewModal({
                     onClick={() => setViewMode("all")}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       viewMode === "all"
-                        ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                        ? "bg-white dark:bg-slate-900 text-teal-600 dark:text-teal-400 shadow-sm"
                         : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
@@ -144,7 +144,7 @@ export default function TailorPreviewModal({
                     <div className="flex items-center gap-2">
                       {(() => {
                         const Icon = fieldIcon(current[0]);
-                        return <Icon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />;
+                        return <Icon className="w-4 h-4 text-teal-600 dark:text-teal-400" />;
                       })()}
                       <span className="text-sm font-bold text-slate-900 dark:text-white">{fieldLabel(current[0])}</span>
                       {current[1].company && (
@@ -182,7 +182,7 @@ export default function TailorPreviewModal({
                         key={i}
                         onClick={() => setCurrentIdx(i)}
                         className={`h-2 rounded-full transition-all cursor-pointer ${
-                          i === currentIdx ? "bg-indigo-600 dark:bg-indigo-400 w-5" : "bg-slate-300 dark:bg-slate-700 w-2 hover:bg-slate-400"
+                          i === currentIdx ? "bg-teal-600 dark:bg-indigo-400 w-5" : "bg-slate-300 dark:bg-slate-700 w-2 hover:bg-slate-400"
                         }`}
                       />
                     ))}
@@ -198,7 +198,7 @@ export default function TailorPreviewModal({
                     return (
                       <div key={path} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
                         <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50 flex items-center gap-2">
-                          <Icon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                          <Icon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                           <span className="text-xs font-bold text-slate-900 dark:text-white">{fieldLabel(path)}</span>
                           {entry.company && <span className="text-xs text-slate-500 font-medium">· {entry.company}</span>}
                         </div>

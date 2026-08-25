@@ -454,7 +454,7 @@ export default function ResumeBuilderPage() {
   return (
     <div className="min-h-screen hero-mesh text-slate-900 flex flex-col font-sans">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-blue-100 px-4 lg:px-8 py-3 shadow-2xs">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-teal-100 px-4 lg:px-8 py-3 shadow-2xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link
@@ -462,17 +462,17 @@ export default function ResumeBuilderPage() {
               className="flex items-center gap-2.5 text-slate-900 font-black text-lg hover:opacity-90 transition-all group"
             >
               <div className="relative shrink-0">
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-400 opacity-20 blur-sm group-hover:opacity-35 transition-opacity" />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-teal-400 to-[#14B8A6] opacity-20 blur-sm group-hover:opacity-35 transition-opacity" />
                 <img
                   src="/logo.svg"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
                   alt="RoleCraft Logo"
-                  className="relative h-9 w-9 object-contain rounded-xl bg-white p-0.5 shadow-xs ring-1 ring-blue-100 transition-all"
+                  className="relative h-9 w-9 object-contain rounded-xl bg-white p-0.5 shadow-xs ring-1 ring-teal-100 transition-all"
                 />
               </div>
               <span className="text-gradient font-black tracking-tight text-xl">RoleCraft</span>
             </Link>
-            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-bold text-[11px]">
+            <span className="px-2.5 py-0.5 rounded-full bg-teal-50 border border-teal-200 text-teal-700 font-bold text-[11px]">
               AI Resume Builder
             </span>
           </div>
@@ -492,7 +492,7 @@ export default function ResumeBuilderPage() {
                 disabled={isSaving || saveStatus === "saved"}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs ${
                   saveStatus === "unsaved"
-                    ? "btn-primary text-white shadow-blue-500/20"
+                    ? "btn-primary text-white shadow-teal-500/20"
                     : "bg-white text-slate-700 border border-slate-200 cursor-default"
                 }`}
               >
@@ -503,7 +503,7 @@ export default function ResumeBuilderPage() {
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-teal-600" />
                     <span>Saved</span>
                   </>
                 )}
@@ -514,7 +514,7 @@ export default function ResumeBuilderPage() {
               <button
                 type="button"
                 onClick={() => setIsProfileModalOpen(true)}
-                className="h-9 w-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-bold text-xs hover:bg-blue-100 transition-all cursor-pointer shadow-2xs"
+                className="h-9 w-9 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600 font-bold text-xs hover:bg-[#E6F7F4] transition-all cursor-pointer shadow-2xs"
                 title="Profile & Settings"
               >
                 <User className="h-4.5 w-4.5" />
@@ -541,7 +541,7 @@ export default function ResumeBuilderPage() {
                 ? "bg-rose-50 border-rose-200 text-rose-700"
                 : statusMsg.type === "success"
                 ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                : "bg-blue-50 border-blue-200 text-blue-700"
+                : "bg-teal-50 border-teal-200 text-teal-700"
             }`}
           >
             <div className="flex items-center gap-2">
@@ -580,9 +580,9 @@ export default function ResumeBuilderPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isParsing}
-                className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-blue-600 border border-slate-200 shadow-2xs text-xs font-bold transition-all flex items-center gap-2 cursor-pointer hover:border-blue-300"
+                className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-teal-600 border border-slate-200 shadow-2xs text-xs font-bold transition-all flex items-center gap-2 cursor-pointer hover:border-teal-300"
               >
-                <UploadCloud className="h-4 w-4 text-blue-600" />
+                <UploadCloud className="h-4 w-4 text-teal-600" />
                 <span>Re-import Resume (DOCX / PDF)</span>
               </button>
 
@@ -667,7 +667,7 @@ export default function ResumeBuilderPage() {
               <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-2xs space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-blue-600" /> Candidate Contact Details
+                    <User className="h-3.5 w-3.5 text-teal-600" /> Candidate Contact Details
                   </h3>
                   {TEMPLATES.find((t) => t.id === selectedTemplate)?.hasPhotoSupport && (
                     <div className="flex items-center gap-2">
@@ -685,7 +685,7 @@ export default function ResumeBuilderPage() {
                           <img
                             src={resume.profile_photo_url}
                             alt="Profile"
-                            className="h-7 w-7 rounded-full object-cover border border-blue-500"
+                            className="h-7 w-7 rounded-full object-cover border border-teal-500"
                           />
                           <button
                             type="button"
@@ -700,7 +700,7 @@ export default function ResumeBuilderPage() {
                           type="button"
                           onClick={() => photoInputRef.current?.click()}
                           disabled={isUploadingPhoto}
-                          className="text-[11px] font-bold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
+                          className="text-[11px] font-bold text-teal-600 hover:underline flex items-center gap-1 cursor-pointer"
                         >
                           <Camera className="h-3.5 w-3.5" />
                           {isUploadingPhoto ? "Uploading..." : "+ Add Profile Photo"}
@@ -731,7 +731,7 @@ export default function ResumeBuilderPage() {
                         });
                         setSaveStatus("unsaved");
                       }}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-teal-500 text-xs text-slate-900 focus:outline-none transition-all"
                       placeholder="Mohammed Ahbar Ajaib"
                     />
                   </div>
@@ -751,7 +751,7 @@ export default function ResumeBuilderPage() {
                         });
                         setSaveStatus("unsaved");
                       }}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-teal-500 text-xs text-slate-900 focus:outline-none transition-all"
                       placeholder="e.g. AI Application Engineer | Full Stack Developer"
                     />
                   </div>
@@ -776,7 +776,7 @@ export default function ResumeBuilderPage() {
                         });
                         setSaveStatus("unsaved");
                       }}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-teal-500 text-xs text-slate-900 focus:outline-none transition-all"
                       placeholder="ahbar@example.com"
                     />
                   </div>
@@ -801,7 +801,7 @@ export default function ResumeBuilderPage() {
                         });
                         setSaveStatus("unsaved");
                       }}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-teal-500 text-xs text-slate-900 focus:outline-none transition-all"
                       placeholder="+91 7411223375"
                     />
                   </div>
@@ -821,7 +821,7 @@ export default function ResumeBuilderPage() {
                         });
                         setSaveStatus("unsaved");
                       }}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-teal-500 text-xs text-slate-900 focus:outline-none transition-all"
                       placeholder="Bangalore, India"
                     />
                   </div>
@@ -832,7 +832,7 @@ export default function ResumeBuilderPage() {
                         LinkedIn URL
                       </label>
                       <div className="relative">
-                        <span className="absolute left-3 top-2.5 text-[10px] font-black text-blue-600 bg-blue-50 px-1 rounded">in</span>
+                        <span className="absolute left-3 top-2.5 text-[10px] font-black text-teal-600 bg-teal-50 px-1 rounded">in</span>
                         <input
                           id="field-linkedin"
                           type="text"
@@ -844,7 +844,7 @@ export default function ResumeBuilderPage() {
                             });
                             setSaveStatus("unsaved");
                           }}
-                          className="w-full p-2.5 pl-9 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
+                          className="w-full p-2.5 pl-9 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-teal-500 text-xs text-slate-900 focus:outline-none transition-all"
                           placeholder="linkedin.com/in/ahbarajaib"
                         />
                       </div>
@@ -867,7 +867,7 @@ export default function ResumeBuilderPage() {
                             });
                             setSaveStatus("unsaved");
                           }}
-                          className="w-full p-2.5 pl-9 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
+                          className="w-full p-2.5 pl-9 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-teal-500 text-xs text-slate-900 focus:outline-none transition-all"
                           placeholder="ahbarajaib.com"
                         />
                       </div>
@@ -890,7 +890,7 @@ export default function ResumeBuilderPage() {
                             });
                             setSaveStatus("unsaved");
                           }}
-                          className="w-full p-2.5 pl-9 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
+                          className="w-full p-2.5 pl-9 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-teal-500 text-xs text-slate-900 focus:outline-none transition-all"
                           placeholder="github.com/ahbarajaib"
                         />
                       </div>
@@ -955,9 +955,9 @@ export default function ResumeBuilderPage() {
                               key={opt.type}
                               type="button"
                               onClick={() => handleAddSection(opt.type as any)}
-                              className="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                              className="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-teal-50 text-slate-700 hover:text-teal-700 border border-slate-200 hover:border-teal-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
                             >
-                              <Icon className="h-3.5 w-3.5 text-blue-600" />
+                              <Icon className="h-3.5 w-3.5 text-teal-600" />
                               {opt.title}
                             </button>
                           );
@@ -975,9 +975,9 @@ export default function ResumeBuilderPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-blue-600" /> Live Resume Overview
+                    <Sparkles className="h-4 w-4 text-teal-600" /> Live Resume Overview
                   </h3>
-                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200">
                     {TEMPLATES.find((t) => t.id === selectedTemplate)?.title}
                   </span>
                 </div>
@@ -988,10 +988,10 @@ export default function ResumeBuilderPage() {
                     <img
                       src={resume.profile_photo_url}
                       alt="Profile"
-                      className="h-12 w-12 rounded-full object-cover border-2 border-blue-500 shadow-sm shrink-0"
+                      className="h-12 w-12 rounded-full object-cover border-2 border-teal-500 shadow-sm shrink-0"
                     />
                   ) : (
-                    <div className="h-12 w-12 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
+                    <div className="h-12 w-12 rounded-full bg-teal-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-sm shadow-teal-500/20">
                       {resume.contact_info?.full_name ? resume.contact_info.full_name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase() : "MA"}
                     </div>
                   )}
@@ -1039,7 +1039,7 @@ export default function ResumeBuilderPage() {
                       type="button"
                       onClick={() => handleDownloadFile("pdf")}
                       disabled={isExporting !== null}
-                      className="w-full py-3.5 rounded-xl btn-primary text-white font-extrabold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-600/20 disabled:opacity-50"
+                      className="w-full py-3.5 rounded-xl btn-primary text-white font-extrabold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-teal-600/20 disabled:opacity-50"
                     >
                       <span className="px-1.5 py-0.5 rounded bg-red-600 text-white font-black text-[9px]">PDF</span>
                       <span>{isExporting === "pdf" ? "Exporting PDF..." : `Export as PDF (${TEMPLATES.find((t) => t.id === selectedTemplate)?.title})`}</span>
@@ -1070,7 +1070,7 @@ export default function ResumeBuilderPage() {
         ) : isLoadingResume ? (
           /* Loading State */
           <div className="p-12 rounded-3xl bg-white border border-slate-200 shadow-sm text-center max-w-xl mx-auto space-y-4 my-12">
-            <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 mx-auto">
+            <div className="h-12 w-12 rounded-2xl bg-teal-50 flex items-center justify-center text-teal-600 mx-auto">
               <RefreshCw className="h-6 w-6 animate-spin" />
             </div>
             <p className="text-xs font-semibold text-slate-600">Loading Master Resume...</p>
@@ -1078,7 +1078,7 @@ export default function ResumeBuilderPage() {
         ) : (
           /* Empty Initial State Card */
           <div className="p-12 rounded-3xl bg-white border border-slate-200 shadow-sm text-center max-w-xl mx-auto space-y-6 my-8">
-            <div className="h-16 w-16 rounded-3xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mx-auto">
+            <div className="h-16 w-16 rounded-3xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600 mx-auto">
               <UploadCloud className="h-8 w-8" />
             </div>
             <div>
@@ -1093,7 +1093,7 @@ export default function ResumeBuilderPage() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="px-6 py-3 rounded-2xl btn-primary text-white font-bold text-xs transition-all cursor-pointer shadow-lg shadow-blue-500/25 inline-flex items-center gap-2"
+              className="px-6 py-3 rounded-2xl btn-primary text-white font-bold text-xs transition-all cursor-pointer shadow-lg shadow-teal-500/25 inline-flex items-center gap-2"
             >
               <UploadCloud className="h-4 w-4" />
               Upload DOCX or PDF
@@ -1126,7 +1126,7 @@ export default function ResumeBuilderPage() {
               type="button"
               onClick={() => handleSaveResume(true)}
               disabled={isSaving}
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
               <Save className="h-3.5 w-3.5" />
               {isSaving ? "Saving..." : "Save Changes"}

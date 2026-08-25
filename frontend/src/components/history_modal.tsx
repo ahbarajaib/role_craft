@@ -340,7 +340,7 @@ export default function HistoryModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
+            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0">
               <History className="h-5 w-5" />
             </div>
             <div>
@@ -359,7 +359,7 @@ export default function HistoryModal({
               onClick={() => setShowChart(!showChart)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer ${
                 showChart
-                  ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30"
+                  ? "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/30"
                   : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
               }`}
               title="Toggle Analytics Chart"
@@ -388,14 +388,14 @@ export default function HistoryModal({
 
           {/* 🎯 Daily Application Target Tracker & Goal Progress */}
           {daily && (
-            <div className="glass-panel p-4 sm:p-5 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white dark:from-indigo-950/40 dark:via-purple-950/20 dark:to-slate-900 space-y-3.5 shadow-md">
+            <div className="glass-panel p-4 sm:p-5 rounded-2xl border border-teal-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white dark:from-indigo-950/40 dark:via-purple-950/20 dark:to-slate-900 space-y-3.5 shadow-md">
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/20 shrink-0">
+                  <div className="h-9 w-9 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-md shadow-teal-600/20 shrink-0">
                     <Target className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-black uppercase tracking-wider text-indigo-900 dark:text-indigo-300 flex items-center gap-2">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-[#0F172A] dark:text-teal-300 flex items-center gap-2">
                       Daily Application Target
                       {daily.goal_achieved && (
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500 text-white font-bold flex items-center gap-1 shadow-xs">
@@ -404,7 +404,7 @@ export default function HistoryModal({
                       )}
                     </h3>
                     <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold">
-                      Today: <span className="font-bold text-indigo-600 dark:text-indigo-400">{daily.today_completed}</span> / {daily.daily_target} jobs tailored ({daily.progress_percentage}%)
+                      Today: <span className="font-bold text-teal-600 dark:text-teal-400">{daily.today_completed}</span> / {daily.daily_target} jobs tailored ({daily.progress_percentage}%)
                     </p>
                     <p className="text-[10px] text-slate-400 font-medium">
                       Resets daily at 12:00 AM (midnight) local time
@@ -419,7 +419,7 @@ export default function HistoryModal({
                     value={daily.daily_target}
                     disabled={isUpdatingTarget}
                     onChange={(e) => handleTargetChange(Number(e.target.value))}
-                    className="px-3 py-1.5 rounded-xl border border-indigo-300 dark:border-indigo-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-xs"
+                    className="px-3 py-1.5 rounded-xl border border-teal-300 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer shadow-xs"
                   >
                     {[5, 10, 15, 20, 25, 30, 40, 50].map((num) => (
                       <option key={num} value={num}>
@@ -447,14 +447,14 @@ export default function HistoryModal({
             <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 space-y-4 shadow-sm">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                  <BarChart2 className="h-4 w-4 text-indigo-500" />
+                  <BarChart2 className="h-4 w-4 text-teal-500" />
                   <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
                     7-Day Tailoring Activity & Match Trends (Click Bar to Filter Date)
                   </h3>
                 </div>
                 <div className="flex items-center gap-4 text-xs">
                   <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-semibold">
-                    <span className="h-2.5 w-2.5 rounded bg-indigo-500 inline-block" /> Tailored Resumes
+                    <span className="h-2.5 w-2.5 rounded bg-teal-500 inline-block" /> Tailored Resumes
                   </span>
                   <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-semibold">
                     <span className="h-2.5 w-2.5 rounded bg-emerald-500 inline-block" /> Avg Match %
@@ -478,7 +478,7 @@ export default function HistoryModal({
                           setDayOffset(day.dayOffset);
                         }}
                         className={`flex flex-col items-center h-full justify-end group relative cursor-pointer outline-none rounded-xl transition-all p-1 ${
-                          isSelectedDay ? "ring-2 ring-indigo-500 bg-indigo-500/10" : ""
+                          isSelectedDay ? "ring-2 ring-teal-500 bg-teal-500/10" : ""
                         }`}
                       >
                         {/* Tooltip on Hover */}
@@ -488,7 +488,7 @@ export default function HistoryModal({
 
                         {/* Top Score Badge */}
                         {day.count > 0 && (
-                          <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 mb-1 group-hover:scale-110 transition-transform">
+                          <span className="text-[10px] font-black text-teal-600 dark:text-teal-400 mb-1 group-hover:scale-110 transition-transform">
                             {day.count}
                           </span>
                         )}
@@ -515,7 +515,7 @@ export default function HistoryModal({
                     <div key={idx} className="space-y-0.5">
                       <span className={`text-[11px] font-bold block truncate ${
                         timeframeFilter === "day" && dayOffset === day.dayOffset
-                          ? "text-indigo-600 dark:text-indigo-400 font-extrabold"
+                          ? "text-teal-600 dark:text-teal-400 font-extrabold"
                           : "text-slate-700 dark:text-slate-300"
                       }`}>
                         {day.label}
@@ -557,7 +557,7 @@ export default function HistoryModal({
                 <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                   Today's Count
                 </span>
-                <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">
+                <span className="text-lg font-black text-teal-600 dark:text-teal-400">
                   {historyData.summary.daily_summary.today_completed}
                 </span>
               </div>
@@ -591,7 +591,7 @@ export default function HistoryModal({
                     onClick={() => setTimeframeFilter(tab.id)}
                     className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
                       timeframeFilter === tab.id
-                        ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/80 dark:border-slate-700"
+                        ? "bg-white dark:bg-slate-800 text-teal-600 dark:text-teal-400 shadow-sm border border-slate-200/80 dark:border-slate-700"
                         : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
@@ -610,7 +610,7 @@ export default function HistoryModal({
                     placeholder="Search role, company, or file..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-xs"
                   />
                 </div>
 
@@ -619,7 +619,7 @@ export default function HistoryModal({
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-xs"
+                    className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer shadow-xs"
                   >
                     <option value="newest">📅 Newest First</option>
                     <option value="oldest">📅 Oldest First</option>
@@ -643,24 +643,24 @@ export default function HistoryModal({
 
             {/* 🗓️ Interactive Day Stepper Navigation Bar */}
             {timeframeFilter === "day" && (
-              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/80 text-xs shadow-xs animate-in fade-in duration-150">
+              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-teal-50/80 dark:bg-slate-900/40 border border-teal-200 dark:border-slate-800/80 text-xs shadow-xs animate-in fade-in duration-150">
                 <button
                   type="button"
                   onClick={() => setDayOffset((prev) => prev - 1)}
                   className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs"
                 >
-                  <ChevronLeft className="h-4 w-4 text-indigo-500" />
+                  <ChevronLeft className="h-4 w-4 text-teal-500" />
                   <span>Prev Day</span>
                 </button>
 
-                <div className="text-center font-black text-indigo-900 dark:text-indigo-300 flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-indigo-500" />
+                <div className="text-center font-black text-[#0F172A] dark:text-teal-300 flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-teal-500" />
                   <span>{dayStepperInfo.label}</span>
                   {dayOffset !== 0 && (
                     <button
                       type="button"
                       onClick={() => setDayOffset(0)}
-                      className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-500 transition-all cursor-pointer ml-1 shadow-xs"
+                      className="text-[10px] px-2.5 py-0.5 rounded-full bg-teal-600 text-white font-bold hover:bg-teal-500 transition-all cursor-pointer ml-1 shadow-xs"
                     >
                       Reset to Today
                     </button>
@@ -674,7 +674,7 @@ export default function HistoryModal({
                   className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <span>Next Day</span>
-                  <ChevronRight className="h-4 w-4 text-indigo-500" />
+                  <ChevronRight className="h-4 w-4 text-teal-500" />
                 </button>
               </div>
             )}
@@ -721,7 +721,7 @@ export default function HistoryModal({
           {/* History Items List */}
           {isLoading ? (
             <div className="p-12 text-center space-y-3">
-              <div className="h-6 w-6 border-2 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin mx-auto" />
+              <div className="h-6 w-6 border-2 border-teal-600/30 border-t-indigo-600 rounded-full animate-spin mx-auto" />
               <p className="text-xs text-slate-500">Loading analysis history...</p>
             </div>
           ) : paginatedItems.length === 0 ? (
@@ -758,7 +758,7 @@ export default function HistoryModal({
                 return (
                   <div
                     key={item.id}
-                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 hover:border-indigo-400 dark:hover:border-indigo-600 transition-all duration-150 space-y-3 shadow-sm group"
+                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 hover:border-teal-400 dark:hover:border-teal-600 transition-all duration-150 space-y-3 shadow-sm group"
                   >
                     <div className="flex items-start justify-between flex-wrap gap-2">
                       <div className="space-y-1">
@@ -809,12 +809,12 @@ export default function HistoryModal({
                           type="button"
                           disabled={loadingItemId === item.id}
                           onClick={() => handleRestore(item)}
-                          className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                          className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs shadow-md shadow-teal-600/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                         >
                           {loadingItemId === item.id ? (
                             <div className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                           ) : (
-                            <Sparkles className="h-3.5 w-3.5 text-indigo-200" />
+                            <Sparkles className="h-3.5 w-3.5 text-teal-200" />
                           )}
                           Open in Workspace
                         </button>
@@ -887,7 +887,7 @@ export default function HistoryModal({
                       onClick={() => setCurrentPage(p)}
                       className={`h-7 w-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         currentPage === p
-                          ? "bg-indigo-600 text-white shadow-sm"
+                          ? "bg-teal-600 text-white shadow-sm"
                           : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                       }`}
                     >

@@ -125,7 +125,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-2xl rounded-2xl p-4 sm:p-8 border border-blue-100 bg-white shadow-2xl flex flex-col space-y-5 sm:space-y-6 max-h-[95vh] overflow-y-auto">
+      <div className="relative w-full max-w-2xl rounded-2xl p-4 sm:p-8 border border-teal-100 bg-white shadow-2xl flex flex-col space-y-5 sm:space-y-6 max-h-[95vh] overflow-y-auto">
         
         {/* Close Button */}
         <button
@@ -137,7 +137,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
 
         {/* Header */}
         <div className="text-center space-y-2 pt-2 sm:pt-0">
-          <div className="inline-flex h-10 w-10 rounded-xl icon-gradient bg-gradient-to-br from-blue-600 to-cyan-500 items-center justify-center mx-auto shadow-md">
+          <div className="inline-flex h-10 w-10 rounded-xl icon-gradient bg-gradient-to-br from-teal-600 to-teal-500 items-center justify-center mx-auto shadow-md">
             <Sparkles className="h-5 w-5 text-white" />
           </div>
           <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
@@ -164,19 +164,19 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             onClick={() => setSelectedPlan("pro")}
             className={`relative rounded-xl p-5 border-2 transition-all cursor-pointer flex flex-col justify-between ${
               selectedPlan === "pro"
-                ? "border-blue-600 bg-blue-50/50 shadow-md ring-1 ring-blue-500/20"
-                : "border-slate-200 hover:border-blue-300 bg-white/60"
+                ? "border-teal-600 bg-teal-50/50 shadow-md ring-1 ring-teal-500/20"
+                : "border-slate-200 hover:border-teal-300 bg-white/60"
             }`}
           >
             {selectedPlan === "pro" && (
-              <div className="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full bg-blue-600 text-white font-extrabold text-[9px] uppercase tracking-wider shadow">
+              <div className="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full bg-teal-600 text-white font-extrabold text-[9px] uppercase tracking-wider shadow">
                 Selected
               </div>
             )}
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-black uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
-                  <Zap className="h-4 w-4 text-blue-600" /> Pro Plan
+                <h3 className="text-sm font-black uppercase tracking-wider text-teal-700 flex items-center gap-1.5">
+                  <Zap className="h-4 w-4 text-teal-600" /> Pro Plan
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
                   Perfect for active job seekers.
@@ -209,19 +209,19 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             onClick={() => setSelectedPlan("elite")}
             className={`relative rounded-xl p-5 border-2 transition-all cursor-pointer flex flex-col justify-between ${
               selectedPlan === "elite"
-                ? "border-blue-600 bg-blue-50/50 shadow-md ring-1 ring-blue-500/20"
-                : "border-slate-200 hover:border-blue-300 bg-white/60"
+                ? "border-teal-600 bg-teal-50/50 shadow-md ring-1 ring-teal-500/20"
+                : "border-slate-200 hover:border-teal-300 bg-white/60"
             }`}
           >
             {selectedPlan === "elite" && (
-              <div className="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full bg-blue-600 text-white font-extrabold text-[9px] uppercase tracking-wider shadow">
+              <div className="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full bg-teal-600 text-white font-extrabold text-[9px] uppercase tracking-wider shadow">
                 Selected
               </div>
             )}
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-black uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
-                  <Award className="h-4 w-4 text-blue-600" /> Elite Plan
+                <h3 className="text-sm font-black uppercase tracking-wider text-teal-700 flex items-center gap-1.5">
+                  <Award className="h-4 w-4 text-teal-600" /> Elite Plan
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
                   Maximum capacity for power job seekers.
@@ -255,7 +255,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         <button
           onClick={handleSubscribe}
           disabled={isSubmitting}
-          className="w-full py-3.5 rounded-xl btn-primary text-sm shadow-lg shadow-blue-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+          className="w-full py-3.5 rounded-xl btn-primary text-sm shadow-lg shadow-teal-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
             <RefreshCw className="h-4 w-4 animate-spin" />

@@ -157,7 +157,7 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
           const content = trimmed.substring(bulletMatch.length).trim();
           return (
             <div key={idx} className="flex items-start gap-2.5 pl-1">
-              <span className="text-indigo-600 dark:text-indigo-400 font-bold shrink-0 mt-0.5 select-none">•</span>
+              <span className="text-teal-600 dark:text-teal-400 font-bold shrink-0 mt-0.5 select-none">•</span>
               <p className="flex-1 select-all">{content}</p>
             </div>
           );
@@ -191,7 +191,7 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
               key={idx}
               className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 select-all flex flex-wrap items-baseline gap-1.5"
             >
-              <span className="font-bold text-indigo-700 dark:text-indigo-300 text-xs tracking-wide uppercase">
+              <span className="font-bold text-teal-700 dark:text-teal-300 text-xs tracking-wide uppercase">
                 {label}
               </span>
               <span className="text-slate-800 dark:text-slate-200 text-xs">{rest}</span>
@@ -233,7 +233,7 @@ function FormattedSectionText({ text, className }: { text: string; className?: s
         if (isImplicitBulletBlock) {
           return (
             <div key={idx} className="flex items-start gap-2.5 pl-1">
-              <span className="text-indigo-600 dark:text-indigo-400 font-bold shrink-0 mt-0.5 select-none">•</span>
+              <span className="text-teal-600 dark:text-teal-400 font-bold shrink-0 mt-0.5 select-none">•</span>
               <p className="flex-1 select-all">{trimmed}</p>
             </div>
           );
@@ -717,8 +717,8 @@ function SectionCard({
           <h3 className="font-black text-slate-900 dark:text-white text-base md:text-lg flex items-center gap-2">
             {section.section_name}
             {inlineLoadingSections[section.section_name] ? (
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-950/90 border border-indigo-300 dark:border-indigo-700 px-2.5 py-0.5 rounded-full animate-pulse">
-                <div className="h-2.5 w-2.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin shrink-0" />
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-teal-700 dark:text-teal-300 bg-[#E6F7F4] dark:bg-slate-900/90 border border-teal-300 dark:border-teal-700 px-2.5 py-0.5 rounded-full animate-pulse">
+                <div className="h-2.5 w-2.5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin shrink-0" />
                 ✨ AI Tailoring Section...
               </span>
             ) : rewrittenText ? (
@@ -740,7 +740,7 @@ function SectionCard({
               }}
               className={`px-3 py-1 rounded-full text-[11px] font-extrabold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs select-none ${
                 isTailoringEnabled
-                  ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-500/20 ring-2 ring-indigo-400/30"
+                  ? "bg-teal-600 text-white hover:bg-teal-700 shadow-teal-500/20 ring-2 ring-teal-400/30"
                   : "bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700"
               }`}
               title={isTailoringEnabled ? "AI Tailoring ENABLED for this section. Click to LOCK / DISABLE." : "AI Tailoring DISABLED for this section. Click to ENABLE."}
@@ -778,22 +778,22 @@ function SectionCard({
 
           {/* Inline AI Loading Cue */}
           {inlineLoadingSections[section.section_name] && (
-            <div className="p-5 bg-gradient-to-r from-indigo-50/70 via-purple-50/50 to-emerald-50/70 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-emerald-950/40 rounded-2xl border border-indigo-200 dark:border-indigo-800 space-y-3.5 animate-pulse">
-              <div className="flex items-center justify-between border-b border-indigo-200/80 dark:border-indigo-800/60 pb-2.5">
+            <div className="p-5 bg-gradient-to-r from-indigo-50/70 via-purple-50/50 to-emerald-50/70 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-emerald-950/40 rounded-2xl border border-teal-200 dark:border-slate-800 space-y-3.5 animate-pulse">
+              <div className="flex items-center justify-between border-b border-teal-200/80 dark:border-slate-800/60 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400 animate-spin" />
-                  <span className="text-xs font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-wider">
+                  <Sparkles className="h-4 w-4 text-teal-600 dark:text-teal-400 animate-spin" />
+                  <span className="text-xs font-black text-[#0F172A] dark:text-teal-200 uppercase tracking-wider">
                     AI Tailoring {section.section_name}...
                   </span>
                 </div>
-                <span className="text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 rounded-md border border-indigo-200">
+                <span className="text-[10px] font-extrabold text-teal-700 dark:text-teal-300 bg-[#E6F7F4] dark:bg-slate-900/60 px-2 py-0.5 rounded-md border border-teal-200">
                   Google XYZ Action-Impact Formula
                 </span>
               </div>
               <div className="space-y-2 pt-1">
-                <div className="h-3 bg-indigo-200/60 dark:bg-indigo-900/40 rounded-md w-3/4" />
-                <div className="h-3 bg-indigo-200/40 dark:bg-indigo-900/30 rounded-md w-full" />
-                <div className="h-3 bg-indigo-200/50 dark:bg-indigo-900/35 rounded-md w-5/6" />
+                <div className="h-3 bg-indigo-200/60 dark:bg-slate-900/40 rounded-md w-3/4" />
+                <div className="h-3 bg-indigo-200/40 dark:bg-slate-900/30 rounded-md w-full" />
+                <div className="h-3 bg-indigo-200/50 dark:bg-slate-900/35 rounded-md w-5/6" />
               </div>
             </div>
           )}
@@ -802,13 +802,13 @@ function SectionCard({
           {rewrittenText && (
             <div className="space-y-3 animate-fade-in-up">
               {/* Header Action Bar */}
-              <div className="flex items-center justify-between flex-wrap gap-2 bg-indigo-50/70 dark:bg-indigo-950/40 p-3 rounded-xl border border-indigo-200 dark:border-indigo-800/60">
+              <div className="flex items-center justify-between flex-wrap gap-2 bg-teal-50/70 dark:bg-slate-900/40 p-3 rounded-xl border border-teal-200 dark:border-slate-800/60">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-wider block">
+                  <span className="text-[11px] font-black text-[#0F172A] dark:text-teal-200 uppercase tracking-wider block">
                     ⚡ AI Section Rewrite Comparison
                   </span>
                   {hasBullets && (
-                    <span className="text-[9px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 px-1.5 py-0.5 rounded-md">
+                    <span className="text-[9px] font-semibold text-teal-600 dark:text-teal-400 bg-[#E6F7F4] dark:bg-slate-900/60 border border-teal-200 dark:border-slate-800 px-1.5 py-0.5 rounded-md">
                       ✓ Uncheck bullets to exclude
                     </span>
                   )}
@@ -845,7 +845,7 @@ function SectionCard({
                         onImproveClick(section.section_name, section.recommendations);
                       }
                     }}
-                    className="flex items-center gap-1 text-[10px] text-indigo-700 dark:text-indigo-300 font-extrabold px-2.5 py-1 border border-indigo-300 dark:border-indigo-700 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 hover:bg-indigo-200 transition-all duration-300 select-none cursor-pointer"
+                    className="flex items-center gap-1 text-[10px] text-teal-700 dark:text-teal-300 font-extrabold px-2.5 py-1 border border-teal-300 dark:border-teal-700 rounded-lg bg-[#E6F7F4] dark:bg-slate-900/80 hover:bg-indigo-200 transition-all duration-300 select-none cursor-pointer"
                   >
                     <Sparkles className="h-2.5 w-2.5 animate-pulse" />
                     Regenerate AI
@@ -924,14 +924,14 @@ function SectionCard({
 
             {/* Recommendations */}
             {section.recommendations.length > 0 && (
-              <div className="space-y-2 bg-blue-50/70 dark:bg-blue-950/40 p-3.5 rounded-xl border border-blue-200 dark:border-blue-800/60">
-                <span className="text-xs font-black text-blue-900 dark:text-blue-300 uppercase tracking-wider block">
+              <div className="space-y-2 bg-teal-50/70 dark:bg-slate-900/40 p-3.5 rounded-xl border border-teal-200 dark:border-slate-800/60">
+                <span className="text-xs font-black text-[#0F172A] dark:text-teal-300 uppercase tracking-wider block">
                   RECOMMENDATIONS
                 </span>
                 <ul className="space-y-1.5">
                   {section.recommendations.map((rec, i) => (
                     <li key={i} className="text-xs text-slate-800 dark:text-slate-200 font-semibold flex items-start gap-2">
-                      <AlertCircle className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                      <AlertCircle className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
                       <span>{rec}</span>
                     </li>
                   ))}
@@ -970,7 +970,7 @@ function SectionCard({
               className={`mt-2 w-full py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2.5 shadow-md transition-all duration-200 select-none ${inlineLoadingSections[section.section_name]
                   ? "bg-slate-900 dark:bg-slate-950 text-white border border-slate-700 shadow-slate-900/30 cursor-wait"
                   : section.review_status === "improve"
-                    ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20 cursor-pointer"
+                    ? "bg-teal-600 hover:bg-teal-700 text-white shadow-teal-600/20 cursor-pointer"
                     : "bg-slate-800 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white shadow-slate-900/20 cursor-pointer"
                 }`}
             >
@@ -1107,9 +1107,9 @@ function LoadingState() {
   }, []);
 
   return (
-    <div className="relative rounded-2xl bg-white border border-slate-200 shadow-xl shadow-blue-500/8 overflow-hidden">
+    <div className="relative rounded-2xl bg-white border border-slate-200 shadow-xl shadow-teal-500/8 overflow-hidden">
       {/* Ambient background glow */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
       {/* Subtle dot grid */}
       <div className="absolute inset-0 bg-grid opacity-40 pointer-events-none" />
@@ -1120,10 +1120,10 @@ function LoadingState() {
           <div className="relative flex items-center justify-center">
             {/* Multi-layered ambient background glow light */}
             <div className="absolute -inset-6 rounded-full bg-gradient-to-tr from-blue-500/35 via-indigo-500/30 to-cyan-400/35 blur-2xl animate-pulse" />
-            <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 opacity-60 blur-sm animate-pulse" />
+            <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-[#0F172A] via-teal-700 to-[#14B8A6] opacity-60 blur-sm animate-pulse" />
             
             {/* Logo container with soft halo */}
-            <div className="relative h-18 w-18 rounded-2xl bg-white p-3 shadow-2xl shadow-blue-500/30 ring-1 ring-blue-200/80 flex items-center justify-center">
+            <div className="relative h-18 w-18 rounded-2xl bg-white p-3 shadow-2xl shadow-teal-500/30 ring-1 ring-teal-200/80 flex items-center justify-center">
               <img
                 src="/logo.svg"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
@@ -1136,8 +1136,8 @@ function LoadingState() {
           <div className="space-y-1 max-w-md">
             <h3 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center justify-center gap-2">
               <span>AI Analysis in Progress</span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-50 text-teal-700 border border-teal-200 shadow-2xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-pulse" />
                 Live
               </span>
             </h3>
@@ -1160,7 +1160,7 @@ function LoadingState() {
                 key={idx}
                 className={`relative flex items-start gap-3.5 px-4 py-3 rounded-xl transition-all duration-500 ${
                   isCurrent
-                    ? "bg-blue-50 border border-blue-200 shadow-sm"
+                    ? "bg-teal-50 border border-teal-200 shadow-sm"
                     : isDone
                     ? "bg-emerald-50/50 border border-emerald-100"
                     : "border border-transparent"
@@ -1176,13 +1176,13 @@ function LoadingState() {
                   isDone
                     ? "bg-emerald-500 shadow-md shadow-emerald-500/30"
                     : isCurrent
-                    ? "bg-white border-2 border-blue-500 shadow-md shadow-blue-500/20"
+                    ? "bg-white border-2 border-teal-500 shadow-md shadow-teal-500/20"
                     : "bg-white border-2 border-slate-200"
                 }`}>
                   {isDone ? (
                     <CheckCircle className="h-3.5 w-3.5 text-white" />
                   ) : isCurrent ? (
-                    <div className="h-3.5 w-3.5 rounded-full border-2 border-blue-200 border-t-blue-600 animate-spin" />
+                    <div className="h-3.5 w-3.5 rounded-full border-2 border-teal-200 border-t-blue-600 animate-spin" />
                   ) : (
                     <div className="h-2.5 w-2.5 rounded-full bg-slate-200" />
                   )}
@@ -1192,12 +1192,12 @@ function LoadingState() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className={`text-sm font-bold leading-tight transition-colors duration-300 ${
-                      isDone ? "text-emerald-700" : isCurrent ? "text-blue-700" : "text-slate-400"
+                      isDone ? "text-emerald-700" : isCurrent ? "text-teal-700" : "text-slate-400"
                     }`}>
                       {step.label}
                     </span>
                     {isCurrent && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-blue-600 text-white tracking-wide animate-pulse shrink-0">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-teal-600 text-white tracking-wide animate-pulse shrink-0">
                         LIVE
                       </span>
                     )}
@@ -1206,7 +1206,7 @@ function LoadingState() {
                     )}
                   </div>
                   <p className={`text-xs mt-0.5 transition-colors duration-300 ${
-                    isDone ? "text-emerald-600/70" : isCurrent ? "text-blue-600/80" : "text-slate-400"
+                    isDone ? "text-emerald-600/70" : isCurrent ? "text-teal-600/80" : "text-slate-400"
                   }`}>
                     {step.sub}
                   </p>
@@ -1214,7 +1214,7 @@ function LoadingState() {
 
                 {/* Step icon */}
                 <div className={`shrink-0 p-1.5 rounded-lg transition-all duration-300 ${
-                  isDone ? "bg-emerald-100 text-emerald-600" : isCurrent ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-300"
+                  isDone ? "bg-emerald-100 text-emerald-600" : isCurrent ? "bg-[#E6F7F4] text-teal-600" : "bg-slate-100 text-slate-300"
                 }`}>
                   <StepIcon className="h-3.5 w-3.5" />
                 </div>
@@ -1227,14 +1227,14 @@ function LoadingState() {
         <div className="border-t border-slate-100 pt-5 space-y-3">
           <div className="flex items-center justify-between text-xs font-bold">
             <div className="flex items-center gap-2 text-slate-600">
-              <Activity className="h-3.5 w-3.5 text-blue-500" />
+              <Activity className="h-3.5 w-3.5 text-teal-500" />
               Pipeline Status
             </div>
-            <span className="text-blue-600 font-extrabold text-sm">{progress}%</span>
+            <span className="text-teal-600 font-extrabold text-sm">{progress}%</span>
           </div>
           <div className="relative h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
             <div
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 rounded-full transition-all duration-300 ease-out"
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#0F172A] via-teal-600 to-[#14B8A6] rounded-full transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             >
               {/* Shimmer */}
@@ -1313,16 +1313,16 @@ function AutoTailoringProgressModal({
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-lg rounded-3xl bg-white border border-slate-200 shadow-2xl shadow-blue-500/10 overflow-hidden p-6 sm:p-8 text-slate-900 space-y-6 animate-scale-in">
+      <div className="relative w-full max-w-lg rounded-3xl bg-white border border-slate-200 shadow-2xl shadow-teal-500/10 overflow-hidden p-6 sm:p-8 text-slate-900 space-y-6 animate-scale-in">
         {/* Ambient background glows */}
-        <div className="absolute -top-24 -right-24 w-56 h-56 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -right-24 w-56 h-56 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
 
         {/* Top Engine Badge */}
         <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-[11px] font-bold text-blue-700">
-            <Zap className="h-3.5 w-3.5 text-blue-600 fill-blue-600 animate-pulse" />
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200/80 text-[11px] font-bold text-teal-700">
+            <Zap className="h-3.5 w-3.5 text-teal-600 fill-teal-600 animate-pulse" />
             <span>16-Worker Parallel AI Engine</span>
           </div>
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-black text-emerald-700">
@@ -1334,9 +1334,9 @@ function AutoTailoringProgressModal({
         {/* Center Animated Glowing Ring Graphic */}
         <div className="relative z-10 flex flex-col items-center text-center space-y-3">
           <div className="relative h-20 w-20 flex items-center justify-center">
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-blue-600 animate-spin blur-md opacity-60" style={{ animationDuration: "4s" }} />
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-teal-600 animate-spin blur-md opacity-60" style={{ animationDuration: "4s" }} />
             <div className="relative h-16 w-16 rounded-2xl bg-white flex items-center justify-center border border-slate-200 shadow-xl">
-              <Sparkles className="h-8 w-8 text-blue-600 animate-pulse" />
+              <Sparkles className="h-8 w-8 text-teal-600 animate-pulse" />
             </div>
           </div>
 
@@ -1346,7 +1346,7 @@ function AutoTailoringProgressModal({
             </h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
               Optimizing for{" "}
-              <span className="font-extrabold text-blue-700 px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200">
+              <span className="font-extrabold text-teal-700 px-2 py-0.5 rounded-lg bg-teal-50 border border-teal-200">
                 {targetRole || "Target Position"}
               </span>
             </p>
@@ -1357,14 +1357,14 @@ function AutoTailoringProgressModal({
         <div className="relative z-10 space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-600">
             <span className="flex items-center gap-1.5">
-              <Activity className="h-3.5 w-3.5 text-blue-600" />
+              <Activity className="h-3.5 w-3.5 text-teal-600" />
               Tailoring Progress
             </span>
-            <span className="text-blue-600 font-extrabold text-sm">{progress}%</span>
+            <span className="text-teal-600 font-extrabold text-sm">{progress}%</span>
           </div>
           <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-0.5">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-blue-600 rounded-full transition-all duration-200 relative overflow-hidden"
+              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-teal-600 rounded-full transition-all duration-200 relative overflow-hidden"
               style={{ width: `${progress}%` }}
             >
               <div className="absolute inset-0 bg-white/30 animate-pulse" />
@@ -1384,7 +1384,7 @@ function AutoTailoringProgressModal({
                 key={idx}
                 className={`p-3 rounded-xl border transition-all duration-300 flex items-center justify-between gap-3 ${
                   isCurrent
-                    ? "bg-blue-50/90 border-blue-300 text-blue-950 shadow-xs"
+                    ? "bg-teal-50/90 border-teal-300 text-[#0F172A] shadow-xs"
                     : isDone
                     ? "bg-emerald-50/70 border-emerald-200 text-emerald-900"
                     : "bg-slate-50 border-slate-200/80 text-slate-400"
@@ -1396,14 +1396,14 @@ function AutoTailoringProgressModal({
                       isDone
                         ? "bg-emerald-100 border-emerald-200 text-emerald-700"
                         : isCurrent
-                        ? "bg-blue-100 border-blue-200 text-blue-700"
+                        ? "bg-[#E6F7F4] border-teal-200 text-teal-700"
                         : "bg-white border-slate-200 text-slate-400"
                     }`}
                   >
                     {isDone ? (
                       <Check className="h-4 w-4 text-emerald-600" />
                     ) : isCurrent ? (
-                      <div className="h-3.5 w-3.5 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+                      <div className="h-3.5 w-3.5 rounded-full border-2 border-teal-600 border-t-transparent animate-spin" />
                     ) : (
                       <StepIcon className="h-3.5 w-3.5" />
                     )}
@@ -1414,7 +1414,7 @@ function AutoTailoringProgressModal({
                         isDone
                           ? "text-emerald-900"
                           : isCurrent
-                          ? "text-blue-900 font-extrabold"
+                          ? "text-[#0F172A] font-extrabold"
                           : "text-slate-500"
                       }`}
                     >
@@ -1427,7 +1427,7 @@ function AutoTailoringProgressModal({
                 </div>
 
                 {isCurrent && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-700 border border-blue-200 animate-pulse shrink-0">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-black bg-[#E6F7F4] text-teal-700 border border-teal-200 animate-pulse shrink-0">
                     WORKING
                   </span>
                 )}
@@ -1565,11 +1565,11 @@ function getSkillCategory(skillName: string): { label: string; badgeColor: strin
   
   // Tools, Systems, Platforms & Software
   if (/system|software|tool|platform|portal|app|erp|crm|sap|oracle|cloud|db|database|server|net|api|hubspot|salesforce|jira|figma|git|linux/i.test(s) || (skillName.length <= 5 && skillName === skillName.toUpperCase())) {
-    return { label: "Systems & Tools", badgeColor: "bg-blue-50 text-blue-700 border-blue-200" };
+    return { label: "Systems & Tools", badgeColor: "bg-teal-50 text-teal-700 border-teal-200" };
   }
 
   // Core Specialized Domain Competencies across all professions
-  return { label: "Domain Competency", badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-200" };
+  return { label: "Domain Competency", badgeColor: "bg-teal-50 text-teal-700 border-teal-200" };
 }
 
 function extractStrictKeywordsFromRaw(raw: string): string[] {
@@ -3401,10 +3401,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               <a
                 key={label}
                 href={href}
-                className="relative px-3.5 py-2 rounded-lg text-slate-600 hover:text-blue-700 transition-colors cursor-pointer whitespace-nowrap group/nav"
+                className="relative px-3.5 py-2 rounded-lg text-slate-600 hover:text-teal-700 transition-colors cursor-pointer whitespace-nowrap group/nav"
               >
                 {label}
-                <span className="absolute bottom-1 left-3.5 right-3.5 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full scale-x-0 group-hover/nav:scale-x-100 transition-transform origin-left duration-200" />
+                <span className="absolute bottom-1 left-3.5 right-3.5 h-0.5 bg-gradient-to-r from-teal-500 to-[#14B8A6] rounded-full scale-x-0 group-hover/nav:scale-x-100 transition-transform origin-left duration-200" />
               </a>
             ))}
           </nav>
@@ -3414,10 +3414,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-end md:self-auto">
           <Link
             href="/resume-builder"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-blue-50 text-blue-700 border border-blue-200 hover:border-blue-400 shadow-sm transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
             title="Create & Edit Structured Resume with ATS Templates"
           >
-            <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+            <Sparkles className="h-3.5 w-3.5 text-teal-500" />
             <span>Resume Builder</span>
           </Link>
 
@@ -3427,7 +3427,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${
                 activeNavTab === "workspace"
-                  ? "bg-slate-900 text-white ring-2 ring-blue-500"
+                  ? "bg-slate-900 text-white ring-2 ring-teal-500"
                   : "btn-primary"
               }`}
           >
@@ -3464,7 +3464,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   <div className="absolute right-0 mt-2 w-72 z-50 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-3.5 animate-fade-in-up">
                     {/* User Header */}
                     <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-indigo-600/30 shrink-0">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-teal-600/30 shrink-0">
                         {(user.name || user.email)[0].toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -3482,7 +3482,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
                         <span className="text-slate-500 dark:text-slate-400 font-medium">Plan</span>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 font-black uppercase text-[10px] tracking-wider">
+                          <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20 font-black uppercase text-[10px] tracking-wider">
                             {user.plan_type}
                           </span>
                           {user.plan_type === "free" && (
@@ -3491,7 +3491,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                 setIsProfileMenuOpen(false);
                                 setIsSubscriptionModalOpen(true);
                               }}
-                              className="px-2 py-0.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[10px] transition-all cursor-pointer shadow-sm"
+                              className="px-2 py-0.5 rounded bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-[10px] transition-all cursor-pointer shadow-sm"
                             >
                               Upgrade
                             </button>
@@ -3510,7 +3510,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               onClick={handleReloadCredits}
                               disabled={isReloadingCredits}
                               title="Reload VIP credits"
-                              className="px-2 py-0.5 rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-extrabold text-[10px] transition-all cursor-pointer shadow-sm flex items-center gap-1"
+                              className="px-2 py-0.5 rounded bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-extrabold text-[10px] transition-all cursor-pointer shadow-sm flex items-center gap-1"
                             >
                               {isReloadingCredits ? "..." : "↺ Reload"}
                             </button>
@@ -3527,13 +3527,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           setIsProfileMenuOpen(false);
                           handleOpenMasterResume();
                         }}
-                        className="w-full py-2.5 px-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 font-bold text-xs transition-all flex items-center justify-between cursor-pointer shadow-2xs"
+                        className="w-full py-2.5 px-3 rounded-xl bg-teal-50 dark:bg-slate-900/40 hover:bg-[#E6F7F4] dark:hover:bg-slate-900/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-slate-800/80 font-bold text-xs transition-all flex items-center justify-between cursor-pointer shadow-2xs"
                       >
                         <span className="flex items-center gap-2">
-                          <Edit className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                          <Edit className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
                           Master Resume
                         </span>
-                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-200/60 dark:bg-indigo-900/80 text-indigo-800 dark:text-indigo-200">
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-200/60 dark:bg-slate-900/80 text-teal-900 dark:text-teal-200">
                           JSON
                         </span>
                       </button>
@@ -3548,7 +3548,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         className="w-full py-2.5 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60 font-bold text-xs transition-all flex items-center justify-between cursor-pointer"
                       >
                         <span className="flex items-center gap-2">
-                          <History className="h-3.5 w-3.5 text-indigo-500" />
+                          <History className="h-3.5 w-3.5 text-teal-500" />
                           History & Daily Goals
                         </span>
                         {dailyGoal && (
@@ -3568,11 +3568,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center justify-between cursor-pointer"
                       >
                         <span className="flex items-center gap-2">
-                          <User className="h-3.5 w-3.5 text-blue-600" />
+                          <User className="h-3.5 w-3.5 text-teal-600" />
                           Profile & Base Docs
                         </span>
                         {user && (
-                          <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                          <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">
                             {calculateProfileCompletion(user).totalPercentage}%
                           </span>
                         )}
@@ -3586,7 +3586,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         }}
                         className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer"
                       >
-                        <LifeBuoy className="h-3.5 w-3.5 text-blue-600" />
+                        <LifeBuoy className="h-3.5 w-3.5 text-teal-600" />
                         <span>Report an Issue / Feedback</span>
                       </button>
                     </div>
@@ -3597,7 +3597,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         setIsProfileMenuOpen(false);
                         setIsProfileModalOpen(true);
                       }}
-                      className="w-full py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                      className="w-full py-2 rounded-xl bg-teal-50 dark:bg-slate-900/40 hover:bg-[#E6F7F4] text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-slate-800 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                     >
                       <User className="h-3.5 w-3.5" />
                       Profile & Base Docs
@@ -3637,15 +3637,15 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
               {/* Left Column: Headline & Action CTAs */}
               <div className="lg:col-span-6 space-y-6 lg:space-y-7 text-left">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50/90 border border-blue-200/80 text-blue-700 font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider shadow-2xs">
-                  <Sparkles className="h-3.5 w-3.5 text-blue-600 animate-pulse" />
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50/90 border border-teal-200/80 text-teal-700 font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider shadow-2xs">
+                  <Sparkles className="h-3.5 w-3.5 text-teal-600 animate-pulse" />
                   <span>Recruiter-Grade AI Resume Optimization Engine</span>
                 </div>
 
                 <h1 className="text-4xl sm:text-5xl xl:text-6xl font-black text-slate-900 tracking-tight leading-[1.12]">
                   Tailor Your Resume<br />
                   to Any Role in{" "}
-                  <span className="text-blue-600">1&#8209;Click</span>
+                  <span className="text-teal-600">1&#8209;Click</span>
                 </h1>
 
                 <p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-xl">
@@ -3655,7 +3655,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 <div className="flex flex-wrap items-center gap-3.5 pt-2">
                   <button
                     onClick={() => switchNavTab("workspace")}
-                    className="px-7 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-sm shadow-lg shadow-blue-600/30 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                    className="px-7 py-3.5 rounded-2xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-sm shadow-lg shadow-teal-600/30 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Zap className="h-4 w-4 text-amber-300" />
                     <span>Launch Optimizer Workspace</span>
@@ -3677,22 +3677,22 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-gradient-to-tr from-indigo-400/15 to-blue-400/15 rounded-full blur-3xl pointer-events-none" />
 
                 {/* Main Resume Window Container */}
-                <div className="relative rounded-3xl bg-white/95 border border-slate-200 shadow-2xl p-5 sm:p-7 backdrop-blur-md transition-all hover:shadow-blue-500/10">
+                <div className="relative rounded-3xl bg-white/95 border border-slate-200 shadow-2xl p-5 sm:p-7 backdrop-blur-md transition-all hover:shadow-teal-500/10">
                   
                   {/* Internal Layout: Left Mini Tool Rail + Paper Content */}
                   <div className="flex items-start gap-4">
                     {/* Left Mini Icon Rail */}
                     <div className="hidden sm:flex flex-col items-center gap-3.5 pt-1 text-slate-400 border-r border-slate-100 pr-3.5 shrink-0 select-none">
-                      <div className="h-6 w-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <div className="h-6 w-6 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
                         <Sparkles className="h-3.5 w-3.5" />
                       </div>
-                      <SlidersHorizontal className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
-                      <Eye className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
-                      <Code className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
-                      <FileText className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
-                      <Copy className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
-                      <Download className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
-                      <Scissors className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
+                      <SlidersHorizontal className="h-3.5 w-3.5 hover:text-teal-600 transition-colors" />
+                      <Eye className="h-3.5 w-3.5 hover:text-teal-600 transition-colors" />
+                      <Code className="h-3.5 w-3.5 hover:text-teal-600 transition-colors" />
+                      <FileText className="h-3.5 w-3.5 hover:text-teal-600 transition-colors" />
+                      <Copy className="h-3.5 w-3.5 hover:text-teal-600 transition-colors" />
+                      <Download className="h-3.5 w-3.5 hover:text-teal-600 transition-colors" />
+                      <Scissors className="h-3.5 w-3.5 hover:text-teal-600 transition-colors" />
                     </div>
 
                     {/* Resume Paper Content */}
@@ -3795,8 +3795,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             {/* Live Trust Metrics Row (4 Colored Icon Tiles) */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
               {/* Card 1: Blue */}
-              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-md hover:border-blue-200 transition-all glass-card-interactive">
-                <div className="h-11 w-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
+              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-md hover:border-teal-200 transition-all glass-card-interactive">
+                <div className="h-11 w-11 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-teal-500/20">
                   <TrendingUp className="h-5 w-5" />
                 </div>
                 <div className="text-left">
@@ -3806,8 +3806,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               </div>
 
               {/* Card 2: Purple */}
-              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-md hover:border-indigo-200 transition-all glass-card-interactive">
-                <div className="h-11 w-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-indigo-500/20">
+              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-md hover:border-teal-200 transition-all glass-card-interactive">
+                <div className="h-11 w-11 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-teal-500/20">
                   <Phone className="h-5 w-5" />
                 </div>
                 <div className="text-left">
@@ -3844,7 +3844,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           <section id="how-it-works" className="space-y-8 scroll-mt-24">
             <div className="text-center space-y-3 max-w-2xl mx-auto">
               <div className="section-eyebrow">
-                <Sparkles className="h-3 w-3 text-blue-600" />
+                <Sparkles className="h-3 w-3 text-teal-600" />
                 <span>Simple. Fast. Effective.</span>
               </div>
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
@@ -3857,12 +3857,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Step 1 */}
-              <div className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden group glass-card-interactive">
+              <div className="rounded-2xl border border-teal-100 bg-white p-6 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden group glass-card-interactive">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-600 to-cyan-400" />
                 <div className="h-11 w-11 rounded-xl icon-gradient bg-gradient-to-br from-blue-600 to-blue-500 text-white font-black text-lg flex items-center justify-center shadow-sm">
                   1
                 </div>
-                <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors">Upload Base Resume</h3>
+                <h3 className="text-base font-bold text-slate-900 group-hover:text-teal-700 transition-colors">Upload Base Resume</h3>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Upload your existing `.docx` base resume. RoleCraft parses low-level XML tags to map structure, fonts, and styles.
                 </p>
@@ -3871,10 +3871,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               {/* Step 2 */}
               <div className="rounded-2xl border border-cyan-100 bg-white p-6 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden group glass-card-interactive">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-400 to-indigo-500" />
-                <div className="h-11 w-11 rounded-xl icon-gradient bg-gradient-to-br from-cyan-600 to-blue-600 text-white font-black text-lg flex items-center justify-center shadow-sm">
+                <div className="h-11 w-11 rounded-xl icon-gradient bg-gradient-to-br from-cyan-600 to-teal-600 text-white font-black text-lg flex items-center justify-center shadow-sm">
                   2
                 </div>
-                <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors">Paste Job Description</h3>
+                <h3 className="text-base font-bold text-slate-900 group-hover:text-teal-700 transition-colors">Paste Job Description</h3>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Paste the Target Job Description. Our LLM pipeline detects key skills, missing keywords, and role priorities.
                 </p>
@@ -3886,7 +3886,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-400 text-white font-black text-lg flex items-center justify-center shadow-sm">
                   3
                 </div>
-                <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors">1-Click Auto-Tailor &amp; Download</h3>
+                <h3 className="text-base font-bold text-slate-900 group-hover:text-teal-700 transition-colors">1-Click Auto-Tailor &amp; Download</h3>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Click '⚡ Auto-Tailor Full Resume' to rewrite summary, weave keywords, and download your patched `.docx` resume.
                 </p>
@@ -3933,7 +3933,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Free Plan Card */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-blue-200 transition-all flex flex-col justify-between space-y-6 glass-card-interactive">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 glass-card-interactive">
                 <div className="space-y-4">
                   <span className="text-xs font-black uppercase text-slate-400 tracking-widest">Free Tier</span>
                   <div className="flex items-baseline gap-1">
@@ -3965,17 +3965,17 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
               {/* Pro Plan Card — Featured */}
               <div className="pricing-popular rounded-2xl p-6 flex flex-col justify-between space-y-6 relative">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-extrabold text-[10px] uppercase tracking-widest shadow-lg shadow-blue-500/30 whitespace-nowrap">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-gradient-to-r from-teal-600 to-teal-500 text-white font-extrabold text-[10px] uppercase tracking-widest shadow-lg shadow-teal-500/30 whitespace-nowrap">
                   ✦ Most Popular
                 </div>
                 <div className="space-y-4">
-                  <span className="text-xs font-black uppercase text-blue-700 tracking-widest">Pro Plan</span>
+                  <span className="text-xs font-black uppercase text-teal-700 tracking-widest">Pro Plan</span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-slate-900">₹399</span>
                     <span className="text-xs text-slate-400 line-through">₹2,000</span>
                     <span className="text-xs text-slate-500 font-semibold">/ month</span>
                   </div>
-                  <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-4 border-t border-blue-200/60">
+                  <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-4 border-t border-teal-200/60">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
                       <span><strong className="text-slate-900">{PRO_CREDITS} Credits</strong> / Month</span>
@@ -4003,9 +4003,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               </div>
 
               {/* Elite Plan Card */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all flex flex-col justify-between space-y-6 glass-card-interactive">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 glass-card-interactive">
                 <div className="space-y-4">
-                  <span className="text-xs font-black uppercase text-indigo-600 tracking-widest">Elite Plan</span>
+                  <span className="text-xs font-black uppercase text-teal-600 tracking-widest">Elite Plan</span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-slate-900">₹599</span>
                     <span className="text-xs text-slate-400 line-through">₹3,000</span>
@@ -4054,12 +4054,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             <div className="gradient-divider mb-8" />
             <div className="flex items-center justify-center gap-3">
               <div className="relative">
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-400 to-cyan-400 opacity-20 blur-sm" />
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-teal-400 to-[#14B8A6] opacity-20 blur-sm" />
                 <img
                   src="/logo.svg"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
                   alt="RoleCraft Logo"
-                  className="relative h-9 w-9 object-contain rounded-lg bg-white p-0.5 ring-1 ring-blue-100 shadow-sm"
+                  className="relative h-9 w-9 object-contain rounded-lg bg-white p-0.5 ring-1 ring-teal-100 shadow-sm"
                 />
               </div>
               <span className="text-lg font-black text-gradient">RoleCraft</span>
@@ -4068,11 +4068,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               Craft every resume for the role. Recruiter-grade AI tailoring with 100% visual DOCX formatting preservation.
             </p>
             <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-500 flex-wrap">
-              <a href="#how-it-works" onClick={() => switchNavTab("landing")} className="hover:text-blue-600 transition-colors">How It Works</a>
-              <a href="#features" onClick={() => switchNavTab("landing")} className="hover:text-blue-600 transition-colors">Features</a>
-              <a href="#pricing" onClick={() => switchNavTab("landing")} className="hover:text-blue-600 transition-colors">Pricing</a>
-              <button onClick={() => switchNavTab("workspace")} className="hover:text-blue-600 transition-colors cursor-pointer">Workspace</button>
-              <button onClick={() => openIssueReport("general")} className="hover:text-blue-600 transition-colors cursor-pointer flex items-center gap-1">
+              <a href="#how-it-works" onClick={() => switchNavTab("landing")} className="hover:text-teal-600 transition-colors">How It Works</a>
+              <a href="#features" onClick={() => switchNavTab("landing")} className="hover:text-teal-600 transition-colors">Features</a>
+              <a href="#pricing" onClick={() => switchNavTab("landing")} className="hover:text-teal-600 transition-colors">Pricing</a>
+              <button onClick={() => switchNavTab("workspace")} className="hover:text-teal-600 transition-colors cursor-pointer">Workspace</button>
+              <button onClick={() => openIssueReport("general")} className="hover:text-teal-600 transition-colors cursor-pointer flex items-center gap-1">
                 <LifeBuoy className="h-3 w-3" />
                 <span>Report Issue / Feedback</span>
               </button>
@@ -4088,8 +4088,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           {/* Left Form Panel */}
           <div className="lg:col-span-4 space-y-6 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
             <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
-              <h2 className="text-lg font-bold text-slate-800 border-b border-blue-100 pb-3 flex items-center gap-2">
-                <Layers className="h-5 w-5 text-blue-500" />
+              <h2 className="text-lg font-bold text-slate-800 border-b border-teal-100 pb-3 flex items-center gap-2">
+                <Layers className="h-5 w-5 text-teal-500" />
                 Configure Analysis
               </h2>
 
@@ -4103,7 +4103,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   <div
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
-                    className="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-xl p-8 text-center bg-slate-100/30 dark:bg-slate-900/30 hover:bg-slate-200/40 dark:hover:bg-slate-900/50 transition-all duration-300"
+                    className="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-teal-500/50 rounded-xl p-8 text-center bg-slate-100/30 dark:bg-slate-900/30 hover:bg-slate-200/40 dark:hover:bg-slate-900/50 transition-all duration-300"
                   >
                     <input
                       type="file"
@@ -4112,7 +4112,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       onChange={handleFileChange}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     />
-                    <UploadCloud className="h-10 w-10 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 mx-auto mb-3 transition-colors" />
+                    <UploadCloud className="h-10 w-10 text-slate-400 dark:text-slate-500 group-hover:text-teal-500 dark:group-hover:text-teal-400 mx-auto mb-3 transition-colors" />
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                       Drag & drop or click to upload
                     </p>
@@ -4121,7 +4121,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </p>
                   </div>
                 ) : isUploading ? (
-                  <div className="relative overflow-hidden p-5 rounded-2xl bg-white border border-blue-200/90 shadow-md shadow-blue-500/5 space-y-4 text-slate-800">
+                  <div className="relative overflow-hidden p-5 rounded-2xl bg-white border border-teal-200/90 shadow-md shadow-teal-500/5 space-y-4 text-slate-800">
                     {/* Ambient Glow Background Effect */}
                     <div className="absolute -top-10 -right-10 w-36 h-36 bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-emerald-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" />
                     <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-gradient-to-tr from-purple-500/10 via-indigo-500/10 to-teal-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" />
@@ -4129,7 +4129,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     {/* Header & Stage Chip */}
                     <div className="flex items-start justify-between gap-3 relative z-10">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20 ring-2 ring-blue-400/20">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-teal-500/20 ring-2 ring-teal-400/20">
                           <Sparkles className="h-5 w-5 text-white animate-spin" />
                         </div>
                         <div className="min-w-0">
@@ -4142,8 +4142,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-[10px] font-extrabold text-blue-700 uppercase tracking-wider shrink-0 shadow-2xs animate-pulse">
-                        <div className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-ping shrink-0" />
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-50 border border-teal-200 text-[10px] font-extrabold text-teal-700 uppercase tracking-wider shrink-0 shadow-2xs animate-pulse">
+                        <div className="h-1.5 w-1.5 rounded-full bg-teal-600 animate-ping shrink-0" />
                         <span>Parsing Resume</span>
                       </div>
                     </div>
@@ -4157,7 +4157,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       </div>
                       <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
                         <span>Extracting text, skills & experience</span>
-                        <span className="text-blue-600 font-extrabold">Processing...</span>
+                        <span className="text-teal-600 font-extrabold">Processing...</span>
                       </div>
                     </div>
 
@@ -4167,8 +4167,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
                         <span className="truncate">DOCX Text</span>
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg animate-pulse">
-                        <Cpu className="h-3 w-3 shrink-0 text-blue-600 animate-spin" />
+                      <div className="flex items-center gap-1 text-[10px] font-semibold text-teal-700 bg-teal-50 border border-teal-200 px-2 py-1 rounded-lg animate-pulse">
+                        <Cpu className="h-3 w-3 shrink-0 text-teal-600 animate-spin" />
                         <span className="truncate">Roles & Skills</span>
                       </div>
                       <div className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-1 rounded-lg">
@@ -4181,7 +4181,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   <div className="space-y-2">
                     <div className="flex items-center justify-between p-3.5 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden gap-3">
                       <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="h-9 w-9 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shrink-0">
+                        <div className="h-9 w-9 rounded-lg bg-teal-500/10 flex items-center justify-center border border-teal-500/20 shrink-0">
                           <WordLogoIcon className="h-5 w-5 shrink-0 shadow-sm" />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -4191,7 +4191,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           {file.size > 0 ? (
                             <p className="text-[11px] text-slate-400 dark:text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
                           ) : (
-                            <p className="text-[11px] text-indigo-500 dark:text-indigo-400 font-medium">
+                            <p className="text-[11px] text-teal-500 dark:text-teal-400 font-medium">
                               Base Resume
                             </p>
                           )}
@@ -4201,7 +4201,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         <button
                           type="button"
                           onClick={handleOpenMasterResume}
-                          className="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                          className="px-2.5 py-1 rounded-lg text-xs font-bold bg-teal-50 hover:bg-[#E6F7F4] dark:bg-slate-900/50 dark:hover:bg-slate-900/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-slate-800 transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
                           title="View & Edit Master Resume Fields"
                         >
                           <Edit className="h-3 w-3" />
@@ -4231,7 +4231,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         onChange={handleFileChange}
                         className="hidden"
                       />
-                      <span className="text-xs text-indigo-500 dark:text-indigo-400 hover:underline group-hover:text-indigo-600 transition-colors">
+                      <span className="text-xs text-teal-500 dark:text-teal-400 hover:underline group-hover:text-teal-600 transition-colors">
                         ↑ Upload a different resume for this session
                       </span>
                     </label>
@@ -4241,10 +4241,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
               {/* Pre-Analysis Section AI Tailoring Controls Box (on parsed content before analyze) */}
               {masterResume && masterResume.sections && masterResume.sections.length > 0 && (
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-white border border-blue-200/80 text-slate-800 space-y-3 shadow-xs">
-                  <div className="flex items-center justify-between border-b border-blue-200/60 pb-2.5">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-teal-50/70 via-indigo-50/40 to-white border border-teal-200/80 text-slate-800 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-teal-200/60 pb-2.5">
                     <div className="flex items-center gap-2">
-                      <SlidersHorizontal className="h-4 w-4 text-blue-600" />
+                      <SlidersHorizontal className="h-4 w-4 text-teal-600" />
                       <span className="text-xs font-black uppercase tracking-wider text-slate-700">
                         Pre-Analysis AI Section Controls
                       </span>
@@ -4252,7 +4252,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     <button
                       type="button"
                       onClick={handleOpenMasterResume}
-                      className="text-[10px] font-extrabold text-blue-700 hover:text-blue-800 bg-white hover:bg-blue-50/80 border border-blue-200 px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                      className="text-[10px] font-extrabold text-teal-700 hover:text-teal-900 bg-white hover:bg-teal-50/80 border border-teal-200 px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
                     >
                       <Edit className="h-3 w-3" />
                       <span>Edit Master</span>
@@ -4272,7 +4272,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           onClick={() => handleToggleSectionTailoring(sec.section_title)}
                           className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border select-none ${
                             isEnabled
-                              ? "bg-blue-600 text-white border-blue-500 shadow-xs hover:bg-blue-500"
+                              ? "bg-teal-600 text-white border-teal-500 shadow-xs hover:bg-teal-500"
                               : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
                           }`}
                           title={isEnabled ? `AI Tailoring ENABLED for ${sec.section_title}. Click to Lock/Disable.` : `AI Tailoring DISABLED for ${sec.section_title}. Click to Enable.`}
@@ -4308,7 +4308,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     <button
                       type="button"
                       onClick={() => handleResetWorkspace(true)}
-                      className="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      className="text-xs text-teal-600 hover:text-teal-500 dark:text-teal-400 font-bold flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <RotateCcw className="h-3 w-3" /> Clear & New Analysis
                     </button>
@@ -4320,7 +4320,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   placeholder="Paste the job description or requirement spec here (minimum 50 characters)..."
                   rows={8}
                   maxLength={8000}
-                  className="w-full bg-white text-slate-900 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 text-sm placeholder-slate-400 transition-all outline-none resize-y shadow-inner"
+                  className="w-full bg-white text-slate-900 border border-slate-200 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 rounded-xl p-3 text-sm placeholder-slate-400 transition-all outline-none resize-y shadow-inner"
                 />
                 <div className="flex items-center justify-between text-xs text-slate-500">
                   <span>Min: 50 chars</span>
@@ -4457,9 +4457,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             title="Configure which sections are updated during 1-Click Auto-Tailor"
                             className="p-3 sm:px-3.5 sm:py-3.5 rounded-xl font-extrabold text-xs border transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md select-none bg-white hover:bg-slate-50 text-slate-800 border-slate-200 hover:border-slate-300 hover:scale-[1.02] active:scale-[0.98]"
                           >
-                            <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
+                            <SlidersHorizontal className="h-4 w-4 text-teal-600" />
                             <span className="hidden md:inline">Settings</span>
-                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-black border bg-blue-50 text-blue-700 border-blue-200">
+                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-black border bg-teal-50 text-teal-700 border-teal-200">
                               {activeCount}/{configSections.length} ON
                             </span>
                           </button>
@@ -4482,13 +4482,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           <img
                             src={getFullProfilePhotoUrl(masterResume.profile_photo_url) || ""}
                             alt="Candidate Avatar"
-                            className="w-14 h-14 rounded-2xl object-cover ring-2 ring-indigo-500/40 shadow-md bg-white dark:bg-slate-800 hover:scale-105 transition-transform"
+                            className="w-14 h-14 rounded-2xl object-cover ring-2 ring-teal-500/40 shadow-md bg-white dark:bg-slate-800 hover:scale-105 transition-transform"
                           />
                         </div>
                       )}
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 dark:border-indigo-500/30 uppercase tracking-wider">
+                          <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/20 dark:border-teal-500/30 uppercase tracking-wider">
                             Target Role Detected
                           </span>
                           {masterResume?.contact_info?.full_name && (
@@ -4569,7 +4569,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             fill="transparent"
                             strokeDasharray={2 * Math.PI * 34}
                             strokeDashoffset={2 * Math.PI * 34 * (1 - currentScore / 100)}
-                            className="text-indigo-500 transition-all duration-1000"
+                            className="text-teal-500 transition-all duration-1000"
                           />
                         </svg>
                         <span className="absolute text-base font-black text-slate-900 dark:text-white">
@@ -4579,7 +4579,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       <div>
                         <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Overall Fit</p>
                         <p className="text-xs font-medium text-slate-600 dark:text-slate-300 mt-0.5">
-                          <span className="font-bold text-indigo-600 dark:text-indigo-400">{sectionsStillNeedingImprovement} of {totalNeeded}</span> sections need improvement
+                          <span className="font-bold text-teal-600 dark:text-teal-400">{sectionsStillNeedingImprovement} of {totalNeeded}</span> sections need improvement
                         </p>
                       </div>
                     </div>
@@ -4645,11 +4645,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   const showMissing = keywordFilterTab === 'all' || keywordFilterTab === 'missing';
 
                   return (
-                    <div className="glass-panel rounded-3xl p-6 sm:p-7 border border-slate-200/90 bg-white shadow-xl shadow-blue-500/5 space-y-6">
+                    <div className="glass-panel rounded-3xl p-6 sm:p-7 border border-slate-200/90 bg-white shadow-xl shadow-teal-500/5 space-y-6">
                       {/* Header */}
                       <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 pb-5">
                         <div className="flex items-center gap-3.5">
-                          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0 ring-1 ring-white/60">
+                          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0 ring-1 ring-white/60">
                             <Layers className="h-5 w-5" />
                           </div>
                           <div>
@@ -4657,7 +4657,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
                                 ATS Skill & Keyword Matrix
                               </h3>
-                              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-teal-50 text-teal-700 border border-teal-200 shadow-2xs">
                                 {matchPercentage}% Match Rate
                               </span>
                             </div>
@@ -4675,7 +4675,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md border ${
                               isKeywordsWoven
                                 ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500/40 shadow-emerald-600/20"
-                                : "bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white border-white/20 shadow-blue-600/20 hover:scale-[1.02] active:scale-[0.98]"
+                                : "bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white border-white/20 shadow-teal-600/20 hover:scale-[1.02] active:scale-[0.98]"
                             }`}
                           >
                             {isWeavingKeywords ? (
@@ -4780,7 +4780,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             value={keywordSearchQuery}
                             onChange={(e) => setKeywordSearchQuery(e.target.value)}
                             placeholder="Filter skills..."
-                            className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                            className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all"
                           />
                           {keywordSearchQuery && (
                             <button
@@ -5011,7 +5011,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       <button
                         type="button"
                         onClick={() => setIsProfileModalOpen(true)}
-                        className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                        className="text-[11px] text-teal-600 dark:text-teal-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
                       >
                         + Add Address, Phone & LinkedIn to Profile for Cover Letter Header
                       </button>
@@ -5128,7 +5128,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           <a
                             href={`${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=docx`}
                             download
-                            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-md shadow-teal-600/20 transition-all flex items-center gap-1.5 cursor-pointer"
                           >
                             <WordLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
                             Download Cover Letter (.DOCX)
@@ -5174,10 +5174,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       <>
                         {/* AI Section Tailoring Master Controls Bar */}
                         {analysisResult?.sections && analysisResult.sections.length > 0 && (
-                          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-purple-50/50 border border-blue-200/80 text-slate-800 shadow-xs space-y-3">
-                            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-blue-200/60 pb-2.5">
+                          <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-50/80 via-indigo-50/60 to-purple-50/50 border border-teal-200/80 text-slate-800 shadow-xs space-y-3">
+                            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-teal-200/60 pb-2.5">
                               <div className="flex items-center gap-2">
-                                <SlidersHorizontal className="h-4 w-4 text-blue-600" />
+                                <SlidersHorizontal className="h-4 w-4 text-teal-600" />
                                 <span className="text-xs font-black tracking-tight text-slate-800 uppercase">
                                   ⚡ AI Section Controls (Toggle ON/OFF for Auto-Tailor)
                                 </span>
@@ -5190,7 +5190,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                     (analysisResult.sections || []).forEach((s) => { allOn[s.section_name] = true; });
                                     setTailoringSectionToggles(allOn);
                                   }}
-                                  className="text-[10px] font-extrabold text-blue-700 hover:text-blue-800 bg-white hover:bg-blue-50/80 border border-blue-200 px-2 py-0.5 rounded-md transition-all cursor-pointer shadow-2xs"
+                                  className="text-[10px] font-extrabold text-teal-700 hover:text-teal-900 bg-white hover:bg-teal-50/80 border border-teal-200 px-2 py-0.5 rounded-md transition-all cursor-pointer shadow-2xs"
                                 >
                                   Enable All
                                 </button>
@@ -5221,7 +5221,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                     onClick={() => handleToggleSectionTailoring(sec.section_name)}
                                     className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none border ${
                                       isEnabled
-                                        ? "bg-blue-600 text-white border-blue-500 shadow-xs hover:bg-blue-500"
+                                        ? "bg-teal-600 text-white border-teal-500 shadow-xs hover:bg-teal-500"
                                         : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
                                     }`}
                                   >
@@ -5471,7 +5471,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
                                         {/* Expected Impact */}
                                         <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                          <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider block">
+                                          <span className="text-[10px] font-black text-teal-900 uppercase tracking-wider block">
                                             Expected Interview Impact
                                           </span>
                                           <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
@@ -5500,11 +5500,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                           <div className="space-y-1 pt-1 border-t border-slate-200">
                                             <div className="flex items-center justify-between text-[11px]">
                                               <span className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Recruiter Confidence</span>
-                                              <span className="text-indigo-700 font-extrabold">{Math.round(imp.confidence * 100)}%</span>
+                                              <span className="text-teal-700 font-extrabold">{Math.round(imp.confidence * 100)}%</span>
                                             </div>
                                             <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
                                               <div
-                                                className="h-full bg-indigo-600 rounded-full transition-all duration-500"
+                                                className="h-full bg-teal-600 rounded-full transition-all duration-500"
                                                 style={{ width: `${imp.confidence * 100}%` }}
                                               />
                                             </div>
@@ -5544,7 +5544,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             <div className="flex items-center justify-between border-b border-slate-200 p-5 bg-gradient-to-r from-emerald-50 to-indigo-50">
               <div>
                 <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-indigo-600 animate-pulse" />
+                  <Sparkles className="h-5 w-5 text-teal-600 animate-pulse" />
                   Select Keywords to Weave
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -5568,7 +5568,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               <button
                 type="button"
                 onClick={() => setSelectedKeywordsToWeave(new Set(keywordsForWeaveModal.map((k) => k.kw)))}
-                className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all cursor-pointer"
+                className="text-[10px] font-bold text-teal-600 hover:text-teal-700 px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-[#E6F7F4] border border-teal-200 transition-all cursor-pointer"
               >
                 Select All
               </button>
@@ -5718,7 +5718,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 p-5 bg-slate-50 dark:bg-slate-950/50">
               <div>
                 <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400 animate-pulse" />
+                  <Sparkles className="h-5 w-5 text-teal-600 dark:text-teal-400 animate-pulse" />
                   AI Section Rewrite: {cleanSectionModalTitle(activeRewriteSection)}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -5740,8 +5740,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             <div className="p-6 overflow-y-auto space-y-6 flex-1">
               {rewriteMutation.isPending ? (
                 <div className="flex flex-col items-center justify-center py-16 space-y-4">
-                  <div className="h-10 w-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-                  <p className="text-sm text-indigo-600 dark:text-indigo-400 font-semibold animate-pulse">
+                  <div className="h-10 w-10 border-4 border-teal-500/20 border-t-indigo-500 rounded-full animate-spin" />
+                  <p className="text-sm text-teal-600 dark:text-teal-400 font-semibold animate-pulse">
                     AI hiring manager is polishing your section...
                   </p>
                   <p className="text-xs text-slate-500 max-w-xs text-center leading-relaxed">
@@ -5776,7 +5776,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         } : undefined
                       });
                     }}
-                    className="mt-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 transition-all duration-300 flex items-center gap-1.5"
+                    className="mt-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-teal-600/20 hover:shadow-teal-600/30 transition-all duration-300 flex items-center gap-1.5"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                     Retry Generation
@@ -5792,13 +5792,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
                       <button
                         onClick={() => setDiffModeActive(false)}
-                        className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${!diffModeActive ? "bg-indigo-600 text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
+                        className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${!diffModeActive ? "bg-teal-600 text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                       >
                         Edit Mode
                       </button>
                       <button
                         onClick={() => setDiffModeActive(true)}
-                        className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${diffModeActive ? "bg-indigo-600 text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
+                        className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${diffModeActive ? "bg-teal-600 text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                       >
                         Visual Diff
                       </button>
@@ -5824,8 +5824,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     {/* Rewritten Content */}
                     <div className="space-y-2 flex flex-col">
                       <div className="flex items-center justify-between flex-wrap gap-1">
-                        <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <Sparkles className="h-3.5 w-3.5 text-indigo-500 animate-pulse" />
+                        <span className="text-[11px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <Sparkles className="h-3.5 w-3.5 text-teal-500 animate-pulse" />
                           {diffModeActive ? "Visual Diff Highlight" : "AI Rewritten Section (Editable)"}
                         </span>
                         <div className="flex items-center gap-2">
@@ -5833,20 +5833,20 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             <button
                               type="button"
                               onClick={() => setDraftRewrittenText(rewriteData.rewritten_text)}
-                              className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold cursor-pointer"
+                              className="text-[10px] text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 font-bold cursor-pointer"
                               title="Reset text to original AI generation"
                             >
                               <RotateCcw className="h-3 w-3" /> Reset AI
                             </button>
                           )}
-                          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-extrabold border border-indigo-500/20">
+                          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-700 dark:text-teal-300 font-extrabold border border-teal-500/20">
                             ✨ Tailored & Fact-Checked
                           </span>
                         </div>
                       </div>
 
                       {diffModeActive ? (
-                        <div className="bg-gradient-to-br from-indigo-50/60 via-white to-purple-50/30 dark:from-indigo-950/30 dark:via-slate-900 dark:to-purple-950/20 p-4 sm:p-5 rounded-2xl border border-indigo-200 dark:border-indigo-500/30 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed min-h-[220px] max-h-[360px] overflow-y-auto whitespace-pre-wrap select-all flex-1 shadow-md">
+                        <div className="bg-gradient-to-br from-indigo-50/60 via-white to-purple-50/30 dark:from-indigo-950/30 dark:via-slate-900 dark:to-purple-950/20 p-4 sm:p-5 rounded-2xl border border-teal-200 dark:border-teal-500/30 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed min-h-[220px] max-h-[360px] overflow-y-auto whitespace-pre-wrap select-all flex-1 shadow-md">
                           {diffWords(rewriteData.original_text, draftRewrittenText).map((token, index) => {
                             if (token.added) {
                               return (
@@ -5870,14 +5870,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           <textarea
                             value={draftRewrittenText}
                             onChange={(e) => setDraftRewrittenText(e.target.value)}
-                            className="w-full bg-white dark:bg-slate-950 p-4 sm:p-5 pb-10 rounded-2xl border-2 border-indigo-500/40 hover:border-indigo-500 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 text-xs sm:text-sm text-slate-900 dark:text-slate-100 leading-relaxed min-h-[220px] max-h-[360px] overflow-y-auto focus:outline-none resize-none font-sans shadow-md transition-all"
+                            className="w-full bg-white dark:bg-slate-950 p-4 sm:p-5 pb-10 rounded-2xl border-2 border-teal-500/40 hover:border-teal-500 focus:border-teal-600 focus:ring-4 focus:ring-teal-500/10 text-xs sm:text-sm text-slate-900 dark:text-slate-100 leading-relaxed min-h-[220px] max-h-[360px] overflow-y-auto focus:outline-none resize-none font-sans shadow-md transition-all"
                             placeholder="Loading rewrite text..."
                           />
                           <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-[10px] text-slate-400 pointer-events-none select-none">
                             <span className="bg-slate-100 dark:bg-slate-900/90 px-2.5 py-0.5 rounded-md border border-slate-200 dark:border-slate-800 font-mono font-semibold text-slate-600 dark:text-slate-400">
                               {draftRewrittenText.split("\n").filter(l => l.trim()).length} Bullets • {draftRewrittenText.trim().split(/\s+/).length} Words
                             </span>
-                            <span className="text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">
+                            <span className="text-teal-600 dark:text-teal-400 font-bold bg-teal-50 dark:bg-slate-900/80 px-2 py-0.5 rounded border border-teal-200 dark:border-slate-800">
                               ✏️ Click text to customize
                             </span>
                           </div>
@@ -5887,17 +5887,17 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   </div>
 
                   {/* Google XYZ Formula & Metric Synthesizer Card */}
-                  <div className="bg-gradient-to-r from-indigo-50/80 via-purple-50/60 to-slate-100 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-slate-950 p-4 rounded-xl border border-indigo-200 dark:border-indigo-500/20 space-y-3">
+                  <div className="bg-gradient-to-r from-indigo-50/80 via-purple-50/60 to-slate-100 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-slate-950 p-4 rounded-xl border border-teal-200 dark:border-teal-500/20 space-y-3">
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-md bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                        <div className="h-6 w-6 rounded-md bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/30">
                           <Sparkles className="h-3.5 w-3.5 animate-pulse" />
                         </div>
-                        <span className="text-xs font-bold text-indigo-900 dark:text-indigo-200">
+                        <span className="text-xs font-bold text-[#0F172A] dark:text-teal-200">
                           Google XYZ Formula & Metric Synthesizer
                         </span>
                       </div>
-                      <span className="text-[10px] bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/20 font-mono">
+                      <span className="text-[10px] bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-500/20 font-mono">
                         Accomplished [X] as measured by [Y], by doing [Z]
                       </span>
                     </div>
@@ -5917,7 +5917,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           value={metricPercentage}
                           onChange={(e) => setMetricPercentage(e.target.value)}
                           placeholder="e.g. '35% latency reduction', '$120k revenue growth'"
-                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-teal-500 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
                           disabled={rewriteMutation.isPending}
                         />
                       </div>
@@ -5931,7 +5931,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           value={metricScale}
                           onChange={(e) => setMetricScale(e.target.value)}
                           placeholder="e.g. 'across 15 microservices', '100k daily users'"
-                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-teal-500 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
                           disabled={rewriteMutation.isPending}
                         />
                       </div>
@@ -5945,7 +5945,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         onClick={() => {
                           setUserInstructions("Format all bullets strictly using Google's XYZ formula (Accomplished X as measured by Y, by doing Z)");
                         }}
-                        className="text-[10px] bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
+                        className="text-[10px] bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-teal-700 dark:text-teal-300 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
                       >
                         ⚡ Google XYZ Bullets
                       </button>
@@ -5981,7 +5981,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         value={userInstructions}
                         onChange={(e) => setUserInstructions(e.target.value)}
                         placeholder="e.g. 'make it shorter', 'use stronger action verbs', 'emphasize leadership'"
-                        className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
+                        className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 focus:border-teal-500 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
                         disabled={rewriteMutation.isPending}
                       />
                       <button
@@ -6001,7 +6001,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           });
                         }}
                         disabled={rewriteMutation.isPending}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-650 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/25 transition-all duration-300 flex items-center justify-center gap-1.5 shrink-0"
+                        className="px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-indigo-650 text-white rounded-xl text-xs font-semibold shadow-md shadow-teal-600/10 hover:shadow-teal-600/25 transition-all duration-300 flex items-center justify-center gap-1.5 shrink-0"
                       >
                         <Sparkles className="h-3.5 w-3.5" />
                         Regenerate
@@ -6030,7 +6030,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           const badgeColorMap: Record<string, string> = {
                             keyword: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30",
                             clarity: "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/20 dark:border-sky-500/30",
-                            structure: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20 dark:border-indigo-500/30",
+                            structure: "bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/20 dark:border-teal-500/30",
                             emphasis: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30"
                           };
                           const badgeColor = badgeColorMap[change.type] || "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20 dark:border-slate-500/30";
@@ -6089,7 +6089,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     rewriteMutation.reset();
                   }}
                   disabled={rewriteMutation.isPending}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 transition-all duration-300 flex items-center gap-1.5"
+                  className="px-5 py-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-xs font-semibold shadow-lg shadow-teal-600/20 hover:shadow-teal-600/30 transition-all duration-300 flex items-center gap-1.5"
                 >
                   <CheckCircle className="h-4 w-4" />
                   Accept Rewrite
@@ -6114,7 +6114,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               >
                 <Sparkles className="h-3 w-3 text-amber-200" />
                 <span>{Object.keys(rewrittenSections).length} Ready</span>
-                <span className="text-[9px] text-indigo-400 underline ml-0.5">
+                <span className="text-[9px] text-teal-400 underline ml-0.5">
                   {isCartOpen ? "Hide" : "Details"}
                 </span>
               </button>
@@ -6184,7 +6184,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 </>
               ) : isPatchingApplied ? (
                 <>
-                  <RefreshCw className="h-3 w-3 text-indigo-400" />
+                  <RefreshCw className="h-3 w-3 text-teal-400" />
                   <span>Re-Apply</span>
                 </>
               ) : (
@@ -6220,7 +6220,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           {isCartOpen && !isPatchingApplied && (
             <div className="mt-2 pt-2 border-t border-slate-800/80 space-y-2 animate-fade-in-up">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider">
+                <span className="text-[10px] font-extrabold text-teal-400 uppercase tracking-wider">
                   Accepted Improvements
                 </span>
                 <button
@@ -6323,7 +6323,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-2 flex items-center justify-center relative overflow-hidden">
               {isPdfLoading ? (
                 <div className="flex flex-col items-center justify-center space-y-3 text-slate-500 dark:text-slate-400">
-                  <div className="h-8 w-8 border-3 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+                  <div className="h-8 w-8 border-3 border-teal-500/20 border-t-indigo-500 rounded-full animate-spin" />
                   <p className="text-xs font-medium">Rendering live PDF preview...</p>
                 </div>
               ) : pdfError ? (
@@ -6332,7 +6332,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   <a
                     href={`${API_BASE_URL}/api/v1/resume/download/${downloadId || documentId}/pdf`}
                     download
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+                    className="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
                   >
                     <PdfLogoIcon className="h-4 w-4 shrink-0" /> Download PDF File
                   </a>
@@ -6415,13 +6415,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
           <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] z-10 text-slate-900 animate-scale-in">
             {/* Ambient glows */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
             {/* Modal Header */}
             <div className="relative z-10 px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 backdrop-blur">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0 ring-1 ring-white/60">
+                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0 ring-1 ring-white/60">
                   <SlidersHorizontal className="h-5 w-5 text-white" />
                 </div>
                 <div>
@@ -6431,7 +6431,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       const configSections = getAutoTailorConfigSections();
                       const activeCount = configSections.filter((s) => isSectionTailorEnabled(s.id, s.defaultOn)).length;
                       return (
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200">
                           {activeCount} of {configSections.length} ON
                         </span>
                       );
@@ -6458,7 +6458,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 <button
                   type="button"
                   onClick={handleEnableRecommendedSections}
-                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs transition-all shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs transition-all shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Sparkles className="h-3 w-3 text-amber-200" />
                   Recommended
@@ -6497,7 +6497,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       onClick={() => handleToggleSectionTailoring(sec.id, sec.defaultOn)}
                       className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between gap-4 cursor-pointer select-none group ${
                         isEnabled
-                          ? "bg-blue-50/70 hover:bg-blue-50 border-blue-200/90 shadow-2xs"
+                          ? "bg-teal-50/70 hover:bg-teal-50 border-teal-200/90 shadow-2xs"
                           : "bg-slate-50/70 hover:bg-slate-100/70 border-slate-200/80 opacity-75 hover:opacity-100"
                       }`}
                     >
@@ -6506,7 +6506,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         <div
                           className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
                             isEnabled
-                              ? "bg-blue-100 border-blue-200 text-blue-700 shadow-2xs"
+                              ? "bg-[#E6F7F4] border-teal-200 text-teal-700 shadow-2xs"
                               : "bg-white border-slate-200 text-slate-400"
                           }`}
                         >
@@ -6514,7 +6514,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`text-sm font-extrabold transition-colors ${isEnabled ? "text-blue-950 group-hover:text-blue-700" : "text-slate-600"}`}>
+                            <span className={`text-sm font-extrabold transition-colors ${isEnabled ? "text-[#0F172A] group-hover:text-teal-700" : "text-slate-600"}`}>
                               {sec.name}
                             </span>
                             {isEnabled ? (
@@ -6585,11 +6585,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         <button
           type="button"
           onClick={() => openIssueReport("bug")}
-          className="flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-blue-600 border border-slate-200 shadow-lg hover:shadow-xl transition-all cursor-pointer text-xs font-bold group select-none hover:scale-105 active:scale-95"
+          className="flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-teal-600 border border-slate-200 shadow-lg hover:shadow-xl transition-all cursor-pointer text-xs font-bold group select-none hover:scale-105 active:scale-95"
           title="Encountered an issue or have feedback? Let us know!"
         >
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <LifeBuoy className="h-4 w-4 text-blue-600 group-hover:rotate-12 transition-transform" />
+          <LifeBuoy className="h-4 w-4 text-teal-600 group-hover:rotate-12 transition-transform" />
           <span className="hidden sm:inline">Report Issue / Feedback</span>
         </button>
       </div>

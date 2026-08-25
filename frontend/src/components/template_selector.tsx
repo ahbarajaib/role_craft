@@ -30,7 +30,7 @@ export const TEMPLATES: TemplateOption[] = [
     font: "Calibri",
     badge: "Popular",
     hasPhotoSupport: false,
-    colorScheme: "border-blue-200 bg-blue-50/20",
+    colorScheme: "border-teal-200 bg-teal-50/20",
   },
   {
     id: "executive_profile",
@@ -39,7 +39,7 @@ export const TEMPLATES: TemplateOption[] = [
     font: "Aptos / Calibri",
     badge: "Supports Photo",
     hasPhotoSupport: true,
-    colorScheme: "border-blue-300 bg-blue-50/30",
+    colorScheme: "border-teal-300 bg-teal-50/30",
   },
 ];
 
@@ -58,7 +58,7 @@ export default function TemplateSelector({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-          <Layout className="h-3.5 w-3.5 text-blue-600" />
+          <Layout className="h-3.5 w-3.5 text-teal-600" />
           Select ATS Template
         </h3>
         {sourceFormat === "docx" && (
@@ -83,8 +83,8 @@ export default function TemplateSelector({
               onClick={() => onSelectTemplate(tmpl.id)}
               className={`relative text-left p-3.5 rounded-2xl border transition-all cursor-pointer shadow-sm flex flex-col justify-between ${
                 isSelected
-                  ? "border-blue-600 ring-2 ring-blue-500/20 bg-blue-50/50"
-                  : "border-slate-200 hover:border-blue-300 bg-white"
+                  ? "border-teal-600 ring-2 ring-teal-500/20 bg-teal-50/50"
+                  : "border-slate-200 hover:border-teal-300 bg-white"
               }`}
             >
               <div>
@@ -93,7 +93,7 @@ export default function TemplateSelector({
                     {tmpl.title}
                   </span>
                   {isSelected && (
-                    <span className="h-4 w-4 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0">
+                    <span className="h-4 w-4 rounded-full bg-teal-600 text-white flex items-center justify-center shrink-0">
                       <Check className="h-2.5 w-2.5" />
                     </span>
                   )}
@@ -108,7 +108,7 @@ export default function TemplateSelector({
                 <span
                   className={`px-1.5 py-0.5 rounded-md font-bold text-[9px] ${
                     tmpl.hasPhotoSupport
-                      ? "bg-blue-100 text-blue-700"
+                      ? "bg-[#E6F7F4] text-teal-700"
                       : "bg-slate-100 text-slate-600"
                   }`}
                 >
