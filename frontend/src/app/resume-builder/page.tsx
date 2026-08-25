@@ -452,7 +452,7 @@ export default function ResumeBuilderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f4ff] hero-mesh text-slate-900 flex flex-col font-sans">
+    <div className="min-h-screen hero-mesh text-slate-900 flex flex-col font-sans">
       {/* Top Navbar */}
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-blue-100 px-4 lg:px-8 py-3 shadow-2xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
