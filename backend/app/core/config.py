@@ -98,6 +98,8 @@ class Settings(BaseSettings):
     # To add VIP emails: set VIP_EMAILS='["you@example.com"]' in .env
     FREE_TIER_CREDITS: int = 15
     VIP_CREDITS: int = 300
+    PRO_CREDITS: int = 200
+    ELITE_CREDITS: int = 400
     VIP_EMAILS: list[str] = Field(
         default=["ahbarajaib@gmail.com", "absarajaib@gmail.com"]
     )

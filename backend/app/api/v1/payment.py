@@ -109,10 +109,10 @@ async def razorpay_webhook(
         # Deduce tier based on plan configuration IDs
         if plan_id == settings.RAZORPAY_PLAN_ELITE_ID:
             user.plan_type = "elite"
-            user.credits = 400
+            user.credits = settings.ELITE_CREDITS
         else:
             user.plan_type = "pro"
-            user.credits = 200
+            user.credits = settings.PRO_CREDITS
 
         user.subscription_status = "active"
         db.commit()
@@ -143,7 +143,7 @@ def simulate_payment_success(
 
     user.plan_type = plan_clean
     user.subscription_status = "active"
-    user.credits = 200 if plan_clean == "pro" else 400
+    user.credits = settings.PRO_CREDITS if plan_clean == "pro" else settings.ELITE_CREDITS
     db.commit()
     db.refresh(user)
 
