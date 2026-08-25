@@ -3425,13 +3425,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           <button
             type="button"
             onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs ${
                 activeNavTab === "workspace"
-                  ? "bg-slate-900 text-white ring-2 ring-teal-500"
+                  ? "bg-[#E6F7F4] hover:bg-[#ccfbf1] text-teal-900 border border-[#99F6E4] ring-1 ring-teal-500/20"
                   : "btn-primary"
               }`}
           >
-            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+            <Sparkles className="h-3.5 w-3.5 text-[#FF6B4A]" />
             <span>{activeNavTab === "workspace" ? "← Exit Workspace" : "⚡ Launch Workspace"}</span>
           </button>
 
@@ -4486,20 +4486,20 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 </div>
 
                 {/* 3-Step Guided Workflow Bar */}
-                <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#0F172A] text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="p-5 rounded-2xl bg-gradient-to-r from-[#E6F7F4] via-teal-50/70 to-slate-50 border border-[#99F6E4]/90 text-[#0F172A] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 flex items-center justify-center shrink-0">
-                      <Zap className="h-4 w-4 fill-teal-400 text-teal-400" />
+                    <div className="h-9 w-9 rounded-xl bg-white text-[#14B8A6] border border-[#99F6E4] shadow-2xs flex items-center justify-center shrink-0">
+                      <Zap className="h-4 w-4 fill-[#14B8A6] text-[#14B8A6]" />
                     </div>
                     <div>
-                      <h5 className="text-xs font-black tracking-wide uppercase text-teal-300">How to get started</h5>
-                      <p className="text-xs text-slate-300 font-medium">
+                      <h5 className="text-xs font-black tracking-wide uppercase text-[#0D9488]">How to get started</h5>
+                      <p className="text-xs text-slate-600 font-medium">
                         1. Upload your resume &rarr; 2. Paste job description &rarr; 3. Hit &quot;Analyze Gaps &amp; Fit&quot;
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] font-bold text-slate-300 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10 shrink-0">
-                    <Shield className="h-3.5 w-3.5 text-teal-400" />
+                  <div className="flex items-center gap-2 text-[11px] font-bold text-teal-900 bg-white/90 px-3.5 py-1.5 rounded-xl border border-teal-200/90 shadow-2xs shrink-0">
+                    <Shield className="h-3.5 w-3.5 text-teal-600" />
                     <span>Strict Recruiter Verification</span>
                   </div>
                 </div>
