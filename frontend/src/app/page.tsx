@@ -51,6 +51,10 @@ import {
   Phone,
   Eye,
   Scissors,
+  Search,
+  BarChart2,
+  ShieldCheck,
+  GitMerge,
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
@@ -1039,76 +1043,201 @@ function CategoryIcon({ category, className }: { category: string; className?: s
 }
 
 function LoadingState() {
-  const steps = [
-    "Reading parsed document structure...",
-    "Extracting job description keywords & technologies...",
-    "Comparing sections against job requirements...",
-    "Analyzing context and evaluating candidate experience...",
-    "Scoping resume evidence & checking truthfulness...",
-    "Consolidating recommendations & deduplicating insights...",
-    "Structuring final recruiter feedback..."
+  const PIPELINE_STEPS = [
+    {
+      label: "Reading Document Structure",
+      sub: "Parsing DOCX headers, tables & bullet points",
+      icon: FileText,
+    },
+    {
+      label: "Extracting JD Keywords",
+      sub: "Identifying required skills, tools & responsibilities",
+      icon: Search,
+    },
+    {
+      label: "Mapping Resume Sections",
+      sub: "Matching experience, skills & projects to JD",
+      icon: Layers,
+    },
+    {
+      label: "Evaluating Experience Depth",
+      sub: "Assessing impact metrics & evidence quality",
+      icon: BarChart2,
+    },
+    {
+      label: "Scoping Evidence & Truthfulness",
+      sub: "Cross-checking claims against resume context",
+      icon: ShieldCheck,
+    },
+    {
+      label: "Consolidating Recommendations",
+      sub: "Deduplicating & prioritizing improvement areas",
+      icon: GitMerge,
+    },
+    {
+      label: "Structuring Recruiter Insights",
+      sub: "Formatting final ATS score & gap analysis",
+      icon: Sparkles,
+    },
   ];
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(2);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentStep((prev) => (prev < steps.length - 1 ? prev + 1 : prev));
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [steps.length]);
+    const stepDuration = 14000 / PIPELINE_STEPS.length; // spread across ~14s
+    const stepTimer = setInterval(() => {
+      setCurrentStep((prev) => (prev < PIPELINE_STEPS.length - 1 ? prev + 1 : prev));
+    }, stepDuration);
+    return () => clearInterval(stepTimer);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 98) return 98;
-        if (prev < 85) {
-          return prev + 1;
-        } else {
-          // hoSlow crawl: only increment approx. once per second (15% chance per 180ms tick)
-          return Math.random() < 0.15 ? prev + 1 : prev;
-        }
+        if (prev >= 97) return 97;
+        if (prev < 80) return prev + 1;
+        return Math.random() < 0.2 ? prev + 1 : prev;
       });
-    }, 180);
+    }, 160);
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className="glass-panel rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800/80 min-h-[450px] flex flex-col items-center justify-center space-y-6">
-      <div className="relative">
-        <div className="h-16 w-16 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin" />
-        <Sparkles className="absolute inset-0 h-6 w-6 text-indigo-500 dark:text-indigo-400 m-auto animate-pulse" />
-      </div>
-      <div className="space-y-4 max-w-md mx-auto w-full">
-        <div className="space-y-1">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white">Analyzing Resume</h3>
-          <p className="text-xs text-indigo-500 dark:text-indigo-400 font-semibold tracking-wide h-6 animate-pulse">
-            {steps[currentStep]}
-          </p>
+    <div className="relative rounded-2xl bg-white border border-slate-200 shadow-xl shadow-blue-500/8 overflow-hidden">
+      {/* Ambient background glow */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+      {/* Subtle dot grid */}
+      <div className="absolute inset-0 bg-grid opacity-40 pointer-events-none" />
+
+      <div className="relative z-10 p-8">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+              <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">AI Analysis in Progress</h3>
+            </div>
+            <p className="text-xs text-slate-500 pl-10.5">Concurrent review across all resume sections</p>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-bold shrink-0">
+            <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+            Processing
+          </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-full max-w-xs mx-auto space-y-1.5 pt-2">
-          <div className="flex justify-between text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-            <span>Pipeline Status</span>
-            <span className="text-indigo-500 dark:text-indigo-400 font-bold">{progress}%</span>
+        {/* Vertical Pipeline Stepper */}
+        <div className="space-y-1 mb-8">
+          {PIPELINE_STEPS.map((step, idx) => {
+            const isDone = idx < currentStep;
+            const isCurrent = idx === currentStep;
+            const isPending = idx > currentStep;
+            const StepIcon = step.icon;
+
+            return (
+              <div
+                key={idx}
+                className={`relative flex items-start gap-3.5 px-4 py-3 rounded-xl transition-all duration-500 ${
+                  isCurrent
+                    ? "bg-blue-50 border border-blue-200 shadow-sm"
+                    : isDone
+                    ? "bg-emerald-50/50 border border-emerald-100"
+                    : "border border-transparent"
+                }`}
+              >
+                {/* Left timeline line */}
+                {idx < PIPELINE_STEPS.length - 1 && (
+                  <div className={`absolute left-[22px] top-[42px] w-0.5 h-[calc(100%-8px)] ${isDone ? "bg-emerald-300" : "bg-slate-200"} transition-colors duration-700`} />
+                )}
+
+                {/* Step circle */}
+                <div className={`relative shrink-0 h-7 w-7 rounded-full flex items-center justify-center mt-0.5 z-10 transition-all duration-500 ${
+                  isDone
+                    ? "bg-emerald-500 shadow-md shadow-emerald-500/30"
+                    : isCurrent
+                    ? "bg-white border-2 border-blue-500 shadow-md shadow-blue-500/20"
+                    : "bg-white border-2 border-slate-200"
+                }`}>
+                  {isDone ? (
+                    <CheckCircle className="h-3.5 w-3.5 text-white" />
+                  ) : isCurrent ? (
+                    <div className="h-3.5 w-3.5 rounded-full border-2 border-blue-200 border-t-blue-600 animate-spin" />
+                  ) : (
+                    <div className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+                  )}
+                </div>
+
+                {/* Step content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm font-bold leading-tight transition-colors duration-300 ${
+                      isDone ? "text-emerald-700" : isCurrent ? "text-blue-700" : "text-slate-400"
+                    }`}>
+                      {step.label}
+                    </span>
+                    {isCurrent && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-blue-600 text-white tracking-wide animate-pulse shrink-0">
+                        LIVE
+                      </span>
+                    )}
+                    {isDone && (
+                      <span className="text-[10px] font-bold text-emerald-600 shrink-0">✓ Done</span>
+                    )}
+                  </div>
+                  <p className={`text-xs mt-0.5 transition-colors duration-300 ${
+                    isDone ? "text-emerald-600/70" : isCurrent ? "text-blue-600/80" : "text-slate-400"
+                  }`}>
+                    {step.sub}
+                  </p>
+                </div>
+
+                {/* Step icon */}
+                <div className={`shrink-0 p-1.5 rounded-lg transition-all duration-300 ${
+                  isDone ? "bg-emerald-100 text-emerald-600" : isCurrent ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-300"
+                }`}>
+                  <StepIcon className="h-3.5 w-3.5" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Progress Bar Section */}
+        <div className="border-t border-slate-100 pt-5 space-y-3">
+          <div className="flex items-center justify-between text-xs font-bold">
+            <div className="flex items-center gap-2 text-slate-600">
+              <Activity className="h-3.5 w-3.5 text-blue-500" />
+              Pipeline Status
+            </div>
+            <span className="text-blue-600 font-extrabold text-sm">{progress}%</span>
           </div>
-          <div className="h-2 w-full bg-slate-100 dark:bg-slate-950 rounded-full overflow-hidden border border-slate-200 dark:border-slate-850">
+          <div className="relative h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
             <div
-              className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full transition-all duration-300 ease-out"
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
-            />
+            >
+              {/* Shimmer */}
+              <div className="absolute inset-0 overflow-hidden rounded-full">
+                <div className="absolute inset-y-0 -left-full w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] text-slate-400 italic">
+              Concurrent AI review across all sections simultaneously
+            </p>
+            <span className="text-[11px] font-semibold text-slate-400 shrink-0">~10–15 sec</span>
           </div>
         </div>
-
-        <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto pt-1">
-          Our AI model is reviewing each resume section concurrently and structuring final recruiter insights. This takes about 10-15 seconds.
-        </p>
       </div>
     </div>
   );
 }
+
 
 function cleanKeywordName(rawName: string): string {
   if (!rawName) return "";
