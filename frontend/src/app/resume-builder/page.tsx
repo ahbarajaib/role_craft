@@ -24,6 +24,7 @@ import {
   Code,
   Layers,
   Check,
+  CheckCircle2,
   Layout,
   Globe,
   Lock,
@@ -478,7 +479,7 @@ export default function ResumeBuilderPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/workspace"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/60 border border-slate-200 hover:border-blue-200 transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-all hover:border-slate-300"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Back to Workspace
             </Link>
@@ -488,14 +489,23 @@ export default function ResumeBuilderPage() {
                 type="button"
                 onClick={() => handleSaveResume(true)}
                 disabled={isSaving || saveStatus === "saved"}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs ${
                   saveStatus === "unsaved"
                     ? "btn-primary text-white shadow-blue-500/20"
-                    : "bg-slate-100 text-slate-500 border border-slate-200 cursor-default"
+                    : "bg-white text-slate-700 border border-slate-200 cursor-default"
                 }`}
               >
-                <Save className="h-3.5 w-3.5" />
-                {isSaving ? "Saving..." : saveStatus === "unsaved" ? "Save Changes" : "Saved"}
+                {saveStatus === "unsaved" ? (
+                  <>
+                    <Save className="h-3.5 w-3.5" />
+                    {isSaving ? "Saving..." : "Save Changes"}
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                    <span>Saved</span>
+                  </>
+                )}
               </button>
             )}
 
@@ -503,16 +513,16 @@ export default function ResumeBuilderPage() {
               <button
                 type="button"
                 onClick={() => setIsProfileModalOpen(true)}
-                className="h-8 w-8 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-bold text-xs hover:bg-blue-100 transition-all cursor-pointer"
+                className="h-9 w-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-bold text-xs hover:bg-blue-100 transition-all cursor-pointer shadow-2xs"
                 title="Profile & Settings"
               >
-                <User className="h-4 w-4" />
+                <User className="h-4.5 w-4.5" />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => setShowAuthModal(true)}
-                className="px-3.5 py-1.5 rounded-xl btn-primary text-white font-bold text-xs transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl btn-primary text-white font-bold text-xs transition-all cursor-pointer"
               >
                 Sign In
               </button>
@@ -527,10 +537,10 @@ export default function ResumeBuilderPage() {
           <div
             className={`p-4 rounded-2xl border text-xs font-semibold flex items-center justify-between gap-3 shadow-md transition-all ${
               statusMsg.type === "error"
-                ? "bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300"
+                ? "bg-rose-50 border-rose-200 text-rose-700"
                 : statusMsg.type === "success"
-                ? "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
-                : "bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                : "bg-blue-50 border-blue-200 text-blue-700"
             }`}
           >
             <div className="flex items-center gap-2">
@@ -544,16 +554,16 @@ export default function ResumeBuilderPage() {
             <button
               type="button"
               onClick={() => setStatusMsg(null)}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold text-sm px-1 cursor-pointer"
+              className="text-slate-400 hover:text-slate-600 font-bold text-sm px-1 cursor-pointer"
             >
               ×
             </button>
           </div>
         )}
 
-        {/* Action Toolbar */}
+        {/* Action / Sync Banner */}
         {resume && (
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <input
                 type="file"
@@ -569,13 +579,13 @@ export default function ResumeBuilderPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isParsing}
-                className="px-3.5 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-blue-600 border border-slate-200 shadow-2xs text-xs font-bold transition-all flex items-center gap-2 cursor-pointer hover:border-blue-300"
               >
-                <UploadCloud className="h-4 w-4 text-indigo-500" />
-                Re-import Resume (DOCX / PDF)
+                <UploadCloud className="h-4 w-4 text-blue-600" />
+                <span>Re-import Resume (DOCX / PDF)</span>
               </button>
 
-              <span className="text-xs text-slate-500 dark:text-slate-400 hidden sm:inline">
+              <span className="text-xs text-slate-500 font-medium hidden sm:inline">
                 Master Resume JSON synced live across RoleCraft workspace
               </span>
             </div>
@@ -592,24 +602,24 @@ export default function ResumeBuilderPage() {
             <div className="lg:col-span-7 space-y-6">
               {/* Unparsed Fields Inspection & Quick-Jump Banner */}
               {lowConfFields.length > 0 && (
-                <div className="p-5 rounded-3xl bg-rose-50/95 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800/80 shadow-md space-y-3">
+                <div className="p-5 rounded-3xl bg-rose-50 border border-rose-200 shadow-xs space-y-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="h-8 w-8 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 font-bold shrink-0">
+                      <div className="h-8 w-8 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-600 font-bold shrink-0">
                         <AlertTriangle className="h-4.5 w-4.5" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-extrabold text-rose-950 dark:text-rose-200">
+                        <h4 className="text-xs font-extrabold text-rose-950">
                           {lowConfFields.length} Field{lowConfFields.length > 1 ? "s" : ""} Needing Your Completion
                         </h4>
-                        <p className="text-[11px] text-rose-800 dark:text-rose-300">
+                        <p className="text-[11px] text-rose-800">
                           Click any unparsed item below to jump directly to it and complete missing details:
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Bold Red Quick-Jump Field Chips */}
+                  {/* Quick-Jump Field Chips */}
                   <div className="flex flex-wrap gap-2 pt-1">
                     {lowConfFields.map((field, fIdx) => {
                       const { label, elementId } = humanizeFieldName(field);
@@ -618,39 +628,9 @@ export default function ResumeBuilderPage() {
                           key={fIdx}
                           type="button"
                           onClick={() => {
-                            const { label, elementId } = humanizeFieldName(field);
                             const cleanPath = field.replace(/^sections\.\d+\.content\./, "");
-
-                            // Strategy 1: Direct elementId match
-                            let el = document.getElementById(elementId);
-
-                            // Strategy 2: Clean path ID match (e.g. field-education-0-location)
-                            if (!el) {
-                              el = document.getElementById(`field-${cleanPath.replace(/\./g, "-")}`);
-                            }
-
-                            // Strategy 3: Exact attribute match
-                            if (!el) {
-                              el = (document.querySelector(`[data-field="${field}"]`) || document.querySelector(`[data-field="${cleanPath}"]`)) as HTMLElement;
-                            }
-
-                            // Strategy 4: Fallback property match
-                            if (!el) {
-                              const parts = field.split(".");
-                              const propKey = parts[parts.length - 1];
-                              let idx = "0";
-                              for (const p of parts) {
-                                if (!isNaN(Number(p))) {
-                                  idx = p;
-                                  break;
-                                }
-                              }
-
-                              if (field.includes("education")) el = document.getElementById(`field-education-${idx}-${propKey}`);
-                              else if (field.includes("experience")) el = document.getElementById(`field-sections-${idx}-content-entries-0-${propKey}`);
-                              else if (field.includes("project")) el = document.getElementById(`field-projects-${idx}-${propKey}`);
-                            }
-
+                            let el = document.getElementById(elementId) || document.getElementById(`field-${cleanPath.replace(/\./g, "-")}`);
+                            if (!el) el = (document.querySelector(`[data-field="${field}"]`) || document.querySelector(`[data-field="${cleanPath}"]`)) as HTMLElement;
                             if (el) {
                               el.scrollIntoView({ behavior: "smooth", block: "center" });
                               (el as HTMLElement).focus?.();
@@ -658,11 +638,11 @@ export default function ResumeBuilderPage() {
                               setTimeout(() => el?.classList.remove("ring-4", "ring-rose-500", "border-rose-500", "animate-pulse"), 3500);
                             }
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-white dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 font-extrabold text-xs hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:scale-105"
+                          className="px-3 py-1.5 rounded-xl bg-white border border-rose-300 text-rose-800 font-extrabold text-xs hover:bg-rose-100 transition-all cursor-pointer flex items-center gap-1.5 shadow-xs hover:scale-105"
                         >
                           <AlertTriangle className="h-3 w-3 text-rose-500 shrink-0" />
                           <span>{label}</span>
-                          <span className="text-[10px] text-rose-600 dark:text-rose-400 font-mono">↓</span>
+                          <span className="text-[10px] text-rose-600 font-mono">↓</span>
                         </button>
                       );
                     })}
@@ -671,7 +651,7 @@ export default function ResumeBuilderPage() {
               )}
 
               {/* ATS Template Picker */}
-              <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-2xs">
                 <TemplateSelector
                   selectedTemplate={selectedTemplate}
                   onSelectTemplate={(t) => {
@@ -683,10 +663,10 @@ export default function ResumeBuilderPage() {
               </div>
 
               {/* Contact Info Card */}
-              <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-2xs space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-indigo-500" /> Candidate Contact Details
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-blue-600" /> Candidate Contact Details
                   </h3>
                   {TEMPLATES.find((t) => t.id === selectedTemplate)?.hasPhotoSupport && (
                     <div className="flex items-center gap-2">
@@ -704,7 +684,7 @@ export default function ResumeBuilderPage() {
                           <img
                             src={resume.profile_photo_url}
                             alt="Profile"
-                            className="h-7 w-7 rounded-full object-cover border border-indigo-500"
+                            className="h-7 w-7 rounded-full object-cover border border-blue-500"
                           />
                           <button
                             type="button"
@@ -719,7 +699,7 @@ export default function ResumeBuilderPage() {
                           type="button"
                           onClick={() => photoInputRef.current?.click()}
                           disabled={isUploadingPhoto}
-                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                          className="text-[11px] font-bold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
                         >
                           <Camera className="h-3.5 w-3.5" />
                           {isUploadingPhoto ? "Uploading..." : "+ Add Profile Photo"}
@@ -731,7 +711,7 @@ export default function ResumeBuilderPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
-                    <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                    <label className="font-bold text-slate-600 mb-1 flex items-center justify-between">
                       Full Name
                       {lowConfFields.includes("contact_info.full_name") && (
                         <span className="text-rose-500 font-bold text-[10px] flex items-center gap-0.5">
@@ -750,17 +730,13 @@ export default function ResumeBuilderPage() {
                         });
                         setSaveStatus("unsaved");
                       }}
-                      className={`w-full p-2.5 rounded-xl border text-xs bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none ${
-                        lowConfFields.includes("contact_info.full_name")
-                          ? "border-rose-400 dark:border-rose-500 bg-rose-50/20"
-                          : "border-slate-200 dark:border-slate-800"
-                      }`}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
                       placeholder="Mohammed Ahbar Ajaib"
                     />
                   </div>
 
                   <div>
-                    <label className="font-semibold text-slate-700 dark:text-slate-300">
+                    <label className="font-bold text-slate-600 mb-1 block">
                       Professional Headline / Target Role
                     </label>
                     <input
@@ -774,13 +750,13 @@ export default function ResumeBuilderPage() {
                         });
                         setSaveStatus("unsaved");
                       }}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
                       placeholder="e.g. AI Application Engineer | Full Stack Developer"
                     />
                   </div>
 
                   <div>
-                    <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                    <label className="font-bold text-slate-600 mb-1 flex items-center justify-between">
                       Email Address
                       {lowConfFields.includes("contact_info.email") && (
                         <span className="text-rose-500 font-bold text-[10px] flex items-center gap-0.5">
@@ -799,17 +775,13 @@ export default function ResumeBuilderPage() {
                         });
                         setSaveStatus("unsaved");
                       }}
-                      className={`w-full p-2.5 rounded-xl border text-xs bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none ${
-                        lowConfFields.includes("contact_info.email")
-                          ? "border-rose-400 dark:border-rose-500 bg-rose-50/20"
-                          : "border-slate-200 dark:border-slate-800"
-                      }`}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
                       placeholder="ahbar@example.com"
                     />
                   </div>
 
                   <div>
-                    <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                    <label className="font-bold text-slate-600 mb-1 flex items-center justify-between">
                       Phone Number
                       {lowConfFields.includes("contact_info.phone") && (
                         <span className="text-rose-500 font-bold text-[10px] flex items-center gap-0.5">
@@ -828,17 +800,13 @@ export default function ResumeBuilderPage() {
                         });
                         setSaveStatus("unsaved");
                       }}
-                      className={`w-full p-2.5 rounded-xl border text-xs bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:outline-none ${
-                        lowConfFields.includes("contact_info.phone")
-                          ? "border-rose-400 dark:border-rose-500 bg-rose-50/20"
-                          : "border-slate-200 dark:border-slate-800"
-                      }`}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
                       placeholder="+91 7411223375"
                     />
                   </div>
 
-                  <div>
-                    <label className="font-semibold text-slate-700 dark:text-slate-300">
+                  <div className="sm:col-span-2">
+                    <label className="font-bold text-slate-600 mb-1 block">
                       Location / Address
                     </label>
                     <input
@@ -852,70 +820,79 @@ export default function ResumeBuilderPage() {
                         });
                         setSaveStatus("unsaved");
                       }}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 text-xs text-slate-900 dark:text-white"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
                       placeholder="Bangalore, India"
                     />
                   </div>
 
                   <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="font-semibold text-slate-700 dark:text-slate-300">
+                      <label className="font-bold text-slate-600 mb-1 block">
                         LinkedIn URL
                       </label>
-                      <input
-                        id="field-linkedin"
-                        type="text"
-                        value={resume.contact_info?.linkedin_url || ""}
-                        onChange={(e) => {
-                          setResume({
-                            ...resume,
-                            contact_info: { ...resume.contact_info, linkedin_url: e.target.value },
-                          });
-                          setSaveStatus("unsaved");
-                        }}
-                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 text-xs text-slate-900 dark:text-white"
-                        placeholder="linkedin.com/in/ahbarajaib"
-                      />
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-[10px] font-black text-blue-600 bg-blue-50 px-1 rounded">in</span>
+                        <input
+                          id="field-linkedin"
+                          type="text"
+                          value={resume.contact_info?.linkedin_url || ""}
+                          onChange={(e) => {
+                            setResume({
+                              ...resume,
+                              contact_info: { ...resume.contact_info, linkedin_url: e.target.value },
+                            });
+                            setSaveStatus("unsaved");
+                          }}
+                          className="w-full p-2.5 pl-9 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
+                          placeholder="linkedin.com/in/ahbarajaib"
+                        />
+                      </div>
                     </div>
 
                     <div>
-                      <label className="font-semibold text-slate-700 dark:text-slate-300">
+                      <label className="font-bold text-slate-600 mb-1 block">
                         Portfolio / Website URL
                       </label>
-                      <input
-                        id="field-portfolio"
-                        type="text"
-                        value={resume.contact_info?.portfolio_url || ""}
-                        onChange={(e) => {
-                          setResume({
-                            ...resume,
-                            contact_info: { ...resume.contact_info, portfolio_url: e.target.value },
-                          });
-                          setSaveStatus("unsaved");
-                        }}
-                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 text-xs text-slate-900 dark:text-white"
-                        placeholder="ahbarajaib.com"
-                      />
+                      <div className="relative">
+                        <Globe className="absolute left-3 top-3 h-3.5 w-3.5 text-slate-400" />
+                        <input
+                          id="field-portfolio"
+                          type="text"
+                          value={resume.contact_info?.portfolio_url || ""}
+                          onChange={(e) => {
+                            setResume({
+                              ...resume,
+                              contact_info: { ...resume.contact_info, portfolio_url: e.target.value },
+                            });
+                            setSaveStatus("unsaved");
+                          }}
+                          className="w-full p-2.5 pl-9 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
+                          placeholder="ahbarajaib.com"
+                        />
+                      </div>
                     </div>
 
                     <div>
-                      <label className="font-semibold text-slate-700 dark:text-slate-300">
+                      <label className="font-bold text-slate-600 mb-1 block">
                         GitHub Profile URL
                       </label>
-                      <input
-                        id="field-github"
-                        type="text"
-                        value={resume.contact_info?.github_url || ""}
-                        onChange={(e) => {
-                          setResume({
-                            ...resume,
-                            contact_info: { ...resume.contact_info, github_url: e.target.value },
-                          });
-                          setSaveStatus("unsaved");
-                        }}
-                        className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 text-xs text-slate-900 dark:text-white"
-                        placeholder="github.com/ahbarajaib"
-                      />
+                      <div className="relative">
+                        <Code className="absolute left-3 top-3 h-3.5 w-3.5 text-slate-400" />
+                        <input
+                          id="field-github"
+                          type="text"
+                          value={resume.contact_info?.github_url || ""}
+                          onChange={(e) => {
+                            setResume({
+                              ...resume,
+                              contact_info: { ...resume.contact_info, github_url: e.target.value },
+                            });
+                            setSaveStatus("unsaved");
+                          }}
+                          className="w-full p-2.5 pl-9 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-blue-500 text-xs text-slate-900 focus:outline-none transition-all"
+                          placeholder="github.com/ahbarajaib"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -924,7 +901,7 @@ export default function ResumeBuilderPage() {
               {/* Resume Sections List */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     Resume Sections ({resume.sections.length})
                   </h3>
                   <span className="text-[11px] text-slate-400">
@@ -948,43 +925,42 @@ export default function ResumeBuilderPage() {
                 {/* Add Section Menu - Only show sections NOT currently active in resume */}
                 {(() => {
                   const existingTypes = new Set(
-                    (resume.sections || []).map((s) => s.section_type.toLowerCase())
+                    resume.sections.map((s) => s.section_type)
                   );
-                  const availableSections = [
-                    { id: "summary", label: "Summary", icon: FileText, color: "text-indigo-500", border: "hover:border-indigo-500" },
-                    { id: "skills", label: "Skills", icon: Code, color: "text-emerald-500", border: "hover:border-emerald-500" },
-                    { id: "experience", label: "Experience", icon: Briefcase, color: "text-blue-500", border: "hover:border-blue-500" },
-                    { id: "education", label: "Education", icon: GraduationCap, color: "text-purple-500", border: "hover:border-purple-500" },
-                    { id: "projects", label: "Projects", icon: FolderGit2, color: "text-amber-500", border: "hover:border-amber-500" },
-                    { id: "certifications", label: "Certifications", icon: Award, color: "text-rose-500", border: "hover:border-rose-500" },
-                  ].filter((sec) => !existingTypes.has(sec.id));
+                  const availableToAdd = [
+                    { type: "experience", title: "Work Experience", icon: Briefcase },
+                    { type: "education", title: "Education", icon: GraduationCap },
+                    { type: "projects", title: "Projects", icon: FolderGit2 },
+                    { type: "skills", title: "Technical Skills", icon: Code },
+                    { type: "certifications", title: "Certifications", icon: Award },
+                    { type: "summary", title: "Professional Summary", icon: FileText },
+                    { type: "custom", title: "Custom Section", icon: Layers },
+                  ].filter(
+                    (opt) => opt.type === "custom" || !existingTypes.has(opt.type as any)
+                  );
+
+                  if (availableToAdd.length === 0) return null;
 
                   return (
-                    <div className="p-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                        + Add New Section
+                    <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                        + Add Missing Section
                       </span>
-                      <div className="flex items-center gap-2 flex-wrap text-xs">
-                        {availableSections.map((sec) => {
-                          const IconComponent = sec.icon;
+                      <div className="flex flex-wrap gap-2">
+                        {availableToAdd.map((opt) => {
+                          const Icon = opt.icon;
                           return (
                             <button
-                              key={sec.id}
+                              key={opt.type}
                               type="button"
-                              onClick={() => handleAddSection(sec.id as any)}
-                              className={`px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold ${sec.border} transition-all cursor-pointer flex items-center gap-1`}
+                              onClick={() => handleAddSection(opt.type as any)}
+                              className="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
                             >
-                              <IconComponent className={`h-3.5 w-3.5 ${sec.color}`} /> {sec.label}
+                              <Icon className="h-3.5 w-3.5 text-blue-600" />
+                              {opt.title}
                             </button>
                           );
                         })}
-                        <button
-                          type="button"
-                          onClick={() => handleAddSection("custom")}
-                          className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold hover:border-slate-500 transition-all cursor-pointer flex items-center gap-1"
-                        >
-                          <Layers className="h-3.5 w-3.5 text-slate-500" /> Custom Section
-                        </button>
                       </div>
                     </div>
                   );
@@ -992,83 +968,97 @@ export default function ResumeBuilderPage() {
               </div>
             </div>
 
-            {/* Right Panel (5 Cols): Live Preview & Summary Card */}
-            <div className="lg:col-span-5 sticky top-20 space-y-6">
-              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            {/* Right Panel (5 Cols): Live Overview & Export */}
+            <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-20">
+              <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-2xs space-y-5">
+                {/* Header */}
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-indigo-500" /> Live Resume Overview
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-blue-600" /> Live Resume Overview
                   </h3>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                     {TEMPLATES.find((t) => t.id === selectedTemplate)?.title}
                   </span>
                 </div>
 
                 {/* Candidate Name Banner */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-center space-y-1">
-                  {resume.profile_photo_url && (
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3.5 text-left">
+                  {resume.profile_photo_url ? (
                     <img
                       src={resume.profile_photo_url}
                       alt="Profile"
-                      className="h-16 w-16 rounded-full mx-auto object-cover border-2 border-indigo-500 shadow-sm mb-2"
+                      className="h-12 w-12 rounded-full object-cover border-2 border-blue-500 shadow-sm shrink-0"
                     />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-blue-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
+                      {resume.contact_info?.full_name ? resume.contact_info.full_name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase() : "MA"}
+                    </div>
                   )}
-                  <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                    {resume.contact_info?.full_name || "Candidate Name"}
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {[resume.contact_info?.phone, resume.contact_info?.email, resume.contact_info?.location]
-                      .filter(Boolean)
-                      .join("  •  ")}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-sm font-black text-slate-900 truncate">
+                      {resume.contact_info?.full_name || "Candidate Name"}
+                    </h2>
+                    <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
+                      {[resume.contact_info?.phone, resume.contact_info?.email, resume.contact_info?.location]
+                        .filter(Boolean)
+                        .join(" • ")}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Section Count & Confidence Metric */}
                 <div className="grid grid-cols-2 gap-3 text-center text-xs">
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Active Sections</span>
-                    <span className="text-base font-black text-slate-900 dark:text-white">
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Active Sections</span>
+                    <span className="text-xl font-black text-slate-900">
                       {resume.sections.filter((s) => s.visible).length}
                     </span>
                   </div>
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Parse Confidence</span>
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Parse Confidence</span>
                     <span
-                      className={`text-base font-black ${
-                        lowConfFields.length > 0 ? "text-amber-500" : "text-emerald-500"
+                      className={`text-xl font-black flex items-center justify-center gap-1 ${
+                        lowConfFields.length > 0 ? "text-amber-600" : "text-emerald-600"
                       }`}
                     >
-                      {lowConfFields.length > 0 ? `${lowConfFields.length} Unparsed` : "100% Verified"}
+                      {lowConfFields.length > 0 ? `${lowConfFields.length} Unparsed` : (
+                        <>
+                          <span>100% Verified</span>
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        </>
+                      )}
                     </span>
                   </div>
                 </div>
 
                 {/* Download Actions */}
                 {token ? (
-                  <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="space-y-2.5 pt-2 border-t border-slate-100">
                     <button
                       type="button"
                       onClick={() => handleDownloadFile("pdf")}
                       disabled={isExporting !== null}
-                      className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-indigo-500/20 disabled:opacity-50"
+                      className="w-full py-3.5 rounded-xl btn-primary text-white font-extrabold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-600/20 disabled:opacity-50"
                     >
-                      <PdfLogoIcon className="h-4 w-4" /> {isExporting === "pdf" ? "Exporting PDF..." : `Export as PDF (${TEMPLATES.find((t) => t.id === selectedTemplate)?.title})`}
+                      <span className="px-1.5 py-0.5 rounded bg-red-600 text-white font-black text-[9px]">PDF</span>
+                      <span>{isExporting === "pdf" ? "Exporting PDF..." : `Export as PDF (${TEMPLATES.find((t) => t.id === selectedTemplate)?.title})`}</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleDownloadFile("docx")}
                       disabled={isExporting !== null}
-                      className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      className="w-full py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs border border-slate-200 hover:border-slate-300 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs disabled:opacity-50"
                     >
-                      <WordLogoIcon className="h-4 w-4" /> {isExporting === "docx" ? "Exporting DOCX..." : "Export as DOCX"}
+                      <WordLogoIcon className="h-4 w-4" />
+                      <span>{isExporting === "docx" ? "Exporting DOCX..." : "Export as DOCX"}</span>
                     </button>
                   </div>
                 ) : (
                   <button
                     type="button"
                     onClick={() => setShowAuthModal(true)}
-                    className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-xl btn-primary text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Lock className="h-4 w-4" /> Sign In to Export Resume
                   </button>
@@ -1078,23 +1068,23 @@ export default function ResumeBuilderPage() {
           </div>
         ) : isLoadingResume ? (
           /* Loading State */
-          <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center max-w-xl mx-auto space-y-4 my-12">
-            <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 mx-auto">
+          <div className="p-12 rounded-3xl bg-white border border-slate-200 shadow-sm text-center max-w-xl mx-auto space-y-4 my-12">
+            <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 mx-auto">
               <RefreshCw className="h-6 w-6 animate-spin" />
             </div>
-            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Loading Master Resume...</p>
+            <p className="text-xs font-semibold text-slate-600">Loading Master Resume...</p>
           </div>
         ) : (
           /* Empty Initial State Card */
-          <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center max-w-xl mx-auto space-y-6 my-8">
-            <div className="h-16 w-16 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mx-auto">
+          <div className="p-12 rounded-3xl bg-white border border-slate-200 shadow-sm text-center max-w-xl mx-auto space-y-6 my-8">
+            <div className="h-16 w-16 rounded-3xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mx-auto">
               <UploadCloud className="h-8 w-8" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              <h2 className="text-lg font-bold text-slate-900">
                 Import Your Resume to Start Building
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+              <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
                 Upload your DOCX or PDF resume. RoleCraft AI parses your content into structured, editable sections so you can modify details, manage section ordering, and export cleanly into ATS single-column templates.
               </p>
             </div>
@@ -1102,7 +1092,7 @@ export default function ResumeBuilderPage() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all cursor-pointer shadow-lg shadow-indigo-500/25 inline-flex items-center gap-2"
+              className="px-6 py-3 rounded-2xl btn-primary text-white font-bold text-xs transition-all cursor-pointer shadow-lg shadow-blue-500/25 inline-flex items-center gap-2"
             >
               <UploadCloud className="h-4 w-4" />
               Upload DOCX or PDF
