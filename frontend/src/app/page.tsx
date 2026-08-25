@@ -1115,20 +1115,35 @@ function LoadingState() {
       <div className="absolute inset-0 bg-grid opacity-40 pointer-events-none" />
 
       <div className="relative z-10 p-8">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-8">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <Sparkles className="h-4 w-4 text-white" />
-              </div>
-              <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">AI Analysis in Progress</h3>
+        {/* Centered Glowing AI Logo with Ambient Background Light */}
+        <div className="flex flex-col items-center justify-center pt-2 pb-6 text-center space-y-4">
+          <div className="relative flex items-center justify-center">
+            {/* Multi-layered ambient background glow light */}
+            <div className="absolute -inset-6 rounded-full bg-gradient-to-tr from-blue-500/35 via-indigo-500/30 to-cyan-400/35 blur-2xl animate-pulse" />
+            <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 opacity-60 blur-sm animate-pulse" />
+            
+            {/* Logo container with soft halo */}
+            <div className="relative h-18 w-18 rounded-2xl bg-white p-3 shadow-2xl shadow-blue-500/30 ring-1 ring-blue-200/80 flex items-center justify-center">
+              <img
+                src="/logo.svg"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
+                alt="RoleCraft AI Logo"
+                className="h-full w-full object-contain drop-shadow-sm"
+              />
             </div>
-            <p className="text-xs text-slate-500 pl-10.5">Concurrent review across all resume sections</p>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-bold shrink-0">
-            <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
-            Processing
+          
+          <div className="space-y-1 max-w-md">
+            <h3 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center justify-center gap-2">
+              <span>AI Analysis in Progress</span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                Live
+              </span>
+            </h3>
+            <p className="text-xs text-slate-500 font-medium">
+              RoleCraft AI is auditing your resume against target job competencies
+            </p>
           </div>
         </div>
 
@@ -3362,7 +3377,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           <div className="relative shrink-0">
             <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-400 opacity-20 blur-md group-hover:opacity-35 transition-opacity" />
             <img
-              src="/logo.png"
+              src="/logo.svg"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
               alt="RoleCraft Logo"
               className="relative h-10 w-10 sm:h-11 sm:w-11 object-contain rounded-xl bg-white p-0.5 shadow-sm ring-1 ring-blue-100 transition-all"
             />
@@ -4038,7 +4054,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             <div className="flex items-center justify-center gap-3">
               <div className="relative">
                 <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-400 to-cyan-400 opacity-20 blur-sm" />
-                <img src="/logo.png" alt="RoleCraft Logo" className="relative h-9 w-9 object-contain rounded-lg bg-white p-0.5 ring-1 ring-blue-100 shadow-sm" />
+                <img
+                  src="/logo.svg"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
+                  alt="RoleCraft Logo"
+                  className="relative h-9 w-9 object-contain rounded-lg bg-white p-0.5 ring-1 ring-blue-100 shadow-sm"
+                />
               </div>
               <span className="text-lg font-black text-gradient">RoleCraft</span>
             </div>

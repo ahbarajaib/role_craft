@@ -13,9 +13,9 @@ export const metadata: Metadata = {
   title: "RoleCraft – AI-Powered Resume Optimization",
   description: "Craft every resume for the role. Beat ATS scanners, weave missing keywords, and triple your interview callbacks.",
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
   },
   openGraph: {
     title: "RoleCraft – AI-Powered Resume Optimization",

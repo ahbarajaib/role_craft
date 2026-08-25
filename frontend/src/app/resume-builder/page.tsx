@@ -464,7 +464,8 @@ export default function ResumeBuilderPage() {
               <div className="relative shrink-0">
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-400 opacity-20 blur-sm group-hover:opacity-35 transition-opacity" />
                 <img
-                  src="/logo.png"
+                  src="/logo.svg"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
                   alt="RoleCraft Logo"
                   className="relative h-9 w-9 object-contain rounded-xl bg-white p-0.5 shadow-xs ring-1 ring-blue-100 transition-all"
                 />

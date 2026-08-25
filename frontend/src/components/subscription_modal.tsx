@@ -91,7 +91,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         subscription_id: session.subscription_id,
         name: "Role Craft Engine",
         description: session.description,
-        image: "/logo.png",
+        image: "/logo.svg",
         handler: async function (checkoutResponse: any) {
           // Poll profile until webhook upgrades them, or reload immediately
           setIsSubmitting(true);
