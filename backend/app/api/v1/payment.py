@@ -119,7 +119,7 @@ async def razorpay_webhook(
     elif event in ["subscription.cancelled", "subscription.halted"]:
         user.plan_type = "free"
         user.subscription_status = "inactive"
-        user.credits = 15
+        user.credits = settings.FREE_TIER_CREDITS
         db.commit()
 
     return {"status": "processed"}

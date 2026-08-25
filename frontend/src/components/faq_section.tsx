@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, HelpCircle } from "lucide-react";
+import { FREE_TIER_CREDITS, PRO_CREDITS, ELITE_CREDITS } from "@/lib/constants";
 
 export default function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -21,7 +22,7 @@ export default function FaqSection() {
     },
     {
       q: "How do monthly credits work?",
-      a: "Every new account receives 15 free credits per month. Pro users get 200 credits/mo and Elite users get 400 credits/mo. 1 credit is used for a section rewrite or document patch.",
+      a: `Every new account receives ${FREE_TIER_CREDITS} free credits. Pro users get ${PRO_CREDITS} credits/mo and Elite users get ${ELITE_CREDITS} credits/mo. 1 credit is used for a section rewrite or document patch.`,
     },
     {
       q: "Can I download my final tailored resume as both DOCX and PDF?",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { FREE_TIER_CREDITS, PRO_CREDITS, ELITE_CREDITS } from "@/lib/constants";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -3333,7 +3334,7 @@ export default function Home() {
                   <ul className="space-y-2.5 text-xs text-slate-600 font-medium pt-4 border-t border-slate-100">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                      <span><strong className="text-slate-800">15 Credits</strong> / Month</span>
+                      <span><strong className="text-slate-800">{FREE_TIER_CREDITS} Credits</strong> / Month</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
@@ -3368,7 +3369,7 @@ export default function Home() {
                   <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-4 border-t border-blue-200/60">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                      <span><strong className="text-slate-900">200 Credits</strong> / Month</span>
+                      <span><strong className="text-slate-900">{PRO_CREDITS} Credits</strong> / Month</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
@@ -3404,7 +3405,7 @@ export default function Home() {
                   <ul className="space-y-2.5 text-xs text-slate-600 font-medium pt-4 border-t border-slate-100">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                      <span><strong className="text-slate-900">400 Credits</strong> / Month</span>
+                      <span><strong className="text-slate-900">{ELITE_CREDITS} Credits</strong> / Month</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />

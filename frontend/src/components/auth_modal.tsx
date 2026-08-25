@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useAuth } from "./auth_provider";
 import { GoogleLogin } from "@react-oauth/google";
+import { FREE_TIER_CREDITS } from "@/lib/constants";
 import { X, Sparkles, Mail, Lock, AlertCircle, RefreshCw, User } from "lucide-react";
 
 export default function AuthModal() {
@@ -124,7 +125,7 @@ export default function AuthModal() {
           <p className="text-xs text-slate-500">
             {authMode === "forgot"
               ? "Enter your email address to receive password reset instructions."
-              : "Get 15 free optimization credits per month and unlock AI rewrites."}
+              : `Get ${FREE_TIER_CREDITS} free optimization credits and unlock AI rewrites.`}
           </p>
         </div>
 

@@ -93,6 +93,15 @@ class Settings(BaseSettings):
     RAZORPAY_PLAN_ELITE_ID: str = ""
     RAZORPAY_WEBHOOK_SECRET: str = ""
 
+    # ── Credits Configuration ─────────────────────────────────────────────────
+    # To change free tier credits: set FREE_TIER_CREDITS=25 in .env (no code change needed)
+    # To add VIP emails: set VIP_EMAILS='["you@example.com"]' in .env
+    FREE_TIER_CREDITS: int = 15
+    VIP_CREDITS: int = 300
+    VIP_EMAILS: list[str] = Field(
+        default=["ahbarajaib@gmail.com", "absarajaib@gmail.com"]
+    )
+
     # ── Support & Email Notifications ─────────────────────────────────────────
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587

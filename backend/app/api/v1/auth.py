@@ -82,7 +82,7 @@ def signup(req: UserSignupRequest, db: Session = Depends(get_db)):
         password_hash=hash_password(req.password),
         provider="credentials",
         name=req.name.strip() if req.name else None,
-        credits=15
+        credits=settings.VIP_CREDITS if email_clean in settings.VIP_EMAILS else settings.FREE_TIER_CREDITS
     )
     db.add(new_user)
     db.commit()
@@ -147,7 +147,7 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
 
     email_clean = email.strip().lower()
     user = db.query(User).filter(User.email == email_clean).first()
-    vip_emails = ["absarajaib@gmail.com", "ahbarajaib@gmail.com"]
+    vip_emails = settings.VIP_EMAILS
 
     if not user:
         # Register new Google user with name from Google profile
@@ -156,7 +156,7 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
             provider="google",
             google_id=google_id,
             name=google_name,
-            credits=300 if email_clean in vip_emails else 15
+            credits=settings.VIP_CREDITS if email_clean in vip_emails else settings.FREE_TIER_CREDITS
         )
         db.add(user)
         db.commit()

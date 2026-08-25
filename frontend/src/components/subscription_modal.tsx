@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { PRO_CREDITS, ELITE_CREDITS } from "@/lib/constants";
 import { useAuth } from "./auth_provider";
 import { X, Check, ShieldAlert, Sparkles, Zap, Award, RefreshCw } from "lucide-react";
 
@@ -189,7 +190,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
               <ul className="space-y-2.5 text-xs text-slate-600 border-t border-slate-200/80 pt-4">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span><strong className="text-slate-900">200 Optimization Credits</strong> / mo</span>
+                  <span><strong className="text-slate-900">{PRO_CREDITS} Optimization Credits</strong> / mo</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
@@ -234,7 +235,7 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
               <ul className="space-y-2.5 text-xs text-slate-600 border-t border-slate-200/80 pt-4">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span><strong className="text-slate-900">400 Optimization Credits</strong> / mo</span>
+                  <span><strong className="text-slate-900">{ELITE_CREDITS} Optimization Credits</strong> / mo</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
