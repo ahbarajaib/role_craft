@@ -509,7 +509,7 @@ _SOFT_SKILL_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     for skill in _KNOWN_SOFT_SKILLS
 ]
 
-# Common English stop-words to exclude from keywords.
+# Common English stop-words and generic job-posting noise to exclude from keywords.
 _STOP_WORDS: frozenset[str] = frozenset({
     "the", "and", "for", "with", "that", "this", "from", "will", "have",
     "your", "our", "you", "are", "not", "but", "can", "all", "also",
@@ -521,6 +521,15 @@ _STOP_WORDS: frozenset[str] = frozenset({
     "knowledge", "ability", "great", "excellent", "help", "build",
     "develop", "design", "implement", "support", "manage", "ensure",
     "provide", "create", "including", "related", "required", "preferred",
+    "access", "agency", "applications", "building", "business", "developer",
+    "internal", "message", "operations", "premium", "recruitment", "tools",
+    "user", "users", "client", "clients", "service", "services", "system",
+    "systems", "solution", "solutions", "years", "level", "position",
+    "company", "candidate", "candidates", "ideal", "successful", "looking",
+    "join", "daily", "overall", "practices", "responsibilities", "requirements",
+    "opportunity", "opportunities", "environment", "environments", "focus",
+    "focused", "high", "plus", "needs", "need", "deliver", "delivering",
+    "collaborate", "collaborating", "driven", "drive", "drives",
 })
 
 
@@ -528,18 +537,54 @@ def _extract_keywords(text: str) -> list[str]:
     """Return high-frequency technical nouns and domain soft-skill phrases from the text.
 
     Two passes:
-    1. Frequency-based: words > 4 chars, not stop-words, appear >= 2 times.
+    1. Frequency-based: technical words > 4 chars, not stop-words, appear >= 2 times.
     2. Soft-skill allow-list: multi-word domain phrases explicitly present in the text.
 
-    Results are merged, deduplicated, and capped at 30.
+    Results are merged, deduplicated, and canonicalised.
     """
-    # Pass 1: frequency-based single words
+    # Pass 1: frequency-based technical terms
     words = re.findall(r"\b[a-zA-Z][a-zA-Z0-9+#.-]{3,}\b", text)
     normalised = [w.lower() for w in words if w.lower() not in _STOP_WORDS]
     counts = Counter(normalised)
     frequent = [(word, count) for word, count in counts.items() if count > 1]
     frequent.sort(key=lambda x: (-x[1], x[0]))
-    freq_keywords = [word for word, _ in frequent[:20]]
+
+    def _canonicalise(w: str) -> str:
+        common_caps = {
+            "python": "Python",
+            "typescript": "TypeScript",
+            "javascript": "JavaScript",
+            "react": "React",
+            "vue": "Vue",
+            "angular": "Angular",
+            "docker": "Docker",
+            "kubernetes": "Kubernetes",
+            "aws": "AWS",
+            "gcp": "GCP",
+            "azure": "Azure",
+            "graphql": "GraphQL",
+            "apis": "REST APIs",
+            "api": "REST APIs",
+            "rest": "REST APIs",
+            "sql": "SQL",
+            "nosql": "NoSQL",
+            "mongodb": "MongoDB",
+            "postgres": "PostgreSQL",
+            "postgresql": "PostgreSQL",
+            "redis": "Redis",
+            "kafka": "Kafka",
+            "salesforce": "Salesforce",
+            "slack": "Slack",
+            "teams": "MS Teams",
+            "llms": "LLMs",
+            "llm": "LLMs",
+            "openai": "OpenAI",
+            "nlp": "NLP",
+            "ci/cd": "CI/CD",
+        }
+        return common_caps.get(w.lower(), w.capitalize())
+
+    freq_keywords = [_canonicalise(word) for word, _ in frequent[:20]]
 
     # Pass 2: soft-skill / multi-word domain phrase matching
     soft_found: list[str] = []

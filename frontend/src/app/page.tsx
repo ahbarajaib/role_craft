@@ -1439,49 +1439,145 @@ function AutoTailoringProgressModal({
 }
 
 
+const ATS_STOPWORDS = new Set([
+  "experience", "experiences", "project", "projects", "technique", "techniques",
+  "knowledge", "understanding", "focus", "skills", "relevant", "professional",
+  "optimization", "ability", "strong", "proven", "background", "usage",
+  "access", "agency", "applications", "building", "business", "developer",
+  "internal", "message", "operations", "premium", "recruitment", "tools",
+  "user", "users", "client", "clients", "service", "services", "system",
+  "systems", "solution", "solutions", "years", "level", "position", "specializing",
+  "company", "candidate", "candidates", "ideal", "successful", "looking",
+  "join", "daily", "overall", "practices", "responsibilities", "requirements",
+  "opportunity", "opportunities", "environment", "environments", "high",
+  "deliver", "delivering", "collaborate", "collaborating", "driven", "drive",
+  "results-oriented", "hands-on", "end-to-end", "proficient", "proficient in",
+  "mindset", "product mindset", "able", "must", "well", "great", "excellent",
+]);
+
+const CANONICAL_SKILL_NAMES: Record<string, string> = {
+  "python": "Python",
+  "typescript": "TypeScript",
+  "javascript": "JavaScript",
+  "react": "React",
+  "reactjs": "React.js",
+  "nextjs": "Next.js",
+  "vue": "Vue.js",
+  "angular": "Angular",
+  "node": "Node.js",
+  "nodejs": "Node.js",
+  "docker": "Docker",
+  "kubernetes": "Kubernetes",
+  "k8s": "Kubernetes",
+  "aws": "AWS",
+  "gcp": "Google Cloud (GCP)",
+  "azure": "Azure",
+  "graphql": "GraphQL",
+  "apis": "REST APIs",
+  "api": "REST APIs",
+  "rest api": "REST APIs",
+  "rest apis": "REST APIs",
+  "microservices": "Microservices Architecture",
+  "microservices architecture": "Microservices Architecture",
+  "sql": "SQL",
+  "nosql": "NoSQL",
+  "mongodb": "MongoDB",
+  "postgres": "PostgreSQL",
+  "postgresql": "PostgreSQL",
+  "redis": "Redis",
+  "kafka": "Apache Kafka",
+  "salesforce": "Salesforce",
+  "slack": "Slack",
+  "teams": "MS Teams",
+  "llms": "Large Language Models (LLMs)",
+  "llm": "Large Language Models (LLMs)",
+  "openai": "OpenAI",
+  "nlp": "Natural Language Processing (NLP)",
+  "ci/cd": "CI/CD Practices",
+  "ci/cd practices": "CI/CD Practices",
+  "full-stack development": "Full-Stack Development",
+  "ai integration": "AI Integration",
+  "stakeholder communication": "Stakeholder Communication",
+  "stakeholder management": "Stakeholder Management",
+  "cross-functional": "Cross-Functional Collaboration",
+  "internal tools development": "Internal Tools Development",
+};
+
 function cleanKeywordName(rawName: string): string {
   if (!rawName) return "";
-  return rawName
-    .replace(/^(add|include|highlight|emphasize|condense|surface|rephrase|incorporate|integrate)\s+/i, "")
+  let clean = rawName
+    .replace(/^(add|include|highlight|emphasize|condense|surface|rephrase|incorporate|integrate|leverage|utilize|apply|built|experience with|proficient with|strong with|hands-on with)\s+/i, "")
     .replace(/\s+in\s+.*$/i, "")
     .replace(/\s+for\s+.*$/i, "")
-    .replace(/\s+(usage|skills|experience|experiences|knowledge|stack|level|concepts|proficiency)$/i, "")
+    .replace(/\s+(usage|skills|experience|experiences|knowledge|stack|level|concepts|proficiency|background)$/i, "")
+    .replace(/^(\d+\+?\s+years?(\s+of)?)\s+/i, "")
+    .replace(/^experience with\s+/i, "")
+    .replace(/^proficient with\s+/i, "")
+    .replace(/^hands-on with\s+/i, "")
+    .replace(/^strong understanding of\s+/i, "")
+    .replace(/^practical understanding of\s+/i, "")
+    .replace(/^ability to\s+/i, "")
+    .replace(/^proven track record in\s+/i, "")
     .trim();
+
+  // Strip trailing punctuation
+  clean = clean.replace(/[.,;:—\-]+$/, "").trim();
+
+  const lower = clean.toLowerCase();
+  if (CANONICAL_SKILL_NAMES[lower]) {
+    return CANONICAL_SKILL_NAMES[lower];
+  }
+
+  // If it matches common words, return capitalized
+  if (clean.length > 0 && clean === clean.toLowerCase()) {
+    return clean
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  }
+
+  return clean;
 }
 
 function isActualATSKeyword(kw: string): boolean {
   if (!kw) return false;
   const clean = kw.trim();
-  if (clean.length > 30 || clean.split(" ").length > 4) return false;
+  // Filter out sentences: > 35 chars or > 4 words or contains em-dash / commas / clauses
+  if (clean.length < 2 || clean.length > 35) return false;
+  if (clean.split(" ").length > 4) return false;
+  if (/—|;|when\s|where\s|which\s|with the\s|and when|ability to/i.test(clean)) return false;
 
-  const forbiddenWords = [
-    "experience",
-    "experiences",
-    "project",
-    "projects",
-    "technique",
-    "techniques",
-    "knowledge",
-    "understanding",
-    "focus",
-    "skills",
-    "relevant",
-    "professional",
-    "optimization",
-    "ability",
-    "strong",
-    "proven",
-    "background",
-    "usage",
-  ];
   const lower = clean.toLowerCase();
-  return !forbiddenWords.some((w) => lower.includes(w));
+  if (ATS_STOPWORDS.has(lower)) return false;
+
+  // Single word validation
+  if (clean.split(" ").length === 1 && (lower.length <= 2 && !["ai", "go", "r", "c", "c#", "c++", "ui", "ux", "qa", "ml", "db"].includes(lower))) {
+    return false;
+  }
+
+  return true;
+}
+
+function getSkillCategory(skillName: string): { label: string; badgeColor: string } {
+  const s = skillName.toLowerCase();
+  if (/python|typescript|javascript|react|vue|angular|node|java|golang|c\+\+|c#|ruby|php|rust|html|css|tailwind|sql|nosql|mongodb|postgres|redis|kafka|graphql|api|rest/i.test(s)) {
+    return { label: "Core Tech", badgeColor: "bg-blue-50 text-blue-700 border-blue-200" };
+  }
+  if (/aws|azure|gcp|cloud|docker|kubernetes|ci\/cd|devops|terraform|linux|microservices|architecture|serverless/i.test(s)) {
+    return { label: "Cloud & Arch", badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-200" };
+  }
+  if (/ai|llm|ml|machine learning|nlp|openai|prompt|gpt|data|deep learning|rag|agent/i.test(s)) {
+    return { label: "AI & Data", badgeColor: "bg-purple-50 text-purple-700 border-purple-200" };
+  }
+  if (/stakeholder|communication|leadership|management|cross-functional|product|agile|scrum|teamwork|strategy/i.test(s)) {
+    return { label: "Leadership", badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  }
+  return { label: "Core Skill", badgeColor: "bg-slate-100 text-slate-700 border-slate-200" };
 }
 
 function extractStrictKeywordsFromRaw(raw: string): string[] {
   if (!raw) return [];
   const cleaned = cleanKeywordName(raw);
-  // Split on "and", ",", "&"
   const parts = cleaned.split(/\s+(?:and|&)\s+|,\s*/i);
   return parts
     .map((p) => cleanKeywordName(p))
@@ -1839,6 +1935,8 @@ export default function Home() {
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [customTargetRole, setCustomTargetRole] = useState<string>("");
+  const [keywordFilterTab, setKeywordFilterTab] = useState<'all' | 'matched' | 'supported' | 'missing'>('all');
+  const [keywordSearchQuery, setKeywordSearchQuery] = useState<string>("");
 
   // ── Keyword Weave Modal state ──────────────────────────────────────────────
   const [isKeywordWeaveModalOpen, setIsKeywordWeaveModalOpen] = useState(false);
@@ -4491,240 +4589,365 @@ export default function Home() {
                 </div>
 
                 {/* Interactive ATS Skill & Keyword Matrix Card */}
-                <div className="glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 space-y-4 shadow-xl">
-                  <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200/80 dark:border-slate-800/80 pb-3.5">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500/15 via-purple-500/15 to-indigo-600/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20 shrink-0 shadow-sm">
-                        <Layers className="h-4.5 w-4.5" />
+                {(() => {
+                  // Compute matched skills
+                  const originalMatched = new Set(
+                    (analysisResult.top_strengths || [])
+                      .map((s: any) => cleanKeywordName(typeof s === "string" ? s : s.name))
+                      .filter((k) => isActualATSKeyword(k))
+                      .map((k) => k.toLowerCase())
+                  );
+                  const wovenMatchedLower = new Set(
+                    appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
+                  );
+                  const allMatched = Array.from(
+                    new Set([
+                      ...(analysisResult.top_strengths || [])
+                        .map((s: any) => cleanKeywordName(typeof s === "string" ? s : s.name))
+                        .filter((k) => isActualATSKeyword(k)),
+                      ...appliedWovenKeywords.map((k) => cleanKeywordName(k)).filter((k) => isActualATSKeyword(k)),
+                    ])
+                  ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
+
+                  const matchedLower = new Set(allMatched.map((s) => s.toLowerCase()));
+
+                  // Compute evidence-supported keywords
+                  const rawEvidence = [
+                    ...(analysisResult.sections || []).flatMap((s: any) => s.strengths || []),
+                    ...(analysisResult.top_improvements || [])
+                      .filter((imp: any) => imp.evidence_reused && imp.evidence_reused.trim())
+                      .map((imp: any) => (typeof imp === "string" ? imp : imp.name)),
+                  ];
+                  const allEvidence = Array.from(
+                    new Set(
+                      rawEvidence
+                        .flatMap((e) => extractStrictKeywordsFromRaw(e))
+                        .filter((k) => isActualATSKeyword(k))
+                    )
+                  ).filter((kw) => !matchedLower.has(kw.toLowerCase()));
+
+                  // Compute missing JD keywords
+                  const rawMissing = [
+                    ...(analysisResult.sections || []).flatMap((s: any) => s.missing_keywords || []),
+                    ...(analysisResult.top_improvements || [])
+                      .filter((imp: any) => !imp.evidence_reused || !imp.evidence_reused.trim())
+                      .map((imp: any) => (typeof imp === "string" ? imp : imp.name)),
+                  ];
+                  const allMissing = Array.from(
+                    new Set(
+                      rawMissing
+                        .flatMap((m) => extractStrictKeywordsFromRaw(m))
+                        .filter((k) => isActualATSKeyword(k))
+                    )
+                  ).filter((kw) => !matchedLower.has(kw.toLowerCase()) && !allEvidence.some((e) => e.toLowerCase() === kw.toLowerCase()));
+
+                  const totalKeywords = allMatched.length + allEvidence.length + allMissing.length;
+                  const matchPercentage = totalKeywords > 0 ? Math.round((allMatched.length / (allMatched.length + allMissing.length || 1)) * 100) : 100;
+
+                  // Apply search query filter
+                  const q = keywordSearchQuery.trim().toLowerCase();
+                  const filterMatch = (k: string) => !q || k.toLowerCase().includes(q);
+
+                  const filteredMatched = allMatched.filter(filterMatch);
+                  const filteredEvidence = allEvidence.filter(filterMatch);
+                  const filteredMissing = allMissing.filter(filterMatch);
+
+                  const showMatched = keywordFilterTab === 'all' || keywordFilterTab === 'matched';
+                  const showEvidence = keywordFilterTab === 'all' || keywordFilterTab === 'supported';
+                  const showMissing = keywordFilterTab === 'all' || keywordFilterTab === 'missing';
+
+                  return (
+                    <div className="glass-panel rounded-3xl p-6 sm:p-7 border border-slate-200/90 bg-white shadow-xl shadow-blue-500/5 space-y-6">
+                      {/* Header */}
+                      <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 pb-5">
+                        <div className="flex items-center gap-3.5">
+                          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0 ring-1 ring-white/60">
+                            <Layers className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2.5">
+                              <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
+                                ATS Skill & Keyword Matrix
+                              </h3>
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs">
+                                {matchPercentage}% Match Rate
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              {allMatched.length} confirmed in resume &bull; {allEvidence.length} in bullet evidence &bull; {allMissing.length} high-value JD gaps
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={openKeywordWeaveModal}
+                            disabled={isWeavingKeywords}
+                            className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md border ${
+                              isKeywordsWoven
+                                ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500/40 shadow-emerald-600/20"
+                                : "bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white border-white/20 shadow-blue-600/20 hover:scale-[1.02] active:scale-[0.98]"
+                            }`}
+                          >
+                            {isWeavingKeywords ? (
+                              <>
+                                <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                Weaving Keywords...
+                              </>
+                            ) : isKeywordsWoven ? (
+                              <>
+                                <CheckCircle className="h-4 w-4 text-emerald-200" />
+                                ✓ Keywords Woven & Applied
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-4 w-4 text-amber-200" />
+                                ⚡ Auto-Weave All Keywords (1-Click)
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">
-                          ATS Skill & Keyword Matrix
-                        </h3>
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                          Match overview & 1-click keyword insertion.
-                        </p>
+
+                      {/* Tri-Color Match Progress Bar */}
+                      <div className="space-y-2">
+                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden flex border border-slate-200 p-0.5">
+                          <div
+                            className="bg-emerald-500 h-full rounded-l-full transition-all duration-500"
+                            style={{ width: `${totalKeywords > 0 ? (allMatched.length / totalKeywords) * 100 : 33}%` }}
+                            title={`${allMatched.length} Confirmed Matched`}
+                          />
+                          <div
+                            className="bg-amber-400 h-full transition-all duration-500"
+                            style={{ width: `${totalKeywords > 0 ? (allEvidence.length / totalKeywords) * 100 : 33}%` }}
+                            title={`${allEvidence.length} Supported in Evidence`}
+                          />
+                          <div
+                            className="bg-rose-400 h-full rounded-r-full transition-all duration-500"
+                            style={{ width: `${totalKeywords > 0 ? (allMissing.length / totalKeywords) * 100 : 34}%` }}
+                            title={`${allMissing.length} Missing from JD`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Filter Bar & Search */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+                        {/* Segmented Filter Tabs */}
+                        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 border border-slate-200 text-xs font-bold overflow-x-auto">
+                          <button
+                            type="button"
+                            onClick={() => setKeywordFilterTab('all')}
+                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                              keywordFilterTab === 'all'
+                                ? "bg-white text-slate-900 shadow-2xs"
+                                : "text-slate-500 hover:text-slate-800"
+                            }`}
+                          >
+                            All ({totalKeywords})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setKeywordFilterTab('matched')}
+                            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                              keywordFilterTab === 'matched'
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs"
+                                : "text-slate-500 hover:text-emerald-700"
+                            }`}
+                          >
+                            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                            Matched ({allMatched.length})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setKeywordFilterTab('supported')}
+                            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                              keywordFilterTab === 'supported'
+                                ? "bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs"
+                                : "text-slate-500 hover:text-amber-700"
+                            }`}
+                          >
+                            <span className="h-2 w-2 rounded-full bg-amber-400" />
+                            In Evidence ({allEvidence.length})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setKeywordFilterTab('missing')}
+                            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                              keywordFilterTab === 'missing'
+                                ? "bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs"
+                                : "text-slate-500 hover:text-rose-700"
+                            }`}
+                          >
+                            <span className="h-2 w-2 rounded-full bg-rose-400" />
+                            Missing ({allMissing.length})
+                          </button>
+                        </div>
+
+                        {/* Search Input */}
+                        <div className="relative min-w-[200px] sm:w-64">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                          <input
+                            type="text"
+                            value={keywordSearchQuery}
+                            onChange={(e) => setKeywordSearchQuery(e.target.value)}
+                            placeholder="Filter skills..."
+                            className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                          />
+                          {keywordSearchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setKeywordSearchQuery("")}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Skill Pills Matrix */}
+                      <div className="space-y-5 pt-2">
+                        {/* 🟢 Confirmed Matched Skills */}
+                        {showMatched && filteredMatched.length > 0 && (
+                          <div className="space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-extrabold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                                Confirmed Matched Skills ({filteredMatched.length})
+                              </span>
+                              <span className="text-[11px] text-slate-400">Verified in resume &bull; click to remove</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {filteredMatched.map((skillName, idx) => {
+                                const skillLower = skillName.toLowerCase();
+                                const isWoven = wovenMatchedLower.has(skillLower);
+                                const isOriginal = originalMatched.has(skillLower);
+                                const cat = getSkillCategory(skillName);
+
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => {
+                                      if (isWoven) {
+                                        setAppliedWovenKeywords((prev) => {
+                                          const next = prev.filter((k) => cleanKeywordName(k).toLowerCase() !== skillLower);
+                                          if (next.length === 0) setIsKeywordsWoven(false);
+                                          return next;
+                                        });
+                                      } else {
+                                        setManuallyRemovedSkills((prev) => {
+                                          const next = new Set(prev);
+                                          next.add(skillLower);
+                                          return next;
+                                        });
+                                      }
+                                      removeSkillFromRewrites(skillName);
+                                    }}
+                                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-50/80 hover:bg-rose-50 text-emerald-900 hover:text-rose-700 border border-emerald-200/90 hover:border-rose-300 transition-all duration-150 cursor-pointer group shadow-2xs"
+                                    title={isWoven ? `Click to move '${skillName}' back to ${isOriginal ? "supported" : "missing"} keywords` : `Click to remove '${skillName}' from matched skills`}
+                                  >
+                                    <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
+                                      {cat.label}
+                                    </span>
+                                    <span>{skillName}</span>
+                                    <Check className="h-3 w-3 text-emerald-600 group-hover:hidden" />
+                                    <X className="h-3 w-3 text-rose-600 hidden group-hover:block" />
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 🟡 Supported in Evidence */}
+                        {showEvidence && filteredEvidence.length > 0 && (
+                          <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-extrabold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                                Supported in Project & Experience Evidence ({filteredEvidence.length})
+                              </span>
+                              <span className="text-[11px] text-slate-400">Click to weave into Technical Skills</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {filteredEvidence.map((kw, idx) => {
+                                const cat = getSkillCategory(kw);
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => handleQuickWeaveKeyword(kw)}
+                                    disabled={weavingSingleKeyword === kw}
+                                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100/80 text-amber-900 border border-amber-200 transition-all duration-150 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 group"
+                                    title={`Click to weave '${kw}' into Technical Skills section`}
+                                  >
+                                    <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
+                                      {cat.label}
+                                    </span>
+                                    <span>{kw}</span>
+                                    {weavingSingleKeyword === kw ? (
+                                      <div className="h-3 w-3 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin shrink-0" />
+                                    ) : (
+                                      <Plus className="h-3 w-3 text-amber-600 group-hover:scale-125 transition-transform" />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 🔴 Missing ATS Keywords */}
+                        {showMissing && filteredMissing.length > 0 && (
+                          <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-extrabold text-rose-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <Plus className="h-3.5 w-3.5 text-rose-600" />
+                                Missing High-Priority Job Competencies ({filteredMissing.length})
+                              </span>
+                              <span className="text-[11px] text-slate-400">In Job Description &bull; click to weave</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {filteredMissing.map((kw, idx) => {
+                                const cat = getSkillCategory(kw);
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => handleQuickWeaveKeyword(kw)}
+                                    disabled={weavingSingleKeyword === kw}
+                                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100/80 text-rose-900 border border-rose-200 transition-all duration-150 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 group"
+                                    title={`Click to weave '${kw}' into Technical Skills section`}
+                                  >
+                                    <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
+                                      {cat.label}
+                                    </span>
+                                    <span>{kw}</span>
+                                    {weavingSingleKeyword === kw ? (
+                                      <div className="h-3 w-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin shrink-0" />
+                                    ) : (
+                                      <Plus className="h-3 w-3 text-rose-600 group-hover:scale-125 transition-transform" />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Empty Search / Filter State */}
+                        {filteredMatched.length === 0 && filteredEvidence.length === 0 && filteredMissing.length === 0 && (
+                          <div className="text-center py-8 text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1">
+                            <p className="font-bold text-slate-600">No skills match &quot;{keywordSearchQuery}&quot;</p>
+                            <p>Try clearing your search query or switching tabs.</p>
+                          </div>
+                        )}
                       </div>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={openKeywordWeaveModal}
-                      disabled={isWeavingKeywords}
-                      className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-md border ${isKeywordsWoven
-                          ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/30 shadow-emerald-600/25"
-                          : "bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white border-white/20 shadow-indigo-500/20 hover:scale-[1.02] active:scale-[0.98]"
-                        }`}
-                    >
-                      {isWeavingKeywords ? (
-                        <>
-                          <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                          Weaving Keywords...
-                        </>
-                      ) : isKeywordsWoven ? (
-                        <>
-                          <CheckCircle className="h-3.5 w-3.5 text-emerald-200" />
-                          ✓ Keywords Woven & Applied
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-3.5 w-3.5 text-amber-200 animate-pulse" />
-                          ⚡ Auto-Weave All Keywords (1-Click)
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* 🟢 Matched Skills — click to un-weave (woven) or remove (original) */}
-                    {(() => {
-                      const originalMatched = new Set(
-                        (analysisResult.top_strengths || []).map((s: any) =>
-                          (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
-                        )
-                      );
-                      const wovenMatchedLower = new Set(
-                        appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
-                      );
-                      const allMatched = Array.from(
-                        new Set([
-                          ...(analysisResult.top_strengths || []).map((s: any) =>
-                            typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
-                          ),
-                          ...appliedWovenKeywords.map((k) => cleanKeywordName(k)),
-                        ])
-                      ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
-
-                      return (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                              Confirmed Matched Skills ({allMatched.length})
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {allMatched.map((skillName, idx) => {
-                              const skillLower = skillName.toLowerCase();
-                              const isWoven = wovenMatchedLower.has(skillLower);
-                              const isOriginal = originalMatched.has(skillLower);
-
-                              return (
-                                <button
-                                  key={idx}
-                                  type="button"
-                                  onClick={() => {
-                                    if (isWoven) {
-                                      setAppliedWovenKeywords((prev) => {
-                                        const next = prev.filter((k) => cleanKeywordName(k).toLowerCase() !== skillLower);
-                                        if (next.length === 0) setIsKeywordsWoven(false);
-                                        return next;
-                                      });
-                                    } else {
-                                      setManuallyRemovedSkills((prev) => {
-                                        const next = new Set(prev);
-                                        next.add(skillLower);
-                                        return next;
-                                      });
-                                    }
-                                    removeSkillFromRewrites(skillName);
-                                  }}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-emerald-500/10 hover:bg-rose-500/10 text-emerald-700 hover:text-rose-600 dark:text-emerald-300 dark:hover:text-rose-400 border border-emerald-500/25 hover:border-rose-400/30 transition-all duration-150 cursor-pointer group shadow-xs"
-                                  title={isWoven ? `Click to move '${skillName}' back to ${isOriginal ? "supported" : "missing"} keywords` : `Click to remove '${skillName}' from matched skills`}
-                                >
-                                  <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 group-hover:hidden" />
-                                  <X className="h-3 w-3 shrink-0 text-rose-500 hidden group-hover:block" />
-                                  {skillName}
-                                  {isWoven && (
-                                    <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 font-extrabold uppercase">
-                                      Woven
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* 🟡 Supported in Evidence — per-section matched strengths (click to weave into skills) */}
-                    {(() => {
-                      const evidenceKeywords = [
-                        ...(analysisResult.sections || []).flatMap((s: any) => s.strengths || []),
-                        ...(analysisResult.top_improvements || [])
-                          .filter((imp: any) => imp.evidence_reused && imp.evidence_reused.trim())
-                          .map((imp: any) => (typeof imp === "string" ? imp : imp.name))
-                      ]
-                        .map((e: string) => cleanKeywordName(e))
-                        .filter((kw: string) => kw.length > 0 && kw.length <= 60); // max 60 chars = real keyword, not a sentence
-
-                      const matchedLower = new Set(
-                        (analysisResult.top_strengths || []).map((s: any) =>
-                          (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
-                        )
-                      );
-
-                      const appliedWovenLower = new Set(
-                        appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
-                      );
-
-                      const unMatchedEvidence = Array.from(new Set(evidenceKeywords)).filter(
-                        (kw: string) => !matchedLower.has(kw.toLowerCase()) && !appliedWovenLower.has(kw.toLowerCase())
-                      );
-
-                      if (unMatchedEvidence.length === 0) return null;
-
-                      return (
-                        <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-                          <div className="flex items-center gap-1.5">
-                            <span className="h-2 w-2 rounded-full bg-amber-500" />
-                            <span className="text-[11px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-                              Supported in Evidence (Click to Weave into Skills)
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {unMatchedEvidence.map((kw: string, idx: number) => (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => handleQuickWeaveKeyword(kw)}
-                                disabled={weavingSingleKeyword === kw}
-                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/25 transition-all duration-150 cursor-pointer shadow-xs hover:scale-105 active:scale-95"
-                                title={`Click to weave '${kw}' into Technical Skills section`}
-                              >
-                                {weavingSingleKeyword === kw ? (
-                                  <div className="h-3 w-3 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin shrink-0" />
-                                ) : (
-                                  <Sparkles className="h-3 w-3 shrink-0 text-amber-500" />
-                                )}
-                                {kw}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* 🔴 Missing ATS Keywords — click to weave into skills section */}
-                    {(() => {
-                      const allMissing = [
-                        ...(analysisResult.sections || []).flatMap((s: any) => s.missing_keywords || []),
-                        ...(analysisResult.top_improvements || [])
-                          .filter((imp: any) => !imp.evidence_reused || !imp.evidence_reused.trim())
-                          .map((imp: any) => (typeof imp === "string" ? imp : imp.name))
-                      ]
-                        .map((k: string) => cleanKeywordName(k))
-                        .filter(Boolean);
-
-                      const matchedLower = new Set(
-                        (analysisResult.top_strengths || []).map((s: any) =>
-                          (typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)).toLowerCase()
-                        )
-                      );
-
-                      const appliedWovenLower = new Set(
-                        appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
-                      );
-
-                      const trulyMissing = Array.from(new Set(allMissing)).filter(
-                        (kw) => !matchedLower.has(kw.toLowerCase()) && !appliedWovenLower.has(kw.toLowerCase())
-                      );
-
-                      if (trulyMissing.length === 0) return null;
-
-                      return (
-                        <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-                          <div className="flex items-center gap-1.5">
-                            <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-                            <span className="text-[11px] font-extrabold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
-                              Missing ATS Keywords (Only in Job Description - Click to Manually Weave)
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {trulyMissing.map((kw, idx) => (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => handleQuickWeaveKeyword(kw)}
-                                disabled={weavingSingleKeyword === kw}
-                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-500/30 transition-all duration-150 cursor-pointer shadow-xs hover:scale-105 active:scale-95 group"
-                                title={`Click to manually weave missing JD keyword '${kw}' into Technical Skills section`}
-                              >
-                                {weavingSingleKeyword === kw ? (
-                                  <div className="h-3 w-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin shrink-0" />
-                                ) : (
-                                  <Plus className="h-3 w-3 shrink-0 text-rose-500 group-hover:scale-110" />
-                                )}
-                                {kw}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* ✉️ Tailored Cover Letter Card */}
                 <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 space-y-4 shadow-xl">
