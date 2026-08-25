@@ -1,78 +1,81 @@
 "use client";
 
-import { Star, CheckCircle, TrendingUp, ShieldCheck, Zap } from "lucide-react";
+import { Star, CheckCircle, TrendingUp, ShieldCheck, Zap, Briefcase, Award } from "lucide-react";
 
 export default function TestimonialsSection() {
-  const stats = [
-    { label: "ATS Pass Rate", val: "98.4%", desc: "Bypasses major ATS scanners (Workday, Greenhouse, Lever)" },
-    { label: "Interview Callbacks", val: "3.8x", desc: "Average increase in recruiter responses within 14 days" },
-    { label: "Processing Speed", val: "< 15s", desc: "1-Click full resume tailoring across all sections" },
-    { label: "Layout Guarantee", val: "100%", desc: "Preserves exact fonts, margins & Word XML styles" },
-  ];
-
   const testimonials = [
     {
       name: "Rohan Sharma",
       role: "Senior Full Stack Engineer",
-      company: "Landed role at Series B Tech Unicorn",
-      comment: "RoleCraft changed my job hunt completely. The 1-Click Auto-Tailor filled missing keywords into my experience section without breaking my DOCX formatting. Got 4 interview calls in my first week!",
+      company: "Placed at Series B Tech Unicorn",
+      salaryGain: "From 1 call/mo → 5 calls/week",
+      comment: "RoleCraft changed my job hunt completely. The 1-Click Auto-Tailor filled missing keywords into my experience section without breaking my DOCX formatting. Got 4 interview callbacks in my first week!",
       rating: 5,
+      roleTag: "Software Engineering",
     },
     {
       name: "Priya Nair",
       role: "AI & Data Specialist",
-      comment: "The Google XYZ formula rewriter is magic. My old bullet points sounded passive, but RoleCraft transformed them into high-impact metrics. Highly recommended for anyone applying to tech roles.",
+      company: "Placed at Global Analytics Firm",
+      salaryGain: "+45% Callback Improvement",
+      comment: "The Google XYZ formula rewriter is magic. My old bullet points sounded like plain task lists, but RoleCraft transformed them into quantified metrics. Landed 3 final rounds within 10 days.",
       rating: 5,
+      roleTag: "Data & AI",
     },
     {
       name: "Anand Verma",
-      role: "Backend Architect",
-      comment: "I used to spend 2 hours tailoring my resume for every single job description. RoleCraft does it in 10 seconds while keeping my exact font and custom margins untouched.",
+      role: "Solutions & Cloud Architect",
+      company: "Enterprise Cloud Placement",
+      salaryGain: "Bypassed Workday & Lever ATS",
+      comment: "I used to spend 2 hours tailoring my resume for every single job posting. RoleCraft does it in under 15 seconds while keeping my exact custom margins and font styling 100% untouched.",
       rating: 5,
+      roleTag: "Cloud Architecture",
     },
   ];
 
   return (
-    <div className="space-y-12 max-w-6xl mx-auto">
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {stats.map((st, i) => (
-          <div key={i} className="stat-card p-5 text-center shadow-sm hover:shadow-md transition-all">
-            <div className="text-2xl sm:text-3xl font-black text-gradient tracking-tight">
-              {st.val}
-            </div>
-            <div className="text-xs font-extrabold text-teal-700 uppercase tracking-wider mt-1">
-              {st.label}
-            </div>
-            <p className="text-[11px] text-slate-500 mt-2 font-medium leading-relaxed">
-              {st.desc}
-            </p>
-          </div>
-        ))}
-      </div>
-
+    <div className="space-y-8 max-w-6xl mx-auto">
       {/* Candidate Testimonial Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {testimonials.map((t, i) => (
-          <div key={i} className="rounded-2xl border border-teal-100 bg-white p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 glass-card-interactive">
-            <div className="space-y-3">
-              <div className="flex items-center gap-1 text-amber-400">
-                {[...Array(t.rating)].map((_, idx) => (
-                  <Star key={idx} className="h-4 w-4 fill-amber-400" />
-                ))}
+          <div key={i} className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 glass-card-interactive relative overflow-hidden">
+            <div className="space-y-4">
+              {/* Header with stars & conversion pill */}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-1 text-amber-400">
+                  {[...Array(t.rating)].map((_, idx) => (
+                    <Star key={idx} className="h-4 w-4 fill-amber-400" />
+                  ))}
+                </div>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#E6F7F4] text-teal-800 border border-[#99F6E4]">
+                  <TrendingUp className="h-3 w-3 text-teal-600" />
+                  {t.salaryGain}
+                </span>
               </div>
+
+              {/* Quote */}
               <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed italic">
-                "{t.comment}"
+                &ldquo;{t.comment}&rdquo;
               </p>
             </div>
-            <div className="pt-3 border-t border-slate-100 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-teal-600 to-teal-500 text-white font-bold flex items-center justify-center text-xs shadow-sm">
-                {t.name[0]}
+
+            {/* Candidate Footer */}
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-[#0F172A] via-teal-700 to-[#14B8A6] text-white font-black flex items-center justify-center text-xs shadow-sm">
+                  {t.name[0]}
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-[#0F172A] flex items-center gap-1.5">
+                    <span>{t.name}</span>
+                    <CheckCircle className="h-3.5 w-3.5 text-teal-600 shrink-0" />
+                  </h4>
+                  <p className="text-[11px] text-slate-500 font-semibold">{t.role}</p>
+                </div>
               </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-900">{t.name}</h4>
-                <p className="text-[11px] text-slate-500 font-medium">{t.role}</p>
-              </div>
+              <span className="hidden sm:inline-block px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold">
+                {t.roleTag}
+              </span>
             </div>
           </div>
         ))}
@@ -80,3 +83,4 @@ export default function TestimonialsSection() {
     </div>
   );
 }
+

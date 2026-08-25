@@ -3854,41 +3854,122 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              {/* Step 1 */}
-              <div className="rounded-2xl border border-teal-100 bg-white p-6 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden group glass-card-interactive">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-600 to-cyan-400" />
-                <div className="h-11 w-11 rounded-xl icon-gradient bg-gradient-to-br from-blue-600 to-blue-500 text-white font-black text-lg flex items-center justify-center shadow-sm">
-                  1
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {/* Step 1: Upload Base Resume */}
+              <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 relative overflow-hidden group glass-card-interactive">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="px-3 py-1 rounded-full bg-[#E6F7F4] border border-[#99F6E4] text-teal-800 font-black text-xs">
+                      Step 01
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Input Stage
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-[#0F172A] group-hover:text-teal-700 transition-colors">
+                      Upload Base Resume
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium leading-relaxed mt-1">
+                      Upload your existing Word (.docx) or PDF resume. RoleCraft parses low-level XML tags to map fonts, tables, and styles.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-base font-bold text-slate-900 group-hover:text-teal-700 transition-colors">Upload Base Resume</h3>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                  Upload your existing `.docx` base resume. RoleCraft parses low-level XML tags to map structure, fonts, and styles.
-                </p>
+
+                {/* Mini Mockup 1: DOCX XML Parser */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-xs font-sans">
+                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-700">
+                    <span className="flex items-center gap-1.5">
+                      <FileText className="h-3.5 w-3.5 text-teal-600" />
+                      resume_base.docx
+                    </span>
+                    <span className="text-emerald-600 font-bold">100% Parsed</span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white border border-slate-200/60 font-mono text-[10px] text-slate-500 flex items-center justify-between">
+                    <span>&lt;w:pPr&gt; Calibri 11pt</span>
+                    <span className="text-teal-700 font-bold">0 XML Drift</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Step 2 */}
-              <div className="rounded-2xl border border-cyan-100 bg-white p-6 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden group glass-card-interactive">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-400 to-indigo-500" />
-                <div className="h-11 w-11 rounded-xl icon-gradient bg-gradient-to-br from-cyan-600 to-teal-600 text-white font-black text-lg flex items-center justify-center shadow-sm">
-                  2
+              {/* Step 2: Paste Job Description */}
+              <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 relative overflow-hidden group glass-card-interactive">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="px-3 py-1 rounded-full bg-[#E6F7F4] border border-[#99F6E4] text-teal-800 font-black text-xs">
+                      Step 02
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      AI Audit
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-[#0F172A] group-hover:text-teal-700 transition-colors">
+                      Extract Competencies
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium leading-relaxed mt-1">
+                      Paste the target job description. The AI extracts core requirements, priority ATS keywords, and missing gaps.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-base font-bold text-slate-900 group-hover:text-teal-700 transition-colors">Paste Job Description</h3>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                  Paste the Target Job Description. Our LLM pipeline detects key skills, missing keywords, and role priorities.
-                </p>
+
+                {/* Mini Mockup 2: Keyword Cloud */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-700">
+                    <span>Detected ATS Targets</span>
+                    <span className="text-teal-700 font-bold">98% Fit</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="px-2 py-0.5 rounded-md bg-teal-50 text-teal-800 border border-teal-200 text-[10px] font-bold">
+                      + Cloud Arch
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold">
+                      + Distributed Systems
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-[#FFF1EE] text-[#FF6B4A] border border-[#FFCFC4] text-[10px] font-bold">
+                      + CI/CD
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              {/* Step 3 */}
-              <div className="rounded-2xl border border-amber-100 bg-white p-6 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden group glass-card-interactive">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-amber-400 to-blue-500" />
-                <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-400 text-white font-black text-lg flex items-center justify-center shadow-sm">
-                  3
+              {/* Step 3: 1-Click Auto-Tailor */}
+              <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 relative overflow-hidden group glass-card-interactive">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="px-3 py-1 rounded-full bg-[#E6F7F4] border border-[#99F6E4] text-teal-800 font-black text-xs">
+                      Step 03
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Export
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-[#0F172A] group-hover:text-teal-700 transition-colors">
+                      1-Click Tailor &amp; Download
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium leading-relaxed mt-1">
+                      Click &quot;Auto-Tailor&quot; to rewrite weak bullets using Google XYZ, embed missing keywords, and download the patched file.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-base font-bold text-slate-900 group-hover:text-teal-700 transition-colors">1-Click Auto-Tailor &amp; Download</h3>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                  Click '⚡ Auto-Tailor Full Resume' to rewrite summary, weave keywords, and download your patched `.docx` resume.
-                </p>
+
+                {/* Mini Mockup 3: Tailored File Ready */}
+                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-teal-50 to-emerald-50/60 border border-teal-200 space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-[11px] font-extrabold text-teal-900">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="h-3 w-3 text-[#FF6B4A]" />
+                      Tailoring Complete
+                    </span>
+                    <span className="text-emerald-700 font-bold">&lt; 15s</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[10px] font-mono text-slate-600">tailored_resume.docx</span>
+                    <span className="px-2 py-0.5 rounded-md bg-teal-600 text-white font-extrabold text-[10px] shadow-2xs">
+                      Ready
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
@@ -3913,7 +3994,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 Trusted by Top Tech Candidates
               </h2>
               <p className="text-sm sm:text-base text-slate-600 font-medium">
-                See real metrics and stories from candidates who landed offers.
+                See verified results from candidates who landed offers at leading companies.
               </p>
             </div>
             <TestimonialsSection />
@@ -3932,7 +4013,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Free Plan Card */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 glass-card-interactive">
+              <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 glass-card-interactive">
                 <div className="space-y-4">
                   <span className="text-xs font-black uppercase text-slate-400 tracking-widest">Free Tier</span>
                   <div className="flex items-baseline gap-1">
@@ -3956,14 +4037,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 </div>
                 <button
                   onClick={() => switchNavTab("workspace")}
-                  className="w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer border border-slate-200"
+                  className="w-full py-3 rounded-xl bg-[#E6F7F4] hover:bg-[#ccfbf1] text-teal-900 font-bold text-xs transition-all cursor-pointer border border-[#99F6E4]"
                 >
                   Start Free
                 </button>
               </div>
 
               {/* Pro Plan Card — Featured */}
-              <div className="pricing-popular rounded-2xl p-6 flex flex-col justify-between space-y-6 relative">
+              <div className="pricing-popular rounded-3xl p-6 sm:p-7 flex flex-col justify-between space-y-6 relative">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-gradient-to-r from-teal-600 to-teal-500 text-white font-extrabold text-[10px] uppercase tracking-widest shadow-lg shadow-teal-500/30 whitespace-nowrap">
                   ✦ Most Popular
                 </div>
@@ -4002,9 +4083,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               </div>
 
               {/* Elite Plan Card */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 glass-card-interactive">
+              <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 glass-card-interactive">
                 <div className="space-y-4">
-                  <span className="text-xs font-black uppercase text-teal-600 tracking-widest">Elite Plan</span>
+                  <span className="text-xs font-black uppercase text-teal-700 tracking-widest">Elite Plan</span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-slate-900">₹599</span>
                     <span className="text-xs text-slate-400 line-through">₹3,000</span>
@@ -4027,11 +4108,59 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 </div>
                 <button
                   onClick={() => setIsSubscriptionModalOpen(true)}
-                  className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#0F172A] via-teal-800 to-[#14B8A6] hover:from-slate-800 hover:to-teal-600 text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
                 >
                   Upgrade to Elite Plan
                 </button>
               </div>
+            </div>
+          </section>
+
+          {/* HIGH-IMPACT FINAL CTA BANNER */}
+          <section className="relative overflow-hidden rounded-3xl p-8 sm:p-12 bg-gradient-to-r from-[#E6F7F4] via-white to-teal-50/60 border border-[#99F6E4]/90 shadow-xl shadow-teal-500/5 max-w-5xl mx-auto text-center space-y-6">
+            <div className="absolute top-0 right-0 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#FF6B4A]/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 space-y-3 max-w-2xl mx-auto">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-teal-200 text-teal-800 text-[11px] font-black uppercase tracking-wider shadow-2xs">
+                <Sparkles className="h-3.5 w-3.5 text-[#FF6B4A]" />
+                <span>Start In 15 Seconds</span>
+              </span>
+              <h2 className="text-2xl sm:text-4xl font-black text-[#0F172A] tracking-tight">
+                Ready to Triple Your Interview Callbacks?
+              </h2>
+              <p className="text-sm sm:text-base text-slate-600 font-medium leading-relaxed">
+                Join thousands of candidates beating ATS scanners and landing recruiter interviews with 100% visual DOCX preservation.
+              </p>
+            </div>
+
+            <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+              <button
+                type="button"
+                onClick={() => switchNavTab("workspace")}
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl btn-primary font-black text-sm shadow-xl shadow-teal-600/25 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Sparkles className="h-4 w-4 text-[#FF6B4A]" />
+                <span>⚡ Launch Workspace Free</span>
+              </button>
+              <Link
+                href="/resume-builder"
+                className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white hover:bg-slate-50 text-[#0F172A] font-extrabold text-sm border border-slate-200 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Open Resume Builder</span>
+              </Link>
+            </div>
+
+            <div className="relative z-10 flex items-center justify-center gap-6 text-xs text-slate-500 font-semibold pt-2 flex-wrap">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle className="h-3.5 w-3.5 text-emerald-600" /> No Credit Card Required
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle className="h-3.5 w-3.5 text-emerald-600" /> 100% DOCX Format Match
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle className="h-3.5 w-3.5 text-emerald-600" /> Instant PDF &amp; Word Export
+              </span>
             </div>
           </section>
 
