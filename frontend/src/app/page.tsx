@@ -1424,6 +1424,28 @@ export default function Home() {
     setSuccessNotification(`Loaded past session for "${filenameStr}" into workspace!`);
   };
 
+  const VIP_EMAILS_FE = ["ahbarajaib@gmail.com", "absarajaib@gmail.com"];
+  const [isReloadingCredits, setIsReloadingCredits] = useState(false);
+
+  const handleReloadCredits = async () => {
+    if (!token) return;
+    setIsReloadingCredits(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://api.rolecraft.tech"}/api/v1/auth/reload-credits`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        await refreshMe();
+        setSuccessNotification("✅ Credits reloaded successfully!");
+      }
+    } catch {
+      // silent fail
+    } finally {
+      setIsReloadingCredits(false);
+    }
+  };
+
   const handleOpenMasterResume = async () => {
     if (!token) {
       setShowAuthModal(true);
@@ -2904,9 +2926,21 @@ export default function Home() {
 
                       <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
                         <span className="text-slate-500 dark:text-slate-400 font-medium">Credits Available</span>
-                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
-                          {user.credits} Credits
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
+                            {user.credits} Credits
+                          </span>
+                          {VIP_EMAILS_FE.includes(user.email?.toLowerCase()) && (
+                            <button
+                              onClick={handleReloadCredits}
+                              disabled={isReloadingCredits}
+                              title="Reload VIP credits"
+                              className="px-2 py-0.5 rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-extrabold text-[10px] transition-all cursor-pointer shadow-sm flex items-center gap-1"
+                            >
+                              {isReloadingCredits ? "..." : "↺ Reload"}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
 

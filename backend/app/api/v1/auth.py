@@ -241,3 +241,20 @@ def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     )
 
 
+@router.post("/reload-credits", response_model=UserResponse)
+def reload_credits(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Reload credits to VIP amount for VIP emails, or to FREE_TIER_CREDITS for regular users.
+    
+    VIP users can call this any time their credits run low to top back up to VIP_CREDITS.
+    Regular users get refilled to FREE_TIER_CREDITS (useful for manual top-ups by admin).
+    """
+    if user.email.lower() in [e.lower() for e in settings.VIP_EMAILS]:
+        user.credits = settings.VIP_CREDITS
+    else:
+        user.credits = settings.FREE_TIER_CREDITS
+    db.commit()
+    db.refresh(user)
+    return serialize_user_response(user)
