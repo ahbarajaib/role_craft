@@ -47,6 +47,9 @@ import {
   Zap,
   SlidersHorizontal,
   LifeBuoy,
+  Phone,
+  Eye,
+  Scissors,
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
@@ -3018,62 +3021,222 @@ export default function Home() {
       </header>
 
       {activeNavTab === "landing" ? (
-        <div className="relative max-w-[1440px] mx-auto space-y-24 py-4 animate-fade-in">
-          {/* HERO BANNER SECTION */}
-          <section className="text-center space-y-8 max-w-4xl mx-auto pt-6 pb-10">
-            <div className="section-eyebrow animate-badge-float">
-              <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-              <span>Recruiter-Grade AI Resume Optimization Engine</span>
-            </div>
-
-            <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-[1.12]">
-              Tailor Your Resume to{" "}
-              <br className="hidden sm:block" />
-              Any Role in{" "}
-              <span className="text-gradient">1&#8209;Click</span>
-            </h1>
-
-            <p className="text-base sm:text-xl text-slate-600 font-medium max-w-2xl mx-auto leading-relaxed">
-              Beat ATS scanners, weave missing technical keywords naturally, and triple your interview callbacks while preserving 100% of your DOCX font &amp; layout formatting.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <button
-                onClick={() => switchNavTab("workspace")}
-                className="w-full sm:w-auto px-8 py-4 btn-glow text-base flex items-center justify-center gap-2.5 cursor-pointer"
-              >
-                <Sparkles className="h-5 w-5 text-amber-300 relative z-10" />
-                <span className="relative z-10">⚡ Launch Optimizer Workspace</span>
-              </button>
-              <a
-                href="#how-it-works"
-                className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 font-bold text-base border border-slate-200 hover:border-blue-200 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>See How It Works</span>
-                <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
-
-            {/* Live Trust Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-10">
-              <div className="gradient-divider sm:hidden col-span-2 mb-2" />
-              {[
-                { value: "98.4%", label: "ATS Pass Rate" },
-                { value: "3.8×", label: "More Interview Calls" },
-                { value: "<15s", label: "Full 1-Click Tailor" },
-                { value: "100%", label: "DOCX Layout Integrity" },
-              ].map(({ value, label }) => (
-                <div key={label} className="stat-card p-4 text-center space-y-1">
-                  <div className="text-2xl font-black text-gradient">{value}</div>
-                  <div className="text-xs font-semibold text-slate-500">{label}</div>
+        <div className="relative max-w-[1440px] mx-auto space-y-20 py-2 sm:py-4 animate-fade-in">
+          {/* HERO 2-COLUMN SECTION */}
+          <section className="space-y-12 pt-4 pb-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+              {/* Left Column: Headline & Action CTAs */}
+              <div className="lg:col-span-6 space-y-6 lg:space-y-7 text-left">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50/90 border border-blue-200/80 text-blue-700 font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider shadow-2xs">
+                  <Sparkles className="h-3.5 w-3.5 text-blue-600 animate-pulse" />
+                  <span>Recruiter-Grade AI Resume Optimization Engine</span>
                 </div>
-              ))}
+
+                <h1 className="text-4xl sm:text-5xl xl:text-6xl font-black text-slate-900 tracking-tight leading-[1.12]">
+                  Tailor Your Resume<br />
+                  to Any Role in{" "}
+                  <span className="text-blue-600">1&#8209;Click</span>
+                </h1>
+
+                <p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-xl">
+                  Beat ATS scanners, weave missing technical keywords naturally, and triple your interview callbacks while preserving 100% of your DOCX font &amp; layout formatting.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-3.5 pt-2">
+                  <button
+                    onClick={() => switchNavTab("workspace")}
+                    className="px-7 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-sm shadow-lg shadow-blue-600/30 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <Zap className="h-4 w-4 text-amber-300" />
+                    <span>Launch Optimizer Workspace</span>
+                  </button>
+                  <a
+                    href="#how-it-works"
+                    className="px-5 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm border border-slate-200 shadow-sm transition-all flex items-center gap-2 cursor-pointer hover:border-slate-300"
+                  >
+                    <span>See How It Works</span>
+                    <span className="text-[10px] text-slate-700">▶</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Right Column: Interactive Floating Resume Preview & ATS Score Overlay */}
+              <div className="lg:col-span-6 relative">
+                {/* Background Ambient Glows */}
+                <div className="absolute -top-12 -right-12 w-72 h-72 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-gradient-to-tr from-indigo-400/15 to-blue-400/15 rounded-full blur-3xl pointer-events-none" />
+
+                {/* Main Resume Window Container */}
+                <div className="relative rounded-3xl bg-white/95 border border-slate-200 shadow-2xl p-5 sm:p-7 backdrop-blur-md transition-all hover:shadow-blue-500/10">
+                  
+                  {/* Internal Layout: Left Mini Tool Rail + Paper Content */}
+                  <div className="flex items-start gap-4">
+                    {/* Left Mini Icon Rail */}
+                    <div className="hidden sm:flex flex-col items-center gap-3.5 pt-1 text-slate-400 border-r border-slate-100 pr-3.5 shrink-0 select-none">
+                      <div className="h-6 w-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <Sparkles className="h-3.5 w-3.5" />
+                      </div>
+                      <SlidersHorizontal className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
+                      <Eye className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
+                      <Code className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
+                      <FileText className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
+                      <Copy className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
+                      <Download className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
+                      <Scissors className="h-3.5 w-3.5 hover:text-blue-600 transition-colors" />
+                    </div>
+
+                    {/* Resume Paper Content */}
+                    <div className="flex-1 space-y-3.5 text-left text-slate-800 pr-0 sm:pr-24">
+                      {/* Candidate Header */}
+                      <div className="space-y-0.5">
+                        <h3 className="text-base font-black text-slate-900">Mohammed Ahbar</h3>
+                        <p className="text-[11px] font-semibold text-slate-500">Full Stack Developer</p>
+                        <p className="text-[10px] text-slate-400 font-medium pt-0.5 flex flex-wrap gap-2">
+                          <span>✉ ahbar@example.com</span>
+                          <span>•</span>
+                          <span>📱 +971 50 123 4567</span>
+                          <span>•</span>
+                          <span>📍 Dubai, UAE</span>
+                        </p>
+                      </div>
+
+                      {/* Section: Professional Summary */}
+                      <div className="space-y-1 pt-1 border-t border-slate-100">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">Professional Summary</span>
+                        <p className="text-[10px] text-slate-500 leading-relaxed">
+                          Accomplished Full Stack Developer with 7+ years of experience architecting resilient distributed cloud systems and AI-powered workflow automation.
+                        </p>
+                      </div>
+
+                      {/* Section: Technical Skills */}
+                      <div className="space-y-1 pt-1 border-t border-slate-100">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">Technical Skills</span>
+                        <div className="text-[10px] space-y-0.5 text-slate-600 font-medium">
+                          <div><strong className="text-slate-800">Languages:</strong> JavaScript, TypeScript, Python, Java, SQL</div>
+                          <div><strong className="text-slate-800">Frameworks:</strong> React, Next.js, Node.js, Express, Django</div>
+                          <div><strong className="text-slate-800">Databases:</strong> PostgreSQL, MongoDB, MySQL</div>
+                          <div><strong className="text-slate-800">Tools:</strong> Docker, Kubernetes, AWS, Git, CI/CD</div>
+                        </div>
+                      </div>
+
+                      {/* Section: Professional Experience */}
+                      <div className="space-y-1 pt-1 border-t border-slate-100">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="font-black text-slate-800">Senior Full Stack Developer</span>
+                          <span className="text-slate-400 text-[9px]">Jan 2022 – Present</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 font-medium">Tech Solutions Inc.</p>
+                        <ul className="text-[10px] text-slate-500 space-y-0.5 list-disc list-inside">
+                          <li>Engineered real-time document transformation pipelines reducing latency by 45%.</li>
+                          <li>Mentored cross-functional engineering teams across frontend and backend services.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Floating ATS Match Score Badge Overlay */}
+                  <div className="absolute top-4 right-4 sm:-right-4 w-48 sm:w-52 p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-xl space-y-2.5 z-20 animate-fade-in-up">
+                    <div>
+                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">ATS Match Score</div>
+                      <div className="flex items-baseline justify-between pt-0.5">
+                        <span className="text-3xl font-black text-emerald-600 tracking-tight">98%</span>
+                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Excellent Match
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 pt-2 border-t border-slate-100 text-[10px] font-semibold text-slate-600">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                          Keywords Matched
+                        </span>
+                        <span className="font-extrabold text-slate-800">32/32</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                          Skills Alignment
+                        </span>
+                        <span className="font-extrabold text-slate-800">98%</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                          Format Preserved
+                        </span>
+                        <span className="font-extrabold text-slate-800">100%</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                          Content Quality
+                        </span>
+                        <span className="font-extrabold text-emerald-600">Excellent</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            {/* Live Trust Metrics Row (4 Colored Icon Tiles) */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+              {/* Card 1: Blue */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-md hover:border-blue-200 transition-all glass-card-interactive">
+                <div className="h-11 w-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+                <div className="text-left">
+                  <div className="text-2xl font-black text-slate-900 leading-tight">98.4%</div>
+                  <div className="text-xs font-semibold text-slate-500">ATS Pass Rate</div>
+                </div>
+              </div>
+
+              {/* Card 2: Purple */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-md hover:border-indigo-200 transition-all glass-card-interactive">
+                <div className="h-11 w-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-indigo-500/20">
+                  <Phone className="h-5 w-5" />
+                </div>
+                <div className="text-left">
+                  <div className="text-2xl font-black text-slate-900 leading-tight">3.8x</div>
+                  <div className="text-xs font-semibold text-slate-500">More Interview Calls</div>
+                </div>
+              </div>
+
+              {/* Card 3: Emerald */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-md hover:border-emerald-200 transition-all glass-card-interactive">
+                <div className="h-11 w-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/20">
+                  <Zap className="h-5 w-5" />
+                </div>
+                <div className="text-left">
+                  <div className="text-2xl font-black text-slate-900 leading-tight">&lt;15s</div>
+                  <div className="text-xs font-semibold text-slate-500">Full 1-Click Tailor</div>
+                </div>
+              </div>
+
+              {/* Card 4: Amber/Orange */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-md hover:border-amber-200 transition-all glass-card-interactive">
+                <div className="h-11 w-11 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-amber-500/20">
+                  <Shield className="h-5 w-5" />
+                </div>
+                <div className="text-left">
+                  <div className="text-2xl font-black text-slate-900 leading-tight">100%</div>
+                  <div className="text-xs font-semibold text-slate-500">DOCX Layout Integrity</div>
+                </div>
+              </div>
             </div>
           </section>
 
           {/* HOW IT WORKS SECTION */}
           <section id="how-it-works" className="space-y-8 scroll-mt-24">
             <div className="text-center space-y-3 max-w-2xl mx-auto">
+              <div className="section-eyebrow">
+                <Sparkles className="h-3 w-3 text-blue-600" />
+                <span>Simple. Fast. Effective.</span>
+              </div>
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
                 How RoleCraft Works in 3 Simple Steps
               </h2>
