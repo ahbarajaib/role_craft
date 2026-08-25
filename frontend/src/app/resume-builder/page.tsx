@@ -451,21 +451,26 @@ export default function ResumeBuilderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
+    <div className="min-h-screen bg-[#f0f4ff] hero-mesh text-slate-900 flex flex-col font-sans">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 py-3">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-blue-100 px-4 lg:px-8 py-3 shadow-2xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="flex items-center gap-2 text-slate-900 dark:text-white font-black text-lg hover:opacity-90 transition-all"
+              className="flex items-center gap-2.5 text-slate-900 font-black text-lg hover:opacity-90 transition-all group"
             >
-              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-                <Sparkles className="h-4.5 w-4.5" />
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-400 opacity-20 blur-sm group-hover:opacity-35 transition-opacity" />
+                <img
+                  src="/logo.png"
+                  alt="RoleCraft Logo"
+                  className="relative h-9 w-9 object-contain rounded-xl bg-white p-0.5 shadow-xs ring-1 ring-blue-100 transition-all"
+                />
               </div>
-              <span>RoleCraft</span>
+              <span className="text-gradient font-black tracking-tight text-xl">RoleCraft</span>
             </Link>
-            <span className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 font-bold text-[11px]">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 font-bold text-[11px]">
               AI Resume Builder
             </span>
           </div>
@@ -473,7 +478,7 @@ export default function ResumeBuilderPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/workspace"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-blue-700 hover:bg-blue-50/60 border border-slate-200 hover:border-blue-200 transition-all"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Back to Workspace
             </Link>
@@ -485,8 +490,8 @@ export default function ResumeBuilderPage() {
                 disabled={isSaving || saveStatus === "saved"}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
                   saveStatus === "unsaved"
-                    ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 cursor-default"
+                    ? "btn-primary text-white shadow-blue-500/20"
+                    : "bg-slate-100 text-slate-500 border border-slate-200 cursor-default"
                 }`}
               >
                 <Save className="h-3.5 w-3.5" />
@@ -498,7 +503,7 @@ export default function ResumeBuilderPage() {
               <button
                 type="button"
                 onClick={() => setIsProfileModalOpen(true)}
-                className="h-8 w-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs hover:bg-indigo-500/20 transition-all cursor-pointer"
+                className="h-8 w-8 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-bold text-xs hover:bg-blue-100 transition-all cursor-pointer"
                 title="Profile & Settings"
               >
                 <User className="h-4 w-4" />
@@ -507,7 +512,7 @@ export default function ResumeBuilderPage() {
               <button
                 type="button"
                 onClick={() => setShowAuthModal(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-700 transition-all cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl btn-primary text-white font-bold text-xs transition-all cursor-pointer"
               >
                 Sign In
               </button>
