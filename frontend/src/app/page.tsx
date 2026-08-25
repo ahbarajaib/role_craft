@@ -1240,6 +1240,204 @@ function LoadingState() {
   );
 }
 
+function AutoTailoringProgressModal({
+  targetRole,
+}: {
+  targetRole: string;
+}) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [progress, setProgress] = useState(14);
+
+  const TAILOR_STEPS = [
+    {
+      title: "Analyzing Target Role & ATS Keywords",
+      desc: "Extracting required competencies, frameworks & role keywords from JD",
+      icon: Search,
+    },
+    {
+      title: "Rewriting Experience with Google XYZ Formula",
+      desc: "Accomplished [X], as measured by [Y], by doing [Z] with active verbs",
+      icon: Briefcase,
+    },
+    {
+      title: "Weaving High-Priority ATS Keywords",
+      desc: "Embedding missing technical stack into bullet points & skill matrix",
+      icon: Sparkles,
+    },
+    {
+      title: "Optimizing Summary & Project Architecture",
+      desc: "Elevating executive pitch & aligning project toolings to JD",
+      icon: Layers,
+    },
+    {
+      title: "Generating Side-by-Side Comparison & Patch",
+      desc: "Formatting final DOCX patch & comparison diff cards",
+      icon: FileText,
+    },
+  ];
+
+  useEffect(() => {
+    // Total tailor time is ~4-6s
+    const stepInterval = setInterval(() => {
+      setStepIndex((prev) => (prev < TAILOR_STEPS.length - 1 ? prev + 1 : prev));
+    }, 1100);
+
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 96) return 96;
+        return prev + (prev < 75 ? 3 : 1);
+      });
+    }, 75);
+
+    return () => {
+      clearInterval(stepInterval);
+      clearInterval(progressInterval);
+    };
+  }, [TAILOR_STEPS.length]);
+
+  return (
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-xl animate-fade-in">
+      <div className="relative w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-700/80 shadow-2xl overflow-hidden p-6 sm:p-8 text-white space-y-6 animate-scale-in">
+        {/* Ambient background glows */}
+        <div className="absolute -top-24 -right-24 w-56 h-56 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-56 h-56 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
+
+        {/* Top Engine Badge */}
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-[11px] font-bold text-slate-300">
+            <Zap className="h-3.5 w-3.5 text-amber-300 fill-amber-300 animate-pulse" />
+            <span>16-Worker Parallel AI Engine</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-black text-emerald-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            LIVE TAILORING
+          </div>
+        </div>
+
+        {/* Center Animated Glowing Ring Graphic */}
+        <div className="relative z-10 flex flex-col items-center text-center space-y-3">
+          <div className="relative h-20 w-20 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-indigo-500 animate-spin blur-md opacity-70" style={{ animationDuration: "4s" }} />
+            <div className="relative h-16 w-16 rounded-2xl bg-slate-950 flex items-center justify-center border border-white/20 shadow-2xl">
+              <Sparkles className="h-8 w-8 text-amber-300 animate-pulse" />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <h3 className="text-xl font-black text-white tracking-tight">
+              Auto-Tailoring Resume
+            </h3>
+            <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+              Optimizing for{" "}
+              <span className="font-extrabold text-indigo-300 px-1.5 py-0.5 rounded bg-indigo-500/20 border border-indigo-400/30">
+                {targetRole || "Target Position"}
+              </span>
+            </p>
+          </div>
+        </div>
+
+        {/* Shimmer Progress Bar */}
+        <div className="relative z-10 space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+            <span className="flex items-center gap-1.5">
+              <Activity className="h-3.5 w-3.5 text-indigo-400" />
+              Tailoring Progress
+            </span>
+            <span className="text-emerald-400 font-black text-sm">{progress}%</span>
+          </div>
+          <div className="h-2.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+            <div
+              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-500 rounded-full transition-all duration-200 relative overflow-hidden"
+              style={{ width: `${progress}%` }}
+            >
+              <div className="absolute inset-0 bg-white/25 animate-pulse" />
+            </div>
+          </div>
+        </div>
+
+        {/* 5-Step Pipeline Live List */}
+        <div className="relative z-10 space-y-1.5">
+          {TAILOR_STEPS.map((step, idx) => {
+            const isDone = idx < stepIndex;
+            const isCurrent = idx === stepIndex;
+            const StepIcon = step.icon;
+
+            return (
+              <div
+                key={idx}
+                className={`p-3 rounded-xl border transition-all duration-300 flex items-center justify-between gap-3 ${
+                  isCurrent
+                    ? "bg-slate-800/90 border-indigo-500/60 shadow-lg shadow-indigo-950/40"
+                    : isDone
+                    ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-300"
+                    : "bg-slate-950/30 border-slate-800/60 text-slate-500 opacity-60"
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div
+                    className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 border ${
+                      isDone
+                        ? "bg-emerald-500/20 border-emerald-400/40 text-emerald-400"
+                        : isCurrent
+                        ? "bg-indigo-500/30 border-indigo-400/50 text-indigo-300"
+                        : "bg-slate-800 border-slate-700 text-slate-500"
+                    }`}
+                  >
+                    {isDone ? (
+                      <Check className="h-4 w-4 text-emerald-400" />
+                    ) : isCurrent ? (
+                      <div className="h-3.5 w-3.5 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+                    ) : (
+                      <StepIcon className="h-3.5 w-3.5" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className={`text-xs font-bold truncate ${
+                        isDone
+                          ? "text-emerald-300"
+                          : isCurrent
+                          ? "text-white"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      {step.title}
+                    </p>
+                    <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                      {step.desc}
+                    </p>
+                  </div>
+                </div>
+
+                {isCurrent && (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-400/40 animate-pulse shrink-0">
+                    WORKING
+                  </span>
+                )}
+                {isDone && (
+                  <span className="text-[10px] font-bold text-emerald-400 shrink-0">
+                    ✓ Done
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Security & Truthfulness Notice Footer */}
+        <div className="relative z-10 pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+          <span className="flex items-center gap-1.5 text-slate-400">
+            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+            Strict Truthfulness Guard Active
+          </span>
+          <span className="text-slate-500 font-semibold">~2–4 sec</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function cleanKeywordName(rawName: string): string {
   if (!rawName) return "";
@@ -5121,44 +5319,9 @@ export default function Home() {
 
       {/* ─── ⚡ 1-Click Auto-Tailoring Full Screen Progress Modal ────────────── */}
       {isAutoTailoring && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6 text-center animate-scale-up">
-            <div className="relative mx-auto h-20 w-20 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-500 via-teal-400 to-emerald-500 animate-spin blur-xs opacity-75" />
-              <div className="relative h-16 w-16 rounded-full bg-slate-950 flex items-center justify-center border border-white/20 shadow-inner">
-                <Sparkles className="h-8 w-8 text-amber-300 animate-pulse" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                ⚡ Auto-Tailoring Your Resume...
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-                AI is rewriting your Work Experience, Skills, Projects, and Summary for {customTargetRole || analysisResult?.overall_summary?.job_title || "Target Role"}.
-              </p>
-            </div>
-
-            <div className="space-y-2.5 pt-2 text-left bg-slate-50 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80">
-              <div className="flex items-center gap-2.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-                <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
-                <span>Target Role & ATS Keywords Analyzed</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-xs text-indigo-600 dark:text-indigo-400 font-bold animate-pulse">
-                <div className="h-3.5 w-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin shrink-0" />
-                <span>Rewriting Bullets (Google XYZ Formula)</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-xs text-slate-400 font-semibold opacity-70">
-                <div className="h-3.5 w-3.5 rounded-full border border-slate-300 shrink-0" />
-                <span>Weaving Stack & Impact Metrics</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-xs text-slate-400 font-semibold opacity-70">
-                <div className="h-3.5 w-3.5 rounded-full border border-slate-300 shrink-0" />
-                <span>Generating Side-by-Side Comparison Cards</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <AutoTailoringProgressModal
+          targetRole={customTargetRole || analysisResult?.overall_summary?.job_title || "Target Role"}
+        />
       )}
 
       {/* ─── ⚡ Keyword Weave Selection Modal ───────────────────────────────── */}
