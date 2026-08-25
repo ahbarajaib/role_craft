@@ -1296,21 +1296,21 @@ function AutoTailoringProgressModal({
   }, [TAILOR_STEPS.length]);
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-xl animate-fade-in">
-      <div className="relative w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-700/80 shadow-2xl overflow-hidden p-6 sm:p-8 text-white space-y-6 animate-scale-in">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-lg rounded-3xl bg-white border border-slate-200 shadow-2xl shadow-blue-500/10 overflow-hidden p-6 sm:p-8 text-slate-900 space-y-6 animate-scale-in">
         {/* Ambient background glows */}
-        <div className="absolute -top-24 -right-24 w-56 h-56 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-56 h-56 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -right-24 w-56 h-56 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
 
         {/* Top Engine Badge */}
         <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-[11px] font-bold text-slate-300">
-            <Zap className="h-3.5 w-3.5 text-amber-300 fill-amber-300 animate-pulse" />
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-[11px] font-bold text-blue-700">
+            <Zap className="h-3.5 w-3.5 text-blue-600 fill-blue-600 animate-pulse" />
             <span>16-Worker Parallel AI Engine</span>
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-black text-emerald-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-black text-emerald-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             LIVE TAILORING
           </div>
         </div>
@@ -1318,19 +1318,19 @@ function AutoTailoringProgressModal({
         {/* Center Animated Glowing Ring Graphic */}
         <div className="relative z-10 flex flex-col items-center text-center space-y-3">
           <div className="relative h-20 w-20 flex items-center justify-center">
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-indigo-500 animate-spin blur-md opacity-70" style={{ animationDuration: "4s" }} />
-            <div className="relative h-16 w-16 rounded-2xl bg-slate-950 flex items-center justify-center border border-white/20 shadow-2xl">
-              <Sparkles className="h-8 w-8 text-amber-300 animate-pulse" />
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-blue-600 animate-spin blur-md opacity-60" style={{ animationDuration: "4s" }} />
+            <div className="relative h-16 w-16 rounded-2xl bg-white flex items-center justify-center border border-slate-200 shadow-xl">
+              <Sparkles className="h-8 w-8 text-blue-600 animate-pulse" />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <h3 className="text-xl font-black text-white tracking-tight">
+            <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">
               Auto-Tailoring Resume
             </h3>
-            <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+            <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
               Optimizing for{" "}
-              <span className="font-extrabold text-indigo-300 px-1.5 py-0.5 rounded bg-indigo-500/20 border border-indigo-400/30">
+              <span className="font-extrabold text-blue-700 px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200">
                 {targetRole || "Target Position"}
               </span>
             </p>
@@ -1339,19 +1339,19 @@ function AutoTailoringProgressModal({
 
         {/* Shimmer Progress Bar */}
         <div className="relative z-10 space-y-2">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-600">
             <span className="flex items-center gap-1.5">
-              <Activity className="h-3.5 w-3.5 text-indigo-400" />
+              <Activity className="h-3.5 w-3.5 text-blue-600" />
               Tailoring Progress
             </span>
-            <span className="text-emerald-400 font-black text-sm">{progress}%</span>
+            <span className="text-blue-600 font-extrabold text-sm">{progress}%</span>
           </div>
-          <div className="h-2.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+          <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-0.5">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-500 rounded-full transition-all duration-200 relative overflow-hidden"
+              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-blue-600 rounded-full transition-all duration-200 relative overflow-hidden"
               style={{ width: `${progress}%` }}
             >
-              <div className="absolute inset-0 bg-white/25 animate-pulse" />
+              <div className="absolute inset-0 bg-white/30 animate-pulse" />
             </div>
           </div>
         </div>
@@ -1368,26 +1368,26 @@ function AutoTailoringProgressModal({
                 key={idx}
                 className={`p-3 rounded-xl border transition-all duration-300 flex items-center justify-between gap-3 ${
                   isCurrent
-                    ? "bg-slate-800/90 border-indigo-500/60 shadow-lg shadow-indigo-950/40"
+                    ? "bg-blue-50/90 border-blue-300 text-blue-950 shadow-xs"
                     : isDone
-                    ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-300"
-                    : "bg-slate-950/30 border-slate-800/60 text-slate-500 opacity-60"
+                    ? "bg-emerald-50/70 border-emerald-200 text-emerald-900"
+                    : "bg-slate-50 border-slate-200/80 text-slate-400"
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div
                     className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 border ${
                       isDone
-                        ? "bg-emerald-500/20 border-emerald-400/40 text-emerald-400"
+                        ? "bg-emerald-100 border-emerald-200 text-emerald-700"
                         : isCurrent
-                        ? "bg-indigo-500/30 border-indigo-400/50 text-indigo-300"
-                        : "bg-slate-800 border-slate-700 text-slate-500"
+                        ? "bg-blue-100 border-blue-200 text-blue-700"
+                        : "bg-white border-slate-200 text-slate-400"
                     }`}
                   >
                     {isDone ? (
-                      <Check className="h-4 w-4 text-emerald-400" />
+                      <Check className="h-4 w-4 text-emerald-600" />
                     ) : isCurrent ? (
-                      <div className="h-3.5 w-3.5 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+                      <div className="h-3.5 w-3.5 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
                     ) : (
                       <StepIcon className="h-3.5 w-3.5" />
                     )}
@@ -1396,27 +1396,27 @@ function AutoTailoringProgressModal({
                     <p
                       className={`text-xs font-bold truncate ${
                         isDone
-                          ? "text-emerald-300"
+                          ? "text-emerald-900"
                           : isCurrent
-                          ? "text-white"
-                          : "text-slate-400"
+                          ? "text-blue-900 font-extrabold"
+                          : "text-slate-500"
                       }`}
                     >
                       {step.title}
                     </p>
-                    <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                    <p className="text-[10px] text-slate-500 truncate mt-0.5">
                       {step.desc}
                     </p>
                   </div>
                 </div>
 
                 {isCurrent && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-400/40 animate-pulse shrink-0">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-700 border border-blue-200 animate-pulse shrink-0">
                     WORKING
                   </span>
                 )}
                 {isDone && (
-                  <span className="text-[10px] font-bold text-emerald-400 shrink-0">
+                  <span className="text-[10px] font-bold text-emerald-700 shrink-0">
                     ✓ Done
                   </span>
                 )}
@@ -1426,12 +1426,12 @@ function AutoTailoringProgressModal({
         </div>
 
         {/* Security & Truthfulness Notice Footer */}
-        <div className="relative z-10 pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
-          <span className="flex items-center gap-1.5 text-slate-400">
-            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+        <div className="relative z-10 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+          <span className="flex items-center gap-1.5 text-slate-600 font-medium">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" />
             Strict Truthfulness Guard Active
           </span>
-          <span className="text-slate-500 font-semibold">~2–4 sec</span>
+          <span className="text-slate-400 font-semibold">~2–4 sec</span>
         </div>
       </div>
     </div>
@@ -4025,58 +4025,58 @@ export default function Home() {
                     </p>
                   </div>
                 ) : isUploading ? (
-                  <div className="relative overflow-hidden p-5 rounded-2xl bg-slate-900/95 border border-indigo-500/30 shadow-2xl space-y-4 text-white">
+                  <div className="relative overflow-hidden p-5 rounded-2xl bg-white border border-blue-200/90 shadow-md shadow-blue-500/5 space-y-4 text-slate-800">
                     {/* Ambient Glow Background Effect */}
-                    <div className="absolute -top-10 -right-10 w-36 h-36 bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-emerald-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" />
-                    <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-gradient-to-tr from-purple-500/15 via-indigo-500/15 to-teal-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" />
+                    <div className="absolute -top-10 -right-10 w-36 h-36 bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-emerald-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" />
+                    <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-gradient-to-tr from-purple-500/10 via-indigo-500/10 to-teal-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" />
 
                     {/* Header & Stage Chip */}
                     <div className="flex items-start justify-between gap-3 relative z-10">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/30 ring-2 ring-indigo-400/20">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20 ring-2 ring-blue-400/20">
                           <Sparkles className="h-5 w-5 text-white animate-spin" />
                         </div>
                         <div className="min-w-0">
-                          <h4 className="text-xs font-black tracking-tight text-white flex items-center gap-2">
+                          <h4 className="text-xs font-black tracking-tight text-slate-900 flex items-center gap-2">
                             <span>AI Resume Extraction</span>
                           </h4>
-                          <p className="text-[11px] text-slate-400 font-medium truncate max-w-[170px]" title={file.name}>
+                          <p className="text-[11px] text-slate-500 font-medium truncate max-w-[170px]" title={file.name}>
                             {file.name}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-[10px] font-extrabold text-indigo-300 uppercase tracking-wider shrink-0 shadow-sm animate-pulse">
-                        <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-ping shrink-0" />
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-[10px] font-extrabold text-blue-700 uppercase tracking-wider shrink-0 shadow-2xs animate-pulse">
+                        <div className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-ping shrink-0" />
                         <span>Parsing Resume</span>
                       </div>
                     </div>
 
                     {/* Animated Shimmer Bar with Glowing Leading Beam */}
                     <div className="space-y-1.5 relative z-10">
-                      <div className="w-full bg-slate-800/90 h-3 rounded-full overflow-hidden p-0.5 border border-indigo-500/30 shadow-inner">
-                        <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full rounded-full animate-pulse w-5/6 relative overflow-hidden shadow-[0_0_15px_rgba(99,102,241,0.75)]">
+                      <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200 shadow-inner">
+                        <div className="bg-gradient-to-r from-blue-600 via-indigo-500 to-teal-500 h-full rounded-full animate-pulse w-5/6 relative overflow-hidden shadow-xs">
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
                         </div>
                       </div>
-                      <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                      <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
                         <span>Extracting text, skills & experience</span>
-                        <span className="text-indigo-400">Processing...</span>
+                        <span className="text-blue-600 font-extrabold">Processing...</span>
                       </div>
                     </div>
 
                     {/* AI Pipeline Step Indicator Badges */}
-                    <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-800/80 relative z-10">
-                      <div className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-1 rounded-lg">
-                        <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-400" />
+                    <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-100 relative z-10">
+                      <div className="flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
+                        <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
                         <span className="truncate">DOCX Text</span>
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] font-semibold text-indigo-300 bg-indigo-950/60 border border-indigo-500/40 px-2 py-1 rounded-lg animate-pulse">
-                        <Cpu className="h-3 w-3 shrink-0 text-indigo-400 animate-spin" />
+                      <div className="flex items-center gap-1 text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg animate-pulse">
+                        <Cpu className="h-3 w-3 shrink-0 text-blue-600 animate-spin" />
                         <span className="truncate">Roles & Skills</span>
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 bg-slate-800/50 border border-slate-700/50 px-2 py-1 rounded-lg">
-                        <Sparkles className="h-3 w-3 shrink-0 text-slate-500" />
+                      <div className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-1 rounded-lg">
+                        <Sparkles className="h-3 w-3 shrink-0 text-slate-400" />
                         <span className="truncate">Master JSON</span>
                       </div>
                     </div>
@@ -4145,18 +4145,18 @@ export default function Home() {
 
               {/* Pre-Analysis Section AI Tailoring Controls Box (on parsed content before analyze) */}
               {masterResume && masterResume.sections && masterResume.sections.length > 0 && (
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950/80 to-slate-950 border border-indigo-500/30 text-white space-y-3 shadow-lg">
-                  <div className="flex items-center justify-between border-b border-indigo-500/20 pb-2.5">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-white border border-blue-200/80 text-slate-800 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-blue-200/60 pb-2.5">
                     <div className="flex items-center gap-2">
-                      <SlidersHorizontal className="h-4 w-4 text-indigo-400 animate-pulse" />
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-200">
+                      <SlidersHorizontal className="h-4 w-4 text-blue-600" />
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-700">
                         Pre-Analysis AI Section Controls
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={handleOpenMasterResume}
-                      className="text-[10px] font-extrabold text-indigo-300 hover:text-white bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/30 px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1"
+                      className="text-[10px] font-extrabold text-blue-700 hover:text-blue-800 bg-white hover:bg-blue-50/80 border border-blue-200 px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
                     >
                       <Edit className="h-3 w-3" />
                       <span>Edit Master</span>
@@ -4176,8 +4176,8 @@ export default function Home() {
                           onClick={() => handleToggleSectionTailoring(sec.section_title)}
                           className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border select-none ${
                             isEnabled
-                              ? "bg-indigo-600 text-white border-indigo-400/50 shadow-md shadow-indigo-600/30 hover:bg-indigo-500"
-                              : "bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700 hover:text-slate-200 opacity-75"
+                              ? "bg-blue-600 text-white border-blue-500 shadow-xs hover:bg-blue-500"
+                              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
                           }`}
                           title={isEnabled ? `AI Tailoring ENABLED for ${sec.section_title}. Click to Lock/Disable.` : `AI Tailoring DISABLED for ${sec.section_title}. Click to Enable.`}
                         >
@@ -4188,7 +4188,7 @@ export default function Home() {
                             </>
                           ) : (
                             <>
-                              <Lock className="h-3 w-3 text-slate-500 shrink-0" />
+                              <Lock className="h-3 w-3 text-slate-400 shrink-0" />
                               <span>{sec.section_title}: OFF</span>
                             </>
                           )}
@@ -4196,7 +4196,7 @@ export default function Home() {
                       );
                     })}
                   </div>
-                  <p className="text-[10px] text-slate-400 italic">
+                  <p className="text-[10px] text-slate-500 italic">
                     💡 Toggle sections OFF before analyzing to lock them 100% untouched as original text.
                   </p>
                 </div>
@@ -4312,20 +4312,20 @@ export default function Home() {
             ) : (
               <div className="space-y-6">
                 {/* ⚡ 1-Click Auto-Tailor Hero Banner */}
-                <div className="relative overflow-hidden rounded-2xl p-5.5 border border-indigo-500/30 dark:border-indigo-500/30 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-950 text-white shadow-2xl backdrop-blur-xl animate-fade-in border-t-white/10">
-                  <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="relative overflow-hidden rounded-2xl p-5.5 border border-indigo-200/90 bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-emerald-50/80 text-slate-900 shadow-xl shadow-blue-500/5 backdrop-blur-xl animate-fade-in">
+                  <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
                   <div className="absolute -left-12 -top-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
                   <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-400 via-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0 ring-1 ring-white/20">
+                      <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0 ring-1 ring-white/50">
                         <Sparkles className="h-6 w-6 animate-pulse text-amber-200" />
                       </div>
                       <div>
-                        <h4 className="text-base font-extrabold text-white flex items-center gap-2 tracking-tight">
+                        <h4 className="text-base font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
                           ⚡ 1-Click Full Resume Auto-Tailor
                         </h4>
-                        <p className="text-xs text-slate-300 mt-0.5 max-w-md leading-relaxed">
+                        <p className="text-xs text-slate-600 mt-0.5 max-w-md leading-relaxed">
                           Automatically rewrite weak sections, weave missing ATS keywords, & add Google XYZ impact metrics in one click.
                         </p>
                       </div>
@@ -4335,7 +4335,7 @@ export default function Home() {
                         type="button"
                         onClick={handleAutoTailor}
                         disabled={isAutoTailoring}
-                        className="px-6 py-3.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20"
+                        className="px-6 py-3.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white shadow-xl shadow-emerald-600/20 hover:shadow-emerald-600/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20"
                       >
                         {isAutoTailoring ? (
                           <>
@@ -4359,11 +4359,11 @@ export default function Home() {
                             type="button"
                             onClick={() => setIsAutoTailorSettingsOpen(true)}
                             title="Configure which sections are updated during 1-Click Auto-Tailor"
-                            className="p-3 sm:px-3.5 sm:py-3.5 rounded-xl font-extrabold text-xs border transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-xl select-none bg-slate-800/90 hover:bg-slate-800 text-white border-white/20 hover:border-white/40 hover:scale-[1.02] active:scale-[0.98]"
+                            className="p-3 sm:px-3.5 sm:py-3.5 rounded-xl font-extrabold text-xs border transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md select-none bg-white hover:bg-slate-50 text-slate-800 border-slate-200 hover:border-slate-300 hover:scale-[1.02] active:scale-[0.98]"
                           >
-                            <SlidersHorizontal className="h-4 w-4 text-amber-300" />
+                            <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
                             <span className="hidden md:inline">Settings</span>
-                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-black border bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-black border bg-blue-50 text-blue-700 border-blue-200">
                               {activeCount}/{configSections.length} ON
                             </span>
                           </button>
@@ -4963,11 +4963,11 @@ export default function Home() {
                       <>
                         {/* AI Section Tailoring Master Controls Bar */}
                         {analysisResult?.sections && analysisResult.sections.length > 0 && (
-                          <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/90 via-slate-900 to-purple-950/90 border border-indigo-500/30 text-white shadow-xl space-y-3">
-                            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-indigo-500/20 pb-2.5">
+                          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-purple-50/50 border border-blue-200/80 text-slate-800 shadow-xs space-y-3">
+                            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-blue-200/60 pb-2.5">
                               <div className="flex items-center gap-2">
-                                <SlidersHorizontal className="h-4 w-4 text-indigo-400 animate-pulse" />
-                                <span className="text-xs font-black tracking-tight text-white uppercase">
+                                <SlidersHorizontal className="h-4 w-4 text-blue-600" />
+                                <span className="text-xs font-black tracking-tight text-slate-800 uppercase">
                                   ⚡ AI Section Controls (Toggle ON/OFF for Auto-Tailor)
                                 </span>
                               </div>
@@ -4979,7 +4979,7 @@ export default function Home() {
                                     (analysisResult.sections || []).forEach((s) => { allOn[s.section_name] = true; });
                                     setTailoringSectionToggles(allOn);
                                   }}
-                                  className="text-[10px] font-extrabold text-indigo-300 hover:text-white bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/30 px-2 py-0.5 rounded-md transition-all cursor-pointer"
+                                  className="text-[10px] font-extrabold text-blue-700 hover:text-blue-800 bg-white hover:bg-blue-50/80 border border-blue-200 px-2 py-0.5 rounded-md transition-all cursor-pointer shadow-2xs"
                                 >
                                   Enable All
                                 </button>
@@ -4990,7 +4990,7 @@ export default function Home() {
                                     (analysisResult.sections || []).forEach((s) => { allOff[s.section_name] = false; });
                                     setTailoringSectionToggles(allOff);
                                   }}
-                                  className="text-[10px] font-extrabold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 py-0.5 rounded-md transition-all cursor-pointer"
+                                  className="text-[10px] font-extrabold text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md transition-all cursor-pointer shadow-2xs"
                                 >
                                   Disable All
                                 </button>
@@ -5010,8 +5010,8 @@ export default function Home() {
                                     onClick={() => handleToggleSectionTailoring(sec.section_name)}
                                     className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none border ${
                                       isEnabled
-                                        ? "bg-indigo-600 text-white border-indigo-400/50 shadow-md shadow-indigo-600/30 hover:bg-indigo-500"
-                                        : "bg-slate-800/80 text-slate-400 border-slate-700 hover:bg-slate-700 hover:text-slate-200"
+                                        ? "bg-blue-600 text-white border-blue-500 shadow-xs hover:bg-blue-500"
+                                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
                                     }`}
                                   >
                                     {isEnabled ? (
@@ -5021,7 +5021,7 @@ export default function Home() {
                                       </>
                                     ) : (
                                       <>
-                                        <Lock className="h-3 w-3 text-slate-500" />
+                                        <Lock className="h-3 w-3 text-slate-400" />
                                         <span>{sec.section_name}: OFF</span>
                                       </>
                                     )}
@@ -6202,31 +6202,31 @@ export default function Home() {
             onClick={() => setIsAutoTailorSettingsOpen(false)}
           />
 
-          <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] z-10 text-white animate-scale-in">
+          <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] z-10 text-slate-900 animate-scale-in">
             {/* Ambient glows */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
             {/* Modal Header */}
-            <div className="relative z-10 px-6 py-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 backdrop-blur">
+            <div className="relative z-10 px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 backdrop-blur">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 shrink-0 ring-1 ring-white/20">
+                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0 ring-1 ring-white/60">
                   <SlidersHorizontal className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                  <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                     ⚡ Auto-Tailor Scope & Preferences
                     {(() => {
                       const configSections = getAutoTailorConfigSections();
                       const activeCount = configSections.filter((s) => isSectionTailorEnabled(s.id, s.defaultOn)).length;
                       return (
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                           {activeCount} of {configSections.length} ON
                         </span>
                       );
                     })()}
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     Click each item to turn AI optimization ON or OFF. Locked items remain 100% untouched.
                   </p>
                 </div>
@@ -6234,36 +6234,36 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setIsAutoTailorSettingsOpen(false)}
-                className="h-9 w-9 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center border border-slate-700 transition-colors cursor-pointer"
+                className="h-9 w-9 rounded-xl bg-white hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center border border-slate-200 transition-colors cursor-pointer shadow-2xs"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             {/* Presets Action Bar */}
-            <div className="relative z-10 px-6 py-3 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between gap-2">
-              <span className="text-xs font-bold text-slate-400 hidden sm:inline">Quick Presets:</span>
+            <div className="relative z-10 px-6 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-500 hidden sm:inline">Quick Presets:</span>
               <div className="flex items-center gap-2 flex-1 sm:flex-initial">
                 <button
                   type="button"
                   onClick={handleEnableRecommendedSections}
-                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition-all shadow-md shadow-indigo-600/30 cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs transition-all shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <Sparkles className="h-3 w-3 text-amber-300" />
+                  <Sparkles className="h-3 w-3 text-amber-200" />
                   Recommended
                 </button>
                 <button
                   type="button"
                   onClick={handleEnableAllSections}
-                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs border border-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                 >
-                  <Check className="h-3 w-3 text-emerald-400" />
+                  <Check className="h-3 w-3 text-emerald-600" />
                   Select All
                 </button>
                 <button
                   type="button"
                   onClick={handleDisableAllSections}
-                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-slate-700 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 font-bold text-xs border border-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                 >
                   <Lock className="h-3 w-3 text-slate-400" />
                   Lock All
@@ -6286,8 +6286,8 @@ export default function Home() {
                       onClick={() => handleToggleSectionTailoring(sec.id, sec.defaultOn)}
                       className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between gap-4 cursor-pointer select-none group ${
                         isEnabled
-                          ? "bg-slate-800/90 hover:bg-slate-800 border-indigo-500/50 hover:border-indigo-400 shadow-md shadow-indigo-950/50"
-                          : "bg-slate-950/40 hover:bg-slate-950/70 border-slate-800 hover:border-slate-700 opacity-75 hover:opacity-90"
+                          ? "bg-blue-50/70 hover:bg-blue-50 border-blue-200/90 shadow-2xs"
+                          : "bg-slate-50/70 hover:bg-slate-100/70 border-slate-200/80 opacity-75 hover:opacity-100"
                       }`}
                     >
                       {/* Left icon & text */}
@@ -6295,30 +6295,30 @@ export default function Home() {
                         <div
                           className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
                             isEnabled
-                              ? "bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-indigo-400/40 text-indigo-300 shadow-inner"
-                              : "bg-slate-800 border-slate-700 text-slate-500"
+                              ? "bg-blue-100 border-blue-200 text-blue-700 shadow-2xs"
+                              : "bg-white border-slate-200 text-slate-400"
                           }`}
                         >
                           <SecIcon className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`text-sm font-extrabold transition-colors ${isEnabled ? "text-white group-hover:text-indigo-200" : "text-slate-400"}`}>
+                            <span className={`text-sm font-extrabold transition-colors ${isEnabled ? "text-blue-950 group-hover:text-blue-700" : "text-slate-600"}`}>
                               {sec.name}
                             </span>
                             {isEnabled ? (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 ACTIVE (ON)
                               </span>
                             ) : (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1">
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-500 border border-slate-200 flex items-center gap-1">
                                 <Lock className="h-2.5 w-2.5" />
                                 LOCKED (OFF)
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                             {sec.desc}
                           </p>
                         </div>
@@ -6327,7 +6327,7 @@ export default function Home() {
                       {/* Right iOS Toggle Switch */}
                       <div
                         className={`w-12 h-6.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out shrink-0 border ${
-                          isEnabled ? "bg-emerald-500 border-emerald-400" : "bg-slate-700 border-slate-600"
+                          isEnabled ? "bg-emerald-500 border-emerald-500" : "bg-slate-200 border-slate-300"
                         }`}
                       >
                         <div
@@ -6343,15 +6343,15 @@ export default function Home() {
             </div>
 
             {/* Modal Footer */}
-            <div className="relative z-10 px-6 py-4 border-t border-slate-800 bg-slate-900/90 backdrop-blur flex items-center justify-between gap-3">
-              <p className="text-xs text-slate-400 flex items-center gap-1.5">
+            <div className="relative z-10 px-6 py-4 border-t border-slate-100 bg-slate-50/80 backdrop-blur flex items-center justify-between gap-3">
+              <p className="text-xs text-slate-500 flex items-center gap-1.5">
                 <Lock className="h-3.5 w-3.5 text-slate-400" />
                 Locked items are skipped during Auto-Tailoring.
               </p>
               <button
                 type="button"
                 onClick={() => setIsAutoTailorSettingsOpen(false)}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
               >
                 Save Scope & Close
               </button>
