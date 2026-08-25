@@ -1439,178 +1439,90 @@ function AutoTailoringProgressModal({
 }
 
 
-const RECOGNIZED_TECH_WHITELIST = new Set([
-  "python", "javascript", "typescript", "react", "reactjs", "react.js",
-  "vue", "vuejs", "vue.js", "angular", "angularjs", "node", "nodejs", "node.js",
-  "nextjs", "next.js", "nuxt", "nuxtjs", "svelte", "sveltekit",
-  "java", "golang", "go", "rust", "c", "c++", "c#", ".net", "dotnet",
-  "ruby", "rails", "php", "laravel", "symfony", "django", "flask", "fastapi",
-  "spring", "springboot", "docker", "kubernetes", "k8s", "aws", "gcp", "azure",
-  "terraform", "ansible", "jenkins", "circleci", "git", "github", "gitlab",
-  "graphql", "rest", "api", "apis", "grpc", "websocket", "sql", "mysql",
-  "postgresql", "postgres", "sqlite", "oracle", "nosql", "mongodb", "redis",
-  "cassandra", "dynamodb", "couchbase", "kafka", "rabbitmq", "celery",
-  "elasticsearch", "opensearch", "solr", "splunk", "datadog", "grafana",
-  "prometheus", "snowflake", "bigquery", "redshift", "dbt", "spark", "hadoop",
-  "airflow", "pandas", "numpy", "scipy", "scikit-learn", "sklearn", "pytorch",
-  "tensorflow", "keras", "opencv", "llm", "llms", "nlp", "rag", "langchain",
-  "llamaindex", "openai", "weaviate", "pinecone", "qdrant", "chroma", "milvus",
-  "salesforce", "hubspot", "servicenow", "jira", "confluence", "figma",
-  "postman", "linux", "unix", "bash", "zsh", "powershell", "tailwind",
-  "tailwindcss", "bootstrap", "sass", "scss", "html", "html5", "css", "css3",
-  "webpack", "vite", "babel", "esbuild", "turbopack", "rollup", "b2b", "b2c",
-  "crm", "erp", "saas", "paas", "iaas", "ci/cd", "devops", "mlops", "aiops",
-  "dataops", "agile", "scrum", "kanban", "prince2", "pmp", "itil", "togaf",
-  "express", "fastify", "nestjs", "prisma", "typeorm", "sequelize", "mongoose",
+// Universal conversational and grammatical noise words (domain-agnostic across all industries)
+const GRAMMATICAL_STOPWORDS = new Set([
+  "the", "and", "for", "with", "that", "this", "from", "will", "have",
+  "your", "our", "you", "are", "not", "but", "can", "all", "also",
+  "any", "who", "how", "what", "when", "where", "than", "been", "more",
+  "they", "their", "them", "into", "its", "over", "such", "each",
+  "well", "both", "about", "work", "role", "using", "able", "must",
+  "should", "would", "could", "other", "some", "within", "across",
+  "which", "through", "great", "excellent", "help", "high", "plus",
+  "needs", "need", "deliver", "delivering", "collaborate", "collaborating",
+  "driven", "drive", "drives", "very", "much", "many", "good", "best",
+  "better", "daily", "overall", "overall fit", "missing", "clarify",
+  "approach", "value", "values", "overview", "practices", "responsibilities",
+  "requirements", "opportunity", "opportunities", "environment", "environments",
+  "assistant", "corporate", "employment", "fast", "follow-up", "followup",
+  "hiring", "information", "interested", "like", "platforms", "platform",
+  "reimbursement", "time", "wing", "urgency", "willing", "process", "processes",
+  "missing technologies", "clarify integration projects", "extensive",
+  "proven expertise", "building full-stack solutions", "deal progression",
+  "and deal progression", "strong full-stack development", "results-oriented",
+  "hands-on", "end-to-end", "proficient", "proficient in", "experience",
+  "experiences", "skills", "knowledge", "understanding", "ability",
 ]);
 
-const ATS_STOPWORDS = new Set([
-  "experience", "experiences", "project", "projects", "technique", "techniques",
-  "knowledge", "understanding", "focus", "skills", "relevant", "professional",
-  "optimization", "ability", "strong", "proven", "background", "usage",
-  "access", "agency", "applications", "building", "business", "developer",
-  "internal", "message", "operations", "premium", "recruitment", "tools",
-  "user", "users", "client", "clients", "service", "services", "system",
-  "systems", "solution", "solutions", "years", "level", "position", "specializing",
-  "company", "candidate", "candidates", "ideal", "successful", "looking",
-  "join", "daily", "overall", "practices", "responsibilities", "requirements",
-  "opportunity", "opportunities", "environment", "environments", "high",
-  "deliver", "delivering", "collaborate", "collaborating", "driven", "drive",
-  "results-oriented", "hands-on", "end-to-end", "proficient", "proficient in",
-  "mindset", "product mindset", "able", "must", "well", "great", "excellent",
-  "assistant", "corporate", "employment", "engineer", "fast", "follow-up", "followup",
-  "hiring", "information", "integration", "integrations", "interested", "lead", "like",
-  "platforms", "platform", "reimbursement", "sales", "time", "wing", "urgency",
-  "willing", "process", "processes", "missing technologies", "clarify integration projects",
-  "extensive", "proven expertise", "building full-stack solutions", "deal progression",
-  "and deal progression", "clarify", "overview", "approach", "value", "values",
-]);
-
-const CANONICAL_SKILL_NAMES: Record<string, string> = {
-  "python": "Python",
-  "typescript": "TypeScript",
-  "javascript": "JavaScript",
-  "react": "React",
-  "reactjs": "React.js",
-  "nextjs": "Next.js",
-  "vue": "Vue.js",
-  "angular": "Angular",
-  "node": "Node.js",
-  "nodejs": "Node.js",
-  "docker": "Docker",
-  "kubernetes": "Kubernetes",
-  "k8s": "Kubernetes",
-  "aws": "AWS",
-  "gcp": "Google Cloud (GCP)",
-  "azure": "Azure",
-  "graphql": "GraphQL",
-  "apis": "REST APIs",
-  "api": "REST APIs",
-  "rest api": "REST APIs",
-  "rest apis": "REST APIs",
-  "microservices": "Microservices Architecture",
-  "microservices architecture": "Microservices Architecture",
-  "sql": "SQL",
-  "nosql": "NoSQL",
-  "mongodb": "MongoDB",
-  "postgres": "PostgreSQL",
-  "postgresql": "PostgreSQL",
-  "redis": "Redis",
-  "kafka": "Apache Kafka",
-  "salesforce": "Salesforce",
-  "slack": "Slack",
-  "teams": "MS Teams",
-  "llms": "Large Language Models (LLMs)",
-  "llm": "Large Language Models (LLMs)",
-  "openai": "OpenAI",
-  "nlp": "Natural Language Processing (NLP)",
-  "ci/cd": "CI/CD Practices",
-  "ci/cd practices": "CI/CD Practices",
-  "full-stack development": "Full-Stack Development",
-  "ai integration": "AI Integration",
-  "stakeholder communication": "Stakeholder Communication",
-  "stakeholder management": "Stakeholder Management",
-  "cross-functional": "Cross-Functional Collaboration",
-  "internal tools development": "Internal Tools Development",
-  "b2b": "B2B Sales Strategy",
-  "data": "Data Analytics & Engineering",
-  "crm": "CRM Systems",
-  "lead": "Technical Leadership",
-  "objection handling": "Objection Handling",
-  "social media management": "Social Media Management",
-  "talent acquisition": "Talent Acquisition",
-  "team collaboration": "Team Collaboration",
-  "team management": "Team Management",
-  "agile methodologies": "Agile Methodologies",
-  "scalable system design": "Scalable System Design",
-  "api integrations": "API Integrations",
-  "rabbitmq": "RabbitMQ",
-  "servicenow": "ServiceNow",
-  "hubspot": "HubSpot",
-  "express": "Express.js",
-  "php": "PHP",
-  "git": "Git Version Control",
-};
+// Format any skill or competency cleanly (preserves acronyms like GAAP, SAP, AWS, EHR, ICU, CPA, SEO, CRM, API)
+function formatDomainSkill(str: string): string {
+  if (!str) return "";
+  if (str.length <= 5 && str === str.toUpperCase() && !str.includes(" ")) {
+    return str;
+  }
+  return str
+    .split(/\s+/)
+    .map((w) => {
+      // Preserve standard uppercase domain acronyms (e.g. GAAP, SAP, EHR, B2B, AI, ML, CPA, P&L, KPI)
+      if (w.length <= 4 && w === w.toUpperCase() && /^[A-Z0-9&]+$/.test(w)) {
+        return w;
+      }
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    })
+    .join(" ");
+}
 
 function cleanKeywordName(rawName: string): string {
   if (!rawName) return "";
   let clean = rawName
-    .replace(/^[\s•\-–—*·▪▸►✓✔→\d.)\]]+/g, "") // strip leading bullets, numbers, checkmarks
-    .replace(/^(add|include|highlight|emphasize|condense|surface|rephrase|incorporate|integrate|leverage|utilize|apply|built|experience with|proficient with|strong with|hands-on with|clarify|missing)\s+/i, "")
-    .replace(/\s+in\s+.*$/i, "")
-    .replace(/\s+for\s+.*$/i, "")
+    .replace(/^[\s•\-–—*·▪▸►✓✔→\d.)\]]+/g, "") // strip leading bullets and numbers
+    .replace(/^(add|include|highlight|emphasize|condense|surface|rephrase|incorporate|integrate|leverage|utilize|apply|demonstrate|showcase|built|clarify|missing|ensure)\s+/i, "")
+    .replace(/^(experience (with|in)|proficien(t|cy) (in|with)|hands-on with|strong background in|knowledge of|familiarity with|understanding of|ability to|proven track record in|deep understanding of|practical experience in|specializing in|focus on|expertise in)\s+/i, "")
     .replace(/\s+(usage|skills|experience|experiences|knowledge|stack|level|concepts|proficiency|background)$/i, "")
     .replace(/^(\d+\+?\s+years?(\s+of)?)\s+/i, "")
-    .replace(/^experience with\s+/i, "")
-    .replace(/^proficient with\s+/i, "")
-    .replace(/^hands-on with\s+/i, "")
-    .replace(/^strong understanding of\s+/i, "")
-    .replace(/^practical understanding of\s+/i, "")
-    .replace(/^ability to\s+/i, "")
-    .replace(/^proven track record in\s+/i, "")
     .replace(/^and\s+/i, "")
     .trim();
 
   // Strip trailing punctuation
   clean = clean.replace(/[.,;:—\-]+$/, "").trim();
 
-  const lower = clean.toLowerCase();
-  if (CANONICAL_SKILL_NAMES[lower]) {
-    return CANONICAL_SKILL_NAMES[lower];
-  }
-
-  // Capitalize nicely if not capitalized
-  if (clean.length > 0 && clean === clean.toLowerCase()) {
-    return clean
-      .split(" ")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
-  }
-
-  return clean;
+  return formatDomainSkill(clean);
 }
 
 function isActualATSKeyword(kw: string): boolean {
   if (!kw) return false;
   const clean = kw.trim();
-  if (clean.length < 2 || clean.length > 35) return false;
-  if (/—|;|when\s|where\s|which\s|with the\s|and when|ability to|missing technologies|clarify/i.test(clean)) return false;
+  // Length check: concise skill or domain competency
+  if (clean.length < 2 || clean.length > 45) return false;
 
-  const lower = clean.toLowerCase();
-  if (ATS_STOPWORDS.has(lower)) return false;
-
-  const words = clean.split(/\s+/);
-  
-  // Single-word check: MUST be in recognized whitelist
-  if (words.length === 1) {
-    return RECOGNIZED_TECH_WHITELIST.has(lower) || CANONICAL_SKILL_NAMES[lower] !== undefined;
+  // Sentence / clause rejection
+  if (/[—;?]|when\s|where\s|which\s|with the\s|and when|in order to|ability to|because\s|although\s|missing technologies|clarify/i.test(clean)) {
+    return false;
   }
 
-  // Multi-word check (2 to 4 words):
+  const lower = clean.toLowerCase();
+  if (GRAMMATICAL_STOPWORDS.has(lower)) return false;
+
+  const words = clean.split(/\s+/);
+  // Word count check: concise 1 to 4 words
   if (words.length > 4) return false;
-  
-  // Ensure none of the words are illegal conjunctions or stopwords
-  if (words[0].toLowerCase() === "and" || words[0].toLowerCase() === "with" || words[0].toLowerCase() === "or") {
+
+  // Single word: must be at least 2 chars and not generic filler
+  if (words.length === 1 && (lower.length < 2 || ["with", "from", "that", "this", "have", "time", "like", "fast", "lead", "wing"].includes(lower))) {
+    return false;
+  }
+
+  // Reject if first word is conjunction or noise
+  if (["and", "with", "or", "to", "for", "in", "of", "the", "by"].includes(words[0].toLowerCase())) {
     return false;
   }
 
@@ -1619,22 +1531,29 @@ function isActualATSKeyword(kw: string): boolean {
 
 function getSkillCategory(skillName: string): { label: string; badgeColor: string } {
   const s = skillName.toLowerCase();
-  if (/python|typescript|javascript|react|vue|angular|node|java|golang|c\+\+|c#|ruby|php|rust|html|css|tailwind|sql|nosql|mongodb|postgres|redis|kafka|graphql|api|rest|git|express/i.test(s)) {
-    return { label: "Core Tech", badgeColor: "bg-blue-50 text-blue-700 border-blue-200" };
+  
+  // Leadership, Strategy, Collaboration & Management
+  if (/lead|manage|direct|coordinat|supervis|stakeholder|communicat|collaborat|team|agile|scrum|strategy|negotiat|client|talent|recruit|train|hiring|cross-functional/i.test(s)) {
+    return { label: "Leadership & Strategy", badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200" };
   }
-  if (/aws|azure|gcp|cloud|docker|kubernetes|ci\/cd|devops|terraform|linux|microservices|architecture|serverless|rabbitmq/i.test(s)) {
-    return { label: "Cloud & Arch", badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-200" };
+  
+  // Compliance, Standards, Regulations, Audits & Quality
+  if (/complian|gaap|hipaa|sox|iso|audit|standard|regul|govern|quality|qa|qc|protocol|safety|customs|tax|law|legal|policy/i.test(s)) {
+    return { label: "Compliance & Standards", badgeColor: "bg-amber-50 text-amber-700 border-amber-200" };
   }
-  if (/salesforce|hubspot|servicenow|crm|erp|b2b|sales|client/i.test(s)) {
-    return { label: "Enterprise & CRM", badgeColor: "bg-teal-50 text-teal-700 border-teal-200" };
+  
+  // Analytics, Data, Financial & Quantitative
+  if (/financ|budget|analyt|data|metric|report|forecast|model|p&l|revenue|cost|ledger|reconcil|math|statist|econom|pricing|kpi/i.test(s)) {
+    return { label: "Analytics & Finance", badgeColor: "bg-purple-50 text-purple-700 border-purple-200" };
   }
-  if (/ai|llm|ml|machine learning|nlp|openai|prompt|gpt|data|deep learning|rag|agent/i.test(s)) {
-    return { label: "AI & Data", badgeColor: "bg-purple-50 text-purple-700 border-purple-200" };
+  
+  // Tools, Systems, Platforms & Software
+  if (/system|software|tool|platform|portal|app|erp|crm|sap|oracle|cloud|db|database|server|net|api|hubspot|salesforce|jira|figma|git|linux/i.test(s) || (skillName.length <= 5 && skillName === skillName.toUpperCase())) {
+    return { label: "Systems & Tools", badgeColor: "bg-blue-50 text-blue-700 border-blue-200" };
   }
-  if (/stakeholder|communication|leadership|management|cross-functional|product|agile|scrum|teamwork|strategy|talent|social media|objection/i.test(s)) {
-    return { label: "Leadership", badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-  }
-  return { label: "Core Competency", badgeColor: "bg-slate-100 text-slate-700 border-slate-200" };
+
+  // Core Specialized Domain Competencies across all professions
+  return { label: "Domain Competency", badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-200" };
 }
 
 function extractStrictKeywordsFromRaw(raw: string): string[] {

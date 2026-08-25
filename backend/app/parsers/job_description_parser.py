@@ -221,7 +221,7 @@ def parse_job_description(text: str) -> JobDescription:
         required_skills=_clean_list(buckets.get("required_skills", [])),
         preferred_skills=_clean_list(buckets.get("preferred_skills", [])),
         technologies=_extract_technologies(text),
-        keywords=_extract_keywords(text),
+        keywords=_extract_keywords(text, buckets),
         raw_text=text,
     )
 
@@ -533,65 +533,48 @@ _STOP_WORDS: frozenset[str] = frozenset({
 })
 
 
-def _extract_keywords(text: str) -> list[str]:
-    """Return high-frequency technical nouns and domain soft-skill phrases from the text.
+def _extract_keywords(text: str, buckets: dict[str, list[str]] | None = None) -> list[str]:
+    """Extract domain keywords, skills, and competencies across ANY industry.
 
-    Two passes:
-    1. Frequency-based: technical words > 4 chars, not stop-words, appear >= 2 times.
-    2. Soft-skill allow-list: multi-word domain phrases explicitly present in the text.
-
-    Results are merged, deduplicated, and canonicalised.
+    Extracts high-value requirement tokens from the job description's qualifications, skills,
+    and responsibilities, rather than counting random repeated English nouns.
     """
-    # Pass 1: frequency-based technical terms
-    words = re.findall(r"\b[a-zA-Z][a-zA-Z0-9+#.-]{3,}\b", text)
-    normalised = [w.lower() for w in words if w.lower() not in _STOP_WORDS]
-    counts = Counter(normalised)
-    frequent = [(word, count) for word, count in counts.items() if count > 1]
-    frequent.sort(key=lambda x: (-x[1], x[0]))
+    found_skills: list[str] = []
+    seen: set[str] = set()
 
-    def _canonicalise(w: str) -> str:
-        common_caps = {
-            "python": "Python",
-            "typescript": "TypeScript",
-            "javascript": "JavaScript",
-            "react": "React",
-            "vue": "Vue",
-            "angular": "Angular",
-            "docker": "Docker",
-            "kubernetes": "Kubernetes",
-            "aws": "AWS",
-            "gcp": "GCP",
-            "azure": "Azure",
-            "graphql": "GraphQL",
-            "apis": "REST APIs",
-            "api": "REST APIs",
-            "rest": "REST APIs",
-            "sql": "SQL",
-            "nosql": "NoSQL",
-            "mongodb": "MongoDB",
-            "postgres": "PostgreSQL",
-            "postgresql": "PostgreSQL",
-            "redis": "Redis",
-            "kafka": "Kafka",
-            "salesforce": "Salesforce",
-            "slack": "Slack",
-            "teams": "MS Teams",
-            "llms": "LLMs",
-            "llm": "LLMs",
-            "openai": "OpenAI",
-            "nlp": "NLP",
-            "ci/cd": "CI/CD",
-        }
-        return common_caps.get(w.lower(), w.capitalize())
+    # Pass 1: Extract domain skills from required_skills, preferred_skills, and responsibilities
+    candidate_lines: list[str] = []
+    if buckets:
+        candidate_lines.extend(buckets.get("required_skills", []))
+        candidate_lines.extend(buckets.get("preferred_skills", []))
+        # Also take first few key responsibility lines if skills section is sparse
+        if len(candidate_lines) < 3:
+            candidate_lines.extend(buckets.get("responsibilities", [])[:5])
 
-    freq_keywords = [_canonicalise(word) for word, _ in frequent[:20]]
+    for line in candidate_lines:
+        clean = _BULLET_PREFIX.sub("", line).strip()
+        # Clean leading introductory phrases like "Experience with", "Knowledge of", "Ability to"
+        clean = re.sub(r"^(experience (with|in)|proficien(t|cy) (in|with)|knowledge of|familiarity with|strong understanding of|ability to|proven track record in|expertise in)\s+", "", clean, flags=re.IGNORECASE).strip()
+        
+        # Split on commas, semicolons, or " and "
+        parts = re.split(r"[,;]|\s+(?:and|&)\s+", clean)
+        for p in parts:
+            p_clean = p.strip().rstrip(".")
+            # Filter out full sentences or noise words
+            if 2 <= len(p_clean) <= 40 and len(p_clean.split()) <= 4:
+                lower = p_clean.lower()
+                if lower not in _STOP_WORDS and not any(w in lower for w in ["willing", "urgency", "fast", "time", "lead", "process", "platform"]):
+                    if lower not in seen:
+                        seen.add(lower)
+                        # Clean title case
+                        words = p_clean.split()
+                        formatted = " ".join(w if w.isupper() and len(w) <= 4 else w.capitalize() for w in words)
+                        found_skills.append(formatted)
 
-    # Pass 2: soft-skill / multi-word domain phrase matching
-    soft_found: list[str] = []
-    seen_lower: set[str] = set(k.lower() for k in freq_keywords)
+    # Pass 2: Match domain/soft skills across all industries (Logistics, Customs, Finance, Healthcare, Sales, etc.)
     for pattern, canonical in _SOFT_SKILL_PATTERNS:
-        if pattern.search(text) and canonical.lower() not in seen_lower:
-            soft_found.append(canonical)
-            seen_lower.add(canonical.lower())
+        if pattern.search(text) and canonical.lower() not in seen:
+            found_skills.append(canonical)
+            seen.add(canonical.lower())
 
-    return (freq_keywords + soft_found)[:30]
+    return found_skills[:35]
