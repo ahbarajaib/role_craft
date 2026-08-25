@@ -461,13 +461,12 @@ export default function ResumeBuilderPage() {
               href="/"
               className="flex items-center gap-2.5 text-slate-900 font-black text-lg hover:opacity-90 transition-all group"
             >
-              <div className="relative shrink-0">
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-teal-400 to-[#14B8A6] opacity-20 blur-sm group-hover:opacity-35 transition-opacity" />
+              <div className="relative shrink-0 flex items-center justify-center">
                 <img
                   src="/logo.svg"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
                   alt="RoleCraft Logo"
-                  className="relative h-9 w-9 object-contain rounded-xl bg-white p-0.5 shadow-xs ring-1 ring-teal-100 transition-all"
+                  className="h-9 w-9 object-contain transition-transform group-hover:scale-105"
                 />
               </div>
               <span className="text-gradient font-black tracking-tight text-xl">RoleCraft</span>

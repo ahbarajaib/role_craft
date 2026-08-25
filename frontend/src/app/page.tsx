@@ -1123,12 +1123,12 @@ function LoadingState() {
             <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-[#0F172A] via-teal-700 to-[#14B8A6] opacity-60 blur-sm animate-pulse" />
             
             {/* Logo container with soft halo */}
-            <div className="relative h-18 w-18 rounded-2xl bg-white p-3 shadow-2xl shadow-teal-500/30 ring-1 ring-teal-200/80 flex items-center justify-center">
+            <div className="relative h-18 w-18 flex items-center justify-center">
               <img
                 src="/logo.svg"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
                 alt="RoleCraft AI Logo"
-                className="h-full w-full object-contain drop-shadow-sm"
+                className="h-full w-full object-contain drop-shadow-md"
               />
             </div>
           </div>
@@ -3373,14 +3373,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       {/* Header */}
       <header className="relative z-30 max-w-[1440px] mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 sm:mb-12 pb-4 border-b border-slate-200/80">
         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => switchNavTab("landing")}>
-          {/* Logo with glow ring */}
-          <div className="relative shrink-0">
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#14B8A6]/30 to-[#FF6B4A]/20 opacity-20 blur-md group-hover:opacity-40 transition-opacity" />
+          {/* Transparent Brand Logo */}
+          <div className="relative shrink-0 flex items-center justify-center">
             <img
               src="/logo.svg"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
               alt="RoleCraft Logo"
-              className="relative h-10 w-10 sm:h-11 sm:w-11 object-contain rounded-xl bg-white p-0.5 shadow-sm ring-1 ring-teal-100 transition-all"
+              className="h-10 w-10 sm:h-11 sm:w-11 object-contain transition-transform group-hover:scale-105"
             />
           </div>
           <div className="min-w-0">
@@ -4053,13 +4052,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           <footer className="pt-12 pb-8 text-center space-y-6">
             <div className="gradient-divider mb-8" />
             <div className="flex items-center justify-center gap-3">
-              <div className="relative">
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-teal-400 to-[#14B8A6] opacity-20 blur-sm" />
+              <div className="relative flex items-center justify-center">
                 <img
                   src="/logo.svg"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
                   alt="RoleCraft Logo"
-                  className="relative h-9 w-9 object-contain rounded-lg bg-white p-0.5 ring-1 ring-teal-100 shadow-sm"
+                  className="h-9 w-9 object-contain"
                 />
               </div>
               <span className="text-lg font-black text-gradient">RoleCraft</span>
