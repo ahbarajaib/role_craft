@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { FREE_TIER_CREDITS, PRO_CREDITS, ELITE_CREDITS } from "@/lib/constants";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
@@ -1665,10 +1666,20 @@ function cleanSectionModalTitle(title: string): string {
   return clean || title;
 }
 
-export default function Home() {
+export default function Home({ initialTab }: { initialTab?: "landing" | "workspace" } = {}) {
   const { user, token, logout, setShowAuthModal, refreshMe } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
   const [theme] = useState<"light">("light");
-  const [activeNavTab, setActiveNavTab] = useState<"landing" | "workspace">("landing");
+  const [activeNavTab, setActiveNavTab] = useState<"landing" | "workspace">(() => {
+    if (initialTab) return initialTab;
+    if (typeof window !== "undefined") {
+      if (window.location.pathname.startsWith("/workspace") || window.location.hash === "#workspace") {
+        return "workspace";
+      }
+    }
+    return "landing";
+  });
   const [file, setFile] = useState<File | null>(null);
   const [dailyGoal, setDailyGoal] = useState<{ progress_percentage: number } | null>(null);
 
@@ -1692,36 +1703,20 @@ export default function Home() {
 
   const switchNavTab = (tab: "landing" | "workspace") => {
     setActiveNavTab(tab);
-    if (typeof window !== "undefined") {
-      if (tab === "workspace") {
-        window.history.pushState(null, "", "/workspace");
-      } else {
-        window.history.pushState(null, "", "/");
-      }
+    if (tab === "workspace") {
+      router.push("/workspace", { scroll: false });
+    } else {
+      router.push("/", { scroll: false });
     }
   };
 
   useEffect(() => {
-    const syncTab = () => {
-      if (typeof window !== "undefined") {
-        if (window.location.pathname.startsWith("/workspace") || window.location.hash === "#workspace") {
-          setActiveNavTab("workspace");
-          if (window.location.hash === "#workspace") {
-            window.history.replaceState(null, "", "/workspace");
-          }
-        } else {
-          setActiveNavTab("landing");
-        }
-      }
-    };
-    syncTab();
-    window.addEventListener("hashchange", syncTab);
-    window.addEventListener("popstate", syncTab);
-    return () => {
-      window.removeEventListener("hashchange", syncTab);
-      window.removeEventListener("popstate", syncTab);
-    };
-  }, []);
+    if (pathname?.startsWith("/workspace") || (typeof window !== "undefined" && window.location.hash === "#workspace")) {
+      setActiveNavTab("workspace");
+    } else if (pathname === "/" && !initialTab) {
+      setActiveNavTab("landing");
+    }
+  }, [pathname, initialTab]);
 
   const [jobDescription, setJobDescription] = useState("");
 
@@ -3944,7 +3939,7 @@ export default function Home() {
                   </ul>
                 </div>
                 <button
-                  onClick={() => setActiveNavTab("workspace")}
+                  onClick={() => switchNavTab("workspace")}
                   className="w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer border border-slate-200"
                 >
                   Start Free
@@ -4051,10 +4046,10 @@ export default function Home() {
               Craft every resume for the role. Recruiter-grade AI tailoring with 100% visual DOCX formatting preservation.
             </p>
             <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-500 flex-wrap">
-              <a href="#how-it-works" onClick={() => setActiveNavTab("landing")} className="hover:text-blue-600 transition-colors">How It Works</a>
-              <a href="#features" onClick={() => setActiveNavTab("landing")} className="hover:text-blue-600 transition-colors">Features</a>
-              <a href="#pricing" onClick={() => setActiveNavTab("landing")} className="hover:text-blue-600 transition-colors">Pricing</a>
-              <button onClick={() => setActiveNavTab("workspace")} className="hover:text-blue-600 transition-colors cursor-pointer">Workspace</button>
+              <a href="#how-it-works" onClick={() => switchNavTab("landing")} className="hover:text-blue-600 transition-colors">How It Works</a>
+              <a href="#features" onClick={() => switchNavTab("landing")} className="hover:text-blue-600 transition-colors">Features</a>
+              <a href="#pricing" onClick={() => switchNavTab("landing")} className="hover:text-blue-600 transition-colors">Pricing</a>
+              <button onClick={() => switchNavTab("workspace")} className="hover:text-blue-600 transition-colors cursor-pointer">Workspace</button>
               <button onClick={() => openIssueReport("general")} className="hover:text-blue-600 transition-colors cursor-pointer flex items-center gap-1">
                 <LifeBuoy className="h-3 w-3" />
                 <span>Report Issue / Feedback</span>
