@@ -1681,75 +1681,6 @@ function cleanSectionModalTitle(title: string): string {
   return clean || title;
 }
 
-const SAMPLE_JDS = [
-  {
-    id: "fullstack",
-    label: "⚡ Senior Full-Stack",
-    role: "Senior Full-Stack Engineer",
-    company: "TechFlow Inc.",
-    tag: "React / Node / AWS",
-    text: `Senior Full-Stack Engineer at TechFlow Inc.
-
-We are looking for a Senior Full-Stack Engineer with 4+ years of experience in React, Next.js, TypeScript, Python (FastAPI/Django) or Node.js, PostgreSQL, and AWS cloud infrastructure.
-
-Key Responsibilities:
-- Architect and build high-performance microservices and responsive web applications.
-- Collaborate with cross-functional product and design teams to deliver scalable features.
-- Optimize application latency, caching strategies (Redis), and database queries for 1M+ active users.
-- Champion CI/CD automation, Docker containerization, and unit/integration testing.
-
-Requirements:
-- Strong proficiency in TypeScript, React, Next.js, and modern state management.
-- Hands-on backend experience with Python (FastAPI/Django) or Node.js.
-- Strong SQL/PostgreSQL database design and Redis caching experience.
-- Familiarity with AWS (ECS, S3, CloudFront), Docker, and Git workflows.`,
-  },
-  {
-    id: "pm",
-    label: "🚀 Product Manager",
-    role: "Senior Product Manager",
-    company: "GrowthScale",
-    tag: "SaaS / Growth / OKRs",
-    text: `Senior Product Manager at GrowthScale
-
-We are seeking a data-driven Senior Product Manager to lead our Core Platform squad and accelerate B2B SaaS product growth.
-
-Responsibilities:
-- Define product vision, roadmap, and quarterly OKRs aligned with business goals.
-- Conduct user interviews, market research, and competitive analysis to uncover unmet customer needs.
-- Partner with engineering, UX design, and marketing to launch high-impact product features.
-- Analyze product metrics, funnel conversion, retention rates, and A/B testing experiments using Mixpanel/Amplitude.
-
-Qualifications:
-- 3+ years in software product management with agile/scrum methodologies.
-- Proven track record of taking software products from 0 to 1 and driving 20%+ ARR growth.
-- Strong analytical skills (SQL, Google Analytics, Amplitude).
-- Exceptional cross-functional leadership and stakeholder communication skills.`,
-  },
-  {
-    id: "datascience",
-    label: "📊 Data Scientist",
-    role: "Lead Data Scientist / AI Engineer",
-    company: "Apex Analytics",
-    tag: "Python / LLMs / SQL",
-    text: `Lead Data Scientist / AI Engineer at Apex Analytics
-
-We are looking for a Data Scientist / Machine Learning Engineer to design and deploy state-of-the-art predictive models and LLM applications.
-
-Key Responsibilities:
-- Develop machine learning pipelines, NLP algorithms, and deep learning models for production.
-- Implement Retrieval-Augmented Generation (RAG) architectures with vector databases (Pinecone, ChromaDB).
-- Perform exploratory data analysis, feature engineering, and statistical hypothesis testing on terabyte-scale datasets.
-- Deploy scalable ML APIs using FastAPI, Docker, and Kubernetes.
-
-Qualifications:
-- 3+ years experience with Python, PyTorch/TensorFlow, scikit-learn, and Pandas.
-- Demonstrated expertise in LLMs, LangChain/LlamaIndex, and Prompt Engineering.
-- Strong background in probability, statistics, and distributed computing (Spark, SQL).
-- Experience shipping production ML models in AWS/GCP cloud environments.`,
-  },
-];
-
 export default function Home({ initialTab }: { initialTab?: "landing" | "workspace" } = {}) {
   const { user, token, logout, setShowAuthModal, refreshMe } = useAuth();
   const pathname = usePathname();
@@ -2228,14 +2159,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     } catch (err) {
       console.warn("Clipboard paste access:", err);
       setSuccessNotification("Please paste directly into the box using Cmd+V or Ctrl+V.");
-    }
-  };
-
-  const handleSelectSampleJD = (sampleId: string) => {
-    const found = SAMPLE_JDS.find((s) => s.id === sampleId);
-    if (found) {
-      setJobDescription(found.text);
-      setSuccessNotification(`✨ Loaded sample role: ${found.role}`);
     }
   };
 
@@ -4734,24 +4657,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   </div>
                 </div>
 
-                {/* Quick Sample JD Selectors */}
-                <div className="flex items-center flex-wrap gap-1.5 pt-0.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                    Quick Sample:
-                  </span>
-                  {SAMPLE_JDS.map((sample) => (
-                    <button
-                      key={sample.id}
-                      type="button"
-                      onClick={() => handleSelectSampleJD(sample.id)}
-                      className="px-2 py-0.5 rounded-lg text-[10.5px] font-bold bg-slate-50 hover:bg-teal-50 text-slate-600 hover:text-teal-800 border border-slate-200 hover:border-teal-300 transition-all cursor-pointer shadow-2xs active:scale-95"
-                      title={`Load ${sample.role} (${sample.company})`}
-                    >
-                      {sample.label}
-                    </button>
-                  ))}
-                </div>
-
                 <div className="relative">
                   <textarea
                     value={jobDescription}
@@ -4908,48 +4813,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       <span className="sonar-dot relative inline-flex rounded-full h-3 w-3 bg-teal-500" />
                     </div>
                     <span className="text-xs font-extrabold text-teal-800">AI Engine Ready</span>
-                  </div>
-                </div>
-
-                {/* Interactive One-Click Sample Role Showcase */}
-                <div className="relative p-4 rounded-2xl bg-gradient-to-r from-teal-50/70 via-indigo-50/40 to-slate-50 border border-teal-200/80 shadow-xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-teal-600 fill-teal-600" />
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800">
-                        Quick-Start Demo Roles (1-Click Test)
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
-                      Click any role to load target job requirements:
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    {SAMPLE_JDS.map((sample) => (
-                      <button
-                        key={sample.id}
-                        type="button"
-                        onClick={() => handleSelectSampleJD(sample.id)}
-                        className="p-3 rounded-xl bg-white hover:bg-teal-50/50 border border-slate-200/80 hover:border-teal-300 text-left transition-all duration-200 group shadow-2xs hover:shadow-md hover:shadow-teal-500/10 cursor-pointer flex flex-col justify-between space-y-2"
-                      >
-                        <div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 group-hover:bg-teal-100 group-hover:text-teal-800 transition-colors">
-                              {sample.tag}
-                            </span>
-                            <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all" />
-                          </div>
-                          <h4 className="text-xs font-bold text-slate-800 group-hover:text-teal-900 mt-1.5 truncate">
-                            {sample.role}
-                          </h4>
-                          <p className="text-[11px] text-slate-400">{sample.company}</p>
-                        </div>
-                        <span className="text-[10px] font-bold text-teal-600 group-hover:underline">
-                          Load Role &rarr;
-                        </span>
-                      </button>
-                    ))}
                   </div>
                 </div>
 
