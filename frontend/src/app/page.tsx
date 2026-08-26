@@ -1681,6 +1681,75 @@ function cleanSectionModalTitle(title: string): string {
   return clean || title;
 }
 
+const SAMPLE_JDS = [
+  {
+    id: "fullstack",
+    label: "⚡ Senior Full-Stack",
+    role: "Senior Full-Stack Engineer",
+    company: "TechFlow Inc.",
+    tag: "React / Node / AWS",
+    text: `Senior Full-Stack Engineer at TechFlow Inc.
+
+We are looking for a Senior Full-Stack Engineer with 4+ years of experience in React, Next.js, TypeScript, Python (FastAPI/Django) or Node.js, PostgreSQL, and AWS cloud infrastructure.
+
+Key Responsibilities:
+- Architect and build high-performance microservices and responsive web applications.
+- Collaborate with cross-functional product and design teams to deliver scalable features.
+- Optimize application latency, caching strategies (Redis), and database queries for 1M+ active users.
+- Champion CI/CD automation, Docker containerization, and unit/integration testing.
+
+Requirements:
+- Strong proficiency in TypeScript, React, Next.js, and modern state management.
+- Hands-on backend experience with Python (FastAPI/Django) or Node.js.
+- Strong SQL/PostgreSQL database design and Redis caching experience.
+- Familiarity with AWS (ECS, S3, CloudFront), Docker, and Git workflows.`,
+  },
+  {
+    id: "pm",
+    label: "🚀 Product Manager",
+    role: "Senior Product Manager",
+    company: "GrowthScale",
+    tag: "SaaS / Growth / OKRs",
+    text: `Senior Product Manager at GrowthScale
+
+We are seeking a data-driven Senior Product Manager to lead our Core Platform squad and accelerate B2B SaaS product growth.
+
+Responsibilities:
+- Define product vision, roadmap, and quarterly OKRs aligned with business goals.
+- Conduct user interviews, market research, and competitive analysis to uncover unmet customer needs.
+- Partner with engineering, UX design, and marketing to launch high-impact product features.
+- Analyze product metrics, funnel conversion, retention rates, and A/B testing experiments using Mixpanel/Amplitude.
+
+Qualifications:
+- 3+ years in software product management with agile/scrum methodologies.
+- Proven track record of taking software products from 0 to 1 and driving 20%+ ARR growth.
+- Strong analytical skills (SQL, Google Analytics, Amplitude).
+- Exceptional cross-functional leadership and stakeholder communication skills.`,
+  },
+  {
+    id: "datascience",
+    label: "📊 Data Scientist",
+    role: "Lead Data Scientist / AI Engineer",
+    company: "Apex Analytics",
+    tag: "Python / LLMs / SQL",
+    text: `Lead Data Scientist / AI Engineer at Apex Analytics
+
+We are looking for a Data Scientist / Machine Learning Engineer to design and deploy state-of-the-art predictive models and LLM applications.
+
+Key Responsibilities:
+- Develop machine learning pipelines, NLP algorithms, and deep learning models for production.
+- Implement Retrieval-Augmented Generation (RAG) architectures with vector databases (Pinecone, ChromaDB).
+- Perform exploratory data analysis, feature engineering, and statistical hypothesis testing on terabyte-scale datasets.
+- Deploy scalable ML APIs using FastAPI, Docker, and Kubernetes.
+
+Qualifications:
+- 3+ years experience with Python, PyTorch/TensorFlow, scikit-learn, and Pandas.
+- Demonstrated expertise in LLMs, LangChain/LlamaIndex, and Prompt Engineering.
+- Strong background in probability, statistics, and distributed computing (Spark, SQL).
+- Experience shipping production ML models in AWS/GCP cloud environments.`,
+  },
+];
+
 export default function Home({ initialTab }: { initialTab?: "landing" | "workspace" } = {}) {
   const { user, token, logout, setShowAuthModal, refreshMe } = useAuth();
   const pathname = usePathname();
@@ -2142,6 +2211,31 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       }
     } finally {
       setDownloadingCoverLetterFormat(null);
+    }
+  };
+
+  const handlePasteClipboardJD = async () => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text && text.trim()) {
+          setJobDescription(text.trim());
+          setSuccessNotification("📋 Target Job Description pasted from clipboard!");
+          return;
+        }
+      }
+      setSuccessNotification("Clipboard is empty. Please paste using Cmd+V or Ctrl+V.");
+    } catch (err) {
+      console.warn("Clipboard paste access:", err);
+      setSuccessNotification("Please paste directly into the box using Cmd+V or Ctrl+V.");
+    }
+  };
+
+  const handleSelectSampleJD = (sampleId: string) => {
+    const found = SAMPLE_JDS.find((s) => s.id === sampleId);
+    if (found) {
+      setJobDescription(found.text);
+      setSuccessNotification(`✨ Loaded sample role: ${found.role}`);
     }
   };
 
@@ -4612,34 +4706,108 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               )}
 
               {/* Job Description Input Container */}
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Job Description
+                    Target Job Description
                   </label>
-                  {(jobDescription || analysisResult) && (
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => handleResetWorkspace(true)}
-                      className="text-xs text-teal-600 hover:text-teal-500 dark:text-teal-400 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      onClick={handlePasteClipboardJD}
+                      className="text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100/80 border border-teal-200/80 px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105 active:scale-95"
+                      title="Paste job description text from your clipboard"
                     >
-                      <RotateCcw className="h-3 w-3" /> Clear & New Analysis
+                      <Copy className="h-3 w-3 text-teal-600" />
+                      <span>Paste Clipboard</span>
+                    </button>
+                    {(jobDescription || analysisResult) && (
+                      <button
+                        type="button"
+                        onClick={() => handleResetWorkspace(true)}
+                        className="text-xs text-slate-500 hover:text-red-500 font-bold flex items-center gap-1 cursor-pointer transition-colors p-1"
+                        title="Clear job description and reset analysis"
+                      >
+                        <RotateCcw className="h-3 w-3" /> Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Sample JD Selectors */}
+                <div className="flex items-center flex-wrap gap-1.5 pt-0.5">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                    Quick Sample:
+                  </span>
+                  {SAMPLE_JDS.map((sample) => (
+                    <button
+                      key={sample.id}
+                      type="button"
+                      onClick={() => handleSelectSampleJD(sample.id)}
+                      className="px-2 py-0.5 rounded-lg text-[10.5px] font-bold bg-slate-50 hover:bg-teal-50 text-slate-600 hover:text-teal-800 border border-slate-200 hover:border-teal-300 transition-all cursor-pointer shadow-2xs active:scale-95"
+                      title={`Load ${sample.role} (${sample.company})`}
+                    >
+                      {sample.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <textarea
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
+                    placeholder="Paste the target job description or requirement spec here (minimum 50 characters)..."
+                    rows={7}
+                    maxLength={8000}
+                    className="w-full bg-white text-slate-900 border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-xl p-3.5 text-xs sm:text-sm placeholder-slate-400 transition-all outline-none resize-y shadow-inner leading-relaxed"
+                  />
+                  {jobDescription.length === 0 && (
+                    <button
+                      type="button"
+                      onClick={handlePasteClipboardJD}
+                      className="absolute inset-0 m-auto h-9 px-4 rounded-xl bg-white/95 hover:bg-white border border-teal-200 text-teal-700 shadow-md text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-105 active:scale-95 w-fit"
+                    >
+                      <Copy className="h-3.5 w-3.5 text-teal-600" />
+                      <span>Click to Paste Copied Job Description</span>
                     </button>
                   )}
                 </div>
-                <textarea
-                  value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value)}
-                  placeholder="Paste the job description or requirement spec here (minimum 50 characters)..."
-                  rows={8}
-                  maxLength={8000}
-                  className="w-full bg-white text-slate-900 border border-slate-200 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 rounded-xl p-3 text-sm placeholder-slate-400 transition-all outline-none resize-y shadow-inner"
-                />
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>Min: 50 chars</span>
-                  <span className={jobDescription.length < 50 ? "text-amber-600 font-medium" : "text-emerald-600 font-bold"}>
-                    {jobDescription.length.toLocaleString()} / 8,000 characters
-                  </span>
+
+                {/* Visual Character & Quality Meter */}
+                <div className="space-y-1.5 pt-0.5">
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 rounded-full ${
+                        jobDescription.length < 50
+                          ? "bg-amber-400"
+                          : jobDescription.length < 250
+                          ? "bg-teal-500"
+                          : "bg-emerald-500"
+                      }`}
+                      style={{ width: `${Math.min(100, Math.round((jobDescription.length / 350) * 100))}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[11px]">
+                    {jobDescription.length < 50 ? (
+                      <span className="text-amber-600 font-bold flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {50 - jobDescription.length} more characters needed for analysis
+                      </span>
+                    ) : jobDescription.length < 250 ? (
+                      <span className="text-teal-700 font-bold flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3 text-teal-600" />
+                        Ready for audit (detailed JD gives higher accuracy)
+                      </span>
+                    ) : (
+                      <span className="text-emerald-700 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        Ideal comprehensive JD length for precision ATS matching
+                      </span>
+                    )}
+                    <span className="text-slate-400 font-medium text-[10.5px]">
+                      {jobDescription.length.toLocaleString()} / 8,000
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -4681,22 +4849,28 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 <button
                   type="submit"
                   disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing}
-                  className={`w-full py-3.5 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-center gap-2 glow-btn ${documentId && jobDescription.trim().length >= 50 && !isAnalyzing
-                      ? "bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:to-teal-500 text-white shadow-xl shadow-teal-500/20 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                  className={`w-full py-3.5 px-4 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-between gap-2 shadow-lg ${
+                    documentId && jobDescription.trim().length >= 50 && !isAnalyzing
+                      ? "bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:via-teal-700 hover:to-teal-500 text-white shadow-teal-500/20 hover:scale-[1.01] active:scale-[0.99] cursor-pointer ring-2 ring-teal-400/30"
                       : "bg-slate-200 text-slate-400 cursor-not-allowed"
-                    }`}
+                  }`}
                 >
-                  {isAnalyzing ? (
-                    <>
+                  <div className="flex items-center gap-2">
+                    {isAnalyzing ? (
                       <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      Running AI Analysis...
-                    </>
-                  ) : (
-                    <>
+                    ) : (
                       <Sparkles className="h-4 w-4 text-[#FF6B4A]" />
-                      Analyze Gaps & Fit
-                    </>
-                  )}
+                    )}
+                    <span>{isAnalyzing ? "Running Recruiter AI Analysis..." : "Analyze Gaps & Fit"}</span>
+                  </div>
+
+                  <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    documentId && jobDescription.trim().length >= 50 && !isAnalyzing
+                      ? "bg-white/20 text-white border border-white/30"
+                      : "bg-slate-300 text-slate-500"
+                  }`}>
+                    {user?.plan_type === "free" ? "1 Credit" : "AI Audit"}
+                  </span>
                 </button>
               </div>
             </form>
@@ -4707,7 +4881,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             {isAnalyzing ? (
               <LoadingState />
             ) : !analysisResult ? (
-              <div className="relative rounded-3xl bg-white border border-slate-200/90 shadow-xl shadow-teal-500/5 overflow-hidden p-6 sm:p-8 space-y-8 animate-fade-in">
+              <div className="relative rounded-3xl bg-white border border-slate-200/90 shadow-xl shadow-teal-500/5 overflow-hidden p-6 sm:p-8 space-y-7 animate-fade-in">
                 {/* Ambient background glow */}
                 <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#FF6B4A]/5 rounded-full blur-3xl pointer-events-none" />
@@ -4737,88 +4911,223 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   </div>
                 </div>
 
-                {/* Feature Highlight Cards Grid — with AI icon glow orbs */}
+                {/* Interactive One-Click Sample Role Showcase */}
+                <div className="relative p-4 rounded-2xl bg-gradient-to-r from-teal-50/70 via-indigo-50/40 to-slate-50 border border-teal-200/80 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-teal-600 fill-teal-600" />
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800">
+                        Quick-Start Demo Roles (1-Click Test)
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
+                      Click any role to load target job requirements:
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {SAMPLE_JDS.map((sample) => (
+                      <button
+                        key={sample.id}
+                        type="button"
+                        onClick={() => handleSelectSampleJD(sample.id)}
+                        className="p-3 rounded-xl bg-white hover:bg-teal-50/50 border border-slate-200/80 hover:border-teal-300 text-left transition-all duration-200 group shadow-2xs hover:shadow-md hover:shadow-teal-500/10 cursor-pointer flex flex-col justify-between space-y-2"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 group-hover:bg-teal-100 group-hover:text-teal-800 transition-colors">
+                              {sample.tag}
+                            </span>
+                            <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all" />
+                          </div>
+                          <h4 className="text-xs font-bold text-slate-800 group-hover:text-teal-900 mt-1.5 truncate">
+                            {sample.role}
+                          </h4>
+                          <p className="text-[11px] text-slate-400">{sample.company}</p>
+                        </div>
+                        <span className="text-[10px] font-bold text-teal-600 group-hover:underline">
+                          Load Role &rarr;
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Feature Highlight Cards Grid — with rich before/after & live previews */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
                   {/* Card 1: ATS Matrix — teal glow */}
-                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs">
-                    <div className="ai-icon-wrap glow-teal">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-teal-100 to-teal-50 text-teal-700 flex items-center justify-center border border-teal-200 group-hover:scale-105 transition-transform shadow-sm">
-                        <Target className="h-5 w-5 text-teal-600" />
+                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="ai-icon-wrap glow-teal">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-teal-100 to-teal-50 text-teal-700 flex items-center justify-center border border-teal-200 group-hover:scale-105 transition-transform shadow-sm">
+                          <Target className="h-5 w-5 text-teal-600" />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-extrabold text-[#0F172A]">ATS Keyword Matrix</h4>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                          Categorizes hard &amp; soft competencies with evidence verification (Confirmed, In Evidence, or Gap).
+                        </p>
                       </div>
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-extrabold text-[#0F172A]">ATS Keyword Matrix</h4>
-                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                        Categorizes hard &amp; soft competencies with evidence verification (Confirmed, Missing, or Weak).
-                      </p>
-                    </div>
-                    <div className="pt-2 flex flex-wrap gap-1.5">
+                    <div className="pt-2 flex flex-wrap gap-1.5 border-t border-slate-100">
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-teal-50 text-teal-700 border border-teal-200">
-                        ✓ Confirmed
+                        ✓ React / TS
                       </span>
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
-                        ⚡ In Evidence
+                        ⚡ Cloud Infra
                       </span>
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-[#FFF1EE] text-[#FF6B4A] border border-[#FFCFC4]">
-                        ✗ Gap Detected
+                        ✗ Redis Cache
                       </span>
                     </div>
                   </div>
 
                   {/* Card 2: Google XYZ Formula — coral glow */}
-                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs">
-                    <div className="ai-icon-wrap glow-coral">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 text-orange-600 flex items-center justify-center border border-orange-200 group-hover:scale-105 transition-transform shadow-sm">
-                        <Sparkles className="h-5 w-5 text-[#FF6B4A]" />
+                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="ai-icon-wrap glow-coral">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 text-orange-600 flex items-center justify-center border border-orange-200 group-hover:scale-105 transition-transform shadow-sm">
+                          <Sparkles className="h-5 w-5 text-[#FF6B4A]" />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-extrabold text-[#0F172A]">Google XYZ Formula</h4>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                          Transforms passive bullets into high-impact metrics (Accomplished [X] by [Y], resulting in [Z]).
+                        </p>
                       </div>
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-extrabold text-[#0F172A]">Google XYZ Rewrites</h4>
-                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                        Converts routine duty bullets into high-impact metrics (Accomplished [X] by [Y], resulting in [Z]).
-                      </p>
-                    </div>
-                    <div className="pt-2 p-2.5 rounded-lg bg-white border border-slate-200 text-[11px] text-slate-600 font-mono">
-                      <span className="text-emerald-600 font-bold">+ 38% Metric Gain</span>
+                    <div className="pt-2 p-2.5 rounded-xl bg-white border border-slate-200/90 text-[10.5px] space-y-1 font-sans">
+                      <div className="text-slate-400 line-through truncate" title="Responsible for backend APIs">
+                        &quot;Responsible for backend APIs&quot;
+                      </div>
+                      <div className="text-emerald-700 font-bold flex items-center justify-between">
+                        <span className="truncate">&quot;Engineered microservices, cutting latency by 38%&quot;</span>
+                        <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1 rounded ml-1 shrink-0">+38%</span>
+                      </div>
                     </div>
                   </div>
 
                   {/* Card 3: DOCX XML Precision — blue glow */}
-                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs">
-                    <div className="ai-icon-wrap glow-blue">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-700 flex items-center justify-center border border-blue-200 group-hover:scale-105 transition-transform shadow-sm">
-                        <FileText className="h-5 w-5 text-blue-600" />
+                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="ai-icon-wrap glow-blue">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-700 flex items-center justify-center border border-blue-200 group-hover:scale-105 transition-transform shadow-sm">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-extrabold text-[#0F172A]">100% DOCX Format Match</h4>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                          Patches paragraphs and tables directly at the XML run level without template or font drift.
+                        </p>
                       </div>
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-extrabold text-[#0F172A]">100% DOCX Format Match</h4>
-                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                        Patches paragraphs and tables directly at the XML run level without template degradation.
-                      </p>
-                    </div>
-                    <div className="pt-2 flex items-center gap-1.5 text-[10px] font-extrabold text-blue-700">
-                      <CheckCircle className="h-3.5 w-3.5 text-blue-600" />
-                      <span>Zero Template Drift</span>
+                    <div className="pt-2 flex items-center justify-between text-[10px] font-extrabold text-blue-700 border-t border-slate-100">
+                      <span className="flex items-center gap-1">
+                        <CheckCircle className="h-3.5 w-3.5 text-blue-600" />
+                        Zero Layout Drift
+                      </span>
+                      <span className="bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                        XML-Level Lock
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* 3-Step Guided Workflow Bar */}
-                <div className="p-5 rounded-2xl bg-gradient-to-r from-[#E6F7F4] via-teal-50/70 to-slate-50 border border-[#99F6E4]/90 text-[#0F172A] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-white text-[#14B8A6] border border-[#99F6E4] shadow-2xs flex items-center justify-center shrink-0">
-                      <Zap className="h-4 w-4 fill-[#14B8A6] text-[#14B8A6]" />
-                    </div>
-                    <div>
-                      <h5 className="text-xs font-black tracking-wide uppercase text-[#0D9488]">How to get started</h5>
-                      <p className="text-xs text-slate-600 font-medium">
-                        1. Upload your resume &rarr; 2. Paste job description &rarr; 3. Hit &quot;Analyze Gaps &amp; Fit&quot;
-                      </p>
+                {/* 3-Step Live Interactive Workflow Stepper */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#E6F7F4] via-teal-50/70 to-slate-50 border border-[#99F6E4]/90 text-[#0F172A] shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase tracking-wider text-[#0D9488] flex items-center gap-1.5">
+                      <Zap className="h-3.5 w-3.5 fill-[#0D9488]" />
+                      Audit Readiness Workflow
+                    </span>
+                    <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-teal-900 bg-white/90 px-2.5 py-1 rounded-lg border border-teal-200/90 shadow-2xs">
+                      <Shield className="h-3 w-3 text-teal-600" />
+                      <span>Strict Recruiter Verification</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] font-bold text-teal-900 bg-white/90 px-3.5 py-1.5 rounded-xl border border-teal-200/90 shadow-2xs shrink-0">
-                    <Shield className="h-3.5 w-3.5 text-teal-600" />
-                    <span>Strict Recruiter Verification</span>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {/* Step 1 */}
+                    <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${
+                      documentId || file
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs"
+                        : "bg-white/80 border-slate-200 text-slate-700"
+                    }`}>
+                      <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                        documentId || file
+                          ? "bg-emerald-600 text-white"
+                          : "bg-slate-200 text-slate-600"
+                      }`}>
+                        {documentId || file ? "✓" : "1"}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold truncate">
+                          {documentId || file ? "Resume Ready" : "Upload Resume"}
+                        </p>
+                        <p className="text-[10px] text-slate-500 truncate">
+                          {file?.name || (documentId ? "Base Resume" : "DOCX file")}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${
+                      jobDescription.trim().length >= 50
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs"
+                        : "bg-white/80 border-slate-200 text-slate-700"
+                    }`}>
+                      <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                        jobDescription.trim().length >= 50
+                          ? "bg-emerald-600 text-white"
+                          : "bg-slate-200 text-slate-600"
+                      }`}>
+                        {jobDescription.trim().length >= 50 ? "✓" : "2"}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold truncate">
+                          {jobDescription.trim().length >= 50 ? "Job Spec Set" : "Paste Job Spec"}
+                        </p>
+                        <p className="text-[10px] text-slate-500 truncate">
+                          {jobDescription.trim().length >= 50
+                            ? `${jobDescription.trim().length} chars loaded`
+                            : "Min 50 characters"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${
+                      (documentId || file) && jobDescription.trim().length >= 50
+                        ? "bg-teal-600 text-white border-teal-500 shadow-md shadow-teal-600/20 animate-pulse"
+                        : "bg-white/80 border-slate-200 text-slate-700"
+                    }`}>
+                      <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                        (documentId || file) && jobDescription.trim().length >= 50
+                          ? "bg-white text-teal-800 font-extrabold"
+                          : "bg-slate-200 text-slate-600"
+                      }`}>
+                        3
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold truncate">
+                          {(documentId || file) && jobDescription.trim().length >= 50
+                            ? "Ready to Audit!"
+                            : "Run Audit"}
+                        </p>
+                        <p className={`text-[10px] truncate ${
+                          (documentId || file) && jobDescription.trim().length >= 50
+                            ? "text-teal-100"
+                            : "text-slate-500"
+                        }`}>
+                          {(documentId || file) && jobDescription.trim().length >= 50
+                            ? "Click Analyze Gaps & Fit"
+                            : "Multi-vector match"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
