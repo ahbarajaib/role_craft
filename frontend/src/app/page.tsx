@@ -4666,16 +4666,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     maxLength={8000}
                     className="w-full bg-white text-slate-900 border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-xl p-3.5 text-xs sm:text-sm placeholder-slate-400 transition-all outline-none resize-y shadow-inner leading-relaxed"
                   />
-                  {jobDescription.length === 0 && (
-                    <button
-                      type="button"
-                      onClick={handlePasteClipboardJD}
-                      className="absolute inset-0 m-auto h-9 px-4 rounded-xl bg-white/95 hover:bg-white border border-teal-200 text-teal-700 shadow-md text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-105 active:scale-95 w-fit"
-                    >
-                      <Copy className="h-3.5 w-3.5 text-teal-600" />
-                      <span>Click to Paste Copied Job Description</span>
-                    </button>
-                  )}
                 </div>
 
                 {/* Visual Character & Quality Meter */}
