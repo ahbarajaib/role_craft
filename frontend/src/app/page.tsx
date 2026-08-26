@@ -1763,6 +1763,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [isSavingBase, setIsSavingBase] = useState(false);
   const [isAutoTailoring, setIsAutoTailoring] = useState(false);
   const [tailoringSectionToggles, setTailoringSectionToggles] = useState<Record<string, boolean>>({});
+  const isRestoredRef = useRef(false);
 
   const [isAutoTailorSettingsOpen, setIsAutoTailorSettingsOpen] = useState(false);
 
@@ -2154,7 +2155,93 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     }
   }, [rewrittenSections]);
 
-  // Auto-load user's saved base resume when they log in
+  // ── Auto-restore Workspace State on page refresh ─────────────────────────
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem("rc_workspace_state");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.jobDescription) setJobDescription(parsed.jobDescription);
+        if (parsed.documentId) setDocumentId(parsed.documentId);
+        if (parsed.fileName) {
+          const synthetic = new File([], parsed.fileName, {
+            type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          });
+          setFile(synthetic);
+          setBaseResumeLoaded(true);
+        }
+        if (parsed.analysisResult) setAnalysisResult(parsed.analysisResult);
+        if (parsed.rewrittenSections && Object.keys(parsed.rewrittenSections).length > 0) {
+          setRewrittenSections(parsed.rewrittenSections);
+        }
+        if (parsed.previousRewrittenSections) setPreviousRewrittenSections(parsed.previousRewrittenSections);
+        if (parsed.downloadId) setDownloadId(parsed.downloadId);
+        if (parsed.downloadUrl) setDownloadUrl(parsed.downloadUrl);
+        if (parsed.isPatchingApplied !== undefined) setIsPatchingApplied(parsed.isPatchingApplied);
+        if (parsed.customTargetRole) setCustomTargetRole(parsed.customTargetRole);
+        if (parsed.appliedWovenKeywords) setAppliedWovenKeywords(parsed.appliedWovenKeywords);
+        if (parsed.isKeywordsWoven !== undefined) setIsKeywordsWoven(parsed.isKeywordsWoven);
+        if (parsed.coverLetterText) setCoverLetterText(parsed.coverLetterText);
+        if (parsed.coverLetterDownloadId) setCoverLetterDownloadId(parsed.coverLetterDownloadId);
+        if (parsed.activeNavTab) setActiveNavTab(parsed.activeNavTab);
+        console.log("✨ [RoleCraft Persistence] Restored active workspace session from storage");
+      }
+    } catch (e) {
+      console.warn("Failed to restore saved workspace state:", e);
+    } finally {
+      isRestoredRef.current = true;
+    }
+  }, []);
+
+  // ── Auto-save Workspace State on state changes so refresh never loses work ─
+  useEffect(() => {
+    if (typeof window === "undefined" || !isRestoredRef.current) return;
+    // Don't overwrite storage with empty state if no active workspace content
+    if (!jobDescription && !documentId && !analysisResult && !file) {
+      return;
+    }
+    const stateToSave = {
+      documentId,
+      fileName: file?.name || null,
+      jobDescription,
+      analysisResult,
+      rewrittenSections,
+      previousRewrittenSections,
+      downloadId,
+      downloadUrl,
+      isPatchingApplied,
+      customTargetRole,
+      appliedWovenKeywords,
+      isKeywordsWoven,
+      coverLetterText,
+      coverLetterDownloadId,
+      activeNavTab,
+    };
+    try {
+      localStorage.setItem("rc_workspace_state", JSON.stringify(stateToSave));
+    } catch (e) {
+      console.warn("Failed to persist workspace state:", e);
+    }
+  }, [
+    documentId,
+    file,
+    jobDescription,
+    analysisResult,
+    rewrittenSections,
+    previousRewrittenSections,
+    downloadId,
+    downloadUrl,
+    isPatchingApplied,
+    customTargetRole,
+    appliedWovenKeywords,
+    isKeywordsWoven,
+    coverLetterText,
+    coverLetterDownloadId,
+    activeNavTab,
+  ]);
+
+  // Auto-load user's saved base resume when they log in (if no active file or session)
   useEffect(() => {
     if (user && user.base_resume_id && user.base_resume_filename && !file && !baseResumeLoaded) {
       setDocumentId(user.base_resume_id);
@@ -3336,6 +3423,37 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setDocumentId(null);
       setBaseResumeLoaded(false);
     }
+
+    try {
+      if (typeof window !== "undefined") {
+        if (!keepResume) {
+          localStorage.removeItem("rc_workspace_state");
+        } else {
+          // Keep resume info in storage so they don't have to re-upload
+          const partial = {
+            documentId: documentId,
+            fileName: file?.name || null,
+            jobDescription: "",
+            analysisResult: null,
+            rewrittenSections: {},
+            previousRewrittenSections: {},
+            downloadId: null,
+            downloadUrl: null,
+            isPatchingApplied: false,
+            customTargetRole: "",
+            appliedWovenKeywords: [],
+            isKeywordsWoven: false,
+            coverLetterText: null,
+            coverLetterDownloadId: null,
+            activeNavTab,
+          };
+          localStorage.setItem("rc_workspace_state", JSON.stringify(partial));
+        }
+      }
+    } catch (e) {
+      console.warn("Error updating workspace storage on reset:", e);
+    }
+
     setSuccessNotification("✨ Workspace reset! Ready for a new job description.");
   };
 
