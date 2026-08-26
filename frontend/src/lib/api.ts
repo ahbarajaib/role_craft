@@ -353,6 +353,38 @@ export async function updateCoverLetter(
   return response.json();
 }
 
+export async function downloadCoverLetterFile(
+  downloadId: string,
+  format: "docx" | "pdf",
+  targetFilename?: string
+): Promise<void> {
+  const url = `${API_BASE_URL}/api/v1/resume/download/${downloadId}/cover-letter?format=${format}`;
+  const response = await fetch(url, {
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || errorData?.detail || `Failed to download cover letter (${response.status})`);
+  }
+
+  const blob = await response.blob();
+  const blobUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = blobUrl;
+  const contentDisposition = response.headers.get("content-disposition");
+  let filename = targetFilename;
+  if (!filename && contentDisposition) {
+    const match = contentDisposition.match(/filename="?([^";]+)"?/i);
+    if (match && match[1]) filename = match[1];
+  }
+  a.download = filename || `cover_letter.${format}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(blobUrl);
+}
+
 export interface AnalysisHistoryItem {
   id: number;
   document_id: string;

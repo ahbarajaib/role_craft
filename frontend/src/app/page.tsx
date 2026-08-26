@@ -59,7 +59,7 @@ import {
   GraduationCap,
   Award,
 } from "lucide-react";
-import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
+import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, downloadCoverLetterFile, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
@@ -2118,6 +2118,29 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       console.error("Cover letter update error:", err);
     } finally {
       setIsUpdatingCoverLetter(false);
+    }
+  };
+
+  const [downloadingCoverLetterFormat, setDownloadingCoverLetterFormat] = useState<"docx" | "pdf" | null>(null);
+
+  const handleDownloadCoverLetter = async (format: "docx" | "pdf") => {
+    if (!coverLetterDownloadId) return;
+    setDownloadingCoverLetterFormat(format);
+    try {
+      setSuccessNotification(`Exporting Cover Letter as ${format.toUpperCase()}...`);
+      await downloadCoverLetterFile(coverLetterDownloadId, format);
+      setSuccessNotification(`✨ Cover Letter (${format.toUpperCase()}) downloaded successfully!`);
+    } catch (err: any) {
+      console.error("Cover letter download error, attempting direct fallback:", err);
+      try {
+        const fallbackUrl = `${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=${format}`;
+        window.open(fallbackUrl, "_blank");
+        setSuccessNotification(`Downloading Cover Letter (${format.toUpperCase()})...`);
+      } catch (fallbackErr) {
+        setError(err?.message || "Failed to download cover letter. Please try again.");
+      }
+    } finally {
+      setDownloadingCoverLetterFormat(null);
     }
   };
 
@@ -5439,23 +5462,34 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               </>
                             )}
                           </button>
-                          <a
-                            href={`${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=docx`}
-                            download
-                            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-md shadow-teal-600/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadCoverLetter("docx")}
+                            disabled={downloadingCoverLetterFormat !== null}
+                            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-md shadow-teal-600/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 hover:scale-105 active:scale-95 select-none"
+                            title="Download formatted DOCX cover letter"
                           >
-                            <WordLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
-                            Download Cover Letter (.DOCX)
-                          </a>
-                          <a
-                            href={`${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=pdf`}
-                            download
-                            onClick={() => setSuccessNotification("Downloading Cover Letter PDF...")}
-                            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer border border-slate-700/60"
+                            {downloadingCoverLetterFormat === "docx" ? (
+                              <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                            ) : (
+                              <WordLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
+                            )}
+                            <span>Download Cover Letter (.DOCX)</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadCoverLetter("pdf")}
+                            disabled={downloadingCoverLetterFormat !== null}
+                            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer border border-slate-700/60 disabled:opacity-60 hover:scale-105 active:scale-95 select-none"
+                            title="Download high-fidelity PDF cover letter"
                           >
-                            <PdfLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
-                            Download Cover Letter (.PDF)
-                          </a>
+                            {downloadingCoverLetterFormat === "pdf" ? (
+                              <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                            ) : (
+                              <PdfLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
+                            )}
+                            <span>Download Cover Letter (.PDF)</span>
+                          </button>
                         </div>
                       )}
                     </div>

@@ -432,6 +432,124 @@ def apply_rewrites(
     return res
 
 
+# ── Cover Letter Endpoints ───────────────────────────────────────────────────
+
+
+@router.post(
+    "/cover-letter",
+    response_model=CoverLetterResponse,
+    summary="Generate a tailored cover letter using AI",
+    dependencies=[Depends(verify_premium_permission)],
+)
+def generate_cover_letter(
+    body: CoverLetterRequest,
+    service: Annotated[CoverLetterService, Depends(get_cover_letter_service)],
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> CoverLetterResponse:
+    """Generate a tailored 3-paragraph cover letter based on resume & job description."""
+    verify_user_credits(user, 1)
+    res = service.generate_cover_letter(body)
+    deduct_user_credits(db, user, 1)
+    return res
+
+
+@router.put(
+    "/cover-letter/{download_id}",
+    summary="Update edited cover letter text before downloading",
+    dependencies=[Depends(verify_premium_permission)],
+)
+def update_cover_letter(
+    download_id: str,
+    body: UpdateCoverLetterRequest,
+    service: Annotated[CoverLetterService, Depends(get_cover_letter_service)],
+) -> dict[str, str]:
+    """Update cover letter text and rebuild DOCX."""
+    service.update_cover_letter_text(download_id, body.cover_letter_text)
+    return {"status": "ok", "message": "Cover letter updated successfully"}
+
+
+@router.get(
+    "/download/{download_id}/cover-letter",
+    summary="Download cover letter as DOCX or PDF",
+)
+@router.get(
+    "/cover-letter/{download_id}/download",
+    summary="Download cover letter as DOCX or PDF (alias)",
+)
+def download_cover_letter(
+    download_id: str,
+    settings: Annotated[Settings, Depends(get_settings)],
+    format: str = "docx",
+    filename: str = "cover_letter.docx",
+) -> FileResponse:
+    """Download the generated cover letter file in DOCX or PDF format."""
+    upload_dir = Path(settings.UPLOAD_DIR)
+    docx_path = upload_dir / "generated" / f"{download_id}.docx"
+
+    if not docx_path.exists():
+        raise NotFoundError(f"Cover letter file for ID '{download_id}' not found.")
+
+    # Extract company name from the cached cover letter text
+    company_name = "Company"
+    txt_cache_path = upload_dir / "generated" / f"{download_id}_cover_letter.txt"
+    if txt_cache_path.exists():
+        try:
+            cl_text = txt_cache_path.read_text(encoding="utf-8")
+            import re
+            first_p = cl_text.split("\n\n")[0] if "\n\n" in cl_text else cl_text
+            patterns = [
+                r"(?:join|at|to|with)\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\s+as\s+an?\b",
+                r"opportunity\s+at\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\b",
+                r"position\s+at\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\b",
+                r"role\s+at\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\b",
+                r"team\s+at\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\b",
+                r"(?:join|at)\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,25}?)\s+because\s+your\b",
+            ]
+            for pattern in patterns:
+                match = re.search(pattern, first_p, re.IGNORECASE)
+                if match:
+                    comp = match.group(1).strip()
+                    comp = re.sub(r'\s+(?:as|the|because|to|for|is|an?)\s*$', '', comp, flags=re.IGNORECASE).strip()
+                    comp = comp.rstrip(".,;:")
+                    if comp:
+                        company_name = comp
+                        break
+        except Exception as e:
+            logger.error(f"Error extracting company name for download: {e}")
+
+    safe_name = f"cover - {company_name}.pdf" if format.lower() == "pdf" else f"cover - {company_name}.docx"
+
+    if format.lower() == "pdf":
+        from app.services.pdf_service import PDFService
+        pdf_path = upload_dir / "generated" / f"{download_id}.pdf"
+        pdf_service = PDFService(upload_dir=upload_dir)
+        pdf_service.convert_docx_to_pdf(docx_path, pdf_path)
+
+        return FileResponse(
+            path=pdf_path,
+            media_type="application/pdf",
+            filename=safe_name,
+            headers={
+                "Content-Disposition": f'attachment; filename="{safe_name}"',
+                "Access-Control-Allow-Origin": "*",
+            },
+        )
+
+    return FileResponse(
+        path=docx_path,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        filename=safe_name,
+        headers={
+            "Content-Disposition": f'attachment; filename="{safe_name}"',
+            "Access-Control-Allow-Origin": "*",
+        },
+    )
+
+
+# ── Patched Resume Download Endpoints ────────────────────────────────────────
+
+
 @router.get(
     "/download/{download_id:path}/pdf",
     summary="Download or stream PDF version of the resume",
@@ -509,112 +627,6 @@ def download_patched_resume(
 
     return FileResponse(
         path=file_path,
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        filename=safe_name,
-    )
-
-
-# ── Cover Letter Endpoints ───────────────────────────────────────────────────
-
-
-@router.post(
-    "/cover-letter",
-    response_model=CoverLetterResponse,
-    summary="Generate a tailored cover letter using AI",
-    dependencies=[Depends(verify_premium_permission)],
-)
-def generate_cover_letter(
-    body: CoverLetterRequest,
-    service: Annotated[CoverLetterService, Depends(get_cover_letter_service)],
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-) -> CoverLetterResponse:
-    """Generate a tailored 3-paragraph cover letter based on resume & job description."""
-    verify_user_credits(user, 1)
-    res = service.generate_cover_letter(body)
-    deduct_user_credits(db, user, 1)
-    return res
-
-
-@router.put(
-    "/cover-letter/{download_id}",
-    summary="Update edited cover letter text before downloading",
-    dependencies=[Depends(verify_premium_permission)],
-)
-def update_cover_letter(
-    download_id: str,
-    body: UpdateCoverLetterRequest,
-    service: Annotated[CoverLetterService, Depends(get_cover_letter_service)],
-) -> dict[str, str]:
-    """Update cover letter text and rebuild DOCX."""
-    service.update_cover_letter_text(download_id, body.cover_letter_text)
-    return {"status": "ok", "message": "Cover letter updated successfully"}
-
-
-@router.get(
-    "/download/{download_id}/cover-letter",
-    summary="Download cover letter as DOCX or PDF",
-)
-def download_cover_letter(
-    download_id: str,
-    settings: Annotated[Settings, Depends(get_settings)],
-    format: str = "docx",
-    filename: str = "cover_letter.docx",
-) -> FileResponse:
-    """Download the generated cover letter file in DOCX or PDF format."""
-    upload_dir = Path(settings.UPLOAD_DIR)
-    docx_path = upload_dir / "generated" / f"{download_id}.docx"
-
-    if not docx_path.exists():
-        raise NotFoundError(f"Cover letter file for ID '{download_id}' not found.")
-
-    # Extract company name from the cached cover letter text
-    company_name = "Company"
-    txt_cache_path = upload_dir / "generated" / f"{download_id}_cover_letter.txt"
-    if txt_cache_path.exists():
-        try:
-            cl_text = txt_cache_path.read_text(encoding="utf-8")
-            import re
-            first_p = cl_text.split("\n\n")[0] if "\n\n" in cl_text else cl_text
-            patterns = [
-                r"(?:join|at|to|with)\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\s+as\s+an?\b",
-                r"opportunity\s+at\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\b",
-                r"position\s+at\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\b",
-                r"role\s+at\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\b",
-                r"team\s+at\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,30}?)\b",
-                r"(?:join|at)\s+([A-Z0-9][a-zA-Z0-9\s\.\,\-\&]{1,25}?)\s+because\s+your\b",
-            ]
-            for pattern in patterns:
-                match = re.search(pattern, first_p, re.IGNORECASE)
-                if match:
-                    comp = match.group(1).strip()
-                    comp = re.sub(r'\s+(?:as|the|because|to|for|is|an?)\s*$', '', comp, flags=re.IGNORECASE).strip()
-                    comp = comp.rstrip(".,;:")
-                    if comp:
-                        company_name = comp
-                        break
-        except Exception as e:
-            logger.error(f"Error extracting company name for download: {e}")
-
-    safe_name = f"cover - {company_name}.pdf" if format.lower() == "pdf" else f"cover - {company_name}.docx"
-
-    if format.lower() == "pdf":
-        from app.services.pdf_service import PDFService
-        pdf_path = upload_dir / "generated" / f"{download_id}.pdf"
-        pdf_service = PDFService(upload_dir=upload_dir)
-        pdf_service.convert_docx_to_pdf(docx_path, pdf_path)
-
-        return FileResponse(
-            path=pdf_path,
-            media_type="application/pdf",
-            headers={
-                "Content-Disposition": f'attachment; filename="{safe_name}"',
-                "Access-Control-Allow-Origin": "*",
-            },
-        )
-
-    return FileResponse(
-        path=docx_path,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         filename=safe_name,
     )
