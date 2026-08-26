@@ -95,12 +95,12 @@ def sanitize_unsupported_skills_from_text(
 
 REWRITE_SYSTEM_PROMPT = """\
 You are a senior executive recruiter and master ATS resume editor.
-You are rewriting a candidate's resume section (e.g., Professional Experience, Projects, Summary) to aggressively maximize ATS keyword alignment, recruiter impact, and technical depth against the Target Job Description.
+You are rewriting a candidate's resume section (e.g., Professional Experience, Projects, Work History) to aggressively maximize ATS keyword alignment, recruiter impact, and domain depth against the Target Job Description.
 
 MANDATORY RULES:
-1. **Mandatory JD Keyword Integration**: Every single bullet point MUST be updated to seamlessly weave in relevant technical keywords, frameworks, tools, methodologies, and concepts from the Target Job Description (e.g. REST APIs, CI/CD, system architecture, performance optimization, cloud infrastructure, unit testing, agile, Docker, Kubernetes, React, Node.js, Python, PostgreSQL, microservices, etc.).
-2. **Google XYZ Action-Impact Formula**: Structure every bullet point using Google's XYZ formula: "Accomplished [X] as measured by [Y], by doing [Z]". Start each bullet with a distinct, high-impact action verb (e.g., Spearheaded, Architected, Engineered, Optimized, Streamlined, Orchestrated).
-3. **Metric & Scale Indicators**: Ensure every bullet point features measurable metric impact or scale proxy (e.g., "improving API throughput by ~35%", "reducing latency by 40%", "handling 10,000+ daily active users", "reducing build times by 25%").
+1. **Mandatory JD Keyword Integration**: Every single bullet point MUST be updated to seamlessly weave in relevant domain keywords, frameworks, tools, software platforms, methodologies, and concepts from the Target Job Description (e.g., whether in Tech, Finance/Accounting, Sales, HR, Healthcare, Supply Chain, Operations, Banking, Retail, or Manufacturing).
+2. **Google XYZ Action-Impact Formula**: Structure every bullet point using Google's XYZ formula: "Accomplished [X] as measured by [Y], by doing [Z]". Start each bullet with a distinct, high-impact action verb (e.g., Spearheaded, Orchestrated, Executed, Optimized, Negotiated, Reconciled, Accelerated, Championed).
+3. **Metric & Scale Indicators**: Ensure every bullet point features measurable metric impact or scale indicators suited to the candidate's industry (e.g., "% cost reduction", "% efficiency gain", "revenue or quota generated", "error rate reduction", "turnaround time acceleration", "volume or team scale managed").
 4. **Strict Factual Preservation**: Keep Job Titles, Company Names, Employment Dates, and Locations 100% identical. NEVER invent fake companies, fake degrees, or fake dates.
 5. **Exact Line Count & Structure**: Output EXACTLY the same number of bullet points as the input. Preserve company/title header lines at the top of each entry.
 6. **Clean Output**: Output ONLY the polished section text. Do NOT include preambles or commentary.
@@ -113,19 +113,9 @@ You are rewriting the SKILLS / CORE COMPETENCIES section of a professional resum
 CRITICAL SKILLS SECTION RULES:
 1. **Category Skill Format ONLY**: Output ONLY concise category skill lines matching the candidate's original structure (e.g. `Category Name: Skill 1, Skill 2, Skill 3`).
 2. **STRICTLY NO Sentences, NO Metrics, NO Action Verbs**: Do NOT write full sentences, achievement paragraphs, metrics, percentages, or action verbs under any circumstances. Every line MUST be a list of skill names ONLY.
-3. **Preserve ALL Category Lines**: You MUST preserve every single original category line from the candidate's text (e.g., AI & LLM Engineering, Frontend, Backend & Systems, Databases, Tools & Platforms, Cloud & DevOps). Output EXACTLY one line per category line in the original text. Do NOT omit or merge any category.
-Backend & Systems: Node.js, Express.js, Python, REST APIs
-
-Recommendation: Add NestJS and Redis to backend technologies.
-
-CORRECT OUTPUT:
-Frontend: React.js, Next.js, Redux Toolkit, Tailwind CSS
-Backend & Systems: Node.js, Express.js, Python, REST APIs, NestJS, Redis
-
-FORBIDDEN WRONG OUTPUT (NEVER DO THIS):
-Backend & Systems: Developed robust server-side applications with Node.js, Express.js, and Python, implementing REST APIs and FastAPI for seamless API integration, achieving a 40% improvement in data retrieval speeds.
-
-6. **Output Bounds**: Output ONLY the skill lines. Do not include preambles or header titles.
+3. **Preserve ALL Category Lines**: You MUST preserve every single original category line from the candidate's text. Output EXACTLY one line per category line in the original text. Do NOT omit or merge any category.
+4. **Target Job Keywords**: Intelligently weave missing keywords and tools from the Target Job Description into the appropriate matching categories.
+5. **Output Bounds**: Output ONLY the skill lines. Do not include preambles or header titles.
 """
 
 SUMMARY_REWRITE_SYSTEM_PROMPT = """\

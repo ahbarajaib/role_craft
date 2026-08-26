@@ -38,7 +38,12 @@ export default function TestimonialsSection() {
       {/* Candidate Testimonial Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {testimonials.map((t, i) => (
-          <div key={i} className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 glass-card-interactive relative overflow-hidden">
+          <div
+            key={i}
+            className={`rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm hover:shadow-xl hover:shadow-teal-500/10 hover:border-teal-300 transition-all flex flex-col justify-between space-y-6 glass-card-interactive relative overflow-hidden reveal-on-scroll ${
+              i === 1 ? "reveal-delay-1" : i === 2 ? "reveal-delay-2" : ""
+            }`}
+          >
             <div className="space-y-4">
               {/* Header with stars & conversion pill */}
               <div className="flex items-center justify-between flex-wrap gap-2">
@@ -47,7 +52,7 @@ export default function TestimonialsSection() {
                     <Star key={idx} className="h-4 w-4 fill-amber-400" />
                   ))}
                 </div>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#E6F7F4] text-teal-800 border border-[#99F6E4]">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#E6F7F4] text-teal-800 border border-[#99F6E4] shadow-2xs">
                   <TrendingUp className="h-3 w-3 text-teal-600" />
                   {t.salaryGain}
                 </span>
@@ -62,7 +67,7 @@ export default function TestimonialsSection() {
             {/* Candidate Footer */}
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-[#0F172A] via-teal-700 to-[#14B8A6] text-white font-black flex items-center justify-center text-xs shadow-sm">
+                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-[#0F172A] via-teal-700 to-[#14B8A6] text-white font-black flex items-center justify-center text-xs shadow-md shadow-teal-500/20">
                   {t.name[0]}
                 </div>
                 <div>

@@ -24,12 +24,10 @@ TAILOR_SUMMARY_SYSTEM = (
 )
 
 TAILOR_EXPERIENCE_SYSTEM = (
-    "You are a master resume editor and ATS optimizer. Rewrite work experience bullet points using "
-    "the Google XYZ formula ('Accomplished [X] as measured by [Y], by doing [Z]').\n"
+    "You are a master resume editor and ATS optimizer.\n"
+    "Rewrite work experience bullet points using the Google XYZ formula ('Accomplished [X] as measured by [Y], by doing [Z]').\n"
     "RULES:\n"
-    "1. MANDATORY: Every single bullet point MUST be updated to weave in relevant technical keywords, "
-    "tools, frameworks, and methodologies from the target Job Description (e.g. REST APIs, CI/CD, React, Node.js, "
-    "FastAPI, Docker, Kubernetes, PostgreSQL, microservices, unit testing, agile, cloud deployment) wherever applicable.\n"
+    "1. MANDATORY: Every single bullet point MUST be updated to seamlessly weave in relevant keywords, tools, methodologies, and competencies from the target Job Description (matching the candidate's profession: Tech, Finance, Accounting, Sales, HR, Healthcare, Logistics, Operations, etc.) wherever applicable.\n"
     "2. STRICTLY LOCK & PRESERVE REAL FACTS: Never change company names, job titles, start/end dates, employment years, or locations.\n"
     "3. Output EXACTLY the same number of bullets as input, one line per bullet.\n"
     "4. Do NOT include bullet symbols or preamble — plain text only."
@@ -38,15 +36,15 @@ TAILOR_EXPERIENCE_SYSTEM = (
 TAILOR_SKILLS_SYSTEM = (
     "You are an ATS resume skills optimizer. Categorize and refine the skills section to maximize keyword match against the target job description.\n"
     "RULES:\n"
-    "1. Intelligently weave target ATS technical skills and tools from the job description into appropriate categories (e.g. Frontend, Backend & Systems, Databases, Cloud & DevOps, AI & Tooling).\n"
+    "1. Intelligently weave target ATS skills, tools, and domain proficiencies from the job description into appropriate categories.\n"
     "2. Preserve all core existing skills from the original candidate profile.\n"
     "3. Output format must be strictly one line per category: 'CategoryName: Skill1, Skill2, Skill3...'"
 )
 
 TAILOR_PROJECTS_SYSTEM = (
-    "You are a master technical resume project strategist. Rewrite project descriptions and bullet points to highlight target stack frameworks, APIs, architecture patterns, and quantifiable engineering impact.\n"
+    "You are a master resume project strategist. Rewrite project descriptions and bullet points to highlight target methodologies, tools, and quantifiable impact.\n"
     "RULES:\n"
-    "1. MANDATORY: Seamlessly weave matching technical keywords, tools, frameworks, and methodologies from the target Job Description (e.g. REST APIs, Microservices, CI/CD, React, Node.js, Python, PostgreSQL, Docker, AWS, GraphQL) into every project bullet point.\n"
+    "1. MANDATORY: Seamlessly weave matching keywords, tools, and standards from the target Job Description into every project bullet point.\n"
     "2. STRICTLY LOCK & PRESERVE REAL FACTS: Never alter project names, company names, repository links, or dates.\n"
     "3. Output EXACTLY the same number of bullets as input, one line per bullet, plain text only."
 )

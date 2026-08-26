@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { FREE_TIER_CREDITS, PRO_CREDITS, ELITE_CREDITS } from "@/lib/constants";
 import Link from "next/link";
@@ -2543,10 +2543,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         if (refreshMe) refreshMe();
       }
 
-      // Close auto-tailor loading modal immediately so candidate gets instant ~2s response!
+      // Clear inline loading state on all section cards and close modal
+      setInlineLoadingSections({});
       setIsAutoTailoring(false);
 
-      // Trigger full structured resume AI tailoring asynchronously in background (non-blocking)
+      // Trigger full structured resume AI tailoring asynchronously in background (for builder preview only)
       (async () => {
         try {
           const tailoredRes = await tailorResume({
@@ -2554,14 +2555,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             job_title: targetHeaderTitle,
           });
           setTailorResult(tailoredRes);
-          if (tailoredRes?.tailored_resume) {
-            const autoRewrites = convertTailoredResumeToRewrites(tailoredRes.tailored_resume);
-            setRewrittenSections((prev) => ({
-              ...prev,
-              ...autoRewrites,
-              header: targetHeaderTitle,
-            }));
-          }
         } catch (te) {
           console.warn("[RoleCraft] Structured tailor warning:", te);
         }
@@ -2618,6 +2611,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setError(err?.message || "Auto-tailor failed. Please try again.");
     } finally {
       setIsAutoTailoring(false);
+      setInlineLoadingSections({});
     }
   };
 
@@ -3311,6 +3305,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     setAppliedWovenKeywords([]);
     setIsKeywordsWoven(false);
     setCustomTargetRole("");
+    setInlineLoadingSections({});
+    setIsAutoTailoring(false);
 
     if (!keepResume) {
       setFile(null);
@@ -3363,15 +3359,48 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const isAnalyzing = analyzeMutation.isPending;
   const isUploading = uploadMutation.isPending;
 
+  // ── Scroll-aware navbar glass ─────────────────────────────────────────
+  const [navScrolled, setNavScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setNavScrolled(window.scrollY > 28);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // ── Scroll-reveal (IntersectionObserver) ─────────────────────────────
+  useEffect(() => {
+    const els = document.querySelectorAll(".reveal-on-scroll");
+    const obs = new IntersectionObserver(
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("visible"); obs.unobserve(e.target); } }),
+      { threshold: 0.12 }
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  // ── Stat count-up when section enters view ───────────────────────────
+  const [statsVisible, setStatsVisible] = useState(false);
+  const statsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!statsRef.current) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setStatsVisible(true); obs.disconnect(); } },
+      { threshold: 0.3 }
+    );
+    obs.observe(statsRef.current);
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <div className="relative min-h-screen text-slate-900 bg-grid p-6 lg:p-12 overflow-x-hidden">
-      {/* Decorative Glow Orbs */}
-      <div className="glow-effect bg-teal-500 w-[600px] h-[600px] -top-48 -left-48" style={{ opacity: 0.12 }} />
-      <div className="glow-effect bg-cyan-400 w-[400px] h-[400px] top-[40%] -right-32" style={{ opacity: 0.08 }} />
-      <div className="glow-effect bg-[#FF6B4A] w-[300px] h-[300px] top-[70%] left-[20%]" style={{ opacity: 0.06 }} />
+      {/* Decorative Glow Orbs — drifting AI ambient background */}
+      <div className="glow-effect bg-teal-500 w-[600px] h-[600px] -top-48 -left-48 orb-drift-1" style={{ opacity: 0.14 }} />
+      <div className="glow-effect bg-violet-400 w-[440px] h-[440px] top-[38%] -right-24 orb-drift-2" style={{ opacity: 0.10 }} />
+      <div className="glow-effect bg-blue-400 w-[360px] h-[360px] top-[22%] right-[28%] orb-drift-3" style={{ opacity: 0.07 }} />
+      <div className="glow-effect bg-[#FF6B4A] w-[300px] h-[300px] top-[70%] left-[20%] orb-drift-1" style={{ opacity: 0.06 }} />
 
       {/* Header */}
-      <header className="relative z-30 max-w-[1440px] mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 sm:mb-12 pb-4 border-b border-slate-200/80">
+      <header className={`sticky top-0 z-30 max-w-full mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 sm:mb-12 pb-4 border-b transition-all duration-300 px-6 lg:px-12 -mx-6 lg:-mx-12 ${navScrolled ? "bg-white/85 backdrop-blur-xl border-slate-200/90 shadow-sm shadow-teal-500/5" : "border-slate-200/80 bg-transparent"}`}>
         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => switchNavTab("landing")}>
           {/* Transparent Brand Logo */}
           <div className="relative shrink-0 flex items-center justify-center">
@@ -3636,7 +3665,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
               {/* Left Column: Headline & Action CTAs */}
               <div className="lg:col-span-6 space-y-6 lg:space-y-7 text-left">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50/90 border border-teal-200/80 text-teal-700 font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider shadow-2xs">
+                <div className="relative inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50/90 border border-teal-200/80 text-teal-700 font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider shadow-2xs overflow-hidden">
+                  <span className="absolute inset-0 ai-badge-shimmer pointer-events-none" />
                   <Sparkles className="h-3.5 w-3.5 text-teal-600 animate-pulse" />
                   <span>Recruiter-Grade AI Resume Optimization Engine</span>
                 </div>
@@ -3644,7 +3674,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 <h1 className="text-4xl sm:text-5xl xl:text-6xl font-black text-slate-900 tracking-tight leading-[1.12]">
                   Tailor Your Resume<br />
                   to Any Role in{" "}
-                  <span className="text-teal-600">1&#8209;Click</span>
+                  <span className="bg-gradient-to-r from-teal-500 via-cyan-500 to-violet-500 bg-clip-text text-transparent" style={{ backgroundSize: "200% auto", animation: "shimmer-text 4s linear infinite" }}>1&#8209;Click</span>
                 </h1>
 
                 <p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-xl">
@@ -3791,48 +3821,56 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               </div>
             </div>
 
-            {/* Live Trust Metrics Row (4 Colored Icon Tiles) */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-              {/* Card 1: Blue */}
-              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-md hover:border-teal-200 transition-all glass-card-interactive">
-                <div className="h-11 w-11 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-teal-500/20">
-                  <TrendingUp className="h-5 w-5" />
+            {/* Live Trust Metrics Row (4 Colored Icon Tiles with AI glow orbs) */}
+            <div ref={statsRef} className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+              {/* Card 1: Teal */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-lg hover:shadow-teal-500/10 hover:border-teal-200 transition-all glass-card-interactive">
+                <div className="ai-icon-wrap glow-teal shrink-0">
+                  <div className="h-11 w-11 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-md shadow-teal-500/30">
+                    <TrendingUp className="h-5 w-5" />
+                  </div>
                 </div>
                 <div className="text-left">
-                  <div className="text-2xl font-black text-slate-900 leading-tight">98.4%</div>
+                  <div className={`text-2xl font-black text-slate-900 leading-tight ${statsVisible ? "stat-number-in" : "opacity-0"}`}>98.4%</div>
                   <div className="text-xs font-semibold text-slate-500">ATS Pass Rate</div>
                 </div>
               </div>
 
               {/* Card 2: Purple */}
-              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-md hover:border-teal-200 transition-all glass-card-interactive">
-                <div className="h-11 w-11 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-teal-500/20">
-                  <Phone className="h-5 w-5" />
+              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-lg hover:shadow-violet-500/10 hover:border-violet-200 transition-all glass-card-interactive">
+                <div className="ai-icon-wrap glow-purple shrink-0">
+                  <div className="h-11 w-11 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow-md shadow-violet-500/30">
+                    <Phone className="h-5 w-5" />
+                  </div>
                 </div>
                 <div className="text-left">
-                  <div className="text-2xl font-black text-slate-900 leading-tight">3.8x</div>
+                  <div className={`text-2xl font-black text-slate-900 leading-tight ${statsVisible ? "stat-number-in" : "opacity-0"}`} style={{ animationDelay: "0.12s" }}>3.8x</div>
                   <div className="text-xs font-semibold text-slate-500">More Interview Calls</div>
                 </div>
               </div>
 
-              {/* Card 3: Emerald */}
-              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-md hover:border-emerald-200 transition-all glass-card-interactive">
-                <div className="h-11 w-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/20">
-                  <Zap className="h-5 w-5" />
+              {/* Card 3: Blue */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-200 transition-all glass-card-interactive">
+                <div className="ai-icon-wrap glow-blue shrink-0">
+                  <div className="h-11 w-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/30">
+                    <Zap className="h-5 w-5" />
+                  </div>
                 </div>
                 <div className="text-left">
-                  <div className="text-2xl font-black text-slate-900 leading-tight">&lt;15s</div>
+                  <div className={`text-2xl font-black text-slate-900 leading-tight ${statsVisible ? "stat-number-in" : "opacity-0"}`} style={{ animationDelay: "0.22s" }}>&lt;15s</div>
                   <div className="text-xs font-semibold text-slate-500">Full 1-Click Tailor</div>
                 </div>
               </div>
 
-              {/* Card 4: Amber/Orange */}
-              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-md hover:border-amber-200 transition-all glass-card-interactive">
-                <div className="h-11 w-11 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-amber-500/20">
-                  <Shield className="h-5 w-5" />
+              {/* Card 4: Coral */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center gap-3.5 hover:shadow-lg hover:shadow-orange-500/10 hover:border-orange-200 transition-all glass-card-interactive">
+                <div className="ai-icon-wrap glow-coral shrink-0">
+                  <div className="h-11 w-11 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-md shadow-orange-500/30">
+                    <Shield className="h-5 w-5" />
+                  </div>
                 </div>
                 <div className="text-left">
-                  <div className="text-2xl font-black text-slate-900 leading-tight">100%</div>
+                  <div className={`text-2xl font-black text-slate-900 leading-tight ${statsVisible ? "stat-number-in" : "opacity-0"}`} style={{ animationDelay: "0.32s" }}>100%</div>
                   <div className="text-xs font-semibold text-slate-500">DOCX Layout Integrity</div>
                 </div>
               </div>
@@ -3856,7 +3894,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
               {/* Step 1: Upload Base Resume */}
-              <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 relative overflow-hidden group glass-card-interactive">
+              <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm hover:shadow-xl hover:shadow-teal-500/10 hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 relative overflow-hidden group glass-card-interactive reveal-on-scroll">
+                {/* Step card top accent line */}
+                <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-transparent via-teal-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="px-3 py-1 rounded-full bg-[#E6F7F4] border border-[#99F6E4] text-teal-800 font-black text-xs">
@@ -3893,7 +3933,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               </div>
 
               {/* Step 2: Paste Job Description */}
-              <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 relative overflow-hidden group glass-card-interactive">
+              <div className="rounded-3xl border border-teal-300/60 bg-white p-6 shadow-md shadow-teal-500/10 hover:shadow-xl hover:shadow-teal-500/15 hover:border-teal-400 transition-all flex flex-col justify-between space-y-6 relative overflow-hidden group glass-card-interactive reveal-on-scroll reveal-delay-1">
+                {/* Active AI card accent — this is the AI step */}
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-teal-400 via-cyan-400 to-violet-400" />
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="px-3 py-1 rounded-full bg-[#E6F7F4] border border-[#99F6E4] text-teal-800 font-black text-xs">
@@ -3934,7 +3976,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               </div>
 
               {/* Step 3: 1-Click Auto-Tailor */}
-              <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 relative overflow-hidden group glass-card-interactive">
+              <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm hover:shadow-xl hover:shadow-teal-500/10 hover:border-teal-200 transition-all flex flex-col justify-between space-y-6 relative overflow-hidden group glass-card-interactive reveal-on-scroll reveal-delay-2">
+                <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-transparent via-violet-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="px-3 py-1 rounded-full bg-[#E6F7F4] border border-[#99F6E4] text-teal-800 font-black text-xs">
@@ -4116,20 +4159,22 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             </div>
           </section>
 
-          {/* HIGH-IMPACT FINAL CTA BANNER */}
-          <section className="relative overflow-hidden rounded-3xl p-8 sm:p-12 bg-gradient-to-r from-[#E6F7F4] via-white to-teal-50/60 border border-[#99F6E4]/90 shadow-xl shadow-teal-500/5 max-w-5xl mx-auto text-center space-y-6">
-            <div className="absolute top-0 right-0 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#FF6B4A]/10 rounded-full blur-3xl pointer-events-none" />
+          {/* HIGH-IMPACT FINAL CTA BANNER — dark gradient with AI orbs */}
+          <section className="relative overflow-hidden rounded-3xl p-8 sm:p-14 cta-dark shadow-2xl shadow-teal-900/40 max-w-5xl mx-auto text-center space-y-6 reveal-on-scroll">
+            {/* Vivid AI glow orbs */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/25 rounded-full blur-3xl pointer-events-none orb-drift-2" />
+            <div className="absolute bottom-0 left-0 w-72 h-72 bg-violet-500/20 rounded-full blur-3xl pointer-events-none orb-drift-3" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10 space-y-3 max-w-2xl mx-auto">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-teal-200 text-teal-800 text-[11px] font-black uppercase tracking-wider shadow-2xs">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-teal-300 text-[11px] font-black uppercase tracking-wider backdrop-blur-sm">
                 <Sparkles className="h-3.5 w-3.5 text-[#FF6B4A]" />
                 <span>Start In 15 Seconds</span>
               </span>
-              <h2 className="text-2xl sm:text-4xl font-black text-[#0F172A] tracking-tight">
+              <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
                 Ready to Triple Your Interview Callbacks?
               </h2>
-              <p className="text-sm sm:text-base text-slate-600 font-medium leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-300 font-medium leading-relaxed">
                 Join thousands of candidates beating ATS scanners and landing recruiter interviews with 100% visual DOCX preservation.
               </p>
             </div>
@@ -4138,28 +4183,28 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               <button
                 type="button"
                 onClick={() => switchNavTab("workspace")}
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl btn-primary font-black text-sm shadow-xl shadow-teal-600/25 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-white font-black text-sm shadow-2xl shadow-teal-500/40 hover:shadow-teal-400/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Sparkles className="h-4 w-4 text-[#FF6B4A]" />
+                <Sparkles className="h-4 w-4 text-white" />
                 <span>⚡ Launch Workspace Free</span>
               </button>
               <Link
                 href="/resume-builder"
-                className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white hover:bg-slate-50 text-[#0F172A] font-extrabold text-sm border border-slate-200 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-sm border border-white/20 backdrop-blur-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Open Resume Builder</span>
               </Link>
             </div>
 
-            <div className="relative z-10 flex items-center justify-center gap-6 text-xs text-slate-500 font-semibold pt-2 flex-wrap">
+            <div className="relative z-10 flex items-center justify-center gap-6 text-xs text-slate-400 font-semibold pt-2 flex-wrap">
               <span className="flex items-center gap-1.5">
-                <CheckCircle className="h-3.5 w-3.5 text-emerald-600" /> No Credit Card Required
+                <CheckCircle className="h-3.5 w-3.5 text-teal-400" /> No Credit Card Required
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle className="h-3.5 w-3.5 text-emerald-600" /> 100% DOCX Format Match
+                <CheckCircle className="h-3.5 w-3.5 text-teal-400" /> 100% DOCX Format Match
               </span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle className="h-3.5 w-3.5 text-emerald-600" /> Instant PDF &amp; Word Export
+                <CheckCircle className="h-3.5 w-3.5 text-teal-400" /> Instant PDF &amp; Word Export
               </span>
             </div>
           </section>
@@ -4542,22 +4587,23 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </p>
                   </div>
 
-                  {/* Live System Indicator */}
-                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-2xs shrink-0 self-start md:self-auto">
-                    <div className="relative flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500" />
+                  {/* Live System Indicator — sonar pulse rings */}
+                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-teal-50 border border-teal-200/80 shadow-sm shrink-0 self-start md:self-auto">
+                    <div className="relative flex h-3 w-3 text-teal-500">
+                      <span className="sonar-dot relative inline-flex rounded-full h-3 w-3 bg-teal-500" />
                     </div>
-                    <span className="text-xs font-extrabold text-[#0F172A]">AI Engine Ready</span>
+                    <span className="text-xs font-extrabold text-teal-800">AI Engine Ready</span>
                   </div>
                 </div>
 
-                {/* Feature Highlight Cards Grid */}
+                {/* Feature Highlight Cards Grid — with AI icon glow orbs */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
-                  {/* Card 1: ATS Matrix */}
-                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-teal-200 transition-all duration-300 space-y-3.5 group shadow-2xs">
-                    <div className="h-10 w-10 rounded-xl bg-[#E6F7F4] text-teal-700 flex items-center justify-center font-black text-sm border border-[#99F6E4] group-hover:scale-105 transition-transform">
-                      <Target className="h-5 w-5 text-teal-600" />
+                  {/* Card 1: ATS Matrix — teal glow */}
+                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs">
+                    <div className="ai-icon-wrap glow-teal">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-teal-100 to-teal-50 text-teal-700 flex items-center justify-center border border-teal-200 group-hover:scale-105 transition-transform shadow-sm">
+                        <Target className="h-5 w-5 text-teal-600" />
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <h4 className="text-sm font-extrabold text-[#0F172A]">ATS Keyword Matrix</h4>
@@ -4578,10 +4624,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </div>
                   </div>
 
-                  {/* Card 2: Google XYZ Formula */}
-                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-teal-200 transition-all duration-300 space-y-3.5 group shadow-2xs">
-                    <div className="h-10 w-10 rounded-xl bg-[#E6F7F4] text-teal-700 flex items-center justify-center font-black text-sm border border-[#99F6E4] group-hover:scale-105 transition-transform">
-                      <Sparkles className="h-5 w-5 text-[#FF6B4A]" />
+                  {/* Card 2: Google XYZ Formula — coral glow */}
+                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs">
+                    <div className="ai-icon-wrap glow-coral">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 text-orange-600 flex items-center justify-center border border-orange-200 group-hover:scale-105 transition-transform shadow-sm">
+                        <Sparkles className="h-5 w-5 text-[#FF6B4A]" />
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <h4 className="text-sm font-extrabold text-[#0F172A]">Google XYZ Rewrites</h4>
@@ -4594,10 +4642,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </div>
                   </div>
 
-                  {/* Card 3: DOCX XML Precision */}
-                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-teal-200 transition-all duration-300 space-y-3.5 group shadow-2xs">
-                    <div className="h-10 w-10 rounded-xl bg-[#E6F7F4] text-teal-700 flex items-center justify-center font-black text-sm border border-[#99F6E4] group-hover:scale-105 transition-transform">
-                      <FileText className="h-5 w-5 text-teal-600" />
+                  {/* Card 3: DOCX XML Precision — blue glow */}
+                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs">
+                    <div className="ai-icon-wrap glow-blue">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-700 flex items-center justify-center border border-blue-200 group-hover:scale-105 transition-transform shadow-sm">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <h4 className="text-sm font-extrabold text-[#0F172A]">100% DOCX Format Match</h4>
@@ -4605,8 +4655,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         Patches paragraphs and tables directly at the XML run level without template degradation.
                       </p>
                     </div>
-                    <div className="pt-2 flex items-center gap-1.5 text-[10px] font-extrabold text-teal-700">
-                      <CheckCircle className="h-3.5 w-3.5 text-teal-600" />
+                    <div className="pt-2 flex items-center gap-1.5 text-[10px] font-extrabold text-blue-700">
+                      <CheckCircle className="h-3.5 w-3.5 text-blue-600" />
                       <span>Zero Template Drift</span>
                     </div>
                   </div>

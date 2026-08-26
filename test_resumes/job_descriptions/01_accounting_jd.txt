@@ -1,0 +1,24 @@
+# 01. SENIOR FINANCIAL ACCOUNTANT
+Company: Global Vertex Enterprises | Financial Services Division
+Location: Hybrid / Remote | Full-Time | ₹12L - ₹18L / $85k - $110k
+
+### ABOUT THE ROLE
+We are seeking an experienced and analytical Senior Financial Accountant to lead our general ledger operations, financial reporting, and compliance functions. In this role, you will manage end-to-end month-end close cycles, complex balance sheet reconciliations, internal audit controls, and statutory tax filings. You will partner directly with our Finance Controller and VP of Finance to ensure strict GAAP/IFRS adherence and optimize working capital.
+
+### KEY RESPONSIBILITIES
+- Lead the full-cycle month-end, quarter-end, and year-end financial close processes, ensuring accuracy and timely delivery within a 5-day close window.
+- Perform and review complex general ledger reconciliations, intercompany balance eliminations, accruals, prepaid expenses, and fixed asset depreciation schedules.
+- Oversee Accounts Payable (AP) and Accounts Receivable (AR) operations, implementing internal control workflows that reduce aging balances and DSO (Days Sales Outstanding).
+- Prepare comprehensive financial statements (Balance Sheet, P&L, Cash Flow Statements) and variance analysis reports for executive leadership and external auditors.
+- Ensure strict compliance with US GAAP, IFRS, local statutory tax regulations (GST/VAT/TDS, corporate income tax), and Sarbanes-Oxley (SOX) internal controls.
+- Coordinate with external audit firms during annual financial audits, preparing audit work papers, schedules, and technical accounting memos.
+- Drive automation in ERP workflows to eliminate manual journal entries and streamline financial reporting.
+
+### REQUIRED QUALIFICATIONS & COMPETENCIES
+- Bachelor's or Master's degree in Accounting, Finance, or related field. CPA, CMA, or CA qualification strongly preferred.
+- 4 to 8 years of progressive accounting experience in corporate finance, public accounting, or mid-to-large enterprise environments.
+- Deep expertise in US GAAP / IFRS standards, revenue recognition principles, and double-entry accounting mechanics.
+- Advanced proficiency in Enterprise ERP software (NetSuite, SAP S/4HANA, QuickBooks Enterprise, Oracle Financials).
+- Advanced Microsoft Excel capabilities (VLOOKUP/XLOOKUP, Nested IFs, Pivot Tables, Power Query, Financial Modeling).
+- Strong experience with variance analysis, working capital optimization, and financial statement consolidation.
+- Exceptional attention to detail, analytical problem-solving, and communication skills for cross-departmental presentations.
