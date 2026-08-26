@@ -4684,66 +4684,104 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             ) : (
               <div className="space-y-6">
                 {/* ⚡ 1-Click Auto-Tailor Hero Banner */}
-                <div className="relative overflow-hidden rounded-2xl p-5.5 border border-[#99f6e4]/80 bg-gradient-to-r from-[#E6F7F4]/90 via-white to-[#F1F5F9] text-slate-900 shadow-xl shadow-teal-500/5 backdrop-blur-xl animate-fade-in">
-                  <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute -left-12 -top-12 w-48 h-48 bg-[#FF6B4A]/10 rounded-full blur-3xl pointer-events-none" />
+                {(() => {
+                  const hasAutoTailored = Boolean(isPatchingApplied && Object.keys(rewrittenSections).length > 0);
+                  return (
+                    <div className={`relative overflow-hidden rounded-2xl p-5.5 border transition-all duration-300 backdrop-blur-xl animate-fade-in ${
+                      hasAutoTailored
+                        ? "border-emerald-300/90 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white text-slate-900 shadow-xl shadow-emerald-500/10"
+                        : "border-[#99f6e4]/80 bg-gradient-to-r from-[#E6F7F4]/90 via-white to-[#F1F5F9] text-slate-900 shadow-xl shadow-teal-500/5"
+                    }`}>
+                      <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+                      <div className={`absolute -left-12 -top-12 w-48 h-48 rounded-full blur-3xl pointer-events-none ${hasAutoTailored ? "bg-emerald-500/10" : "bg-[#FF6B4A]/10"}`} />
 
-                  <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#0F172A] via-[#0F766E] to-[#14B8A6] text-white flex items-center justify-center shadow-lg shadow-teal-500/20 shrink-0 ring-1 ring-white/50">
-                        <Sparkles className="h-6 w-6 animate-pulse text-[#FF6B4A]" />
-                      </div>
-                      <div>
-                        <h4 className="text-base font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
-                          ⚡ 1-Click Full Resume Auto-Tailor
-                        </h4>
-                        <p className="text-xs text-slate-600 mt-0.5 max-w-md leading-relaxed">
-                          Automatically rewrite weak sections, weave missing ATS keywords, & add Google XYZ impact metrics in one click.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={handleAutoTailor}
-                        disabled={isAutoTailoring}
-                        className="px-6 py-3.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:to-teal-500 text-white shadow-xl shadow-teal-600/20 hover:shadow-teal-600/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20"
-                      >
-                        {isAutoTailoring ? (
-                          <>
-                            <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                            ⚡ Auto-Tailoring Resume...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="h-4 w-4 text-amber-200" />
-                            ⚡ Auto-Tailor Full Resume (1-Click)
-                          </>
-                        )}
-                      </button>
-
-                      {/* ⚙️ 1-Click Scope Settings Trigger Button */}
-                      {(() => {
-                        const configSections = getAutoTailorConfigSections();
-                        const activeCount = configSections.filter((s) => isSectionTailorEnabled(s.id, s.defaultOn)).length;
-                        return (
+                      <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg shrink-0 ring-1 ring-white/50 transition-all ${
+                            hasAutoTailored
+                              ? "bg-gradient-to-br from-emerald-800 via-teal-700 to-teal-500 text-white shadow-emerald-500/20"
+                              : "bg-gradient-to-br from-[#0F172A] via-[#0F766E] to-[#14B8A6] text-white shadow-teal-500/20"
+                          }`}>
+                            {hasAutoTailored ? (
+                              <CheckCircle2 className="h-6 w-6 text-emerald-300 animate-pulse" />
+                            ) : (
+                              <Sparkles className="h-6 w-6 animate-pulse text-[#FF6B4A]" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="text-base font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
+                                ⚡ 1-Click Full Resume Auto-Tailor
+                              </h4>
+                              {hasAutoTailored && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase tracking-wider animate-scale-in">
+                                  <Check className="h-3 w-3 text-emerald-700 stroke-[3]" />
+                                  Tailored
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-600 mt-0.5 max-w-md leading-relaxed">
+                              {hasAutoTailored
+                                ? "Resume successfully tailored for role. Click Re-Auto-Tailor anytime to re-evaluate with new settings or updated JD."
+                                : "Automatically rewrite weak sections, weave missing ATS keywords, & add Google XYZ impact metrics in one click."}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2.5 shrink-0">
                           <button
                             type="button"
-                            onClick={() => setIsAutoTailorSettingsOpen(true)}
-                            title="Configure which sections are updated during 1-Click Auto-Tailor"
-                            className="p-3 sm:px-3.5 sm:py-3.5 rounded-xl font-extrabold text-xs border transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md select-none bg-white hover:bg-slate-50 text-slate-800 border-slate-200 hover:border-slate-300 hover:scale-[1.02] active:scale-[0.98]"
+                            onClick={handleAutoTailor}
+                            disabled={isAutoTailoring}
+                            className={`px-6 py-3.5 rounded-xl font-extrabold text-xs text-white shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20 ${
+                              isAutoTailoring
+                                ? "bg-slate-700 opacity-90 cursor-wait"
+                                : hasAutoTailored
+                                  ? "bg-gradient-to-r from-emerald-700 via-teal-700 to-teal-600 hover:from-emerald-600 hover:to-teal-500 shadow-emerald-600/25 hover:shadow-emerald-600/40 ring-2 ring-emerald-400/30"
+                                  : "bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:to-teal-500 shadow-teal-600/20 hover:shadow-teal-600/35"
+                            }`}
                           >
-                            <SlidersHorizontal className="h-4 w-4 text-teal-600" />
-                            <span className="hidden md:inline">Settings</span>
-                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-black border bg-teal-50 text-teal-700 border-teal-200">
-                              {activeCount}/{configSections.length} ON
-                            </span>
+                            {isAutoTailoring ? (
+                              <>
+                                <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                ⚡ Auto-Tailoring Resume...
+                              </>
+                            ) : hasAutoTailored ? (
+                              <>
+                                <RotateCcw className="h-4 w-4 text-emerald-200 transition-transform duration-300 group-hover:-rotate-180" />
+                                🔄 Re-Auto-Tailor Full Resume
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-4 w-4 text-amber-200" />
+                                ⚡ Auto-Tailor Full Resume (1-Click)
+                              </>
+                            )}
                           </button>
-                        );
-                      })()}
+
+                          {/* ⚙️ 1-Click Scope Settings Trigger Button */}
+                          {(() => {
+                            const configSections = getAutoTailorConfigSections();
+                            const activeCount = configSections.filter((s) => isSectionTailorEnabled(s.id, s.defaultOn)).length;
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => setIsAutoTailorSettingsOpen(true)}
+                                title="Configure which sections are updated during 1-Click Auto-Tailor"
+                                className="p-3 sm:px-3.5 sm:py-3.5 rounded-xl font-extrabold text-xs border transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md select-none bg-white hover:bg-slate-50 text-slate-800 border-slate-200 hover:border-slate-300 hover:scale-[1.02] active:scale-[0.98]"
+                              >
+                                <SlidersHorizontal className="h-4 w-4 text-teal-600" />
+                                <span className="hidden md:inline">Settings</span>
+                                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-black border bg-teal-50 text-teal-700 border-teal-200">
+                                  {activeCount}/{configSections.length} ON
+                                </span>
+                              </button>
+                            );
+                          })()}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Summary Dashboard Card */}
                 <div className="glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-r from-white/90 via-indigo-500/5 to-white/90 dark:from-slate-900/90 dark:via-indigo-950/20 dark:to-slate-900/90 shadow-xl">
