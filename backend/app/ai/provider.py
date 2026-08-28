@@ -3,6 +3,7 @@
 Wraps the OpenAI client and exposes a single typed method for structured
 response generation.  The rest of the application never imports ``openai``
 directly — all OpenAI interactions go through this class.
+# Credit system: only /analyze costs 1 credit. All other AI ops are credit-free.
 
 Responsibilities (AI Layer — architecture.md)
 ---------------------------------------------
