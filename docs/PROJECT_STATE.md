@@ -285,6 +285,23 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
   - 3 ATS single-column templates ("Clean Classic", "Modern Professional", "Executive Profile")
   - Profile photo upload and embedding engine for Executive Profile template
   - Programmatic DOCX template renderer (`ATSTemplateRenderer`) & PDF streaming
+- [x] **Workspace UX Overhaul** (Phase 8a):
+  - 3-step visual stepper (Upload → Analyze → Tailor) on workspace page
+  - Quality meter bar with dynamic color based on analysis score
+  - Feature highlight cards replacing inline instructions
+  - Session persistence via `localStorage` — all workspace state (JD, analysis result, rewrites) survives page refresh
+  - Removed duplicate Paste button and Quick-Start demo role chips for a cleaner UI
+  - Fixed cover letter download route collision in FastAPI (reordered routes + explicit alias)
+- [x] **Analyze-Only Credit System** (Phase 8b):
+  - 1 credit per `/resume/analyze` call only
+  - 15 free credits on signup (unchanged from `FREE_TIER_CREDITS` default)
+  - All other AI ops (rewrite, batch-rewrite, cover letter, AI tailor, apply) are now credit-free
+  - Backend safeguards: all non-analyze endpoints still require auth + model timeout/token limits
+  - `verify_premium_permission` simplified to auth-only; new `verify_auth_only` helper added
+  - Frontend credit guards removed from all non-analyze handlers (8 locations)
+- [x] **SMTP Email Notifications**:
+  - Support ticket email notifications via Gmail SMTP App Password
+  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SUPPORT_NOTIFICATION_EMAIL` env vars configured on VPS
 
 ## Features Intentionally Postponed
 - **PostgreSQL**: Kept as a future database option for production scale.
@@ -297,7 +314,8 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 ### Phase 5 - Authentication, Persistence & Webhook CD (Completed)
 - [x] Authentication (JWT-based standard credentials + Google Login verification flow)
 - [x] Local SQLite database & SQLAlchemy ORM
-- [x] Credit caps & IP rate limits (10 starting credits, 1 guest analysis per day limit)
+- [x] **Analyze-Only Credit System**: 1 credit per analyze. 15 free credits on signup. All other AI operations (rewrite, cover letter, batch-tailor, AI tailor) are credit-free but still auth-protected.
+- [x] IP rate limits & guest analysis protection
 - [x] Webhook-based secure redeployment automation
 - [x] Docker + Docker Compose setups
 - [ ] PostgreSQL integration
@@ -350,6 +368,20 @@ npm run dev
 | `UPLOAD_DIR` | String | `"uploads"` | Folder where uploaded DOCX are temporarily stored. |
 | `OPENAI_API_KEY` | String | `""` | Secret API key for OpenAI. |
 | `OPENAI_MODEL` | String | `"gpt-4o-mini"` | Model used for Responses API. |
+| `JWT_SECRET` | String | `"..."` | JWT signing secret. |
+| `GOOGLE_CLIENT_ID` | String | `""` | Google OAuth client ID. |
+| `FREE_TIER_CREDITS` | Integer | `15` | Starting credits for new users. |
+| `VIP_CREDITS` | Integer | `300` | Credits for VIP email addresses. |
+| `VIP_EMAILS` | JSON list | `[...]` | Email addresses with VIP credit top-ups. |
+| `RAZORPAY_KEY_ID` | String | `""` | Razorpay API key for billing. |
+| `RAZORPAY_KEY_SECRET` | String | `""` | Razorpay secret for billing. |
+| `SMTP_HOST` | String | `""` | SMTP server hostname (e.g. `smtp.gmail.com`). |
+| `SMTP_PORT` | Integer | `587` | SMTP port (587 for TLS). |
+| `SMTP_USE_TLS` | Boolean | `true` | Enable STARTTLS for SMTP. |
+| `SMTP_USER` | String | `""` | SMTP login username / email. |
+| `SMTP_PASSWORD` | String | `""` | SMTP password or App Password. |
+| `SMTP_FROM_EMAIL` | String | `"noreply@rolecraft.tech"` | From address on notification emails. |
+| `SUPPORT_NOTIFICATION_EMAIL` | String | `""` | Destination for support ticket notifications. |
 
 ---
 

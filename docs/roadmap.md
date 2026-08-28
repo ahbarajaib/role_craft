@@ -89,7 +89,30 @@
 
 ---
 
-## Phase 8 - Planned
+## Phase 8 - UX Polish, Credit Redesign & Email ✅
+
+- [x] **Workspace UX Overhaul**:
+  - 3-step visual stepper (Upload → Analyze → Tailor)
+  - Quality meter bar with dynamic score-based color
+  - Feature highlight cards (cleaner onboarding)
+  - Session state persistence via `localStorage` (survives refresh)
+  - Removed duplicate Paste button & Quick-Start demo roles
+  - Fixed FastAPI cover letter download route collision
+- [x] **Analyze-Only Credit System**:
+  - 1 credit charged per `/resume/analyze` only
+  - 15 free credits on signup (`FREE_TIER_CREDITS = 15`)
+  - All other AI features (rewrite, batch-rewrite, cover letter, tailor) are **credit-free**
+  - Backend auth guards remain on all AI endpoints (no unlimited token abuse)
+  - `verify_premium_permission` simplified to auth-only; `verify_auth_only` helper added
+  - Frontend credit guards removed from 8 non-analyze handler locations
+- [x] **SMTP Email Notifications**:
+  - Gmail SMTP App Password integration
+  - Support ticket notifications sent to admin email
+  - `SMTP_*` and `SUPPORT_NOTIFICATION_EMAIL` env vars added to VPS
+
+---
+
+## Phase 9 - Planned
 
 - [ ] PostgreSQL + Redis migration
 - [ ] Multi-language resume support (Arabic, French, German...)
@@ -97,4 +120,4 @@
 - [ ] Team workspaces & collaboration
 - [ ] ATS scoring engine (per-company ATS simulation)
 - [ ] Multi-model AI routing (Claude / Gemini fallback)
-- [ ] Billing & subscription tiers
+- [ ] Billing & subscription tiers (Razorpay Pro/Elite plans)

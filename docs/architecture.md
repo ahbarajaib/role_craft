@@ -160,8 +160,8 @@ Stores:
 - Multiple templates
 - Multi-model AI routing
 - ATS scoring engine
-- Authentication
-- Billing
+- ~~Authentication~~ ✅ Done
+- ~~Billing~~ ✅ Done (Razorpay Pro/Elite, credit system)
 - Team workspaces
 
 ---
@@ -179,3 +179,6 @@ Stores:
 
 4. Section heading detection uses all available signals.
    `_is_heading()` checks four independent signals: Word Heading style, SECTION_NAME_MAP text match, ALL-CAPS heuristic, and Bold-Normal run detection. This ensures compatibility with all major real-world DOCX template formats.
+
+5. **Analyze-Only Credit Billing**.
+   Only `POST /resume/analyze` deducts 1 credit (`deduct_analysis_credit`). All other AI endpoints (rewrite, batch-rewrite, cover letter, tailor) are credit-free. They are protected by authentication and OpenAI model/timeout limits to prevent token abuse, but do not consume user credits. Free users start with 15 credits (`FREE_TIER_CREDITS = 15`). Elite plan users have unlimited analyzes.
