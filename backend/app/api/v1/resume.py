@@ -41,8 +41,6 @@ from app.dependencies.limits import (
     verify_analysis_permission,
     verify_premium_permission,
     deduct_analysis_credit,
-    verify_user_credits,
-    deduct_user_credits,
 )
 from app.dependencies.auth import get_current_user
 
@@ -196,14 +194,14 @@ def rewrite_section(
 ) -> RewriteSectionResponse:
     """Rewrite a resume section using AI.
 
+    Credit-free: rewrites do not consume credits. Only /analyze costs 1 credit.
+
     JSON-first: if section_content is provided in the request body (from the
     structured resume editor), the rewrite runs directly from that JSON content
     without loading any DOCX file.
 
     Falls back to legacy DOCX-based rewrite if document_id is provided.
     """
-    verify_user_credits(user, 1)
-
     # JSON-first path: section content is passed directly from the structured resume
     if body.section_content is not None and body.section_type is not None:
         evidence_text = body.evidence_text or ""
@@ -235,7 +233,6 @@ def rewrite_section(
             user_instructions=body.user_instructions,
             metric_inputs=body.metric_inputs,
         )
-        deduct_user_credits(db, user, 1)
         return res
 
     # Legacy DOCX path
@@ -247,7 +244,6 @@ def rewrite_section(
         user_instructions=body.user_instructions,
         metric_inputs=body.metric_inputs,
     )
-    deduct_user_credits(db, user, 1)
     return res
 
 
@@ -264,8 +260,10 @@ def batch_rewrite_sections(
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> BatchRewriteResponse:
-    """Batch parallel section tailoring endpoint. Executes rewrites concurrently across worker threads."""
-    verify_user_credits(user, 3)
+    """Batch parallel section tailoring endpoint. Executes rewrites concurrently across worker threads.
+
+    Credit-free: batch rewrites do not consume credits. Only /analyze costs 1 credit.
+    """
 
     doc_id = body.document_id or f"base/{user.id}"
     rewrites_map = service.batch_rewrite(
@@ -299,8 +297,6 @@ def batch_rewrite_sections(
             logger.info(f"⚡ [RoleCraft Audit] Batch auto-tailor generated patched file: download_id={download_id}, sections_updated={patch_res.sections_updated}")
         except Exception as patch_err:
             logger.error(f"Batch patch error: {patch_err}")
-
-    deduct_user_credits(db, user, 3)
 
     return BatchRewriteResponse(
         rewrites=rewrites_map,
@@ -447,10 +443,11 @@ def generate_cover_letter(
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> CoverLetterResponse:
-    """Generate a tailored 3-paragraph cover letter based on resume & job description."""
-    verify_user_credits(user, 1)
+    """Generate a tailored 3-paragraph cover letter based on resume & job description.
+
+    Credit-free: cover letter generation does not consume credits. Only /analyze costs 1 credit.
+    """
     res = service.generate_cover_letter(body)
-    deduct_user_credits(db, user, 1)
     return res
 
 

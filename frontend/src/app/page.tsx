@@ -2056,10 +2056,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setShowAuthModal(true);
       return;
     }
-    if (user && user.plan_type === "free" && user.credits <= 0) {
-      setIsSubscriptionModalOpen(true);
-      return;
-    }
 
     const originalMatched = (analysisResult?.top_strengths || []).map((s: any) =>
       typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
@@ -2354,10 +2350,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setShowAuthModal(true);
       return;
     }
-    if (user && user.plan_type === "free" && user.credits <= 0) {
-      setIsSubscriptionModalOpen(true);
-      return;
-    }
     setInlineLoadingSections((prev) => ({ ...prev, [sectionName]: true }));
     try {
       const { rewriteSection } = require("@/lib/api");
@@ -2439,10 +2431,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setShowAuthModal(true);
       return;
     }
-    if (user && user.plan_type === "free" && user.credits <= 0) {
-      setIsSubscriptionModalOpen(true);
-      return;
-    }
     setIsImprovingAll(true);
     try {
       await Promise.all(
@@ -2465,10 +2453,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     if (!documentId) return;
     if (!token) {
       setShowAuthModal(true);
-      return;
-    }
-    if (user && user.plan_type === "free" && user.credits <= 0) {
-      setIsSubscriptionModalOpen(true);
       return;
     }
     if (jobDescription.trim().length < 50) return;
@@ -2900,10 +2884,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setShowAuthModal(true);
       return;
     }
-    if (user && user.plan_type === "free" && user.credits <= 0) {
-      setIsSubscriptionModalOpen(true);
-      return;
-    }
     setActiveRewriteSection(sectionName);
     setRewriteData(null);
     setDraftRewrittenText("");
@@ -2994,10 +2974,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setShowAuthModal(true);
       return;
     }
-    if (user && user.plan_type === "free" && user.credits <= 0) {
-      setIsSubscriptionModalOpen(true);
-      return;
-    }
     const rewrites = Object.entries(rewrittenSections).map(([sectionName, rewrittenText]) => {
       const section = (analysisResult?.sections || []).find(
         (s) => s.section_name.toLowerCase() === sectionName.toLowerCase()
@@ -3030,10 +3006,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     if (!documentId) return;
     if (!token) {
       setShowAuthModal(true);
-      return;
-    }
-    if (user && user.plan_type === "free" && user.credits <= 0) {
-      setIsSubscriptionModalOpen(true);
       return;
     }
 
@@ -3081,10 +3053,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     if (!analysisResult || !documentId) return;
     if (!token) {
       setShowAuthModal(true);
-      return;
-    }
-    if (user && user.plan_type === "free" && user.credits <= 0) {
-      setIsSubscriptionModalOpen(true);
       return;
     }
 
