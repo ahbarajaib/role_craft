@@ -454,34 +454,36 @@ export default function ResumeBuilderPage() {
   return (
     <div className="min-h-screen hero-mesh text-slate-900 flex flex-col font-sans">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-teal-100 px-4 lg:px-8 py-3 shadow-2xs">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-teal-100 px-3 sm:px-4 lg:px-8 py-2.5 sm:py-3 shadow-2xs">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link
               href="/"
-              className="flex items-center gap-2.5 text-slate-900 font-black text-lg hover:opacity-90 transition-all group"
+              className="flex items-center gap-2 text-slate-900 font-black text-base sm:text-lg hover:opacity-90 transition-all group"
             >
               <div className="relative shrink-0 flex items-center justify-center">
                 <img
                   src="/logo.svg"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
                   alt="RoleCraft Logo"
-                  className="h-9 w-9 object-contain transition-transform group-hover:scale-105"
+                  className="h-8 w-8 sm:h-9 sm:w-9 object-contain transition-transform group-hover:scale-105"
                 />
               </div>
-              <span className="text-gradient font-black tracking-tight text-xl">RoleCraft</span>
+              <span className="text-gradient font-black tracking-tight text-lg sm:text-xl">RoleCraft</span>
             </Link>
-            <span className="px-2.5 py-0.5 rounded-full bg-teal-50 border border-teal-200 text-teal-700 font-bold text-[11px]">
+            <span className="hidden md:inline-flex px-2.5 py-0.5 rounded-full bg-teal-50 border border-teal-200 text-teal-700 font-bold text-[11px]">
               AI Resume Builder
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <Link
               href="/workspace"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-all hover:border-slate-300"
+              className="touch-target inline-flex items-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-all hover:border-slate-300"
             >
-              <ArrowLeft className="h-3.5 w-3.5" /> Back to Workspace
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Back to Workspace</span>
+              <span className="sm:hidden">Workspace</span>
             </Link>
 
             {token && (
@@ -489,7 +491,7 @@ export default function ResumeBuilderPage() {
                 type="button"
                 onClick={() => handleSaveResume(true)}
                 disabled={isSaving || saveStatus === "saved"}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs ${
+                className={`touch-target inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs ${
                   saveStatus === "unsaved"
                     ? "btn-primary text-white shadow-teal-500/20"
                     : "bg-white text-slate-700 border border-slate-200 cursor-default"
@@ -498,7 +500,8 @@ export default function ResumeBuilderPage() {
                 {saveStatus === "unsaved" ? (
                   <>
                     <Save className="h-3.5 w-3.5" />
-                    {isSaving ? "Saving..." : "Save Changes"}
+                    <span className="hidden sm:inline">{isSaving ? "Saving..." : "Save Changes"}</span>
+                    <span className="sm:hidden">{isSaving ? "..." : "Save"}</span>
                   </>
                 ) : (
                   <>
@@ -513,7 +516,7 @@ export default function ResumeBuilderPage() {
               <button
                 type="button"
                 onClick={() => setIsProfileModalOpen(true)}
-                className="h-9 w-9 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600 font-bold text-xs hover:bg-[#E6F7F4] transition-all cursor-pointer shadow-2xs"
+                className="touch-target h-9 w-9 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600 font-bold text-xs hover:bg-[#E6F7F4] transition-all cursor-pointer shadow-2xs"
                 title="Profile & Settings"
               >
                 <User className="h-4.5 w-4.5" />
@@ -522,7 +525,7 @@ export default function ResumeBuilderPage() {
               <button
                 type="button"
                 onClick={() => setShowAuthModal(true)}
-                className="px-4 py-2 rounded-xl btn-primary text-white font-bold text-xs transition-all cursor-pointer"
+                className="touch-target px-3.5 sm:px-4 py-2 rounded-xl btn-primary text-white font-bold text-xs transition-all cursor-pointer"
               >
                 Sign In
               </button>

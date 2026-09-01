@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useIsMobile } from "@/lib/use_is_mobile";
 import { usePathname, useRouter } from "next/navigation";
 import { FREE_TIER_CREDITS, PRO_CREDITS, ELITE_CREDITS } from "@/lib/constants";
 import Link from "next/link";
@@ -21,6 +22,8 @@ import {
   Layers,
   ArrowRight,
   Cpu,
+  Menu,
+  ArrowLeft,
   BookOpen,
   Code,
   ClipboardList,
@@ -3484,6 +3487,25 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
   const isAnalyzing = analyzeMutation.isPending;
   const isUploading = uploadMutation.isPending;
+  const isMobile = useIsMobile();
+
+  // ── Mobile tab state (Setup / Results) ────────────────────────────────
+  const [mobileTab, setMobileTab] = useState<"setup" | "results">("setup");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Auto-switch to results tab when analyze completes
+  useEffect(() => {
+    if (analysisResult && isMobile) {
+      setMobileTab("results");
+    }
+  }, [analysisResult, isMobile]);
+
+  // Also switch when analysis starts (show results panel with loading state)
+  useEffect(() => {
+    if (isAnalyzing && isMobile) {
+      setMobileTab("results");
+    }
+  }, [isAnalyzing, isMobile]);
 
   // ── Scroll-aware navbar glass ─────────────────────────────────────────
   const [navScrolled, setNavScrolled] = useState(false);
@@ -3518,37 +3540,37 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   }, []);
 
   return (
-    <div className="relative min-h-screen text-slate-900 bg-grid p-6 lg:p-12 overflow-x-hidden">
+    <div className="relative min-h-screen text-slate-900 bg-grid p-3 sm:p-6 lg:p-12 overflow-x-hidden">
       {/* Decorative Glow Orbs — drifting AI ambient background */}
       <div className="glow-effect bg-teal-500 w-[600px] h-[600px] -top-48 -left-48 orb-drift-1" style={{ opacity: 0.14 }} />
       <div className="glow-effect bg-violet-400 w-[440px] h-[440px] top-[38%] -right-24 orb-drift-2" style={{ opacity: 0.10 }} />
       <div className="glow-effect bg-blue-400 w-[360px] h-[360px] top-[22%] right-[28%] orb-drift-3" style={{ opacity: 0.07 }} />
       <div className="glow-effect bg-[#FF6B4A] w-[300px] h-[300px] top-[70%] left-[20%] orb-drift-1" style={{ opacity: 0.06 }} />
 
-      {/* Header */}
-      <header className={`sticky top-0 z-30 max-w-full mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 sm:mb-12 pb-4 border-b transition-all duration-300 px-6 lg:px-12 -mx-6 lg:-mx-12 ${navScrolled ? "bg-white/85 backdrop-blur-xl border-slate-200/90 shadow-sm shadow-teal-500/5" : "border-slate-200/80 bg-transparent"}`}>
-        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => switchNavTab("landing")}>
-          {/* Transparent Brand Logo */}
+      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
+      <header className={`sticky top-0 z-30 max-w-full mx-auto flex items-center justify-between gap-2 mb-6 sm:mb-12 pb-4 border-b transition-all duration-300 px-3 sm:px-6 lg:px-12 -mx-3 sm:-mx-6 lg:-mx-12 ${navScrolled ? "bg-white/85 backdrop-blur-xl border-slate-200/90 shadow-sm shadow-teal-500/5" : "border-slate-200/80 bg-transparent"}`}>
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 cursor-pointer group shrink-0" onClick={() => switchNavTab("landing")}>
           <div className="relative shrink-0 flex items-center justify-center">
             <img
               src="/logo.svg"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }}
               alt="RoleCraft Logo"
-              className="h-10 w-10 sm:h-11 sm:w-11 object-contain transition-transform group-hover:scale-105"
+              className="h-9 w-9 sm:h-10 sm:w-10 object-contain transition-transform group-hover:scale-105"
             />
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight leading-none flex items-center">
+            <h1 className="text-lg sm:text-2xl font-black tracking-tight leading-none flex items-center">
               <span className="text-[#0F172A]">Role</span>
               <span className="text-[#14B8A6]">Craft</span>
             </h1>
-            <p className="text-[10px] text-slate-500 font-extrabold tracking-wider uppercase truncate mt-0.5">
+            <p className="hidden sm:block text-[10px] text-slate-500 font-extrabold tracking-wider uppercase truncate mt-0.5">
               TAILOR. MATCH. GET HIRED.
             </p>
           </div>
         </div>
 
-        {/* Navigation Bar Links (Shown on landing page) */}
+        {/* Desktop Nav Links (landing page only) */}
         {activeNavTab === "landing" && (
           <nav className="hidden lg:flex items-center gap-0.5 text-xs font-bold text-slate-600">
             {[{label: "Features", href: "#features"}, {label: "Pricing", href: "#pricing"}, {label: "FAQ", href: "#faq"}].map(({label, href}) => (
@@ -3564,225 +3586,267 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           </nav>
         )}
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-end md:self-auto">
+        {/* Right Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Resume Builder — icon only on mobile */}
           <Link
             href="/resume-builder"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
+            className="touch-target flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
             title="Create & Edit Structured Resume with ATS Templates"
           >
-            <Sparkles className="h-3.5 w-3.5 text-teal-500" />
-            <span>Resume Builder</span>
+            <Sparkles className="h-3.5 w-3.5 text-teal-500 shrink-0" />
+            <span className="hidden sm:inline">Resume Builder</span>
           </Link>
 
-          {/* Launch / Switch Workspace Button */}
+          {/* Launch / Switch Workspace */}
           <button
             type="button"
             onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs ${
+            className={`touch-target flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs ${
                 activeNavTab === "workspace"
                   ? "bg-[#E6F7F4] hover:bg-[#ccfbf1] text-teal-900 border border-[#99F6E4] ring-1 ring-teal-500/20"
                   : "btn-primary"
               }`}
           >
-            <Sparkles className="h-3.5 w-3.5 text-[#FF6B4A]" />
-            <span>{activeNavTab === "workspace" ? "← Exit Workspace" : "⚡ Launch Workspace"}</span>
+            <Sparkles className="h-3.5 w-3.5 text-[#FF6B4A] shrink-0" />
+            <span className="hidden sm:inline">{activeNavTab === "workspace" ? "← Exit" : "⚡ Workspace"}</span>
+            <span className="sm:hidden">{activeNavTab === "workspace" ? "Exit" : "Launch"}</span>
           </button>
 
+          {/* User Auth Area */}
           {user ? (
             <div className="relative z-40">
               <button
                 type="button"
-                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-2 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs transition-all cursor-pointer select-none"
+                onClick={() => {
+                  if (isMobile) {
+                    setIsProfileMenuOpen(!isProfileMenuOpen);
+                  } else {
+                    setIsProfileMenuOpen(!isProfileMenuOpen);
+                  }
+                }}
+                className="touch-target flex items-center gap-1.5 sm:gap-2 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs transition-all cursor-pointer select-none"
               >
-                <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 shadow-sm">
+                <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 shadow-sm">
                   {(user.name || user.email)[0].toUpperCase()}
                 </div>
-                <span className="font-bold text-slate-800 dark:text-slate-200 max-w-[70px] sm:max-w-[120px] truncate">
+                <span className="hidden sm:inline font-bold text-slate-800 dark:text-slate-200 max-w-[120px] truncate">
                   {user.name || user.email.split("@")[0]}
                 </span>
-                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-extrabold text-[10px] border border-emerald-500/20">
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-extrabold text-[10px] border border-emerald-500/20 whitespace-nowrap">
                   {user.credits} CR
                 </span>
-                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={`hidden sm:block h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`} />
               </button>
 
-              {/* Profile Dropdown Card */}
+              {/* Profile Dropdown (desktop) / Bottom Sheet (mobile) */}
               {isProfileMenuOpen && (
                 <>
                   <div
                     className="fixed inset-0 z-40"
                     onClick={() => setIsProfileMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-72 z-50 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-3.5 animate-fade-in-up">
-                    {/* User Header */}
-                    <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-teal-600/30 shrink-0">
-                        {(user.name || user.email)[0].toUpperCase()}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                          {user.name || "User Account"}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Account Status Details */}
-                    <div className="space-y-2 text-xs">
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">Plan</span>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20 font-black uppercase text-[10px] tracking-wider">
-                            {user.plan_type}
-                          </span>
-                          {user.plan_type === "free" && (
-                            <button
-                              onClick={() => {
-                                setIsProfileMenuOpen(false);
-                                setIsSubscriptionModalOpen(true);
-                              }}
-                              className="px-2 py-0.5 rounded bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-[10px] transition-all cursor-pointer shadow-sm"
-                            >
-                              Upgrade
+                  {/* Mobile: bottom sheet */}
+                  {isMobile ? (
+                    <div className="modal-bottom-sheet" onClick={() => setIsProfileMenuOpen(false)}>
+                      <div className="modal-inner" onClick={e => e.stopPropagation()}>
+                        <div className="px-5 pb-5 pt-2 space-y-4">
+                          {/* User Header */}
+                          <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
+                            <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-base shadow-md shrink-0">
+                              {(user.name || user.email)[0].toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-bold text-slate-900 truncate">{user.name || "User Account"}</p>
+                              <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                            </div>
+                          </div>
+                          {/* Account Status */}
+                          <div className="space-y-2 text-xs">
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                              <span className="text-slate-500 font-medium">Plan</span>
+                              <div className="flex items-center gap-2">
+                                <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-700 border border-teal-500/20 font-black uppercase text-[10px] tracking-wider">{user.plan_type}</span>
+                                {user.plan_type === "free" && (
+                                  <button onClick={() => { setIsProfileMenuOpen(false); setIsSubscriptionModalOpen(true); }} className="px-2 py-0.5 rounded bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-[10px] transition-all cursor-pointer shadow-sm">Upgrade</button>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                              <span className="text-slate-500 font-medium">Credits Available</span>
+                              <span className="font-extrabold text-emerald-600">{user.credits} Credits</span>
+                            </div>
+                          </div>
+                          {/* Quick Actions */}
+                          <div className="space-y-2">
+                            <button type="button" onClick={() => { setIsProfileMenuOpen(false); handleOpenMasterResume(); }} className="touch-target w-full py-3 px-4 rounded-xl bg-teal-50 hover:bg-[#E6F7F4] text-teal-700 border border-teal-200 font-bold text-sm transition-all flex items-center justify-between cursor-pointer">
+                              <span className="flex items-center gap-2"><Edit className="h-4 w-4 text-teal-600" /> Master Resume</span>
+                              <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-200/60 text-teal-900">JSON</span>
                             </button>
-                          )}
+                            <button type="button" onClick={() => { setIsProfileMenuOpen(false); if (!token) setShowAuthModal(true); else setIsHistoryModalOpen(true); }} className="touch-target w-full py-3 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-sm transition-all flex items-center justify-between cursor-pointer">
+                              <span className="flex items-center gap-2"><History className="h-4 w-4 text-teal-500" /> History & Daily Goals</span>
+                              {dailyGoal && <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">{dailyGoal.progress_percentage}%</span>}
+                            </button>
+                            <button type="button" onClick={() => { setIsProfileMenuOpen(false); if (!token) setShowAuthModal(true); else setIsProfileModalOpen(true); }} className="touch-target w-full py-3 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-sm transition-all flex items-center justify-between cursor-pointer">
+                              <span className="flex items-center gap-2"><User className="h-4 w-4 text-teal-600" /> Profile & Base Docs</span>
+                              {user && <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">{calculateProfileCompletion(user).totalPercentage}%</span>}
+                            </button>
+                            <button type="button" onClick={() => { setIsProfileMenuOpen(false); openIssueReport("general"); }} className="touch-target w-full py-3 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-sm transition-all flex items-center gap-2 cursor-pointer">
+                              <LifeBuoy className="h-4 w-4 text-teal-600" />
+                              Report an Issue / Feedback
+                            </button>
+                            <button type="button" onClick={() => { setIsProfileMenuOpen(false); logout(); }} className="touch-target w-full py-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 border border-rose-500/20 font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                              <LogOut className="h-4 w-4" />
+                              Sign Out
+                            </button>
+                          </div>
                         </div>
                       </div>
-
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">Credits Available</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
-                            {user.credits} Credits
-                          </span>
-                          {VIP_EMAILS_FE.includes(user.email?.toLowerCase()) && (
-                            <button
-                              onClick={handleReloadCredits}
-                              disabled={isReloadingCredits}
-                              title="Reload VIP credits"
-                              className="px-2 py-0.5 rounded bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-extrabold text-[10px] transition-all cursor-pointer shadow-sm flex items-center gap-1"
-                            >
-                              {isReloadingCredits ? "..." : "↺ Reload"}
-                            </button>
-                          )}
+                    </div>
+                  ) : (
+                    /* Desktop dropdown */
+                    <div className="absolute right-0 mt-2 w-72 z-50 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-3.5 animate-fade-in-up">
+                      {/* User Header */}
+                      <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-teal-600/30 shrink-0">
+                          {(user.name || user.email)[0].toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.name || "User Account"}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Quick Access Menu Items */}
-                    <div className="space-y-1.5 pt-1 border-t border-slate-200 dark:border-slate-800">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsProfileMenuOpen(false);
-                          handleOpenMasterResume();
-                        }}
-                        className="w-full py-2.5 px-3 rounded-xl bg-teal-50 dark:bg-slate-900/40 hover:bg-[#E6F7F4] dark:hover:bg-slate-900/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-slate-800/80 font-bold text-xs transition-all flex items-center justify-between cursor-pointer shadow-2xs"
-                      >
-                        <span className="flex items-center gap-2">
-                          <Edit className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
-                          Master Resume
-                        </span>
-                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-200/60 dark:bg-slate-900/80 text-teal-900 dark:text-teal-200">
-                          JSON
-                        </span>
+                      {/* Account Status Details */}
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
+                          <span className="text-slate-500 dark:text-slate-400 font-medium">Plan</span>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20 font-black uppercase text-[10px] tracking-wider">{user.plan_type}</span>
+                            {user.plan_type === "free" && (
+                              <button onClick={() => { setIsProfileMenuOpen(false); setIsSubscriptionModalOpen(true); }} className="px-2 py-0.5 rounded bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-[10px] transition-all cursor-pointer shadow-sm">Upgrade</button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
+                          <span className="text-slate-500 dark:text-slate-400 font-medium">Credits Available</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-emerald-600 dark:text-emerald-400">{user.credits} Credits</span>
+                            {VIP_EMAILS_FE.includes(user.email?.toLowerCase()) && (
+                              <button onClick={handleReloadCredits} disabled={isReloadingCredits} title="Reload VIP credits" className="px-2 py-0.5 rounded bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-extrabold text-[10px] transition-all cursor-pointer shadow-sm flex items-center gap-1">
+                                {isReloadingCredits ? "..." : "↺ Reload"}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Quick Access Menu Items */}
+                      <div className="space-y-1.5 pt-1 border-t border-slate-200 dark:border-slate-800">
+                        <button type="button" onClick={() => { setIsProfileMenuOpen(false); handleOpenMasterResume(); }} className="w-full py-2.5 px-3 rounded-xl bg-teal-50 dark:bg-slate-900/40 hover:bg-[#E6F7F4] dark:hover:bg-slate-900/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-slate-800/80 font-bold text-xs transition-all flex items-center justify-between cursor-pointer shadow-2xs">
+                          <span className="flex items-center gap-2"><Edit className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" /> Master Resume</span>
+                          <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-200/60 dark:bg-slate-900/80 text-teal-900 dark:text-teal-200">JSON</span>
+                        </button>
+                        <button type="button" onClick={() => { setIsProfileMenuOpen(false); if (!token) setShowAuthModal(true); else setIsHistoryModalOpen(true); }} className="w-full py-2.5 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60 font-bold text-xs transition-all flex items-center justify-between cursor-pointer">
+                          <span className="flex items-center gap-2"><History className="h-3.5 w-3.5 text-teal-500" /> History & Daily Goals</span>
+                          {dailyGoal && <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">{dailyGoal.progress_percentage}%</span>}
+                        </button>
+                        <button type="button" onClick={() => { setIsProfileMenuOpen(false); if (!token) setShowAuthModal(true); else setIsProfileModalOpen(true); }} className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center justify-between cursor-pointer">
+                          <span className="flex items-center gap-2"><User className="h-3.5 w-3.5 text-teal-600" /> Profile & Base Docs</span>
+                          {user && <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">{calculateProfileCompletion(user).totalPercentage}%</span>}
+                        </button>
+                        <button type="button" onClick={() => { setIsProfileMenuOpen(false); openIssueReport("general"); }} className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer">
+                          <LifeBuoy className="h-3.5 w-3.5 text-teal-600" />
+                          Report an Issue / Feedback
+                        </button>
+                      </div>
+                      <button type="button" onClick={() => { setIsProfileMenuOpen(false); setIsProfileModalOpen(true); }} className="w-full py-2 rounded-xl bg-teal-50 dark:bg-slate-900/40 hover:bg-[#E6F7F4] text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-slate-800 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                        <User className="h-3.5 w-3.5" />
+                        Profile & Base Docs
                       </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsProfileMenuOpen(false);
-                          if (!token) setShowAuthModal(true);
-                          else setIsHistoryModalOpen(true);
-                        }}
-                        className="w-full py-2.5 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60 font-bold text-xs transition-all flex items-center justify-between cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <History className="h-3.5 w-3.5 text-teal-500" />
-                          History & Daily Goals
-                        </span>
-                        {dailyGoal && (
-                          <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                            {dailyGoal.progress_percentage}%
-                          </span>
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsProfileMenuOpen(false);
-                          if (!token) setShowAuthModal(true);
-                          else setIsProfileModalOpen(true);
-                        }}
-                        className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center justify-between cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <User className="h-3.5 w-3.5 text-teal-600" />
-                          Profile & Base Docs
-                        </span>
-                        {user && (
-                          <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">
-                            {calculateProfileCompletion(user).totalPercentage}%
-                          </span>
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsProfileMenuOpen(false);
-                          openIssueReport("general");
-                        }}
-                        className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer"
-                      >
-                        <LifeBuoy className="h-3.5 w-3.5 text-teal-600" />
-                        <span>Report an Issue / Feedback</span>
+                      <button type="button" onClick={() => { setIsProfileMenuOpen(false); logout(); }} className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 border border-rose-500/20 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                        <LogOut className="h-3.5 w-3.5" />
+                        Sign Out
                       </button>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        setIsProfileModalOpen(true);
-                      }}
-                      className="w-full py-2 rounded-xl bg-teal-50 dark:bg-slate-900/40 hover:bg-[#E6F7F4] text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-slate-800 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                    >
-                      <User className="h-3.5 w-3.5" />
-                      Profile & Base Docs
-                    </button>
-
-                    {/* Sign Out Button */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        logout();
-                      }}
-                      className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 border border-rose-500/20 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <LogOut className="h-3.5 w-3.5" />
-                      Sign Out
-                    </button>
-                  </div>
+                  )}
                 </>
               )}
             </div>
           ) : (
             <button
               onClick={() => setShowAuthModal(true)}
-              className="px-4 py-2 btn-primary text-xs cursor-pointer"
+              className="touch-target px-3.5 sm:px-4 py-2 btn-primary text-xs cursor-pointer rounded-xl"
             >
               Sign In
             </button>
           )}
+
+          {/* Mobile Hamburger (landing page only, for nav links) */}
+          {activeNavTab === "landing" && (
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="lg:hidden touch-target p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-all cursor-pointer"
+              aria-label="Open navigation menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          )}
         </div>
       </header>
+
+      {/* ── Mobile Navigation Overlay ───────────────────────────────────────── */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-50 mobile-menu-overlay"
+          style={{ background: "rgba(15,23,42,0.6)", backdropFilter: "blur(8px)" }}
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          <div
+            className="mobile-menu-panel absolute top-0 left-0 right-0 bg-white shadow-2xl"
+            onClick={e => e.stopPropagation()}
+            style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+          >
+            {/* Menu Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <img src="/logo.svg" onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/logo.png"; }} alt="RoleCraft" className="h-8 w-8 object-contain" />
+                <span className="text-lg font-black"><span className="text-[#0F172A]">Role</span><span className="text-[#14B8A6]">Craft</span></span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="touch-target p-2 rounded-xl hover:bg-slate-100 text-slate-500 cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {/* Nav Links */}
+            <div className="px-4 py-4 space-y-2">
+              {[{label: "Features", href: "#features"}, {label: "Pricing", href: "#pricing"}, {label: "FAQ", href: "#faq"}].map(({label, href}) => (
+                <a
+                  key={label}
+                  href={href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="touch-target flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-bold text-slate-700 hover:bg-teal-50 hover:text-teal-700 transition-all"
+                >
+                  {label}
+                </a>
+              ))}
+              <button
+                type="button"
+                onClick={() => { setIsMobileMenuOpen(false); switchNavTab("workspace"); }}
+                className="touch-target w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold bg-teal-600 text-white cursor-pointer"
+              >
+                <Sparkles className="h-4 w-4 text-amber-300" />
+                Launch Workspace Free
+              </button>
+            </div>
+            {/* Safe area bottom */}
+            <div style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }} />
+          </div>
+        </div>
+      )}
+
 
       {activeNavTab === "landing" ? (
         <div className="relative max-w-[1440px] mx-auto space-y-20 py-2 sm:py-4 animate-fade-in">
@@ -4382,9 +4446,26 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         </div>
       ) : (
         /* Main Workspace Container */
-        <main className="relative max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in-up">
+        <main className="relative max-w-[1440px] mx-auto animate-fade-in-up">
+          {/* Mobile Tab Bar */}
+          <div className="lg:hidden mobile-tab-bar mb-4 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+            <button
+              className={mobileTab === "setup" ? "active" : ""}
+              onClick={() => setMobileTab("setup")}
+            >
+              📋 Setup
+            </button>
+            <button
+              className={mobileTab === "results" ? "active" : ""}
+              onClick={() => setMobileTab("results")}
+            >
+              📊 Results {analysisResult ? `· ${Math.round(analysisResult.overall_summary?.overall_coverage_percentage ?? 0)}%` : ""}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Form Panel */}
-          <div className="lg:col-span-4 space-y-6 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+          <div className={`lg:col-span-4 space-y-6 animate-fade-in-up ${isMobile && mobileTab !== "setup" ? "hidden" : ""}`} style={{ animationDelay: "0.1s" }}>
             <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
               <h2 className="text-lg font-bold text-slate-800 border-b border-teal-100 pb-3 flex items-center gap-2">
                 <Layers className="h-5 w-5 text-teal-500" />
@@ -4401,7 +4482,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   <div
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
-                    className="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-teal-500/50 rounded-xl p-8 text-center bg-slate-100/30 dark:bg-slate-900/30 hover:bg-slate-200/40 dark:hover:bg-slate-900/50 transition-all duration-300"
+                    className="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-teal-500/50 rounded-xl p-6 sm:p-8 text-center bg-slate-100/30 dark:bg-slate-900/30 hover:bg-slate-200/40 dark:hover:bg-slate-900/50 transition-all duration-300 min-h-[140px] flex flex-col items-center justify-center"
                   >
                     <input
                       type="file"
@@ -4412,10 +4493,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     />
                     <UploadCloud className="h-10 w-10 text-slate-400 dark:text-slate-500 group-hover:text-teal-500 dark:group-hover:text-teal-400 mx-auto mb-3 transition-colors" />
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                      Drag & drop or click to upload
+                      <span className="hidden sm:inline">Drag &amp; drop or click to upload</span>
+                      <span className="sm:hidden">Tap to upload resume</span>
                     </p>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                      Word (.docx) & PDF (.pdf) documents up to 5MB
+                      Word (.docx) &amp; PDF (.pdf) up to 5MB
                     </p>
                   </div>
                 ) : isUploading ? (
@@ -4740,7 +4822,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           </div>
 
           {/* Right Results Panel */}
-          <div className="lg:col-span-8 space-y-6 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+          <div className={`lg:col-span-8 space-y-6 animate-fade-in-up ${isMobile && mobileTab !== "results" ? "hidden" : ""}`} style={{ animationDelay: "0.2s" }}>
             {isAnalyzing ? (
               <LoadingState />
             ) : !analysisResult ? (
@@ -6121,6 +6203,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               </div>
             )}
           </div>
+          </div>
         </main>
       )}
 
@@ -7176,13 +7259,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         activeDocumentId={documentId || user?.base_resume_id || null}
       />
 
-      {/* Floating Feedback / Issue Report Button */}
-      <div className="fixed bottom-5 right-5 z-40">
+      {/* Floating Feedback / Issue Report Button — safe-area-aware */}
+      <div className="fixed bottom-5 right-4 z-40 pb-safe">
         <button
           type="button"
           onClick={() => openIssueReport("bug")}
-          className="flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-teal-600 border border-slate-200 shadow-lg hover:shadow-xl transition-all cursor-pointer text-xs font-bold group select-none hover:scale-105 active:scale-95"
+          className="touch-target flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-700 hover:text-teal-600 border border-slate-200 shadow-lg hover:shadow-xl transition-all cursor-pointer text-xs font-bold group select-none hover:scale-105 active:scale-95"
           title="Encountered an issue or have feedback? Let us know!"
+          style={{ paddingBottom: `calc(0.625rem + env(safe-area-inset-bottom, 0px))` }}
         >
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <LifeBuoy className="h-4 w-4 text-teal-600 group-hover:rotate-12 transition-transform" />

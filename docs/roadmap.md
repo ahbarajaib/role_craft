@@ -112,12 +112,35 @@
 
 ---
 
-## Phase 9 - Planned
+## Phase 9 - Mobile-First & Cross-Device Responsiveness ✅
+
+- [x] **Viewport & Safe-Area Inset Support**:
+  - Added `viewport-fit=cover` and dynamic theme colors in Next.js metadata.
+  - Added safe area padding utilities (`pb-safe`, `pt-safe`, `pl-safe`, `pr-safe`, `mb-safe`) for iPhone Dynamic Island, home indicators, and Android notches.
+- [x] **Mobile Breakpoint Hook (`useIsMobile`)**:
+  - SSR-safe media query listener for responsive switching.
+- [x] **Mobile Navigation & Menus**:
+  - Responsive header with slide-down overlay navigation on mobile.
+  - Bottom sheet profile and account dropdowns on small screens with swipe-away animations.
+- [x] **Workspace Tab Switcher**:
+  - `📋 Setup` vs `📊 Results` tab switcher on mobile viewport (`lg:hidden`).
+  - Auto-switches from Setup to Results upon completing analysis.
+- [x] **Touch Target Optimization & Ergonomics**:
+  - Apple HIG minimum 44px touch targets on interactive controls (`touch-action: manipulation`, tap highlight removal).
+  - Tap-to-upload prompt for touchscreens vs drag-and-drop for desktop.
+  - Floating action buttons repositioned and cushioned above device home indicators.
+- [x] **Resume Builder Responsiveness**:
+  - Compact mobile top navigation bar with condensed action buttons.
+  - Stacking single-column layout for editor and live template preview cards.
+
+---
+
+## Phase 10 - Planned
 
 - [ ] PostgreSQL + Redis migration
 - [ ] Multi-language resume support (Arabic, French, German...)
-- [ ] Resume version history & diff viewer
-- [ ] Team workspaces & collaboration
+- [ ] Resume version history & visual diff viewer
+- [ ] Team workspaces & recruiter collaboration
 - [ ] ATS scoring engine (per-company ATS simulation)
 - [ ] Multi-model AI routing (Claude / Gemini fallback)
-- [ ] Billing & subscription tiers (Razorpay Pro/Elite plans)
+- [ ] Razorpay webhook payment reconciliation

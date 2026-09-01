@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers";
@@ -22,6 +22,14 @@ export const metadata: Metadata = {
     description: "Craft every resume for the role. Recruiter-grade AI tailoring with 100% visual DOCX formatting preservation.",
     type: "website",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+  themeColor: "#14b8a6",
 };
 
 export default function RootLayout({

@@ -534,3 +534,204 @@ body {
   animation: count-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+
+
+/* ─── Mobile / iOS Foundations ──────────────────────────────────────────────── */
+
+/* Eliminate 300ms tap delay on all interactive elements */
+button, a, [role="button"], input, select, textarea, label {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent iOS auto-zoom on input focus (requires font-size >= 16px) */
+input, textarea, select {
+  font-size: 16px;
+}
+@media (min-width: 768px) {
+  input, textarea, select {
+    font-size: inherit;
+  }
+}
+
+/* iOS momentum scrolling for scrollable containers */
+.ios-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* Safe-area padding utilities for iPhone notch / Dynamic Island / home indicator */
+.pb-safe  { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pt-safe  { padding-top: env(safe-area-inset-top, 0px); }
+.pl-safe  { padding-left: env(safe-area-inset-left, 0px); }
+.pr-safe  { padding-right: env(safe-area-inset-right, 0px); }
+.mb-safe  { margin-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* Combined bottom padding: base value + safe-area */
+.pb-safe-4  { padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); }
+.pb-safe-5  { padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)); }
+.pb-safe-6  { padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)); }
+
+/* Minimum touch target 44px (Apple HIG) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Bottom Sheet Animation ─────────────────────────────────────────────────── */
+@keyframes slideUpSheet {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes slideDownDismiss {
+  from { transform: translateY(0);    opacity: 1; }
+  to   { transform: translateY(100%); opacity: 0; }
+}
+
+.bottom-sheet {
+  animation: slideUpSheet 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ─── Horizontal chip scroll (keywords, tabs) ────────────────────────────────── */
+.chip-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 0.375rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.chip-scroll::-webkit-scrollbar { display: none; }
+
+/* ─── Mobile tab bar ─────────────────────────────────────────────────────────── */
+.mobile-tab-bar {
+  display: flex;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.mobile-tab-bar button {
+  flex: 1;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  border-bottom: 2px solid transparent;
+  transition: all 0.18s ease;
+  color: #64748b;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+}
+.mobile-tab-bar button.active {
+  color: #0d9488;
+  border-bottom-color: #14b8a6;
+  background: #f0fdfa;
+}
+
+/* ─── Hamburger menu overlay ─────────────────────────────────────────────────── */
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideInMenu {
+  from { transform: translateY(-16px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+.mobile-menu-overlay {
+  animation: fadeInOverlay 0.2s ease forwards;
+}
+.mobile-menu-panel {
+  animation: slideInMenu 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ─── Bottom sheet modal wrapper ─────────────────────────────────────────────── */
+.modal-bottom-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.modal-bottom-sheet .modal-inner {
+  width: 100%;
+  max-height: 92vh;
+  border-radius: 1.5rem 1.5rem 0 0;
+  background: white;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: slideUpSheet 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* Drag handle indicator */
+.modal-bottom-sheet .modal-inner::before {
+  content: '';
+  display: block;
+  width: 2.5rem;
+  height: 0.25rem;
+  background: #cbd5e1;
+  border-radius: 9999px;
+  margin: 0.75rem auto 0;
+}
+
+/* Desktop: centered dialog */
+@media (min-width: 768px) {
+  .modal-bottom-sheet {
+    align-items: center;
+    padding: 1rem;
+  }
+  .modal-bottom-sheet .modal-inner {
+    border-radius: 1rem;
+    max-width: 36rem;
+    max-height: 95vh;
+    padding-bottom: 0;
+  }
+  .modal-bottom-sheet .modal-inner::before {
+    display: none;
+  }
+}
+
+/* ─── Full-screen modal (for history, profile, tailor preview) ─────────────── */
+.modal-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: white;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: slideUpSheet 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@media (min-width: 768px) {
+  .modal-fullscreen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: none;
+  }
+  .modal-fullscreen .modal-fullscreen-inner {
+    background: white;
+    border-radius: 1rem;
+    width: 100%;
+    max-width: 56rem;
+    max-height: 95vh;
+    overflow-y: auto;
+    animation: none;
+  }
+}
