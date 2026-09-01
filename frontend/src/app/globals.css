@@ -608,14 +608,19 @@ input, textarea, select {
 }
 .chip-scroll::-webkit-scrollbar { display: none; }
 
-/* ─── Mobile tab bar ─────────────────────────────────────────────────────────── */
+/* ─── Mobile tab bar (visible only on mobile/tablet < 1024px) ─────────────── */
 .mobile-tab-bar {
-  display: flex;
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  display: none;
+}
+@media (max-width: 1023px) {
+  .mobile-tab-bar {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
 }
 .mobile-tab-bar button {
   flex: 1;
