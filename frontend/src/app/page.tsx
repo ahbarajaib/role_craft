@@ -62,7 +62,8 @@ import {
   GraduationCap,
   Award,
 } from "lucide-react";
-import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, downloadCoverLetterFile, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory } from "@/lib/api";
+import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, downloadCoverLetterFile, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory, DailyTargetSummary, updateDailyTarget } from "@/lib/api";
+import { DailyGoalCard } from "@/components/daily_goal_card";
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
@@ -1699,7 +1700,41 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     return "landing";
   });
   const [file, setFile] = useState<File | null>(null);
-  const [dailyGoal, setDailyGoal] = useState<{ progress_percentage: number } | null>(null);
+  const [dailyGoal, setDailyGoal] = useState<DailyTargetSummary | null>(null);
+  const [showDailyGoalBanner, setShowDailyGoalBanner] = useState<boolean>(true);
+  const [isUpdatingDailyTarget, setIsUpdatingDailyTarget] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("rolecraft_show_daily_goal");
+      if (saved !== null) {
+        setShowDailyGoalBanner(saved === "true");
+      }
+    }
+  }, []);
+
+  const toggleDailyGoalBanner = () => {
+    setShowDailyGoalBanner((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("rolecraft_show_daily_goal", String(next));
+      }
+      return next;
+    });
+  };
+
+  const handleQuickUpdateTarget = async (newTarget: number) => {
+    if (newTarget < 1 || newTarget > 50 || isUpdatingDailyTarget) return;
+    setIsUpdatingDailyTarget(true);
+    try {
+      const updated = await updateDailyTarget(newTarget);
+      setDailyGoal(updated);
+    } catch (err) {
+      console.error("Failed to update daily target:", err);
+    } finally {
+      setIsUpdatingDailyTarget(false);
+    }
+  };
 
   const fetchDailyGoal = async () => {
     if (!token) return;
@@ -3613,6 +3648,35 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             <span className="sm:hidden">{activeNavTab === "workspace" ? "Exit" : "Launch"}</span>
           </button>
 
+          {/* Daily Goal Quick Progress Pill in Header */}
+          {user && dailyGoal && showDailyGoalBanner && (
+            <button
+              type="button"
+              onClick={() => setIsHistoryModalOpen(true)}
+              className={`touch-target flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-105 select-none ${
+                dailyGoal.goal_achieved
+                  ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 ring-1 ring-emerald-500/20"
+                  : "bg-white hover:bg-teal-50 text-slate-700 hover:text-teal-800 border-slate-200 hover:border-teal-300"
+              }`}
+              title={`Daily Target: ${dailyGoal.today_completed}/${dailyGoal.daily_target} tailored (${dailyGoal.progress_percentage}%). Click to view full analytics.`}
+            >
+              <div className="flex items-center gap-1">
+                <span className="text-xs sm:text-sm leading-none">{dailyGoal.goal_achieved ? "🎉" : "🎯"}</span>
+                <span className="font-extrabold text-[11px] text-slate-900 dark:text-slate-100">
+                  {dailyGoal.today_completed}/{dailyGoal.daily_target}
+                </span>
+              </div>
+              <div className="w-8 sm:w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden shrink-0">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    dailyGoal.goal_achieved ? "bg-emerald-500" : "bg-gradient-to-r from-teal-500 to-indigo-500"
+                  }`}
+                  style={{ width: `${Math.min(100, dailyGoal.progress_percentage)}%` }}
+                />
+              </div>
+            </button>
+          )}
+
           {/* User Auth Area */}
           {user ? (
             <div className="relative z-40">
@@ -3676,6 +3740,32 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               <span className="text-slate-500 font-medium">Credits Available</span>
                               <span className="font-extrabold text-emerald-600">{user.credits} Credits</span>
                             </div>
+
+                            {/* Daily Goal Widget On/Off Switch */}
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-teal-50/50 border border-teal-200/60">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Target className="h-4 w-4 text-teal-600 shrink-0" />
+                                <div className="min-w-0">
+                                  <p className="font-bold text-slate-900 text-xs">Daily Goal Widget</p>
+                                  <p className="text-[10px] text-slate-500 truncate">Show goal bar &amp; count on main page</p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={toggleDailyGoalBanner}
+                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                  showDailyGoalBanner ? "bg-teal-600" : "bg-slate-300"
+                                }`}
+                                role="switch"
+                                aria-checked={showDailyGoalBanner}
+                              >
+                                <span
+                                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                    showDailyGoalBanner ? "translate-x-4" : "translate-x-0"
+                                  }`}
+                                />
+                              </button>
+                            </div>
                           </div>
                           {/* Quick Actions */}
                           <div className="space-y-2">
@@ -3738,6 +3828,32 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             )}
                           </div>
                         </div>
+
+                        {/* Daily Goal Widget On/Off Switch */}
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-teal-50/50 dark:bg-slate-800/60 border border-teal-200/60 dark:border-slate-700/60">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Target className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0" />
+                            <div className="min-w-0">
+                              <p className="font-bold text-slate-800 dark:text-slate-200 text-xs">Daily Goal Widget</p>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Show goal bar on main page</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={toggleDailyGoalBanner}
+                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              showDailyGoalBanner ? "bg-teal-600" : "bg-slate-300 dark:bg-slate-700"
+                            }`}
+                            role="switch"
+                            aria-checked={showDailyGoalBanner}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                showDailyGoalBanner ? "translate-x-4" : "translate-x-0"
+                              }`}
+                            />
+                          </button>
+                        </div>
                       </div>
                       {/* Quick Access Menu Items */}
                       <div className="space-y-1.5 pt-1 border-t border-slate-200 dark:border-slate-800">
@@ -3758,10 +3874,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           Report an Issue / Feedback
                         </button>
                       </div>
-                      <button type="button" onClick={() => { setIsProfileMenuOpen(false); setIsProfileModalOpen(true); }} className="w-full py-2 rounded-xl bg-teal-50 dark:bg-slate-900/40 hover:bg-[#E6F7F4] text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-slate-800 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                        <User className="h-3.5 w-3.5" />
-                        Profile & Base Docs
-                      </button>
                       <button type="button" onClick={() => { setIsProfileMenuOpen(false); logout(); }} className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 border border-rose-500/20 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer">
                         <LogOut className="h-3.5 w-3.5" />
                         Sign Out
@@ -3849,9 +3961,20 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
 
       {activeNavTab === "landing" ? (
-        <div className="relative max-w-[1440px] mx-auto space-y-20 py-2 sm:py-4 animate-fade-in">
+        <div className="relative max-w-[1440px] mx-auto space-y-12 sm:space-y-16 py-2 sm:py-4 animate-fade-in">
+          {/* Prominent Daily Goal Focus Card on Landing (when logged in & enabled) */}
+          {user && dailyGoal && showDailyGoalBanner && (
+            <DailyGoalCard
+              dailyGoal={dailyGoal}
+              onUpdateTarget={handleQuickUpdateTarget}
+              isUpdatingTarget={isUpdatingDailyTarget}
+              onOpenHistory={() => setIsHistoryModalOpen(true)}
+              onHide={toggleDailyGoalBanner}
+            />
+          )}
+
           {/* HERO 2-COLUMN SECTION */}
-          <section className="space-y-12 pt-4 pb-4">
+          <section className="space-y-12 pt-2 pb-4">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
               {/* Left Column: Headline & Action CTAs */}
               <div className="lg:col-span-6 space-y-6 lg:space-y-7 text-left">
@@ -4446,7 +4569,18 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         </div>
       ) : (
         /* Main Workspace Container */
-        <main className="relative max-w-[1440px] mx-auto animate-fade-in-up">
+        <main className="relative max-w-[1440px] mx-auto animate-fade-in-up space-y-5">
+          {/* Prominent Daily Goal Focus Card in Workspace (when logged in & enabled) */}
+          {user && dailyGoal && showDailyGoalBanner && (
+            <DailyGoalCard
+              dailyGoal={dailyGoal}
+              onUpdateTarget={handleQuickUpdateTarget}
+              isUpdatingTarget={isUpdatingDailyTarget}
+              onOpenHistory={() => setIsHistoryModalOpen(true)}
+              onHide={toggleDailyGoalBanner}
+            />
+          )}
+
           {/* Mobile Tab Bar */}
           <div className="lg:hidden mobile-tab-bar mb-4 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
             <button

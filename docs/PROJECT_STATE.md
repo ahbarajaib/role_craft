@@ -320,8 +320,8 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 - [x] Docker + Docker Compose setups
 - [x] Production SMTP Email Support Ticket Routing
 - [x] Mobile-Friendly First Responsive UX & Touch Targets (iPhone Pro/Max, Samsung Ultra)
-- [x] Structured Resume Engine with 3 ATS Templates & PDF export
 - [x] Analyze-Only Credit System (1 credit / analyze, free rewrites)
+- [x] ADHD Daily Application Goal Tracking (main page progress card, inline stepper, sticky header pill, profile toggle switch)
 - [ ] PostgreSQL integration
 - [ ] Redis + Background jobs (Celery/RQ for long-running AI queries)
 

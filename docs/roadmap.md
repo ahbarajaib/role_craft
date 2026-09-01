@@ -129,9 +129,11 @@
   - Apple HIG minimum 44px touch targets on interactive controls (`touch-action: manipulation`, tap highlight removal).
   - Tap-to-upload prompt for touchscreens vs drag-and-drop for desktop.
   - Floating action buttons repositioned and cushioned above device home indicators.
-- [x] **Resume Builder Responsiveness**:
-  - Compact mobile top navigation bar with condensed action buttons.
-  - Stacking single-column layout for editor and live template preview cards.
+- [x] **ADHD Daily Application Goal Tracking & Visibility Switch**:
+  - Prominent motivating daily goal card (`X of Y tailored today`, progress bar, dopamine cues) on Landing & Workspace.
+  - Interactive `+ / −` stepper on main page to adjust target on the fly without modal diving.
+  - Sticky header mini goal tracker pill (`🎯 3/5 [====>  ]`) linked to activity analytics.
+  - Dedicated on/off toggle switch in profile menu (desktop dropdown & mobile bottom sheet) persisting preference to `localStorage`.
 
 ---
 
