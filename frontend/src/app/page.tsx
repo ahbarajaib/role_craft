@@ -3648,8 +3648,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             <span className="sm:hidden">{activeNavTab === "workspace" ? "Exit" : "Launch"}</span>
           </button>
 
-          {/* Daily Goal Quick Progress Pill in Header */}
-          {user && dailyGoal && showDailyGoalBanner && (
+          {/* Daily Goal Quick Progress Pill in Header (ALWAYS visible when logged in) */}
+          {user && dailyGoal && (
             <button
               type="button"
               onClick={() => setIsHistoryModalOpen(true)}
@@ -3664,6 +3664,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 <span className="text-xs sm:text-sm leading-none">{dailyGoal.goal_achieved ? "🎉" : "🎯"}</span>
                 <span className="font-extrabold text-[11px] text-slate-900 dark:text-slate-100">
                   {dailyGoal.today_completed}/{dailyGoal.daily_target}
+                </span>
+                <span className="text-[10px] text-teal-600 font-bold hidden sm:inline">
+                  ({dailyGoal.progress_percentage}%)
                 </span>
               </div>
               <div className="w-8 sm:w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden shrink-0">
@@ -3741,13 +3744,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               <span className="font-extrabold text-emerald-600">{user.credits} Credits</span>
                             </div>
 
-                            {/* Daily Goal Widget On/Off Switch */}
+                            {/* In-Page Goal Banner On/Off Switch */}
                             <div className="flex items-center justify-between p-3 rounded-xl bg-teal-50/50 border border-teal-200/60">
                               <div className="flex items-center gap-2 min-w-0">
                                 <Target className="h-4 w-4 text-teal-600 shrink-0" />
                                 <div className="min-w-0">
-                                  <p className="font-bold text-slate-900 text-xs">Daily Goal Widget</p>
-                                  <p className="text-[10px] text-slate-500 truncate">Show goal bar &amp; count on main page</p>
+                                  <p className="font-bold text-slate-900 text-xs">In-Page Goal Strip</p>
+                                  <p className="text-[10px] text-slate-500 truncate">Show extra progress strip on main workspace</p>
                                 </div>
                               </div>
                               <button
@@ -3829,13 +3832,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           </div>
                         </div>
 
-                        {/* Daily Goal Widget On/Off Switch */}
+                        {/* In-Page Goal Strip On/Off Switch */}
                         <div className="flex items-center justify-between p-2.5 rounded-xl bg-teal-50/50 dark:bg-slate-800/60 border border-teal-200/60 dark:border-slate-700/60">
                           <div className="flex items-center gap-2 min-w-0">
                             <Target className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0" />
                             <div className="min-w-0">
-                              <p className="font-bold text-slate-800 dark:text-slate-200 text-xs">Daily Goal Widget</p>
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Show goal bar on main page</p>
+                              <p className="font-bold text-slate-800 dark:text-slate-200 text-xs">In-Page Goal Strip</p>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Show extra progress strip on main workspace</p>
                             </div>
                           </div>
                           <button
