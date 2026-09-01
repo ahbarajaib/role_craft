@@ -3487,9 +3487,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
   const isAnalyzing = analyzeMutation.isPending;
   const isUploading = uploadMutation.isPending;
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile(1024);
 
-  // ── Mobile tab state (Setup / Results) ────────────────────────────────
+  // ── Mobile / Tablet tab state (Setup / Results) ─────────────────────────
   const [mobileTab, setMobileTab] = useState<"setup" | "results">("setup");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -4465,7 +4465,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Form Panel */}
-          <div className={`lg:col-span-4 space-y-6 animate-fade-in-up ${isMobile && mobileTab !== "setup" ? "hidden" : ""}`} style={{ animationDelay: "0.1s" }}>
+          <div className={`lg:col-span-4 space-y-6 animate-fade-in-up ${mobileTab !== "setup" ? "hidden lg:block" : "block"}`} style={{ animationDelay: "0.1s" }}>
             <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
               <h2 className="text-lg font-bold text-slate-800 border-b border-teal-100 pb-3 flex items-center gap-2">
                 <Layers className="h-5 w-5 text-teal-500" />
@@ -4822,7 +4822,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           </div>
 
           {/* Right Results Panel */}
-          <div className={`lg:col-span-8 space-y-6 animate-fade-in-up ${isMobile && mobileTab !== "results" ? "hidden" : ""}`} style={{ animationDelay: "0.2s" }}>
+          <div className={`lg:col-span-8 space-y-6 animate-fade-in-up ${mobileTab !== "results" ? "hidden lg:block" : "block"}`} style={{ animationDelay: "0.2s" }}>
             {isAnalyzing ? (
               <LoadingState />
             ) : !analysisResult ? (
