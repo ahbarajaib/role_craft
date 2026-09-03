@@ -3630,7 +3630,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           {/* Resume Builder — desktop only (mobile uses bottom nav bar) */}
           <Link
             href="/resume-builder"
-            className="touch-target hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
+            className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
             title="Create & Edit Structured Resume with ATS Templates"
           >
             <Sparkles className="h-3.5 w-3.5 text-teal-500 shrink-0" />
@@ -3641,7 +3641,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           <button
             type="button"
             onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
-            className={`touch-target hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs ${
+            className={`hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs ${
                 activeNavTab === "workspace"
                   ? "bg-[#E6F7F4] hover:bg-[#ccfbf1] text-teal-900 border border-[#99F6E4] ring-1 ring-teal-500/20"
                   : "btn-primary"
@@ -5176,11 +5176,38 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               </div>
             ) : (
               <div className="space-y-6">
-                {/* ⚡ 1-Click Auto-Tailor Hero Banner */}
+                {/* Mobile Results Segmented Bar (iPhone 16 Pro & Mobile Zero-Scroll Experience) */}
+                <div className="lg:hidden sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md py-2 border-b border-slate-200 dark:border-slate-800 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-xs mb-3">
+                  <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                    {[
+                      { id: "score", label: "📊 Score & Fit" },
+                      { id: "keywords", label: "🎯 Keywords" },
+                      { id: "rewrites", label: "✨ Rewrites" },
+                      { id: "export", label: "📥 Export" },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setMobileResultsTab(tab.id as any)}
+                        className={`flex-1 py-2 px-1 text-center rounded-lg text-xs font-black transition-all cursor-pointer select-none ${
+                          mobileResultsTab === tab.id
+                            ? "bg-white dark:bg-slate-700 text-teal-700 dark:text-teal-300 shadow-xs ring-1 ring-teal-500/20"
+                            : "text-slate-500 hover:text-slate-900 dark:text-slate-400"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ⚡ 1-Click Auto-Tailor Hero Banner (Under Score & Fit tab on mobile, top of right col on desktop) */}
                 {(() => {
                   const hasAutoTailored = Boolean(isPatchingApplied && Object.keys(rewrittenSections).length > 0);
                   return (
                     <div className={`relative overflow-hidden rounded-2xl p-5.5 border transition-all duration-300 backdrop-blur-xl animate-fade-in ${
+                      mobileResultsTab === "score" ? "block" : "hidden lg:block"
+                    } ${
                       hasAutoTailored
                         ? "border-emerald-300/90 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white text-slate-900 shadow-xl shadow-emerald-500/10"
                         : "border-[#99f6e4]/80 bg-gradient-to-r from-[#E6F7F4]/90 via-white to-[#F1F5F9] text-slate-900 shadow-xl shadow-teal-500/5"
@@ -5275,31 +5302,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </div>
                   );
                 })()}
-
-                {/* Mobile Results Segmented Bar (iPhone 16 Pro & Mobile Zero-Scroll Experience) */}
-                <div className="lg:hidden sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md py-2 border-b border-slate-200 dark:border-slate-800 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-xs mb-3">
-                  <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                    {[
-                      { id: "score", label: "📊 Score & Fit" },
-                      { id: "keywords", label: "🎯 Keywords" },
-                      { id: "rewrites", label: "✨ Rewrites" },
-                      { id: "export", label: "📥 Export" },
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setMobileResultsTab(tab.id as any)}
-                        className={`flex-1 py-2 px-1 text-center rounded-lg text-xs font-black transition-all cursor-pointer select-none ${
-                          mobileResultsTab === tab.id
-                            ? "bg-white dark:bg-slate-700 text-teal-700 dark:text-teal-300 shadow-xs ring-1 ring-teal-500/20"
-                            : "text-slate-500 hover:text-slate-900 dark:text-slate-400"
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
                 {/* Summary Dashboard Card */}
                 <div className={`glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-r from-white/90 via-indigo-500/5 to-white/90 dark:from-slate-900/90 dark:via-indigo-950/20 dark:to-slate-900/90 shadow-xl ${mobileResultsTab === "score" ? "block" : "hidden lg:block"}`}>
@@ -6290,17 +6292,18 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   })()}
                 </div>
 
-                {/* Detailed Recruitment Insights Toggle (Collapsible by default at the bottom) */}
-                <div className="pt-4 border-t border-slate-900/60">
-                  <button
-                    type="button"
-                    onClick={() => setShowDetailedInsights(!showDetailedInsights)}
-                    className="w-full py-3 bg-slate-950/40 hover:bg-slate-950/80 text-slate-400 hover:text-white rounded-xl text-xs font-semibold border border-slate-900 transition-all flex items-center justify-center gap-2 select-none"
-                  >
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showDetailedInsights ? "transform rotate-180" : ""}`} />
-                    {showDetailedInsights ? "Hide Detailed Recruiter Insights" : "Show Detailed Recruiter Insights (Strengths & Gap Highlights)"}
-                  </button>
-                </div>
+                {/* Detailed Recruitment Insights Toggle (Shown under Score & Fit on mobile, bottom of column on desktop) */}
+                <div className={mobileResultsTab === "score" ? "block" : "hidden lg:block"}>
+                  <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setShowDetailedInsights(!showDetailedInsights)}
+                      className="w-full py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-2 select-none cursor-pointer"
+                    >
+                      <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showDetailedInsights ? "transform rotate-180" : ""}`} />
+                      {showDetailedInsights ? "Hide Detailed Recruiter Insights" : "Show Detailed Recruiter Insights (Strengths & Gap Highlights)"}
+                    </button>
+                  </div>
 
                 {showDetailedInsights && (
                   <div className="space-y-6 pt-2 animate-fade-in-up">
@@ -6443,63 +6446,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     )}
                   </div>
                 )}
+                </div>
               </div>
             )}
           </div>
-          </div>
-
-          {/* Mobile Floating Sticky Action Bar (iOS Thumb Ergonomics) */}
-          <div className="lg:hidden fixed bottom-18 left-0 right-0 z-30 px-4 pb-1 pointer-events-none">
-            <div className="max-w-md mx-auto pointer-events-auto">
-              {mobileTab === "setup" ? (
-                <button
-                  type="button"
-                  onClick={handleAnalyze}
-                  disabled={isAnalyzing || !file || jobDescription.trim().length < 50}
-                  className={`w-full py-3.5 px-5 rounded-2xl text-xs sm:text-sm font-black shadow-2xl flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer border ${
-                    isAnalyzing || !file || jobDescription.trim().length < 50
-                      ? "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-300 dark:border-slate-700 cursor-not-allowed"
-                      : "btn-primary border-teal-400/40 shadow-teal-600/30"
-                  }`}
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Analyzing ATS Fit...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="h-4 w-4 text-amber-300 fill-amber-300" />
-                      <span>⚡ Analyze Match (1 Credit)</span>
-                    </>
-                  )}
-                </button>
-              ) : analysisResult ? (
-                <div className="flex items-center gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-1.5 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 shadow-2xl">
-                  <button
-                    type="button"
-                    onClick={handleAutoTailor}
-                    disabled={isAutoTailoring}
-                    className="flex-1 py-3 px-4 rounded-xl btn-primary text-xs font-black shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer border border-teal-400/40"
-                  >
-                    {isAutoTailoring ? (
-                      <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-                    )}
-                    <span>{isAutoTailoring ? "Tailoring..." : "⚡ Auto-Tailor (1-Click)"}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMobileResultsTab("export")}
-                    className="py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-black shadow-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <Download className="h-3.5 w-3.5 text-teal-600" />
-                    <span>Export</span>
-                  </button>
-                </div>
-              ) : null}
-            </div>
           </div>
         </main>
       )}
@@ -7077,9 +7027,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         </div>
       )}
 
-      {/* Floating Sticky Action Dock — Compact Bottom-Right Floating Bar */}
+      {/* Floating Sticky Action Dock — Compact Bottom-Right Floating Bar (Desktop Only) */}
       {Object.keys(rewrittenSections).length > 0 && isBottomBarVisible && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-950/90 backdrop-blur-2xl border border-slate-800/90 p-2 px-3 rounded-2xl shadow-2xl text-white animate-fade-in-up transition-all duration-300 max-w-[95vw] sm:max-w-none">
+        <div className="hidden lg:block fixed bottom-6 right-6 z-50 bg-slate-950/90 backdrop-blur-2xl border border-slate-800/90 p-2 px-3 rounded-2xl shadow-2xl text-white animate-fade-in-up transition-all duration-300">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Expandable Drawer Toggle if not yet patched */}
             {!isPatchingApplied && (
@@ -7556,8 +7506,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         activeDocumentId={documentId || user?.base_resume_id || null}
       />
 
-      {/* Floating Feedback / Issue Report Button — safe-area-aware and positioned above mobile bottom nav */}
-      <div className="fixed bottom-20 lg:bottom-5 right-4 z-30 pb-safe">
+      {/* Floating Feedback / Issue Report Button (Desktop Only — on mobile, accessed via Account tab) */}
+      <div className="hidden lg:block fixed bottom-5 right-4 z-30 pb-safe">
         <button
           type="button"
           onClick={() => openIssueReport("bug")}

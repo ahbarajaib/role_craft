@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn(`[RoleCraft Auth] Profile fetch returned non-200 status (${response.status}). Retaining local session token.`);
       }
     } catch (err) {
-      console.error("Error loading user profile (network error):", err);
+      console.warn(`[RoleCraft Auth] Could not reach backend server at ${API_BASE_URL}. Running in offline mode:`, err);
     } finally {
       setIsLoading(false);
     }
