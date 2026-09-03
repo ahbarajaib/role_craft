@@ -77,6 +77,7 @@ import ResumeCompletionModal, { getFullProfilePhotoUrl } from "@/components/resu
 import TailorPreviewModal from "@/components/tailor_preview_modal";
 import ResumeDownloadPanel from "@/components/resume_download_panel";
 import IssueReportModal from "@/components/issue_report_modal";
+import { MobileBottomNav } from "@/components/mobile_bottom_nav";
 import {
   StructuredResume,
   parseAndSaveStructuredResume,
@@ -3526,12 +3527,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
   // ── Mobile / Tablet tab state (Setup / Results) ─────────────────────────
   const [mobileTab, setMobileTab] = useState<"setup" | "results">("setup");
+  const [mobileResultsTab, setMobileResultsTab] = useState<"score" | "keywords" | "rewrites" | "export">("score");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Auto-switch to results tab when analyze completes
   useEffect(() => {
     if (analysisResult && isMobile) {
       setMobileTab("results");
+      setMobileResultsTab("score");
     }
   }, [analysisResult, isMobile]);
 
@@ -3539,6 +3542,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   useEffect(() => {
     if (isAnalyzing && isMobile) {
       setMobileTab("results");
+      setMobileResultsTab("score");
     }
   }, [isAnalyzing, isMobile]);
 
@@ -3623,29 +3627,28 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
         {/* Right Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Resume Builder — icon only on mobile */}
+          {/* Resume Builder — desktop only (mobile uses bottom nav bar) */}
           <Link
             href="/resume-builder"
-            className="touch-target flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
+            className="touch-target hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
             title="Create & Edit Structured Resume with ATS Templates"
           >
             <Sparkles className="h-3.5 w-3.5 text-teal-500 shrink-0" />
-            <span className="hidden sm:inline">Resume Builder</span>
+            <span>Resume Builder</span>
           </Link>
 
-          {/* Launch / Switch Workspace */}
+          {/* Launch / Switch Workspace — desktop only (mobile uses bottom nav bar) */}
           <button
             type="button"
             onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
-            className={`touch-target flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs ${
+            className={`touch-target hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs ${
                 activeNavTab === "workspace"
                   ? "bg-[#E6F7F4] hover:bg-[#ccfbf1] text-teal-900 border border-[#99F6E4] ring-1 ring-teal-500/20"
                   : "btn-primary"
               }`}
           >
             <Sparkles className="h-3.5 w-3.5 text-[#FF6B4A] shrink-0" />
-            <span className="hidden sm:inline">{activeNavTab === "workspace" ? "← Exit" : "⚡ Workspace"}</span>
-            <span className="sm:hidden">{activeNavTab === "workspace" ? "Exit" : "Launch"}</span>
+            <span>{activeNavTab === "workspace" ? "← Exit" : "⚡ Workspace"}</span>
           </button>
 
           {/* Daily Goal Quick Progress Pill in Header (ALWAYS visible when logged in) */}
@@ -4572,7 +4575,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         </div>
       ) : (
         /* Main Workspace Container */
-        <main className="relative max-w-[1440px] mx-auto animate-fade-in-up space-y-5">
+        <main className="relative max-w-[1440px] mx-auto animate-fade-in-up space-y-5 has-mobile-nav">
           {/* Prominent Daily Goal Focus Card in Workspace (when logged in & enabled) */}
           {user && dailyGoal && showDailyGoalBanner && (
             <DailyGoalCard
@@ -5273,8 +5276,33 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   );
                 })()}
 
+                {/* Mobile Results Segmented Bar (iPhone 16 Pro & Mobile Zero-Scroll Experience) */}
+                <div className="lg:hidden sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md py-2 border-b border-slate-200 dark:border-slate-800 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-xs mb-3">
+                  <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                    {[
+                      { id: "score", label: "📊 Score & Fit" },
+                      { id: "keywords", label: "🎯 Keywords" },
+                      { id: "rewrites", label: "✨ Rewrites" },
+                      { id: "export", label: "📥 Export" },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setMobileResultsTab(tab.id as any)}
+                        className={`flex-1 py-2 px-1 text-center rounded-lg text-xs font-black transition-all cursor-pointer select-none ${
+                          mobileResultsTab === tab.id
+                            ? "bg-white dark:bg-slate-700 text-teal-700 dark:text-teal-300 shadow-xs ring-1 ring-teal-500/20"
+                            : "text-slate-500 hover:text-slate-900 dark:text-slate-400"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Summary Dashboard Card */}
-                <div className="glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-r from-white/90 via-indigo-500/5 to-white/90 dark:from-slate-900/90 dark:via-indigo-950/20 dark:to-slate-900/90 shadow-xl">
+                <div className={`glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-r from-white/90 via-indigo-500/5 to-white/90 dark:from-slate-900/90 dark:via-indigo-950/20 dark:to-slate-900/90 shadow-xl ${mobileResultsTab === "score" ? "block" : "hidden lg:block"}`}>
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="flex items-center gap-4">
                       {masterResume?.profile_photo_url && (
@@ -5449,7 +5477,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   const showMissing = keywordFilterTab === 'all' || keywordFilterTab === 'missing';
 
                   return (
-                    <div className="glass-panel rounded-3xl p-6 sm:p-7 border border-slate-200/90 bg-white shadow-xl shadow-teal-500/5 space-y-6">
+                    <div className={`glass-panel rounded-3xl p-6 sm:p-7 border border-slate-200/90 bg-white shadow-xl shadow-teal-500/5 space-y-6 ${mobileResultsTab === "keywords" ? "block" : "hidden lg:block"}`}>
                       {/* Header */}
                       <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 pb-5">
                         <div className="flex items-center gap-3.5">
@@ -5742,7 +5770,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 })()}
 
                 {/* ✉️ Tailored Cover Letter Card */}
-                <div className="glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 space-y-4 shadow-xl">
+                <div className={`glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 space-y-4 shadow-xl ${mobileResultsTab === "rewrites" || mobileResultsTab === "export" ? "block" : "hidden lg:block"}`}>
                   <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
                     <div className="flex items-center gap-2.5">
                       <div className="h-8 w-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
@@ -5969,8 +5997,86 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   )}
                 </div>
 
+                {/* 📥 Dedicated Mobile Export View (Clean, 1-Tap Download Panel for Phones) */}
+                {mobileResultsTab === "export" && (
+                  <div className="lg:hidden glass-panel rounded-3xl p-6 border border-slate-200/90 bg-white shadow-xl shadow-teal-500/5 space-y-5 animate-fade-in">
+                    <div className="flex items-center gap-3.5 border-b border-slate-100 pb-4">
+                      <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0 ring-1 ring-white/60">
+                        <Download className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-black text-slate-900 tracking-tight">
+                          Export Tailored Resume
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Recruiter-grade resume with 100% visual layout preservation.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Primary DOCX Download */}
+                      <a
+                        href={downloadUrl ? `${API_BASE_URL}${downloadUrl}` : (downloadId ? `${API_BASE_URL}/api/v1/resume/download/${downloadId}` : undefined)}
+                        download
+                        onClick={() => {
+                          if (!downloadUrl && !downloadId) {
+                            handleApplyRewrites();
+                          } else {
+                            setSuccessNotification("Downloading tailored DOCX...");
+                          }
+                        }}
+                        className={`w-full py-4 px-5 rounded-2xl font-black text-sm text-white shadow-xl flex items-center justify-between transition-all active:scale-95 ${
+                          downloadUrl || downloadId
+                            ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-teal-500 shadow-emerald-600/25"
+                            : "btn-primary shadow-teal-600/25"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <WordLogoIcon className="h-6 w-6 shrink-0" />
+                          <div className="text-left">
+                            <p className="font-black text-sm">Download Tailored DOCX</p>
+                            <p className="text-[11px] text-teal-100 font-medium">100% Word format & template preserved</p>
+                          </div>
+                        </div>
+                        <Download className="h-5 w-5 text-white/90" />
+                      </a>
+
+                      {/* PDF Download (if available) */}
+                      {downloadId && (
+                        <a
+                          href={`${API_BASE_URL}/api/v1/resume/download-pdf/${downloadId}?t=${encodeURIComponent(
+                            localStorage.getItem("token") || ""
+                          )}`}
+                          download
+                          onClick={() => setSuccessNotification("Downloading PDF...")}
+                          className="w-full py-3.5 px-5 rounded-2xl font-bold text-xs bg-slate-900 hover:bg-slate-800 text-white shadow-md flex items-center justify-between transition-all active:scale-95"
+                        >
+                          <div className="flex items-center gap-3">
+                            <PdfLogoIcon className="h-5 w-5 shrink-0" />
+                            <span className="font-bold">Download Tailored PDF</span>
+                          </div>
+                          <Download className="h-4 w-4 text-white/70" />
+                        </a>
+                      )}
+
+                      {/* PDF Preview */}
+                      {downloadId && (
+                        <button
+                          type="button"
+                          onClick={() => setIsPdfPreviewOpen(true)}
+                          className="w-full py-3 px-5 rounded-2xl font-bold text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 shadow-xs flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+                        >
+                          <Eye className="h-4 w-4 text-slate-600" />
+                          <span>Preview PDF in Browser</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Section Analysis Breakdown (Actionable cards shown at the top for maximum speed) */}
-                <div className="space-y-6">
+                <div className={`space-y-6 ${mobileResultsTab === "rewrites" ? "block" : "hidden lg:block"}`}>
                   {(() => {
                     const sectionsToImprove = (analysisResult.sections || [])
                       .filter((s) => s.review_status === "improve" || (s.recommendations && s.recommendations.length > 0))
@@ -6340,6 +6446,60 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               </div>
             )}
           </div>
+          </div>
+
+          {/* Mobile Floating Sticky Action Bar (iOS Thumb Ergonomics) */}
+          <div className="lg:hidden fixed bottom-18 left-0 right-0 z-30 px-4 pb-1 pointer-events-none">
+            <div className="max-w-md mx-auto pointer-events-auto">
+              {mobileTab === "setup" ? (
+                <button
+                  type="button"
+                  onClick={handleAnalyze}
+                  disabled={isAnalyzing || !file || jobDescription.trim().length < 50}
+                  className={`w-full py-3.5 px-5 rounded-2xl text-xs sm:text-sm font-black shadow-2xl flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer border ${
+                    isAnalyzing || !file || jobDescription.trim().length < 50
+                      ? "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-300 dark:border-slate-700 cursor-not-allowed"
+                      : "btn-primary border-teal-400/40 shadow-teal-600/30"
+                  }`}
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Analyzing ATS Fit...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-4 w-4 text-amber-300 fill-amber-300" />
+                      <span>⚡ Analyze Match (1 Credit)</span>
+                    </>
+                  )}
+                </button>
+              ) : analysisResult ? (
+                <div className="flex items-center gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-1.5 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 shadow-2xl">
+                  <button
+                    type="button"
+                    onClick={handleAutoTailor}
+                    disabled={isAutoTailoring}
+                    className="flex-1 py-3 px-4 rounded-xl btn-primary text-xs font-black shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer border border-teal-400/40"
+                  >
+                    {isAutoTailoring ? (
+                      <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                    )}
+                    <span>{isAutoTailoring ? "Tailoring..." : "⚡ Auto-Tailor (1-Click)"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMobileResultsTab("export")}
+                    className="py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-black shadow-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Download className="h-3.5 w-3.5 text-teal-600" />
+                    <span>Export</span>
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </main>
       )}
@@ -7396,8 +7556,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         activeDocumentId={documentId || user?.base_resume_id || null}
       />
 
-      {/* Floating Feedback / Issue Report Button — safe-area-aware */}
-      <div className="fixed bottom-5 right-4 z-40 pb-safe">
+      {/* Floating Feedback / Issue Report Button — safe-area-aware and positioned above mobile bottom nav */}
+      <div className="fixed bottom-20 lg:bottom-5 right-4 z-30 pb-safe">
         <button
           type="button"
           onClick={() => openIssueReport("bug")}
@@ -7410,6 +7570,22 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           <span className="hidden sm:inline">Report Issue / Feedback</span>
         </button>
       </div>
+
+      {/* Mobile-First Bottom Navigation Bar (iOS / iPhone 16 Pro Ergonomics) */}
+      <MobileBottomNav
+        activeNavTab={activeNavTab}
+        onSelectNavTab={switchNavTab}
+        onOpenGoals={() => {
+          if (!token) setShowAuthModal(true);
+          else setIsHistoryModalOpen(true);
+        }}
+        onOpenProfile={() => {
+          if (!token) setShowAuthModal(true);
+          else setIsProfileMenuOpen(true);
+        }}
+        user={user}
+        dailyGoal={dailyGoal}
+      />
     </div>
   );
 }

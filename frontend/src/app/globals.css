@@ -608,6 +608,27 @@ input, textarea, select {
 }
 .chip-scroll::-webkit-scrollbar { display: none; }
 
+/* ─── Horizontal scroll edge fade mask ──────────────────────────────────────── */
+.horizontal-scroll-mask {
+  mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+}
+
+/* ─── Tactile Mobile Touch Feedback ─────────────────────────────────────────── */
+.active-bounce {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.active-bounce:active {
+  transform: scale(0.97);
+}
+
+/* ─── Mobile Bottom Nav Padding Utility ─────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .has-mobile-nav {
+    padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 76px) !important;
+  }
+}
+
 /* ─── Mobile tab bar (visible only on mobile/tablet < 1024px) ─────────────── */
 .mobile-tab-bar {
   display: none;
