@@ -547,4 +547,37 @@ export function calculateProfileCompletion(user: any) {
   return { items, totalPercentage };
 }
 
+export interface ExtensionStatusResponse {
+  authenticated: boolean;
+  eligible: boolean;
+  plan_type: string;
+  version: string;
+}
+
+export async function getExtensionStatus(token?: string): Promise<ExtensionStatusResponse> {
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  const response = await fetch(`${API_BASE_URL}/api/v1/extension/status`, { headers });
+  if (!response.ok) {
+    throw new Error("Failed to fetch extension status");
+  }
+  return response.json();
+}
+
+export async function downloadExtensionZip(token: string): Promise<Blob> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/extension/download`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Failed to download extension bundle");
+  }
+  return response.blob();
+}
+
+
 

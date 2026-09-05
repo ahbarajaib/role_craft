@@ -67,6 +67,7 @@ import { DailyGoalCard } from "@/components/daily_goal_card";
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
+import ExtensionModal from "@/components/extension_modal";
 import HistoryModal from "@/components/history_modal";
 import FeaturesShowcase from "@/components/features_showcase";
 import TestimonialsSection from "@/components/testimonials_section";
@@ -1688,6 +1689,7 @@ function cleanSectionModalTitle(title: string): string {
 
 export default function Home({ initialTab }: { initialTab?: "landing" | "workspace" } = {}) {
   const { user, token, logout, setShowAuthModal, refreshMe } = useAuth();
+  const isProOrElite = Boolean(user?.plan_type === "pro" || user?.plan_type === "elite" || user?.subscription_status === "active");
   const pathname = usePathname();
   const router = useRouter();
   const [theme] = useState<"light">("light");
@@ -1783,6 +1785,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [rewrittenSections, setRewrittenSections] = useState<Record<string, string>>({});
   const [previousRewrittenSections, setPreviousRewrittenSections] = useState<Record<string, string>>({});
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [isExtensionModalOpen, setIsExtensionModalOpen] = useState(false);
   const [isRewriteModalOpen, setIsRewriteModalOpen] = useState(false);
   const [activeRewriteSection, setActiveRewriteSection] = useState<string | null>(null);
   const [rewriteData, setRewriteData] = useState<any | null>(null);
@@ -3787,6 +3790,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               <span className="flex items-center gap-2"><User className="h-4 w-4 text-teal-600" /> Profile & Base Docs</span>
                               {user && <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">{calculateProfileCompletion(user).totalPercentage}%</span>}
                             </button>
+                            <button type="button" onClick={() => { setIsProfileMenuOpen(false); setIsExtensionModalOpen(true); }} className="touch-target w-full py-3 px-4 rounded-xl bg-teal-50/70 hover:bg-teal-100/70 text-teal-950 border border-teal-200/80 font-bold text-sm transition-all flex items-center justify-between cursor-pointer">
+                              <span className="flex items-center gap-2"><Zap className="h-4 w-4 text-teal-600" /> LinkedIn Chrome Extension</span>
+                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs">{isProOrElite ? "Download" : "Pro"}</span>
+                            </button>
                             <button type="button" onClick={() => { setIsProfileMenuOpen(false); openIssueReport("general"); }} className="touch-target w-full py-3 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-sm transition-all flex items-center gap-2 cursor-pointer">
                               <LifeBuoy className="h-4 w-4 text-teal-600" />
                               Report an Issue / Feedback
@@ -3874,6 +3881,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         <button type="button" onClick={() => { setIsProfileMenuOpen(false); if (!token) setShowAuthModal(true); else setIsProfileModalOpen(true); }} className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center justify-between cursor-pointer">
                           <span className="flex items-center gap-2"><User className="h-3.5 w-3.5 text-teal-600" /> Profile & Base Docs</span>
                           {user && <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">{calculateProfileCompletion(user).totalPercentage}%</span>}
+                        </button>
+                        <button type="button" onClick={() => { setIsProfileMenuOpen(false); setIsExtensionModalOpen(true); }} className="w-full py-2.5 px-3 rounded-xl bg-teal-50/80 hover:bg-teal-100/80 text-teal-950 border border-teal-200 font-bold text-xs transition-all flex items-center justify-between cursor-pointer shadow-2xs">
+                          <span className="flex items-center gap-2"><Zap className="h-3.5 w-3.5 text-teal-600" /> LinkedIn Chrome Extension</span>
+                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs">{isProOrElite ? "Download" : "Pro"}</span>
                         </button>
                         <button type="button" onClick={() => { setIsProfileMenuOpen(false); openIssueReport("general"); }} className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer">
                           <LifeBuoy className="h-3.5 w-3.5 text-teal-600" />
@@ -4395,6 +4406,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
                       <span>Basic Keyword Matching</span>
                     </li>
+                    <li className="flex items-center gap-2 text-slate-400 opacity-60">
+                      <X className="h-4 w-4 text-slate-300 shrink-0" />
+                      <span className="line-through">LinkedIn 1-Click Chrome Extension</span>
+                    </li>
                   </ul>
                 </div>
                 <button
@@ -4434,6 +4449,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
                       <span>100% DOCX &amp; PDF Downloads</span>
                     </li>
+                    <li className="flex items-center gap-2 text-teal-950 font-bold bg-teal-50/90 -mx-2 px-2 py-1.5 rounded-lg border border-teal-200/80 shadow-2xs">
+                      <Sparkles className="h-4 w-4 text-teal-600 shrink-0" />
+                      <span>✦ LinkedIn 1-Click Copier Extension</span>
+                    </li>
                   </ul>
                 </div>
                 <button
@@ -4461,6 +4480,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
                       <span>Everything in Pro Plan</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-teal-950 font-bold bg-teal-50/90 -mx-2 px-2 py-1.5 rounded-lg border border-teal-200/80 shadow-2xs">
+                      <Sparkles className="h-4 w-4 text-teal-600 shrink-0" />
+                      <span>✦ LinkedIn 1-Click Copier Extension</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
@@ -4845,6 +4868,26 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       </button>
                     )}
                   </div>
+                </div>
+
+                {/* LinkedIn Companion Extension Contextual Banner */}
+                <div className="flex items-center justify-between bg-gradient-to-r from-teal-50/90 via-teal-50/50 to-slate-50 border border-teal-200/80 rounded-xl px-3 py-2 text-xs shadow-2xs">
+                  <div className="flex items-center gap-2 text-slate-800 min-w-0">
+                    <span className="flex h-5 w-5 rounded-lg bg-teal-600 text-white items-center justify-center shrink-0 shadow-2xs">
+                      <Zap className="h-3 w-3" />
+                    </span>
+                    <span className="text-[11px] truncate">
+                      <strong className="text-teal-950 font-bold">Applying from LinkedIn?</strong> Extract clean job requirements in 1 click.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsExtensionModalOpen(true)}
+                    className="font-bold text-teal-700 hover:text-teal-900 flex items-center gap-1 hover:underline cursor-pointer ml-2 shrink-0 text-[11px]"
+                  >
+                    <span>{isProOrElite ? "Download Extension" : "Get Extension (Pro)"}</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </button>
                 </div>
 
                 <div className="relative">
@@ -7216,6 +7259,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
       {/* Popover Billing & Subscription Modal */}
       <SubscriptionModal isOpen={isSubscriptionModalOpen} onClose={() => setIsSubscriptionModalOpen(false)} />
+
+      {/* Popover LinkedIn Chrome Extension Modal */}
+      <ExtensionModal
+        isOpen={isExtensionModalOpen}
+        onClose={() => setIsExtensionModalOpen(false)}
+        onOpenSubscribe={() => setIsSubscriptionModalOpen(true)}
+      />
 
       {/* Live PDF Preview Modal */}
       {isPdfPreviewOpen && (downloadId || documentId) && (

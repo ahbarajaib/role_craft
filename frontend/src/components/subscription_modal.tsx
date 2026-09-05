@@ -200,6 +200,10 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
                   <span>Patched DOCX &amp; PDF Downloads</span>
                 </li>
+                <li className="flex items-center gap-2 text-teal-800 font-semibold">
+                  <Sparkles className="h-4 w-4 text-teal-600 shrink-0" />
+                  <span>LinkedIn 1-Click Copier Chrome Extension</span>
+                </li>
               </ul>
             </div>
           </div>
@@ -239,7 +243,11 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>AI Section Rewrites &amp; Keyword Weaving</span>
+                  <span>Everything in Pro Plan</span>
+                </li>
+                <li className="flex items-center gap-2 text-teal-800 font-semibold">
+                  <Sparkles className="h-4 w-4 text-teal-600 shrink-0" />
+                  <span>LinkedIn 1-Click Copier Chrome Extension</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
