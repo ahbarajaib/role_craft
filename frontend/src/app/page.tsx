@@ -6133,13 +6133,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
                             {/* Section Toggle Chips */}
                             <div className="flex flex-wrap gap-2 pt-1">
-                              {(analysisResult.sections || []).map((sec) => {
+                              {(analysisResult.sections || []).map((sec, idx) => {
                                 const isEnabled = tailoringSectionToggles[sec.section_name] !== undefined
                                   ? tailoringSectionToggles[sec.section_name]
                                   : !(sec.section_name.toLowerCase().includes("education") || sec.section_name.toLowerCase().includes("certification"));
                                 return (
                                   <button
-                                    key={sec.section_name}
+                                    key={`${sec.section_name}-${idx}`}
                                     type="button"
                                     onClick={() => handleToggleSectionTailoring(sec.section_name)}
                                     className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none border ${
