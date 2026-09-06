@@ -20,5 +20,6 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - JWT_SECRET=${JWT_SECRET:-supersecretrolecraftkey}
-      - ALLOWED_ORIGINS=["https://rolecraft.tech", "https://www.rolecraft.tech", "http://localhost:3000"]
+      - ADMIN_SECRET=${ADMIN_SECRET}
+      - ALLOWED_ORIGINS=["https://rolecraft.tech", "https://www.rolecraft.tech", "https://admin.rolecraft.tech", "http://localhost:3000"]
     restart: always
