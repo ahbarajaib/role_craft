@@ -18,12 +18,14 @@ import {
   AlertCircle,
   Loader2,
   Code,
+  Trash2,
 } from "lucide-react";
 import {
   fetchUserDetail,
   updateUserCredits,
   updateUserPlan,
   toggleUserAdmin,
+  deleteUser,
   AdminUserDetail,
   getAdminEmail,
 } from "@/lib/admin-api";
@@ -124,6 +126,29 @@ export default function SingleUserDetailPage({
     } catch (err: unknown) {
       setFeedback({ type: "error", text: err instanceof Error ? err.message : "Failed to toggle admin role." });
     } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!user) return;
+    if (user.email === currentAdminEmail) {
+      alert("You cannot delete your own admin account.");
+      return;
+    }
+    const confirmed = window.confirm(
+      `⚠️ PERMANENT ACCOUNT DELETION\n\nAre you sure you want to permanently delete user:\n${user.email} (ID: #${user.id})?\n\nThis will purge all analysis histories, tailored resumes, and credit balances. This action CANNOT be undone.`
+    );
+    if (!confirmed) return;
+
+    setActionLoading(true);
+    setFeedback(null);
+    try {
+      await deleteUser(user.id);
+      alert(`User ${user.email} was successfully deleted.`);
+      router.push("/xrc-control/dashboard/users");
+    } catch (err: unknown) {
+      setFeedback({ type: "error", text: err instanceof Error ? err.message : "Failed to delete user." });
       setActionLoading(false);
     }
   };
@@ -390,6 +415,27 @@ export default function SingleUserDetailPage({
           </div>
         )}
       </div>
+
+      {/* Danger Zone: Delete User */}
+      <div className="bg-rose-50/70 rounded-2xl p-6 border border-rose-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-bold text-rose-900 flex items-center gap-2">
+            <Trash2 className="w-4 h-4 text-rose-600" />
+            Delete User Account
+          </h3>
+          <p className="text-xs text-rose-600/80 mt-0.5">
+            Permanently delete this user, purging their analysis histories, resumes, and credits. This action cannot be undone.
+          </p>
+        </div>
+        <button
+          onClick={handleDeleteUser}
+          disabled={actionLoading || (user.email === currentAdminEmail)}
+          className="px-4 py-2.5 rounded-xl font-semibold text-xs transition-all cursor-pointer flex-shrink-0 bg-rose-600 hover:bg-rose-700 text-white shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {user.email === currentAdminEmail ? "Cannot Delete Self" : "Permanently Delete User"}
+        </button>
+      </div>
     </div>
   );
 }
+

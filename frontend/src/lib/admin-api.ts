@@ -324,6 +324,15 @@ export async function toggleUserAdmin(userId: number, is_admin: boolean) {
   return handleAdminResponse<{ success: boolean; user_id: number; is_admin: boolean }>(res);
 }
 
+export async function deleteUser(userId: number) {
+  const res = await fetch(withAdminToken(`${API_BASE_URL}/api/v1/admin/users/${userId}/delete`), {
+    method: "POST",
+    headers: getAdminHeaders(),
+  });
+  return handleAdminResponse<{ success: boolean; deleted_user_id: number; deleted_email: string }>(res);
+}
+
+
 export async function fetchSupportTickets(params: {
   page?: number;
   limit?: number;

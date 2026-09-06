@@ -22,6 +22,7 @@ from app.dependencies.admin import (
 from app.models import (
     User,
     AnalysisHistory,
+    StructuredResumeModel,
     TailoredResumeModel,
     IssueReport,
     AdminActivityLog,
@@ -490,6 +491,62 @@ def toggle_user_admin(
         "success": True,
         "user_id": u.id,
         "is_admin": u.is_admin,
+    }
+
+
+@router.delete("/users/{user_id}")
+@router.post("/users/{user_id}/delete")
+def delete_user(
+    user_id: int,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    """Permanently delete a user account and purge all associated records."""
+    if user_id == admin_user.id:
+        raise BadRequestError("You cannot delete your own admin account.")
+
+    u = db.query(User).filter(User.id == user_id).first()
+    if not u:
+        raise NotFoundError(f"User with ID {user_id} not found.")
+
+    deleted_email = u.email
+    deleted_plan = u.plan_type
+    deleted_credits = u.credits
+
+    # 1. Purge user's analysis histories
+    db.query(AnalysisHistory).filter(AnalysisHistory.user_id == user_id).delete()
+
+    # 2. Purge user's structured master resumes
+    db.query(StructuredResumeModel).filter(StructuredResumeModel.user_id == user_id).delete()
+
+    # 3. Purge user's tailored resumes
+    db.query(TailoredResumeModel).filter(TailoredResumeModel.user_id == user_id).delete()
+
+    # 4. Decouple issue reports so ticket logs stay for records
+    db.query(IssueReport).filter(IssueReport.user_id == user_id).update({"user_id": None})
+
+    # 5. Delete the User
+    db.delete(u)
+    db.commit()
+
+    # 6. Audit log
+    log_admin_action(
+        db=db,
+        admin_email=admin_user.email,
+        action="user_delete",
+        target_user_id=None,
+        payload={
+            "deleted_user_id": user_id,
+            "deleted_email": deleted_email,
+            "plan_type": deleted_plan,
+            "credits": deleted_credits,
+        },
+    )
+
+    return {
+        "success": True,
+        "deleted_user_id": user_id,
+        "deleted_email": deleted_email,
     }
 
 

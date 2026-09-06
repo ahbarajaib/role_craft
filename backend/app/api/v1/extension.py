@@ -9,9 +9,22 @@ from app.models import User
 
 router = APIRouter(prefix="/extension", tags=["extension"])
 
-# Find the extension directory relative to the project root
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
-EXTENSION_DIR = PROJECT_ROOT / "linkedin-job-copier"
+def get_extension_dir() -> Path:
+    """Find the extension directory from known bundle/project locations."""
+    candidate_dirs = [
+        # 1. Bundled inside backend/app/extension_src
+        Path(__file__).resolve().parent.parent.parent / "extension_src",
+        # 2. Mounted into container at /app/linkedin-job-copier
+        Path("/app/linkedin-job-copier"),
+        # 3. Development root locations
+        Path(__file__).resolve().parents[4] / "linkedin-job-copier",
+        Path(__file__).resolve().parents[3] / "linkedin-job-copier",
+        Path("/opt/role_craft/linkedin-job-copier"),
+    ]
+    for p in candidate_dirs:
+        if p.exists() and (p / "manifest.json").exists():
+            return p
+    return candidate_dirs[0]
 
 
 def is_user_pro_or_elite(user: User) -> bool:
@@ -24,21 +37,22 @@ def is_user_pro_or_elite(user: User) -> bool:
 
 def build_extension_zip() -> io.BytesIO:
     """Builds a ZIP archive in memory containing all necessary extension files."""
-    if not EXTENSION_DIR.exists():
+    ext_dir = get_extension_dir()
+    if not ext_dir.exists() or not (ext_dir / "manifest.json").exists():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Extension source files not found on server.",
+            detail=f"Extension source files not found on server (checked {ext_dir}).",
         )
 
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        for root, dirs, files in os.walk(EXTENSION_DIR):
+        for root, dirs, files in os.walk(ext_dir):
             for file in files:
                 # Exclude hidden files or git files if any
                 if file.startswith(".") or file.endswith(".tmp"):
                     continue
                 file_path = Path(root) / file
-                arcname = file_path.relative_to(EXTENSION_DIR)
+                arcname = file_path.relative_to(ext_dir)
                 # Nest inside folder rolecraft-linkedin-copier/ inside the zip for clean extraction
                 zf.write(file_path, arcname=f"rolecraft-linkedin-copier/{arcname}")
 

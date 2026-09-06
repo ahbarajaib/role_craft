@@ -19,6 +19,7 @@ import {
   Globe,
   FileText,
   Calendar,
+  Trash2,
 } from "lucide-react";
 import {
   fetchUsers,
@@ -26,6 +27,7 @@ import {
   updateUserCredits,
   updateUserPlan,
   toggleUserAdmin,
+  deleteUser,
   AdminUserItem,
   AdminUserDetail,
   getAdminEmail,
@@ -173,6 +175,41 @@ export default function UsersManagementPage() {
         type: "error",
         text: err instanceof Error ? err.message : "Failed to update admin role.",
       });
+    } finally {
+      setDrawerActionLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (targetUser?: AdminUserItem | AdminUserDetail) => {
+    const target = targetUser || selectedUser;
+    if (!target) return;
+
+    if (target.email === currentAdminEmail) {
+      alert("You cannot delete your own admin account.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `⚠️ PERMANENT ACCOUNT DELETION\n\nAre you sure you want to permanently delete user:\n${target.email} (ID: #${target.id})?\n\nThis will purge all analysis records, tailored resumes, and credit balances. This action CANNOT be undone.`
+    );
+
+    if (!confirmed) return;
+
+    setDrawerActionLoading(true);
+    try {
+      await deleteUser(target.id);
+      if (selectedUser?.id === target.id) {
+        setSelectedUser(null);
+      }
+      loadUsers();
+      alert(`User ${target.email} was successfully deleted.`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to delete user.";
+      if (selectedUser?.id === target.id) {
+        setDrawerMessage({ type: "error", text: msg });
+      } else {
+        alert(msg);
+      }
     } finally {
       setDrawerActionLoading(false);
     }
@@ -328,14 +365,25 @@ export default function UsersManagementPage() {
                       {new Date(u.created_at).toLocaleDateString()}
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenDrawer(u)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100/70 text-slate-700 font-semibold text-xs transition-all cursor-pointer"
-                      >
-                        <Edit3 className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Manage</span>
-                      </button>
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDrawer(u)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100/70 text-slate-700 font-semibold text-xs transition-all cursor-pointer"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Manage</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(u)}
+                          disabled={u.email === currentAdminEmail}
+                          title={u.email === currentAdminEmail ? "Cannot delete self" : "Delete user"}
+                          className="p-1.5 rounded-lg border border-rose-200/80 bg-rose-50/50 hover:bg-rose-100 text-rose-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -543,6 +591,29 @@ export default function UsersManagementPage() {
                         : selectedUser.is_admin
                         ? "Demote from Admin"
                         : "Promote to Admin"}
+                    </button>
+                  </div>
+
+                  {/* Section: Danger Zone */}
+                  <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-200/80 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-rose-800 flex items-center gap-1.5">
+                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                          Danger Zone
+                        </span>
+                        <p className="text-[11px] text-rose-600/80 mt-0.5">
+                          Permanently delete user account and all resume/analysis data.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteUser()}
+                      disabled={drawerActionLoading || selectedUser.email === currentAdminEmail}
+                      className="w-full py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      {selectedUser.email === currentAdminEmail ? "Cannot Delete Self" : "Permanently Delete User"}
                     </button>
                   </div>
 
