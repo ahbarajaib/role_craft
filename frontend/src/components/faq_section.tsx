@@ -10,15 +10,15 @@ export default function FaqSection() {
   const faqs = [
     {
       q: "Does RoleCraft preserve 100% of my DOCX document formatting and fonts?",
-      a: "Yes, 100%. Unlike generic tools that convert your resume into plain text or destroy your custom styles, RoleCraft operates at low-level OpenXML. It preserves your exact font families, font sizes, margins, bullet list XML (<w:numPr>), colors, and table structures.",
+      a: "Yes, 100%. Unlike tools that paste your resume into a text box and lose all your fonts, spacing, and layout — RoleCraft rewrites only the text inside your existing sections. Your original DOCX comes back exactly as you designed it.",
     },
     {
       q: "How does the 1-Click Auto-Tailoring feature work?",
-      a: "When you click '⚡ Auto-Tailor Full Resume', RoleCraft concurrently analyzes your base resume against the target Job Description. It rewrites your Professional Summary, weaves missing ATS keywords into your Technical Skills, and formats your Work Experience bullets using Google's XYZ Formula.",
+      a: "When you click '⚡ Auto-Tailor Full Resume', RoleCraft reads your resume and the job description together. It rewrites your Professional Summary, updates your Skills section with relevant keywords, and strengthens your Work Experience bullet points — all in one go.",
     },
     {
-      q: "What is Google's XYZ Impact Formula?",
-      a: "Google's formula structures achievement bullets as: 'Accomplished [X] as measured by [Y], by doing [Z]'. RoleCraft automatically converts weak bullet points into high-impact, quantifiable statements that capture recruiter attention immediately.",
+      q: "How does RoleCraft rewrite my bullet points?",
+      a: "RoleCraft strengthens weak bullet points by making them more specific, results-focused, and relevant to the job you're applying for. Instead of 'Worked on backend systems', it rewrites to something like 'Built backend API that reduced response time by 40%'. Clearer, stronger, more likely to get noticed.",
     },
     {
       q: "How do monthly credits work?",

@@ -1329,7 +1329,7 @@ function AutoTailoringProgressModal({
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200/80 text-[11px] font-bold text-teal-700">
             <Zap className="h-3.5 w-3.5 text-teal-600 fill-teal-600 animate-pulse" />
-            <span>16-Worker Parallel AI Engine</span>
+            <span>AI Tailoring in Progress</span>
           </div>
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-black text-emerald-700">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -3998,7 +3998,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 <div className="relative inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50/90 border border-teal-200/80 text-teal-700 font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider shadow-2xs overflow-hidden">
                   <span className="absolute inset-0 ai-badge-shimmer pointer-events-none" />
                   <Sparkles className="h-3.5 w-3.5 text-teal-600 animate-pulse" />
-                  <span>Recruiter-Grade AI Resume Optimization Engine</span>
+                  <span>Built for Indian professionals switching companies</span>
                 </div>
 
                 <h1 className="text-4xl sm:text-5xl xl:text-6xl font-black text-slate-900 tracking-tight leading-[1.12]">
@@ -4008,7 +4008,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 </h1>
 
                 <p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-xl">
-                  Beat ATS scanners, weave missing technical keywords naturally, and triple your interview callbacks while preserving 100% of your DOCX font &amp; layout formatting.
+                  Paste any job description. RoleCraft rewrites only the right sections of your resume — keywords, tone, relevance — without touching your formatting.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-3.5 pt-2">
@@ -4017,7 +4017,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     className="px-7 py-3.5 rounded-2xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-sm shadow-lg shadow-teal-600/30 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Zap className="h-4 w-4 text-amber-300" />
-                    <span>Launch Optimizer Workspace</span>
+                    <span>Tailor My Resume Free →</span>
                   </button>
                   <a
                     href="#how-it-works"
@@ -4027,6 +4027,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     <span className="text-[10px] text-slate-700">▶</span>
                   </a>
                 </div>
+                {/* Trust signal */}
+                <p className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block"></span>
+                  {/* UPDATE: replace with real signup count from /xrc-control/dashboard/users */}
+                  Join early adopters tailoring smarter — free to start
+                </p>
               </div>
 
               {/* Right Column: Interactive Floating Resume Preview & ATS Score Overlay */}
@@ -4058,14 +4064,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     <div className="flex-1 space-y-3.5 text-left text-slate-800 pr-0 sm:pr-24">
                       {/* Candidate Header */}
                       <div className="space-y-0.5">
-                        <h3 className="text-base font-black text-slate-900">Mohammed Ahbar</h3>
-                        <p className="text-[11px] font-semibold text-slate-500">Full Stack Developer</p>
+                        <h3 className="text-base font-black text-slate-900">Rahul Sharma</h3>
+                        <p className="text-[11px] font-semibold text-slate-500">Software Engineer, 4 yrs exp</p>
                         <p className="text-[10px] text-slate-400 font-medium pt-0.5 flex flex-wrap gap-2">
-                          <span>✉ ahbar@example.com</span>
+                          <span>✉ rahul.sharma@email.com</span>
                           <span>•</span>
-                          <span>📱 +971 50 123 4567</span>
+                          <span>📱 +91 98765 43210</span>
                           <span>•</span>
-                          <span>📍 Dubai, UAE</span>
+                          <span>📍 Bengaluru, India</span>
                         </p>
                       </div>
 
@@ -4161,8 +4167,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   </div>
                 </div>
                 <div className="text-left">
-                  <div className={`text-2xl font-black text-slate-900 leading-tight ${statsVisible ? "stat-number-in" : "opacity-0"}`}>98.4%</div>
-                  <div className="text-xs font-semibold text-slate-500">ATS Pass Rate</div>
+                  <div className={`text-2xl font-black text-slate-900 leading-tight ${statsVisible ? "stat-number-in" : "opacity-0"}`}>60 sec</div>
+                  <div className="text-xs font-semibold text-slate-500">To tailor your resume per job</div>
                 </div>
               </div>
 
@@ -4174,8 +4180,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   </div>
                 </div>
                 <div className="text-left">
-                  <div className={`text-2xl font-black text-slate-900 leading-tight ${statsVisible ? "stat-number-in" : "opacity-0"}`} style={{ animationDelay: "0.12s" }}>3.8x</div>
-                  <div className="text-xs font-semibold text-slate-500">More Interview Calls</div>
+                  <div className={`text-2xl font-black text-slate-900 leading-tight ${statsVisible ? "stat-number-in" : "opacity-0"}`} style={{ animationDelay: "0.12s" }}>0 hrs</div>
+                  <div className="text-xs font-semibold text-slate-500">Wasted rewriting manually</div>
                 </div>
               </div>
 
@@ -4204,6 +4210,48 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   <div className="text-xs font-semibold text-slate-500">DOCX Layout Integrity</div>
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* FOUNDER STORY + WHO IS THIS FOR */}
+          <section className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 reveal-on-scroll">
+            {/* Founder Story */}
+            <div className="rounded-3xl border border-teal-100 bg-gradient-to-br from-teal-50/80 to-white p-7 flex flex-col justify-between space-y-5 shadow-sm">
+              <div className="space-y-3">
+                <span className="text-[10px] font-black uppercase tracking-widest text-teal-600">Why I Built This</span>
+                <p className="text-base sm:text-lg font-semibold text-slate-800 leading-relaxed">
+                  &ldquo;I was applying to jobs and spending 2+ hours rewriting my resume for every application. If I sent the same resume everywhere, I heard nothing back. So I built RoleCraft — paste the job description and it updates your resume in under 60 seconds, without touching the formatting.&rdquo;
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-teal-600 flex items-center justify-center text-white font-black text-sm shrink-0">A</div>
+                <div>
+                  <div className="text-sm font-bold text-slate-900">Ahbar</div>
+                  <div className="text-xs text-slate-500">Founder, RoleCraft</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Who Is This For */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-7 space-y-5 shadow-sm">
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Who Is This For?</span>
+                <h3 className="text-lg font-black text-slate-900">RoleCraft is built for you if&hellip;</h3>
+              </div>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <span className="h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">✓</span>
+                  <span className="text-sm text-slate-700 font-medium">You have 2–10+ years of experience and are switching companies</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">✓</span>
+                  <span className="text-sm text-slate-700 font-medium">You're applying to 5+ jobs a week and can't manually rewrite your resume each time</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">✓</span>
+                  <span className="text-sm text-slate-700 font-medium">You've sent 50 applications and gotten 2 callbacks — and you know your resume is the problem</span>
+                </li>
+              </ul>
             </div>
           </section>
 
@@ -4322,7 +4370,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       1-Click Tailor &amp; Download
                     </h3>
                     <p className="text-xs text-slate-500 font-medium leading-relaxed mt-1">
-                      Click &quot;Auto-Tailor&quot; to rewrite weak bullets using Google XYZ, embed missing keywords, and download the patched file.
+                      Click &quot;Auto-Tailor&quot; to update your resume sections to match the job description and download the file instantly.
                     </p>
                   </div>
                 </div>
@@ -4351,10 +4399,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           <section id="features" className="space-y-8 scroll-mt-24">
             <div className="text-center space-y-3 max-w-2xl mx-auto">
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                Engineered for Recruiter Callbacks
+                Everything You Need to Get More Interviews
               </h2>
               <p className="text-sm sm:text-base text-slate-600 font-medium">
-                Built with low-level OpenXML preservation and recruiter-grade evaluation algorithms.
+                Simple tools that do the hard work of tailoring your resume, so you don't have to.
               </p>
             </div>
             <FeaturesShowcase />
@@ -4364,10 +4412,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           <section className="space-y-8">
             <div className="text-center space-y-3 max-w-2xl mx-auto">
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                Trusted by Top Tech Candidates
+                What People Are Saying
               </h2>
               <p className="text-sm sm:text-base text-slate-600 font-medium">
-                See verified results from candidates who landed offers at leading companies.
+                Early feedback from professionals who tried RoleCraft.
               </p>
             </div>
             <TestimonialsSection />
@@ -4427,10 +4475,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 </div>
                 <div className="space-y-4">
                   <span className="text-xs font-black uppercase text-teal-700 tracking-widest">Pro Plan</span>
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex items-baseline gap-2 flex-wrap">
                     <span className="text-4xl font-black text-slate-900">₹399</span>
-                    <span className="text-xs text-slate-400 line-through">₹2,000</span>
                     <span className="text-xs text-slate-500 font-semibold">/ month</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold">⚡ One-time 30-day pass available</span>
                   </div>
                   <ul className="space-y-2.5 text-xs text-slate-700 font-medium pt-4 border-t border-teal-200/60">
                     <li className="flex items-center gap-2">
@@ -4443,7 +4493,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                      <span>Google XYZ Formula Bullet Rewriter</span>
+                      <span>AI-powered bullet point rewriter</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
@@ -4514,10 +4564,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 <span>Start In 15 Seconds</span>
               </span>
               <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-                Ready to Triple Your Interview Callbacks?
+                Stop Sending the Same Resume to Every Job
               </h2>
               <p className="text-sm sm:text-base text-slate-300 font-medium leading-relaxed">
-                Join thousands of candidates beating ATS scanners and landing recruiter interviews with 100% visual DOCX preservation.
+                Join professionals across India tailoring smarter. Upload your resume and try it free in under a minute.
               </p>
             </div>
 
@@ -4528,7 +4578,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-white font-black text-sm shadow-2xl shadow-teal-500/40 hover:shadow-teal-400/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Sparkles className="h-4 w-4 text-white" />
-                <span>⚡ Launch Workspace Free</span>
+                <span>⚡ Tailor My Resume Free</span>
               </button>
               <Link
                 href="/resume-builder"
