@@ -153,3 +153,56 @@ def simulate_payment_success(
         "credits": user.credits,
         "subscription_status": user.subscription_status
     }
+
+
+class VerifySubscriptionRequest(BaseModel):
+    razorpay_payment_id: str
+    razorpay_subscription_id: str
+    razorpay_signature: str
+    plan_type: str = "pro"
+
+
+@router.post("/verify")
+def verify_subscription(
+    req: VerifySubscriptionRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Instantly verify subscription checkout signature and activate membership."""
+    # If live keys are present, verify signature
+    if settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET:
+        try:
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            client.utility.verify_subscription_payment_signature({
+                "razorpay_payment_id": req.razorpay_payment_id,
+                "razorpay_subscription_id": req.razorpay_subscription_id,
+                "razorpay_signature": req.razorpay_signature,
+            })
+        except Exception as e:
+            raise BadRequestError(f"Payment signature verification failed: {str(e)}")
+
+    plan_clean = (req.plan_type or "pro").lower().strip()
+    if plan_clean not in ["pro", "elite"]:
+        plan_clean = "pro"
+
+    # Set subscription details
+    user.razorpay_subscription_id = req.razorpay_subscription_id
+    user.plan_type = plan_clean
+    user.subscription_status = "active"
+
+    # Auto-grant full tier monthly credits (top up if below quota)
+    tier_credits = settings.ELITE_CREDITS if plan_clean == "elite" else settings.PRO_CREDITS
+    if user.credits < tier_credits:
+        user.credits = tier_credits
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "status": "success",
+        "plan_type": user.plan_type,
+        "subscription_status": user.subscription_status,
+        "credits": user.credits,
+        "subscription_id": user.razorpay_subscription_id,
+    }
+

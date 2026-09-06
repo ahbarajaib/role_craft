@@ -421,16 +421,38 @@ def update_user_plan(
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
-    """Update a user's subscription plan type and status."""
+    """Update a user's subscription plan type and status.
+    
+    Automatically grants Pro or Elite tier credit quota if upgraded from a lower balance.
+    """
     u = db.query(User).filter(User.id == user_id).first()
     if not u:
         raise NotFoundError(f"User with ID {user_id} not found.")
 
     old_plan = u.plan_type
     old_status = u.subscription_status
+    old_credits = u.credits
 
-    u.plan_type = payload.plan_type
+    new_plan = payload.plan_type.lower().strip()
+    u.plan_type = new_plan
     u.subscription_status = payload.subscription_status
+
+    # Check dynamic SiteConfig or fallback to settings for tier quota
+    if new_plan in ["pro", "elite"]:
+        cfg_key = "PRO_CREDITS" if new_plan == "pro" else "ELITE_CREDITS"
+        default_quota = settings.PRO_CREDITS if new_plan == "pro" else settings.ELITE_CREDITS
+        tier_quota = default_quota
+        cfg_row = db.query(SiteConfig).filter(SiteConfig.key == cfg_key).first()
+        if cfg_row:
+            try:
+                tier_quota = int(json.loads(cfg_row.value))
+            except Exception:
+                pass
+        
+        # If user balance is below the tier quota, top them up to the full monthly tier amount
+        if u.credits < tier_quota:
+            u.credits = tier_quota
+
     db.commit()
     db.refresh(u)
 
@@ -443,6 +465,7 @@ def update_user_plan(
             "user_email": u.email,
             "plan_type": {"before": old_plan, "after": u.plan_type},
             "subscription_status": {"before": old_status, "after": u.subscription_status},
+            "credits": {"before": old_credits, "after": u.credits},
         },
     )
 
@@ -451,6 +474,7 @@ def update_user_plan(
         "user_id": u.id,
         "plan_type": u.plan_type,
         "subscription_status": u.subscription_status,
+        "credits": u.credits,
     }
 
 

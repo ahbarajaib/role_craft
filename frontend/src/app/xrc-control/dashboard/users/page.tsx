@@ -131,11 +131,21 @@ export default function UsersManagementPage() {
     try {
       const res = await updateUserPlan(selectedUser.id, editPlan, editStatus);
       setSelectedUser((prev) =>
-        prev ? { ...prev, plan_type: res.plan_type, subscription_status: res.subscription_status } : null
+        prev
+          ? {
+              ...prev,
+              plan_type: res.plan_type,
+              subscription_status: res.subscription_status,
+              credits: res.credits ?? prev.credits,
+            }
+          : null
       );
+      if (res.credits !== undefined) {
+        setCreditAmount(res.credits);
+      }
       setDrawerMessage({
         type: "success",
-        text: `Plan updated to ${res.plan_type} (${res.subscription_status}).`,
+        text: `Plan updated to ${res.plan_type.toUpperCase()} (${res.subscription_status}). Credits balance: ${res.credits ?? selectedUser.credits}`,
       });
       loadUsers();
     } catch (err: unknown) {

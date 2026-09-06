@@ -97,9 +97,22 @@ export default function SingleUserDetailPage({
     try {
       const res = await updateUserPlan(userId, planType, subStatus);
       setUser((prev) =>
-        prev ? { ...prev, plan_type: res.plan_type, subscription_status: res.subscription_status } : null
+        prev
+          ? {
+              ...prev,
+              plan_type: res.plan_type,
+              subscription_status: res.subscription_status,
+              credits: res.credits ?? prev.credits,
+            }
+          : null
       );
-      setFeedback({ type: "success", text: `Plan updated to ${res.plan_type} (${res.subscription_status}).` });
+      if (res.credits !== undefined) {
+        setCredits(res.credits);
+      }
+      setFeedback({
+        type: "success",
+        text: `Plan updated to ${res.plan_type.toUpperCase()} (${res.subscription_status}). Credit balance: ${res.credits ?? credits}`,
+      });
     } catch (err: unknown) {
       setFeedback({ type: "error", text: err instanceof Error ? err.message : "Failed to update plan." });
     } finally {

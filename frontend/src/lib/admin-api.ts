@@ -312,7 +312,7 @@ export async function updateUserPlan(userId: number, plan_type: string, subscrip
     headers: getAdminHeaders(),
     body: JSON.stringify({ plan_type, subscription_status }),
   });
-  return handleAdminResponse<{ success: boolean; user_id: number; plan_type: string; subscription_status: string }>(res);
+  return handleAdminResponse<{ success: boolean; user_id: number; plan_type: string; subscription_status: string; credits: number }>(res);
 }
 
 export async function toggleUserAdmin(userId: number, is_admin: boolean) {

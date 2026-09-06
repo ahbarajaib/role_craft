@@ -93,14 +93,35 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         description: session.description,
         image: "/logo.svg",
         handler: async function (checkoutResponse: any) {
-          // Poll profile until webhook upgrades them, or reload immediately
           setIsSubmitting(true);
           try {
-            await new Promise((r) => setTimeout(r, 2000));
+            // Instantly verify payment signature & activate membership on server
+            const verifyRes = await fetch(`${API_BASE_URL}/api/v1/payment/verify`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                razorpay_payment_id: checkoutResponse.razorpay_payment_id,
+                razorpay_subscription_id: checkoutResponse.razorpay_subscription_id,
+                razorpay_signature: checkoutResponse.razorpay_signature,
+                plan_type: selectedPlan,
+              }),
+            });
+
+            if (!verifyRes.ok) {
+              console.warn("Direct verify failed, waiting for webhook fallback...");
+              await new Promise((r) => setTimeout(r, 2000));
+            }
+
             await refreshMe();
             onClose();
           } catch (err) {
-            console.error(err);
+            console.error("Checkout verify error:", err);
+            await new Promise((r) => setTimeout(r, 2000));
+            await refreshMe();
+            onClose();
           } finally {
             setIsSubmitting(false);
           }
