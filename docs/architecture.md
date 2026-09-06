@@ -189,3 +189,12 @@ Stores:
 
 7. **Admin Dashboard Undiscoverability & Two-Layer Security**.
    The admin portal is hosted at `admin.rolecraft.tech` (internally mapped to `/xrc-control`) and completely isolated from the consumer frontend with `robots.txt` disallow and `X-Robots-Tag: noindex, nofollow`. Authentication requires two distinct gates: (1) Standard Bearer JWT verification where `user.is_admin == True`, and (2) Secret Admin PIN verification against server-configured `ADMIN_SECRET` generating a short-lived in-memory session token (`X-Admin-Token`, 30m TTL) with 5-attempt rate-limiting lockout. All admin modifications are recorded in an immutable `AdminActivityLog` audit table.
+
+8. **Dual Billing Engine & Instant Checkout Verification**.
+   Users can select between a **One-Off 30-Day Pass** (Razorpay Standard Orders via `client.order.create`, zero recurring auto-debit, 100% UPI/card support) and a **Recurring Monthly Subscription** (Razorpay Subscriptions via `client.subscription.create`). Instant verification (`POST /api/v1/payment/verify`) verifies the cryptographic payment signature on checkout completion and immediately activates the plan with full tier credits (Pro: 200, Elite: 400). Automatic pass expiration is enforced gracefully via `plan_expires_at` in the user authentication dependency (`get_current_user`).
+
+9. **In-Container Extension Bundling**.
+   The LinkedIn Job Copier Chrome extension source is bundled directly inside `backend/app/extension_src/`. This guarantees that in-container ZIP streaming (`GET /api/v1/extension/download`) operates independently of host filesystem mounts, with multiple fallbacks for local development.
+
+10. **Admin User Deletion Safety & Decoupled Cascade**.
+    Permanent deletion of user accounts via `POST /api/v1/admin/users/{id}/delete` enforces self-deletion protection (admin cannot delete their own account). It performs a complete cascade cleanup of user analysis history, master resumes, and tailored resumes, while setting `user_id = NULL` on issue reports to preserve support audit trails.

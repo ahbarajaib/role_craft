@@ -96,7 +96,7 @@ sudo apt install nginx certbot python3-certbot-nginx -y
    ```
 
 ---
-## Just an update
+
 ## 4. Deploying the Frontend on Vercel
 
 1. Log in to your [Vercel Dashboard](https://vercel.com) and click **Add New Project**.
@@ -108,7 +108,6 @@ sudo apt install nginx certbot python3-certbot-nginx -y
 5. In your Vercel project settings, navigate to **Domains** and add your custom domain `rolecraft.tech`.
 
 ---
-## Just a comment
 
 ## 5. Setting up CI/CD to VPS (Secure Webhook Redeployment)
 
@@ -207,5 +206,20 @@ source .venv/bin/activate
 python scripts/bootstrap_admin.py
 ```
 
+---
 
+## 7. Quick-Syncing Backend Code in Production
 
+When applying backend changes to the running production container without rebuilding from scratch:
+
+```bash
+cd /opt/role_craft
+git pull
+docker cp backend/app rolecraft-backend:/app/
+docker restart rolecraft-backend
+```
+
+To view live container logs:
+```bash
+docker logs -f rolecraft-backend --tail 50
+```

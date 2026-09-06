@@ -8,8 +8,15 @@ AI-powered resume optimization platform. Upload a DOCX resume, provide a job des
 
 ## Project Status
 
+> **Milestone 21 – Dual Billing Modes (One-Off 30-Day Pass + Subscriptions), Immediate Checkout Verification, User Deletion & Container Extension Distribution (Complete)**
+> * **Dual Billing Modes**: Users can now choose between a **One-Time 30-Day Pass** (zero recurring auto-debit, 100% UPI/card compatibility) and an **Auto-Renewing Monthly Subscription** via Razorpay. Automatic pass expiration is gracefully enforced via `plan_expires_at`.
+> * **Immediate Checkout Verification (`POST /api/v1/payment/verify`)**: Checkout activates membership and full tier credits in milliseconds directly on payment completion, without waiting for webhook latencies.
+> * **Admin User Deletion (`POST /api/v1/admin/users/{id}/delete`)**: Admins can permanently delete user accounts with full cascade purge of analyses, master resumes, and tailored resumes, plus self-deletion protection.
+> * **Auto-Grant Credits on Upgrade**: Admin plan upgrades to Pro or Elite automatically top up user credits to the tier quota (200 / 400 credits).
+> * **Container-Bundled Chrome Extension**: Chrome extension files are bundled directly inside `backend/app/extension_src/` for 100% reliable streaming downloads inside Docker containers.
+
 > **Milestone 20 – Admin Dashboard & Platform Control Center (Complete)**
-> A dedicated, undiscoverable administrative portal (`admin.rolecraft.tech` / `/xrc-control/`) with two-layer authentication (JWT + Secret PIN) is now live. Features include real-time financial metrics and estimated MRR, interactive 30-day signup and feature usage analytics, comprehensive user management with credit top-up drawers and plan changers, centralized support ticket triage with technical JSON context, dynamic live system configuration editing (`SiteConfig`), and an immutable audit trail (`AdminActivityLog`).
+> A dedicated, undiscoverable administrative portal (`admin.rolecraft.tech` / `/xrc-control/`) with two-layer authentication (JWT + Secret PIN) is now live. Features include real-time financial metrics and estimated MRR, interactive 30-day signup and feature usage analytics, comprehensive user management with credit top-up drawers, user deletion, plan changers, centralized support ticket triage with technical JSON context, dynamic live system configuration editing (`SiteConfig`), and an immutable audit trail (`AdminActivityLog`).
 
 > **Milestone 19 – LinkedIn Job Copier Chrome Extension, Premium Gated Distribution & Mobile Bottom Nav (Complete)**
 > RoleCraft now ships a branded **LinkedIn Job Copier Chrome Extension** (Manifest V3), distributed securely via the backend API (`GET /api/v1/extension/download`) and gated to **Pro & Elite** subscribers. The `ExtensionModal` component guides users through installation. A new **Mobile Bottom Navigation Bar** (`mobile_bottom_nav.tsx`) replaces the hamburger menu on small screens for improved one-thumb ergonomics. The extension extracts job title, company, location, and full description from any LinkedIn job page in one click, with a multi-strategy DOM fallback system (6/5/4/5 strategies per field) resilient to LinkedIn DOM changes.
@@ -100,14 +107,14 @@ RoleCraft/
 
 | Tool | Version |
 |------|---------|
-| Python | 3.14+ |
+| Python | 3.13+ |
 | [uv](https://docs.astral.sh/uv/) | latest |
 
 ### 1 – Clone and enter the repository
 
 ```bash
 git clone <repo-url>
-cd resume_ai
+cd RoleCraft
 ```
 
 ### 2 – Create the virtual environment and install dependencies
@@ -160,6 +167,16 @@ The API will be available at **http://localhost:8000**.
 | `POST` | `/api/v1/resume/apply` | Merge approved section rewrites & export ATS document |
 | `GET` | `/api/v1/extension/status` | Returns `{available, plan_required}` for current user's plan |
 | `GET` | `/api/v1/extension/download` | Streams LinkedIn Job Copier ZIP to Pro/Elite users (403 for free) |
+| `POST` | `/api/v1/payment/subscribe` | Create Razorpay checkout session (one-time 30-day pass or recurring monthly) |
+| `POST` | `/api/v1/payment/verify` | Instantly verify checkout signature, activate Pro/Elite & grant credits |
+| `POST` | `/api/v1/payment/webhook` | Razorpay recurring billing hooks (`subscription.charged`, `subscription.cancelled`) |
+| `POST` | `/api/v1/admin/auth/verify-pin` | Layer 2 Admin PIN verification (issues 30m session token) |
+| `GET` | `/api/v1/admin/stats/overview` | Platform overview: MRR, total users, analysis/tailoring stats |
+| `GET` | `/api/v1/admin/users` | Paginated search, filter users by plan and role |
+| `POST` | `/api/v1/admin/users/{id}/plan` | Update user plan & auto-assign tier credits (Pro: 200, Elite: 400) |
+| `POST` | `/api/v1/admin/users/{id}/credits` | Top up or set exact user credit balance |
+| `POST` | `/api/v1/admin/users/{id}/delete` | Permanently delete user and cascade purge resumes/analyses |
+| `GET/POST` | `/api/v1/admin/config` | View and dynamically edit live `SiteConfig` values |
 | `GET` | `/docs` | Swagger UI (development only) |
 | `GET` | `/redoc` | ReDoc (development only) |
 

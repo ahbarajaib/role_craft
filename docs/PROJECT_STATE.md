@@ -3,12 +3,16 @@
 ## Vision
 RoleCraft is a production-grade AI-powered Resume Optimization platform (live at **rolecraft.tech**).
 The application allows users to:
-1. Upload a DOCX resume.
+1. Upload a DOCX or PDF resume.
 2. Segment the document into semantic sections (e.g., Experience, Skills, Summary) deterministically.
 3. Parse a job description into a structured Pydantic schema using rule-based parsing.
 4. Deterministically compare resume sections with job description requirements (keywords, technologies, skills).
-5. Review resume sections via AI (using GPT-4o-mini) to detect gaps and strengths without rewriting.
-6. *(Future Phase)* Generate target rewrites, let the user approve them, and patch the changes back into the original DOCX while preserving formatting.
+5. Review resume sections via AI (using GPT-4o-mini) to detect gaps and strengths.
+6. Generate targeted rewrites, approve/reject changes, and patch directly back into the original DOCX while preserving 100% of formatting.
+7. Build and manage Master Resumes with structured schemas, rendering high-fidelity ATS DOCX and PDF templates (`/resume-builder`).
+8. Extract job details in 1 click from LinkedIn via a Chrome Extension (Manifest V3) gated to Pro/Elite users.
+9. Dual billing modes: One-Off 30-Day Pass (zero recurring auto-debit) or Monthly Auto-Renewing Subscriptions via Razorpay, with immediate checkout verification (`/api/v1/payment/verify`).
+10. Admin Control Center (`admin.rolecraft.tech` / `/xrc-control/`) with two-layer authentication (JWT + PIN), financial & growth analytics, user management, credit adjustment, account deletion, support ticket triage, and live configuration editing.
 
 ---
 
@@ -197,18 +201,43 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 | Method | Path | Request Body | Response Schema | Description |
 |---|---|---|---|---|
 | `GET` | `/api/v1/health` | None | None | Returns liveness probe status. |
-| `POST` | `/api/v1/documents/upload` | Form-data (file) | `DocumentUploadResponse` | Uploads DOCX file, validates size (< 5MB) and type. |
+| `POST` | `/api/v1/auth/register` | `UserRegisterRequest` | `TokenResponse` | Register new user with email/password. |
+| `POST` | `/api/v1/auth/login` | `UserLoginRequest` | `TokenResponse` | Log in with email/password. |
+| `POST` | `/api/v1/auth/google` | `GoogleAuthRequest` | `TokenResponse` | Google OAuth token verification and login. |
+| `GET` | `/api/v1/auth/me` | None | `UserResponse` | Fetch current user profile, credits, and active plan. |
+| `POST` | `/api/v1/documents/upload` | Form-data (file) | `DocumentUploadResponse` | Uploads DOCX/PDF file, validates size (< 5MB) and type. |
+| `POST` | `/api/v1/documents/set-base` | `SetBaseResumeRequest` | `DocumentUploadResponse` | Set uploaded document as workspace base resume. |
 | `GET` | `/api/v1/documents/{document_id}/parse` | None | `DocumentParseResponse` | Reads DOCX and parses paragraphs. |
 | `GET` | `/api/v1/documents/{document_id}/sections` | None | `DocumentSectionsResponse` | Detects semantic resume sections. |
 | `POST` | `/api/v1/job-descriptions/parse` | `JobDescriptionRequest` | `JobDescription` | Deterministically parses job description text. |
+| `POST` | `/api/v1/structured-resume/parse` | Form-data (file) | `StructuredResume` | AI-driven parse of DOCX/PDF into master resume schema. |
+| `GET` | `/api/v1/structured-resume` | None | `StructuredResume` | Retrieve active user's saved Master Resume JSON. |
+| `PUT` | `/api/v1/structured-resume` | `StructuredResume` | `StructuredResume` | Update active user's saved Master Resume JSON. |
+| `GET` | `/api/v1/structured-resume/generate/{template}/{format}` | None | File Download | Render ATS DOCX or PDF from master resume. |
 | `POST` | `/api/v1/analyze` | `AnalysisRequest` | `ResumeAnalysisResponse` | AI analysis of all resume sections against a parsed JD. |
 | `POST` | `/api/v1/compare` | `CompareRequest` | `ComparisonResult` | Deterministic comparison of keywords/tech/skills. |
 | `POST` | `/api/v1/review-section` | `ReviewRequest` | `SectionReview` | AI review of a single section reasoning about pre-computed gaps. |
 | `POST` | `/api/v1/resume/analyze` | `ResumeAnalysisRequest` | `ResumeAnalysisResult` | Primary unified workflow endpoint for frontend. |
+| `POST` | `/api/v1/resume/rewrite` | `RewriteSectionRequest` | `RewriteSectionResponse` | AI section rewrite with universal role & section routing. |
 | `POST` | `/api/v1/resume/apply` | `ApplyRewriteRequest` | `ApplyRewriteResponse` | Apply accepted rewrites to original DOCX. |
 | `GET` | `/api/v1/resume/download/{download_id}` | None | File Download | Stream the generated patched DOCX. |
 | `GET` | `/api/v1/extension/status` | None | `{available, plan_required}` | Returns whether the extension is available for the current user's plan. |
 | `GET` | `/api/v1/extension/download` | None | File (ZIP) | Streams `linkedin-job-copier.zip` to Pro/Elite subscribers only. Returns 403 for free users. |
+| `POST` | `/api/v1/payment/subscribe` | `SubscribeRequest` | `SubscribeResponse` | Creates checkout session: One-Off 30-Day Pass (Order) or Monthly Auto-Renew (Subscription). |
+| `POST` | `/api/v1/payment/verify` | `VerifyPaymentRequest` | `VerifyPaymentResponse` | Instantly verifies checkout signature, activates plan, and grants tier credits. |
+| `POST` | `/api/v1/payment/webhook` | Webhook JSON | `{"status": "ok"}` | Razorpay recurring lifecycle hooks (`subscription.charged`, `subscription.cancelled`). |
+| `POST` | `/api/v1/admin/auth/verify-pin` | `VerifyPinRequest` | `VerifyPinResponse` | Layer 2 Admin PIN verification (issues ephemeral 30m token). |
+| `GET` | `/api/v1/admin/stats/overview` | None | `AdminOverviewStats` | Platform overview: MRR, total users, analysis/tailoring counts. |
+| `GET` | `/api/v1/admin/stats/signups` | Query `days` | List of daily signup counts | 30-day interactive daily registration analytics. |
+| `GET` | `/api/v1/admin/stats/usage` | Query `days` | List of daily feature stats | 30-day AI feature usage breakdown (Analyses vs Tailoring). |
+| `GET` | `/api/v1/admin/users` | Query `page`, `search`, `plan`, `role` | Paginated users list | Search and filter registered accounts. |
+| `GET` | `/api/v1/admin/users/{id}` | None | `AdminUserDetailResponse` | Detailed user inspection with analyses and master resumes. |
+| `POST` | `/api/v1/admin/users/{id}/plan` | `AdminUpdatePlanRequest` | `AdminUserActionResponse` | Update plan & auto-assign tier credits (Pro: 200, Elite: 400). |
+| `POST` | `/api/v1/admin/users/{id}/credits` | `AdminUpdateCreditsRequest` | `AdminUserActionResponse` | Top up or set exact user credit balance. |
+| `POST` | `/api/v1/admin/users/{id}/delete` | None | `{"status": "success"}` | Permanently delete user and cascade purge resumes/analyses. |
+| `GET/POST` | `/api/v1/admin/reports` | Status query / update body | Support reports list / status update | Support ticket triage with full JSON technical context. |
+| `GET/POST` | `/api/v1/admin/config` | Config body on POST | `AdminConfigResponse` | View and dynamically edit live `SiteConfig` values. |
+| `GET` | `/api/v1/admin/activity` | Query `limit`, `offset` | `AdminActivityLogResponse` | Immutable audit log of administrative actions with diffs. |
 | `GET` | `/docs` | None | None | Swagger UI (development only) |
 | `GET` | `/redoc` | None | None | ReDoc (development only) |
 
@@ -243,12 +272,19 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 
 ## Design Decisions
 1. **No LLM direct modifications**: GPT-4o-mini only detects gaps and recommends changes. It never patches DOCX files directly (keeps the system reliable and formatting intact).
-2. **In-Memory Statelessness**: The API does not have a database. Documents are saved as local files in `backend/uploads/` identified by a UUID. Data coordinates on HTTP requests.
+2. **Persistent Storage with SQLite & Local File Cache**: User accounts, credit balances, analysis histories, structured master resumes, issue reports, admin logs, and dynamic configurations are persisted via SQLAlchemy in `data/rolecraft.db`. Uploaded files are cached locally in `uploads/` with automated 24-hour background cleanup.
 3. **Curated Technology Allow-List**: JD parser uses a regex-matching list of known technologies (Languages, Frameworks, Databases) to achieve maximum accuracy without complex vector search.
 4. **Majority-Vote Skill Matching**: Skill phrases are decomposed and filtered of stop-words (e.g. `experience`, `proficiency`). A skill is considered "matched" if at least 50% of its technical content words are present in the resume.
 5. **Parallel Section Reviews**: Section reviews are processed concurrently using a `ThreadPoolExecutor` instead of sequentially.
 6. **In-Place Paragraph Patches**: Rather than recreating DOCX files, the `PatchService` targets and rewrites only the body paragraph runs inside user-approved sections.
 7. **Universal Resume Design**: All role-routing, section-classification, and keyword constants are centralised in `app/constants/resume_keywords.py`. This single source of truth is imported by `section_detector`, `rewrite_service`, `patch_service`, and `resume_analysis_workflow` — eliminating duplicated lists and making it trivial to extend support for new industries or professions.
+8. **Analyze-Only Credit Billing**: Only `POST /resume/analyze` deducts 1 credit. All subsequent actions (section rewriting, cover letter generation, tailoring, DOCX patching) are credit-free but auth-protected.
+9. **Dual Billing Architecture (30-Day Pass vs Recurring Subscriptions)**:
+   - **One-Off 30-Day Pass**: Generated via Razorpay standard Orders API (`client.order.create`). Zero auto-debit mandates, 100% UPI/credit card compatibility. Sets `plan_expires_at = utcnow + 30 days`. Gracefully reverts to `free` plan upon expiration.
+   - **Monthly Auto-Renew**: Generated via Razorpay Subscriptions API (`client.subscription.create`) with recurring auto-debit on the same day every month.
+   - **Instant Checkout Verification (`POST /api/v1/payment/verify`)**: Direct client signature verification enables instant tier activation and credit top-up without waiting for webhook delays.
+10. **Container-Bundled Chrome Extension Distribution**: The LinkedIn Job Copier extension source files are bundled inside `backend/app/extension_src/`, guaranteeing zero-downtime, reliable ZIP generation inside Docker containers without host mount dependencies.
+11. **Admin User Deletion & Cascade Decoupling**: Permanent user deletion purges user records, analyses, master resumes, and tailored resumes, while setting `user_id = NULL` on support tickets to preserve platform audit history without integrity violations.
 
 ---
 
@@ -318,6 +354,19 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
   - Extension promoted in pricing cards (`subscription_modal.tsx`) and FAQ (`faq_section.tsx`)
   - Profile dropdown and workspace banner trigger the extension modal
   - `frontend/src/lib/api.ts` updated with `getExtensionStatus()` and `downloadExtensionZip()` helpers
+- [x] **Admin Dashboard & Platform Control Center** (Phase 11):
+  - Isolated admin control portal at `admin.rolecraft.tech` (`/xrc-control/`) with Two-Layer Security (`is_admin` JWT + PIN secret token)
+  - Real-time financial metrics, estimated MRR, interactive 30-day registration curves, and AI usage breakdown
+  - User management table with quick action drawer for credits and subscription plan adjustments
+  - Support ticket triage dashboard with full JSON technical context
+  - Dynamic `SiteConfig` live editing and immutable `AdminActivityLog`
+- [x] **Dual Billing Modes, Instant Verification & User Lifecycle** (Phase 12):
+  - Dual billing UI: One-Off 30-Day Pass (Orders API) vs Monthly Auto-Renew (Subscriptions API)
+  - Instant client signature checkout verification endpoint (`POST /api/v1/payment/verify`)
+  - Auto-expiration enforcement via `plan_expires_at` column in SQLite database
+  - Admin permanent user deletion with cascade cleanup (`POST /api/v1/admin/users/{id}/delete`)
+  - Auto-grant tier credits on admin plan change (Pro: 200, Elite: 400)
+  - In-container bundled Chrome extension files (`backend/app/extension_src/`) for reliable ZIP distribution
 
 ## Features Intentionally Postponed
 - **PostgreSQL**: Kept as a future database option for production scale.

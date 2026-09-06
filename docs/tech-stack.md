@@ -14,7 +14,7 @@ This project prioritizes:
 
 # Backend
 
-- Python 3.14
+- Python 3.13+
 - FastAPI
 - Uvicorn
 
@@ -149,19 +149,40 @@ Production
 
 # Deployment
 
-- Docker
-- Docker Compose
-- Ubuntu VPS
-- Caddy
+- Docker & Docker Compose
+- Ubuntu VPS (FastAPI Backend + SQLite)
+- Nginx & Certbot (Host Reverse Proxy & SSL Termination)
+- Vercel (Frontend Next.js Serverless Hosting)
+
+---
+
+# Billing & Payments
+
+- Razorpay Python SDK
+- Standard Orders API (`client.order.create` for One-Off 30-Day Pass)
+- Subscriptions API (`client.subscription.create` for Monthly Auto-Renew)
+- Cryptographic Signature Verification (`razorpay.utility.verify_payment_signature` / `verify_subscription_payment_signature`)
+- Webhooks (`subscription.charged`, `subscription.cancelled`)
+
+---
+
+# Admin Portal (`/xrc-control/`)
+
+- Dedicated Isolated Routes in Next.js
+- Lucide React Icons
+- Recharts (Interactive 30-day analytics charts)
+- Two-Layer PIN Verification & ephemeral session tokens (`X-Admin-Token`, 30m TTL)
+- Audit Logging (`AdminActivityLog`) & Live Configuration (`SiteConfig`)
 
 ---
 
 # Frontend
 
-- Next.js (App Router)
-- React
+- Next.js 15 (App Router)
+- React 19
 - TypeScript
 - Tailwind CSS
+- Lucide React
 
 ---
 
@@ -169,9 +190,9 @@ Production
 
 - Manifest V3 (no background service worker)
 - Vanilla JavaScript (single `content.js` IIFE)
-- Multi-strategy DOM extraction
+- Multi-strategy DOM extraction (6/5/4/5 fallbacks)
 - SPA navigation detection (URL polling + History API + MutationObserver)
-- Distributed via backend API (Pro/Elite gated ZIP download)
+- Bundled in `backend/app/extension_src/` for secure, in-container ZIP streaming
 
 ---
 

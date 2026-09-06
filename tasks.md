@@ -26,8 +26,9 @@
 - [x] Phase 9 – Mobile-First Responsiveness (safe-area insets, touch targets, tab switcher, goal tracking)
 - [x] Phase 10 – LinkedIn Job Copier Chrome Extension (backend-gated distribution, ExtensionModal, FAQ)
 - [x] Phase 11 – Admin Dashboard & Platform Control Center (2-layer PIN auth, metrics, user management, support triage, live config, audit logs)
+- [x] Phase 12 – Dual Billing Architecture & Admin User Deletion (One-Off 30-Day Pass [Orders API] + Recurring Subscriptions [Subscriptions API], instant checkout verification `/api/v1/payment/verify`, auto-expiration `plan_expires_at`, admin user deletion cascade `/api/v1/admin/users/{id}/delete`, auto tier credits, container-bundled extension files)
 - [x] Mobile Bottom Navigation Bar (`mobile_bottom_nav.tsx`)
-- [x] Update all .md docs to reflect Phase 9, 10 & 11 changes
+- [x] Razorpay instant payment verification & auto tier credit allocation
 
 ## Backlog
 
@@ -40,4 +41,3 @@
 - [ ] Team workspaces & recruiter collaboration
 - [ ] ATS scoring engine (per-company simulation)
 - [ ] Multi-model AI routing (Claude / Gemini fallback)
-- [ ] Razorpay webhook payment reconciliation

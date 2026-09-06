@@ -195,7 +195,28 @@
 
 ---
 
-## Phase 12 - Planned
+## Phase 12 - Dual Billing Modes, Instant Verification & Account Lifecycle ✅
+
+- [x] **Dual Billing Architecture**:
+  - Choice between **One-Off 30-Day Pass** (Razorpay Standard Orders API) and **Monthly Auto-Renew** (Razorpay Subscriptions API)
+  - Zero auto-debit friction and 100% UPI/card support on one-off passes
+  - Automated pass expiration via `plan_expires_at` column in SQLite database
+  - Graceful reversion to free plan upon pass expiration handled in `get_current_user` auth dependency
+- [x] **Instant Checkout Verification Endpoint (`POST /api/v1/payment/verify`)**:
+  - Immediate client-side signature verification after Razorpay modal completes
+  - Activates plan and grants full tier credits (Pro: 200, Elite: 400) in milliseconds without waiting for webhook latencies
+- [x] **Admin Permanent User Deletion (`POST /api/v1/admin/users/{id}/delete`)**:
+  - Cascade purge of user analyses, master resumes, and tailored resumes
+  - Decouples `IssueReport.user_id = NULL` to retain support history without foreign key violations
+  - Self-deletion guard preventing admins from deleting their own active account
+- [x] **Automatic Tier Credit Top-Ups on Admin Upgrade**:
+  - Upgrading users from Free to Pro/Elite automatically sets their credits to the tier quota (200 / 400 credits)
+- [x] **In-Container Extension Bundling**:
+  - Bundled `linkedin-job-copier/` files directly into `backend/app/extension_src/` for 100% reliable ZIP streaming in Docker
+
+---
+
+## Phase 13 - Planned & Future Improvements
 
 - [ ] PostgreSQL + Redis migration
 - [ ] Multi-language resume support (Arabic, French, German...)
@@ -203,6 +224,5 @@
 - [ ] Team workspaces & recruiter collaboration
 - [ ] ATS scoring engine (per-company ATS simulation)
 - [ ] Multi-model AI routing (Claude / Gemini fallback)
-- [ ] Razorpay webhook payment reconciliation
 - [ ] Chrome Web Store submission (public extension distribution)
 

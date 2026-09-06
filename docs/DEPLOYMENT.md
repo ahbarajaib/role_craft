@@ -45,7 +45,7 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-ENV NEXT_PUBLIC_API_URL=https://api.rolecraft.yourdomain.com
+ENV NEXT_PUBLIC_API_URL=https://api.rolecraft.tech
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -60,6 +60,8 @@ EXPOSE 3000
 CMD ["npm", "run", "start"]
 ```
 
+> **Note**: In our live production environment, the Next.js frontend is hosted serverless on **Vercel** (`rolecraft.tech`), while the FastAPI backend runs in Docker on the Ubuntu VPS (`api.rolecraft.tech`). Refer to [`DEPLOYMENT.md`](../DEPLOYMENT.md) for the active production deployment runbook.
+
 ---
 
 ## 2. Environment Variables
@@ -73,19 +75,23 @@ Create a secure `.env` file in production with the following configurations.
 | `ENVIRONMENT` | `production` | Enables/disables swagger docs |
 | `DEBUG` | `false` | Disables debug stacktraces |
 | `LOG_LEVEL` | `INFO` | Central loguru level |
-| `ALLOWED_ORIGINS` | `["https://rolecraft.yourdomain.com"]` | CORS restrict policy |
-| `UPLOAD_DIR` | `/var/lib/rolecraft/uploads` | Mounted volume folder |
+| `ALLOWED_ORIGINS` | `["https://rolecraft.tech","https://admin.rolecraft.tech"]` | CORS restrict policy |
+| `UPLOAD_DIR` | `/data/uploads` | Mounted volume folder |
 | `MAX_UPLOAD_SIZE_BYTES`| `5242880` | 5 MB upload boundary |
 | `GENERATED_CLEANUP_HOURS`| `24` | Automated cleanup interval |
 | `OPENAI_API_KEY` | `sk-proj-...` | Production OpenAI API Key |
 | `OPENAI_MODEL` | `gpt-4o-mini` | Production LLM model |
 | `OPENAI_TIMEOUT_SECONDS` | `30.0` | API query timeout limit |
+| `JWT_SECRET` | `...` | Secret key for JWT signing |
+| `ADMIN_SECRET` | `...` | Secret PIN for Admin Portal Layer 2 |
+| `RAZORPAY_KEY_ID` | `rzp_live_...` | Razorpay billing key |
+| `RAZORPAY_KEY_SECRET` | `...` | Razorpay billing secret |
 
 ---
 
 ## 3. Production Startup (Docker Compose)
 
-Save the following as `docker-compose.prod.yml` in the root:
+Save the following as `docker-compose.yml` in the root:
 ```yaml
 version: '3.8'
 
@@ -95,22 +101,17 @@ services:
     restart: always
     environment:
       - ENVIRONMENT=production
-      - OPENAI_API_KEY=${PROD_OPENAI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_SECRET=${ADMIN_SECRET}
       - UPLOAD_DIR=/data/uploads
       - GENERATED_CLEANUP_HOURS=24
-      - ALLOWED_ORIGINS=["https://rolecraft.yourdomain.com"]
+      - ALLOWED_ORIGINS=["https://rolecraft.tech","https://admin.rolecraft.tech"]
     volumes:
       - uploads_data:/data/uploads
+      - ./data:/data
     ports:
       - "8000:8000"
-
-  frontend:
-    build: ./frontend
-    restart: always
-    environment:
-      - NEXT_PUBLIC_API_URL=https://api.rolecraft.yourdomain.com
-    ports:
-      - "3000:3000"
 
 volumes:
   uploads_data:
@@ -123,13 +124,13 @@ volumes:
 Nginx sits at the edge, handles SSL termination, and routes requests to the respective frontend/backend containers.
 
 ```nginx
-# HTTPS Frontend
+# HTTPS Frontend (if self-hosted instead of Vercel)
 server {
     listen 443 ssl http2;
-    server_name rolecraft.yourdomain.com;
+    server_name rolecraft.tech;
 
-    ssl_certificate /etc/letsencrypt/live/rolecraft.yourdomain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/rolecraft.yourdomain.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/rolecraft.tech/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/rolecraft.tech/privkey.pem;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -144,10 +145,10 @@ server {
 # HTTPS Backend API
 server {
     listen 443 ssl http2;
-    server_name api.rolecraft.yourdomain.com;
+    server_name api.rolecraft.tech;
 
-    ssl_certificate /etc/letsencrypt/live/rolecraft.yourdomain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/rolecraft.yourdomain.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/api.rolecraft.tech/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.rolecraft.tech/privkey.pem;
 
     # Restrict maximum upload sizes at reverse-proxy level to match application configs
     client_max_body_size 5M;
@@ -165,20 +166,21 @@ server {
 
 ---
 
-## 5. Backup Strategy
+## 5. Database & Volume Backup Strategy
 
-Since RoleCraft acts as a stateless analysis tool, no database backup is necessary. The only assets stored are uploaded resumes under the `/data/uploads/` directory.
+The persistent SQLite database is stored on the host at `./data/rolecraft.db` (mounted into `/data/rolecraft.db` in Docker), and temporary uploads are at `./uploads` / `/data/uploads`.
 
 ### Backup Policy
-1. **Uploads volume backup**:
-   Configure a nightly cron job to back up the mounted volumes:
+1. **SQLite Database Backup**:
+   Use SQLite's safe online backup or a daily snapshot:
    ```bash
-   tar -czf /backups/uploads_$(date +%F).tar.gz /var/lib/docker/volumes/uploads_data/_data
+   # Safe online backup while container is running
+   sqlite3 /opt/role_craft/data/rolecraft.db ".backup '/backups/rolecraft_$(date +%F).db'"
    ```
 2. **Automated cleanup retention**:
-   The background file cleanup deletes files older than 24 hours. Backups should retain historical files for up to 7 days before pruning to allow server diagnostics in case of failures:
+   Uploaded files older than 24 hours are automatically pruned by the backend. Retain daily DB backups for 30 days:
    ```bash
-   find /backups/ -name "uploads_*.tar.gz" -mtime +7 -delete
+   find /backups/ -name "rolecraft_*.db" -mtime +30 -delete
    ```
 
 ---
