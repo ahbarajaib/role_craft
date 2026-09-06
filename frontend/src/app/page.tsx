@@ -4035,8 +4035,25 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 </p>
               </div>
 
-              {/* Right Column: Interactive Floating Resume Preview & ATS Score Overlay */}
-              <div className="lg:col-span-6 relative">
+              {/* Mobile-only compact preview — visible only on small screens */}
+              <div className="lg:hidden mt-4 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-4 flex items-center justify-between gap-4 shadow-sm">
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Resume Match</p>
+                  <p className="text-xs text-slate-600 font-medium">Rahul Sharma → Senior SWE @ Swiggy</p>
+                  <div className="flex gap-2 flex-wrap pt-1">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">✓ Keywords updated</span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">✓ Summary rewritten</span>
+                    <span className="px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 text-[10px] font-bold">✓ Format preserved</span>
+                  </div>
+                </div>
+                <div className="shrink-0 text-center">
+                  <div className="text-3xl font-black text-emerald-600">98%</div>
+                  <div className="text-[10px] font-bold text-slate-400">Match</div>
+                </div>
+              </div>
+
+              {/* Right Column: Interactive Floating Resume Preview & ATS Score Overlay — desktop only */}
+              <div className="hidden lg:block lg:col-span-6 relative">
                 {/* Background Ambient Glows */}
                 <div className="absolute -top-12 -right-12 w-72 h-72 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-gradient-to-tr from-indigo-400/15 to-blue-400/15 rounded-full blur-3xl pointer-events-none" />
