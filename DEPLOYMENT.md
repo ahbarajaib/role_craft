@@ -140,4 +140,72 @@ To bypass standard SSH rate-limiting blocks and connection timeouts on public cl
 4. Reload Nginx (`systemctl reload nginx`).
 5. (Optional) Set `DEPLOY_TOKEN` as an Action secret on GitHub to override the default token.
 
+---
+
+## 6. Admin Dashboard Subdomain (`admin.rolecraft.tech`) Setup
+
+The admin control panel is hosted completely isolated from normal users at `admin.rolecraft.tech`.
+
+### 1. DNS Record
+In your domain registrar / DNS manager for `rolecraft.tech`:
+- Add an **`A` record**:
+  - Host / Name: `admin`
+  - Value: Your VPS IP address (same IP as `rolecraft.tech`)
+  - TTL: Auto / 300
+
+### 2. Environment Variable
+Generate a strong secret key:
+```bash
+openssl rand -hex 16
+```
+Add to `backend/.env`:
+```env
+ADMIN_SECRET="your-generated-16-character-secret"
+```
+
+### 3. Web Server Reverse Proxy
+
+**Option A: Caddy (`/etc/caddy/Caddyfile`)**
+```caddy
+admin.rolecraft.tech {
+    header X-Robots-Tag "noindex, nofollow"
+    rewrite * /xrc-control{uri}
+    reverse_proxy localhost:3000
+}
+```
+Reload Caddy: `systemctl reload caddy`
+
+**Option B: Nginx (`/etc/nginx/sites-available/admin.rolecraft.tech`)**
+```nginx
+server {
+    listen 80;
+    server_name admin.rolecraft.tech;
+    add_header X-Robots-Tag "noindex, nofollow" always;
+
+    location / {
+        rewrite ^(.*)$ /xrc-control$1 break;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+Enable and secure with Certbot:
+```bash
+sudo ln -s /etc/nginx/sites-available/admin.rolecraft.tech /etc/nginx/sites-enabled/
+sudo certbot --nginx -d admin.rolecraft.tech
+sudo systemctl reload nginx
+```
+
+### 4. One-Time Superuser Bootstrap
+Promote your account (`ahbarajaib@gmail.com`) to Administrator:
+```bash
+cd backend
+source .venv/bin/activate
+python scripts/bootstrap_admin.py
+```
+
+
 

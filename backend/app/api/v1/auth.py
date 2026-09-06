@@ -51,6 +51,7 @@ def serialize_user_response(user: User) -> UserResponse:
         "address": user.address,
         "linkedin_url": user.linkedin_url,
         "missing_skills_tracker": sorted_tracker,
+        "is_admin": getattr(user, "is_admin", False),
         "created_at": user.created_at or datetime.utcnow(),
     }
     return UserResponse.model_validate(data)

@@ -180,3 +180,53 @@ Since RoleCraft acts as a stateless analysis tool, no database backup is necessa
    ```bash
    find /backups/ -name "uploads_*.tar.gz" -mtime +7 -delete
    ```
+
+---
+
+## 6. Admin Dashboard Subdomain (`admin.rolecraft.tech`) Setup
+
+The admin control panel is hosted completely isolated from normal users at `admin.rolecraft.tech`.
+
+### 1. DNS Record
+- Add an **`A` record** in your domain DNS:
+  - Host: `admin`
+  - IP: Your VPS IP (same as `rolecraft.tech`)
+
+### 2. Environment Variable
+Generate a strong secret key:
+```bash
+openssl rand -hex 16
+```
+Add to `backend/.env`:
+```env
+ADMIN_SECRET="your-generated-secret"
+```
+
+### 3. Caddy or Nginx Reverse Proxy
+**Caddy (`/etc/caddy/Caddyfile`)**:
+```caddy
+admin.rolecraft.tech {
+    header X-Robots-Tag "noindex, nofollow"
+    rewrite * /xrc-control{uri}
+    reverse_proxy localhost:3000
+}
+```
+
+**Nginx**:
+```nginx
+server {
+    server_name admin.rolecraft.tech;
+    add_header X-Robots-Tag "noindex, nofollow" always;
+    location / {
+        rewrite ^(.*)$ /xrc-control$1 break;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+### 4. Bootstrap Superuser
+```bash
+cd backend
+python scripts/bootstrap_admin.py
+```

@@ -1,7 +1,7 @@
 # Project State
 
 ## Vision
-Resume AI is a production-grade AI-powered Resume Optimization platform.
+RoleCraft is a production-grade AI-powered Resume Optimization platform (live at **rolecraft.tech**).
 The application allows users to:
 1. Upload a DOCX resume.
 2. Segment the document into semantic sections (e.g., Experience, Skills, Summary) deterministically.
@@ -118,7 +118,8 @@ backend/
             ├── analysis.py     POST /analyze (batch AI)
             ├── comparison.py   POST /compare (deterministic)
             ├── review.py       POST /review-section (single AI review)
-            └── resume.py       POST /resume/analyze (primary unified endpoint)
+            ├── resume.py       POST /resume/analyze (primary unified endpoint)
+            └── extension.py    GET /extension/status, GET /extension/download (Pro/Elite gated)
 ```
 
 ---
@@ -206,6 +207,8 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 | `POST` | `/api/v1/resume/analyze` | `ResumeAnalysisRequest` | `ResumeAnalysisResult` | Primary unified workflow endpoint for frontend. |
 | `POST` | `/api/v1/resume/apply` | `ApplyRewriteRequest` | `ApplyRewriteResponse` | Apply accepted rewrites to original DOCX. |
 | `GET` | `/api/v1/resume/download/{download_id}` | None | File Download | Stream the generated patched DOCX. |
+| `GET` | `/api/v1/extension/status` | None | `{available, plan_required}` | Returns whether the extension is available for the current user's plan. |
+| `GET` | `/api/v1/extension/download` | None | File (ZIP) | Streams `linkedin-job-copier.zip` to Pro/Elite subscribers only. Returns 403 for free users. |
 | `GET` | `/docs` | None | None | Swagger UI (development only) |
 | `GET` | `/redoc` | None | None | ReDoc (development only) |
 
@@ -302,6 +305,19 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 - [x] **SMTP Email Notifications**:
   - Support ticket email notifications via Gmail SMTP App Password
   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SUPPORT_NOTIFICATION_EMAIL` env vars configured on VPS
+- [x] **Mobile Bottom Navigation Bar** (`mobile_bottom_nav.tsx`):
+  - Sticky bottom nav with Home, Resume Builder, History, and Profile icons for mobile viewports
+  - Replaces hamburger menu on small screens for improved one-thumb ergonomics
+- [x] **LinkedIn Job Copier Chrome Extension** (Phase 10a):
+  - `linkedin-job-copier/` directory: Manifest V3 extension with `content.js`, `styles.css`, branded icons, README
+  - One-click copy of LinkedIn job title, company, location, URL, and full description to clipboard
+  - Multi-strategy DOM extraction (6/5/4/5 fallback strategies per field) — resilient to LinkedIn DOM changes
+  - SPA-aware navigation detection (URL polling + History API + MutationObserver)
+  - **Backend gating** (`backend/app/api/v1/extension.py`): JWT-authenticated download endpoint; 403 returned for `free` plan users
+  - **Frontend `ExtensionModal`** (`frontend/src/components/extension_modal.tsx`): Premium download UI with step-by-step Chrome setup guide
+  - Extension promoted in pricing cards (`subscription_modal.tsx`) and FAQ (`faq_section.tsx`)
+  - Profile dropdown and workspace banner trigger the extension modal
+  - `frontend/src/lib/api.ts` updated with `getExtensionStatus()` and `downloadExtensionZip()` helpers
 
 ## Features Intentionally Postponed
 - **PostgreSQL**: Kept as a future database option for production scale.
@@ -322,8 +338,19 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 - [x] Mobile-Friendly First Responsive UX & Touch Targets (iPhone Pro/Max, Samsung Ultra)
 - [x] Analyze-Only Credit System (1 credit / analyze, free rewrites)
 - [x] ADHD Daily Application Goal Tracking (main page progress card, inline stepper, sticky header pill, profile toggle switch)
+- [x] Mobile Bottom Navigation Bar (sticky bottom nav replacing hamburger on small viewports)
 - [ ] PostgreSQL integration
 - [ ] Redis + Background jobs (Celery/RQ for long-running AI queries)
+
+### Phase 10 - LinkedIn Job Copier Extension & Premium Distribution (Completed)
+- [x] Chrome Extension (Manifest V3): one-click LinkedIn job detail extractor
+- [x] Multi-strategy DOM fallback system (resilient to LinkedIn DOM changes)
+- [x] SPA navigation detection (URL poll + History API + MutationObserver)
+- [x] Auto-expand "Show more" before extraction
+- [x] Backend gated download endpoint (Pro/Elite only, JWT auth, returns ZIP)
+- [x] `ExtensionModal` frontend component with setup guide
+- [x] Pricing cards and FAQ updated to promote the extension
+- [x] Branded extension icons (16×16, 48×48, 128×128)
 
 ---
 
@@ -386,6 +413,20 @@ npm run dev
 | `SMTP_PASSWORD` | String | `""` | SMTP password or App Password. |
 | `SMTP_FROM_EMAIL` | String | `"noreply@rolecraft.tech"` | From address on notification emails. |
 | `SUPPORT_NOTIFICATION_EMAIL` | String | `""` | Destination for support ticket notifications. |
+| `ADMIN_SECRET` | String | `""` | Secret PIN for Layer 2 Admin Portal authentication. |
+
+---
+
+## Admin Dashboard & Platform Control Center
+
+Hosted at `admin.rolecraft.tech` (mapped internally to `/xrc-control/`), the Admin Control Center provides superusers and designated platform administrators with:
+1. **Financial & Growth Metrics**: Real-time user counts, Pro/Elite subscriber breakdown, and MRR (₹) estimation.
+2. **Interactive Usage Visualizations**: 30-day signup curves and AI feature usage (Analyses vs Tailoring).
+3. **User Management & Action Drawer**: Paginated user search, credit balance top-ups/overrides, subscription tier switches, and admin role assignments.
+4. **Support Ticket Triage**: Centralized feedback and bug report dashboard with full JSON request context inspection and instant status transitions (`open` / `investigating` / `resolved`).
+5. **Dynamic Global Config Editor**: Real-time updates for initial free tier credits, tier allowances, and VIP whitelist emails with zero server reboots.
+6. **Immutable Audit Trail**: `AdminActivityLog` tracking all administrative actions with timestamp, admin email, and before/after state diffs.
+7. **Two-Layer Security Architecture**: Enforces `is_admin == True` via standard JWT, followed by an `ADMIN_SECRET` PIN gate that issues an ephemeral `X-Admin-Token` (30m TTL) with rate-limiting lockout protection.
 
 ---
 

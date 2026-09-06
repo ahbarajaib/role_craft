@@ -40,23 +40,36 @@ This project prioritizes:
 
 # Database
 
+Current (production)
+
+- SQLite (via SQLAlchemy 2.x)
+
+Planned
+
 - PostgreSQL
 
 ---
 
 # AI
 
-Primary Framework
+Primary Integration
 
-- PydanticAI
+- OpenAI SDK (Responses API with Pydantic structured outputs)
 
-LLM Providers
+Planned
 
-- OpenAI
+- PydanticAI (multi-provider abstraction)
+
+LLM Providers (current)
+
+- OpenAI (gpt-4o-mini)
+
+LLM Providers (planned)
+
 - Anthropic Claude
 - Google Gemini
 
-The application should support multiple providers behind a common interface.
+The application is designed to support multiple providers behind a common interface.
 
 ---
 
@@ -145,10 +158,20 @@ Production
 
 # Frontend
 
-- Next.js
+- Next.js (App Router)
 - React
 - TypeScript
 - Tailwind CSS
+
+---
+
+# Chrome Extension
+
+- Manifest V3 (no background service worker)
+- Vanilla JavaScript (single `content.js` IIFE)
+- Multi-strategy DOM extraction
+- SPA navigation detection (URL polling + History API + MutationObserver)
+- Distributed via backend API (Pro/Elite gated ZIP download)
 
 ---
 

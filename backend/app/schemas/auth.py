@@ -36,6 +36,7 @@ class UserResponse(BaseModel):
     address: Optional[str] = None
     linkedin_url: Optional[str] = None
     missing_skills_tracker: Optional[dict[str, int]] = None
+    is_admin: bool = False
     created_at: datetime
 
     class Config:

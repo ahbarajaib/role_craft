@@ -1,4 +1,4 @@
-# Resume AI
+# RoleCraft
 
 # Goal
 
@@ -83,3 +83,5 @@ The application should:
 - Explain why recommendations are made.
 - Prioritize recommendations by expected impact.
 - Never rewrite content without explicit user approval.
+- Be live and accessible at rolecraft.tech.
+- Ship a Chrome extension that copies LinkedIn job details in one click (available to Pro/Elite subscribers).

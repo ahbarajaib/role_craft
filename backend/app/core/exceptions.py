@@ -64,6 +64,14 @@ class UnauthorizedError(AppError):
     default_detail = "Authentication credentials were not provided or are invalid."
 
 
+class ForbiddenError(AppError):
+    """Raised when the user is authenticated but lacks required permissions."""
+
+    status_code = status.HTTP_403_FORBIDDEN
+    default_detail = "You do not have permission to perform this action."
+
+
+
 class InsufficientCreditsError(AppError):
     """Raised when a user has depleted their AI analysis credit balance."""
 

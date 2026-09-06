@@ -162,6 +162,7 @@ Stores:
 - ATS scoring engine
 - ~~Authentication~~ ✅ Done
 - ~~Billing~~ ✅ Done (Razorpay Pro/Elite, credit system)
+- ~~Chrome Extension distribution~~ ✅ Done (LinkedIn Job Copier, backend-gated ZIP download)
 - Team workspaces
 
 ---
@@ -182,3 +183,9 @@ Stores:
 
 5. **Analyze-Only Credit Billing**.
    Only `POST /resume/analyze` deducts 1 credit (`deduct_analysis_credit`). All other AI endpoints (rewrite, batch-rewrite, cover letter, tailor) are credit-free. They are protected by authentication and OpenAI model/timeout limits to prevent token abuse, but do not consume user credits. Free users start with 15 credits (`FREE_TIER_CREDITS = 15`). Elite plan users have unlimited analyzes.
+
+6. **Extension Delivered via Backend (not Chrome Web Store)**.
+   `GET /api/v1/extension/download` streams a ZIP of the `linkedin-job-copier/` folder. This bypasses Chrome Web Store review delays while keeping distribution secure — the download is JWT-authenticated and gated to `pro` / `elite` `plan_type` + `active` `subscription_status`. Free-tier users receive 403.
+
+7. **Admin Dashboard Undiscoverability & Two-Layer Security**.
+   The admin portal is hosted at `admin.rolecraft.tech` (internally mapped to `/xrc-control`) and completely isolated from the consumer frontend with `robots.txt` disallow and `X-Robots-Tag: noindex, nofollow`. Authentication requires two distinct gates: (1) Standard Bearer JWT verification where `user.is_admin == True`, and (2) Secret Admin PIN verification against server-configured `ADMIN_SECRET` generating a short-lived in-memory session token (`X-Admin-Token`, 30m TTL) with 5-attempt rate-limiting lockout. All admin modifications are recorded in an immutable `AdminActivityLog` audit table.

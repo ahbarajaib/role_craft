@@ -8,21 +8,25 @@ AI-powered resume optimization platform. Upload a DOCX resume, provide a job des
 
 ## Project Status
 
-## Project Status
+> **Milestone 20 – Admin Dashboard & Platform Control Center (Complete)**
+> A dedicated, undiscoverable administrative portal (`admin.rolecraft.tech` / `/xrc-control/`) with two-layer authentication (JWT + Secret PIN) is now live. Features include real-time financial metrics and estimated MRR, interactive 30-day signup and feature usage analytics, comprehensive user management with credit top-up drawers and plan changers, centralized support ticket triage with technical JSON context, dynamic live system configuration editing (`SiteConfig`), and an immutable audit trail (`AdminActivityLog`).
 
-> **Milestone 18 – AI Master Resume Builder, Dynamic UX & Multi-Format ATS Export (Complete)**
-> RoleCraft features a unified **Master Resume JSON** engine (`StructuredResume` in DB) powering both AI job alignment analysis and the interactive Resume Builder (`/resume-builder`). Supports DOCX & PDF uploads with AI parsing into structured sections (Summary, Technical Skills, Professional Experience, Projects, Education, Certifications, Custom). Features live step-by-step parsing progress UX with shimmer progress bars, dynamic "+ Add New Section" toolbar filtering, professional headline fields, project links & bullet highlights, and dual-authenticated (Header / URL Token) PDF and DOCX single-column ATS template exports.
+> **Milestone 19 – LinkedIn Job Copier Chrome Extension, Premium Gated Distribution & Mobile Bottom Nav (Complete)**
+> RoleCraft now ships a branded **LinkedIn Job Copier Chrome Extension** (Manifest V3), distributed securely via the backend API (`GET /api/v1/extension/download`) and gated to **Pro & Elite** subscribers. The `ExtensionModal` component guides users through installation. A new **Mobile Bottom Navigation Bar** (`mobile_bottom_nav.tsx`) replaces the hamburger menu on small screens for improved one-thumb ergonomics. The extension extracts job title, company, location, and full description from any LinkedIn job page in one click, with a multi-strategy DOM fallback system (6/5/4/5 strategies per field) resilient to LinkedIn DOM changes.
 
 ---
 
 ## Repository Layout
 
 ```
-resume_ai/
+RoleCraft/
 ├── docs/               Project documentation
 │   ├── vision.md
 │   ├── architecture.md
 │   ├── tech-stack.md
+│   ├── roadmap.md
+│   ├── PROJECT_STATE.md
+│   ├── AI_RULES.md
 │   └── agent.md
 │
 ├── backend/            Python API (FastAPI + Uvicorn)
@@ -50,7 +54,8 @@ resume_ai/
 │       │       ├── documents.py                POST /upload, POST /set-base, GET /{id}/parse
 │       │       ├── job_descriptions.py         POST /job-descriptions/parse
 │       │       ├── structured_resume.py        GET/PUT/POST /structured-resume/* (Master Resume)
-│       │       └── resume.py                   POST /resume/analyze, POST /resume/rewrite, POST /resume/apply
+│       │       ├── resume.py                   POST /resume/analyze, POST /resume/rewrite, POST /resume/apply
+│       │       └── extension.py                GET /extension/status, GET /extension/download (Pro/Elite gated)
 │       ├── schemas/
 │       │   └── structured_resume.py        StructuredResume Pydantic schemas + converter
 │       └── services/
@@ -58,6 +63,31 @@ resume_ai/
 │           ├── template_renderer.py        ATS DOCX rendering (Clean Classic, Modern, Executive)
 │           ├── pdf_service.py              High-fidelity DOCX → PDF conversion
 │           └── rewrite_service.py          AI section rewrite (universal section routing)
+│
+├── frontend/           Next.js (App Router) frontend
+│   └── src/
+│       ├── app/
+│       │   ├── page.tsx                    Main workspace page
+│       │   └── resume-builder/page.tsx     Interactive resume builder
+│       ├── components/
+│       │   ├── extension_modal.tsx         LinkedIn Job Copier download & setup guide modal
+│       │   ├── subscription_modal.tsx      Pricing & plan upgrade modal
+│       │   ├── faq_section.tsx             FAQ section (includes extension entry)
+│       │   └── mobile_bottom_nav.tsx       Mobile bottom navigation bar
+│       └── lib/
+│           └── api.ts                      API client helpers (incl. getExtensionStatus, downloadExtensionZip)
+│
+├── linkedin-job-copier/  Chrome Extension (Manifest V3)
+│   ├── manifest.json   Extension manifest
+│   ├── content.js      All extraction logic, button injection, SPA detection
+│   ├── styles.css      Button styling with state-based appearances
+│   ├── icons/          Branded icons (16x16, 48x48, 128x128)
+│   └── README.md       Extension documentation
+│
+├── recordings/         Demo video recordings
+│   ├── RoleCraft_Demo_Vertical_9x16.mp4
+│   ├── RoleCraft_Demo_Walkthrough.mp4
+│   └── rolecraft_desktop_1080p.mp4
 │
 └── README.md           This file
 ```
@@ -128,6 +158,8 @@ The API will be available at **http://localhost:8000**.
 | `POST` | `/api/v1/resume/analyze` | Full resume vs JD gap analysis workflow (JSON-first) |
 | `POST` | `/api/v1/resume/rewrite` | AI review & rewrite single resume section |
 | `POST` | `/api/v1/resume/apply` | Merge approved section rewrites & export ATS document |
+| `GET` | `/api/v1/extension/status` | Returns `{available, plan_required}` for current user's plan |
+| `GET` | `/api/v1/extension/download` | Streams LinkedIn Job Copier ZIP to Pro/Elite users (403 for free) |
 | `GET` | `/docs` | Swagger UI (development only) |
 | `GET` | `/redoc` | ReDoc (development only) |
 

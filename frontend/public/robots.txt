@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /xrc-control
+Disallow: /xrc-control/
+Allow: /
+
+Sitemap: https://rolecraft.tech/sitemap.xml

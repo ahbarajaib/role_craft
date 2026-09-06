@@ -134,10 +134,68 @@
   - Interactive `+ / −` stepper on main page to adjust target on the fly without modal diving.
   - Sticky header mini goal tracker pill (`🎯 3/5 [====>  ]`) linked to activity analytics.
   - Dedicated on/off toggle switch in profile menu (desktop dropdown & mobile bottom sheet) persisting preference to `localStorage`.
+- [x] **Mobile Bottom Navigation Bar** (`mobile_bottom_nav.tsx`):
+  - Sticky bottom nav for Home, Resume Builder, History, and Profile on small viewports.
+  - Replaces hamburger menu for one-thumb ergonomics on iOS/Android.
 
 ---
 
-## Phase 10 - Planned
+## Phase 10 - LinkedIn Job Copier Extension & Premium Distribution ✅
+
+- [x] **Chrome Extension** (`linkedin-job-copier/`, Manifest V3):
+  - One-click extraction of job title, company, location, URL, and full description from LinkedIn
+  - Multi-strategy DOM fallback (6/5/4/5 strategies per field) — resilient to LinkedIn DOM changes
+  - SPA-aware navigation (URL polling + History API interception + MutationObserver)
+  - Auto-expands "Show more" / "See more" before extraction
+  - Visual button states: Extracting → Copied! / Extraction Failed
+  - Branded icons: 16×16, 48×48, 128×128
+- [x] **Backend Gating** (`backend/app/api/v1/extension.py`):
+  - `GET /api/v1/extension/status` — returns `{available, plan_required}` for any authenticated user
+  - `GET /api/v1/extension/download` — streams `linkedin-job-copier.zip` to Pro/Elite only; returns 403 for free tier
+  - JWT-authenticated; plan check via `user.plan_type` + `user.subscription_status`
+- [x] **Frontend `ExtensionModal`** (`frontend/src/components/extension_modal.tsx`):
+  - Premium gated download UI with step-by-step Chrome setup guide
+  - Triggered from profile dropdown (desktop & mobile) and workspace banner
+- [x] **Pricing & FAQ Integration**:
+  - Extension listed as a feature bullet in Pro & Elite pricing cards (`subscription_modal.tsx`)
+  - Dedicated FAQ entry added (`faq_section.tsx`)
+- [x] **`api.ts` helpers**: `getExtensionStatus()` and `downloadExtensionZip()`
+
+---
+
+## Phase 11 - Admin Dashboard & Platform Control Center ✅
+
+- [x] **Undiscoverable Dedicated Admin Portal** (`admin.rolecraft.tech` / `/xrc-control`):
+  - Completely isolated light UI with Stripe/Vercel design principles
+  - Zero discoverability from consumer marketing site; disallowed in `robots.txt` and `X-Robots-Tag: noindex, nofollow`
+  - Served via Next.js route `/xrc-control/` with Caddy/Nginx reverse proxy rewrite
+- [x] **Two-Layer Security Architecture**:
+  - Layer 1: Regular JWT authentication verifying `user.is_admin == True`
+  - Layer 2: Admin Secret PIN verification (`ADMIN_SECRET`), in-memory session token with 30-min TTL
+  - Rate limiting (5 failed attempts locks out IP/email for 15 minutes)
+- [x] **Real-Time Analytics & Financial Metrics**:
+  - 4 high-level stat cards: Total Users, Pro Subscribers, Elite Subscribers, Estimated MRR (₹)
+  - 30-day interactive daily signups chart
+  - 30-day AI feature usage breakdown (Analyses vs Tailoring)
+- [x] **Full User Management Table & Slide-Over Drawer**:
+  - Paginated user list with instant search and plan/role filters
+  - Detailed profile viewer with master resume filenames and missing skills frequency
+  - Credit management: Set exact amount or +add credits with immediate balance update
+  - Subscription plan changer: Free / Pro / Elite and Active / Inactive status
+  - Admin promotion/demotion toggle with confirmation protection
+- [x] **Support Ticket Triage System**:
+  - Centralized issue reporting triage with expandable details and formatted JSON technical context
+  - Inline status update dropdowns (open, investigating, resolved)
+  - Deprecated background SMTP emails for zero failure points
+- [x] **Live Global Configuration Editor**:
+  - Hot-updating `SiteConfig` parameters (`FREE_TIER_CREDITS`, `PRO_CREDITS`, `ELITE_CREDITS`, `VIP_EMAILS`)
+  - Tag manager for VIP email lists with automatic instant persistence
+- [x] **Immutable Audit Trail (`AdminActivityLog`)**:
+  - Audit logging of every administrative credit grant, plan change, config edit, and login with JSON before/after diffs
+
+---
+
+## Phase 12 - Planned
 
 - [ ] PostgreSQL + Redis migration
 - [ ] Multi-language resume support (Arabic, French, German...)
@@ -146,3 +204,5 @@
 - [ ] ATS scoring engine (per-company ATS simulation)
 - [ ] Multi-model AI routing (Claude / Gemini fallback)
 - [ ] Razorpay webhook payment reconciliation
+- [ ] Chrome Web Store submission (public extension distribution)
+

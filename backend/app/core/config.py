@@ -52,6 +52,7 @@ class Settings(BaseSettings):
             "https://rolecraft.tech",
             "https://www.rolecraft.tech",
             "https://api.rolecraft.tech",
+            "https://admin.rolecraft.tech",
         ]
     )
 
@@ -112,6 +113,9 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = "noreply@rolecraft.tech"
     SMTP_USE_TLS: bool = True
     SUPPORT_NOTIFICATION_EMAIL: str = "ahbarajaib@gmail.com"
+
+    # ── Admin Dashboard ───────────────────────────────────────────────────────
+    ADMIN_SECRET: str = ""
 
 
 

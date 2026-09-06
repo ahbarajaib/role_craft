@@ -24,6 +24,7 @@ def init_db() -> None:
         ("address", "VARCHAR(255)"),
         ("linkedin_url", "VARCHAR(255)"),
         ("missing_skills_tracker", "TEXT"),
+        ("is_admin", "BOOLEAN DEFAULT 0 NOT NULL"),
     ]
     for col_name, col_type in columns_to_add:
         try:
@@ -76,6 +77,37 @@ def init_db() -> None:
             """))
             conn.execute(text("CREATE INDEX IF NOT EXISTS ix_issue_reports_user_id ON issue_reports (user_id)"))
             conn.execute(text("CREATE INDEX IF NOT EXISTS ix_issue_reports_user_email ON issue_reports (user_email)"))
+    except Exception:
+        pass
+
+    # Ensure admin_activity_logs table is created
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS admin_activity_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    admin_email VARCHAR NOT NULL,
+                    action VARCHAR NOT NULL,
+                    target_user_id INTEGER,
+                    payload_json TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_admin_activity_logs_admin_email ON admin_activity_logs (admin_email)"))
+    except Exception:
+        pass
+
+    # Ensure site_config table is created
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS site_config (
+                    key VARCHAR PRIMARY KEY,
+                    value TEXT NOT NULL,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_by VARCHAR
+                )
+            """))
     except Exception:
         pass
 

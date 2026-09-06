@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import String, Integer, DateTime, Text
+from sqlalchemy import String, Integer, DateTime, Text, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 class Base(DeclarativeBase):
@@ -15,6 +15,7 @@ class User(Base):
     provider: Mapped[str] = mapped_column(String, default="credentials", nullable=False)  # "credentials" or "google"
     google_id: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
     name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     credits: Mapped[int] = mapped_column(Integer, default=15, nullable=False)
     plan_type: Mapped[str] = mapped_column(String, default="free", nullable=False)  # "free" or "pro"
     subscription_status: Mapped[str] = mapped_column(String, default="inactive", nullable=False)  # "active" or "inactive"
@@ -99,4 +100,27 @@ class IssueReport(Base):
     context_data: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON string containing page URL, document_id, error message, browser/device info
     status: Mapped[str] = mapped_column(String, default="open", nullable=False)  # "open", "investigating", "resolved"
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class AdminActivityLog(Base):
+    """Immutable audit trail for all admin actions."""
+    __tablename__ = "admin_activity_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    admin_email: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    action: Mapped[str] = mapped_column(String, nullable=False)  # "credit_update" | "plan_change" | "admin_toggle" | "config_change" | "support_status"
+    target_user_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    payload_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON: {before, after, details}
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class SiteConfig(Base):
+    """Dynamic global system configurations managed via Admin Dashboard."""
+    __tablename__ = "site_config"
+
+    key: Mapped[str] = mapped_column(String, primary_key=True)  # e.g. "FREE_TIER_CREDITS", "PRO_CREDITS", "ELITE_CREDITS", "VIP_EMAILS"
+    value: Mapped[str] = mapped_column(Text, nullable=False)  # JSON-encoded string
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_by: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # admin email
+
 
