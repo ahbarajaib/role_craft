@@ -38,6 +38,7 @@ RUN uv sync --frozen --no-cache && \
 # Copy application source code & custom Microsoft TTF font suite (Aptos, Calibri, Arial, Times, Georgia, Cambria, Century Gothic)
 COPY app/ app/
 COPY main.py main.py
+COPY scripts/ scripts/
 RUN mkdir -p /usr/share/fonts/truetype/custom && \
     find /app/app/fonts -type f -name "*.ttf" -exec cp "{}" /usr/share/fonts/truetype/custom/ \; && \
     fc-cache -fv
