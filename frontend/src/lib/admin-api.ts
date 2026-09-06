@@ -209,11 +209,11 @@ export async function loginAdminStep1(email: string, password: string) {
 
   const data = await res.json();
   const user = data.user;
-  if (!user || !user.is_admin) {
-    throw new Error("Access denied. This account does not have administrator privileges.");
+  if (!data.access_token) {
+    throw new Error("Authentication failed. No access token returned.");
   }
 
-  setAdminAuth(data.access_token, user.email);
+  setAdminAuth(data.access_token, user?.email || email.trim());
   return data;
 }
 
