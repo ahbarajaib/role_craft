@@ -368,6 +368,7 @@ def get_user_detail(
 
 
 @router.patch("/users/{user_id}/credits")
+@router.post("/users/{user_id}/credits")
 def update_user_credits(
     user_id: int,
     payload: AdminUserCreditsUpdateRequest,
@@ -412,6 +413,7 @@ def update_user_credits(
 
 
 @router.patch("/users/{user_id}/plan")
+@router.post("/users/{user_id}/plan")
 def update_user_plan(
     user_id: int,
     payload: AdminUserPlanUpdateRequest,
@@ -452,6 +454,7 @@ def update_user_plan(
 
 
 @router.patch("/users/{user_id}/admin")
+@router.post("/users/{user_id}/admin")
 def toggle_user_admin(
     user_id: int,
     payload: AdminUserAdminToggleRequest,
@@ -546,6 +549,7 @@ def get_support_tickets(
 
 
 @router.patch("/support/{report_id}/status")
+@router.post("/support/{report_id}/status")
 def update_support_status(
     report_id: int,
     payload: AdminSupportStatusUpdateRequest,
@@ -626,6 +630,7 @@ def get_site_config(
 
 
 @router.patch("/config")
+@router.post("/config")
 def update_site_config(
     payload: AdminConfigUpdateRequest,
     admin_user: User = Depends(get_admin_user),

@@ -1,7 +1,7 @@
 import secrets
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from loguru import logger
 
@@ -82,36 +82,38 @@ def invalidate_admin_session(token: str) -> None:
 
 def get_admin_user(
     x_admin_token: Optional[str] = Header(None, alias="X-Admin-Token"),
+    admin_token_query: Optional[str] = Query(None, alias="admin_token"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> User:
     """Enforce two-layer authorization:
     
     1. User must be authenticated and have user.is_admin == True.
-    2. Request must provide a valid, unexpired X-Admin-Token in headers.
+    2. Request must provide a valid, unexpired session token in X-Admin-Token header or ?admin_token query.
     """
     # Layer 1: Is the user an admin in DB?
     if not getattr(current_user, "is_admin", False):
         logger.warning(f"Forbidden admin access attempt by non-admin: {current_user.email}")
         raise ForbiddenError("Access denied. Admin privileges required.")
 
-    # Layer 2: Is the X-Admin-Token valid and not expired?
-    if not x_admin_token:
+    # Layer 2: Is the session token valid and not expired?
+    effective_token = x_admin_token or admin_token_query
+    if not effective_token:
         raise UnauthorizedError("Admin session token is missing. Please enter your Admin Secret PIN.")
 
-    session_info = ADMIN_SESSIONS.get(x_admin_token)
+    session_info = ADMIN_SESSIONS.get(effective_token)
     if not session_info:
         raise UnauthorizedError("Admin session is invalid or expired. Please re-authenticate.")
 
     now = datetime.utcnow()
     if session_info["expires_at"] < now:
-        ADMIN_SESSIONS.pop(x_admin_token, None)
+        ADMIN_SESSIONS.pop(effective_token, None)
         raise UnauthorizedError("Admin session has expired. Please enter your Admin Secret PIN.")
 
     if session_info["email"] != current_user.email:
         raise UnauthorizedError("Admin session token mismatch.")
 
-    # Optionally refresh expiry on active use (up to 30 min)
+    # Refresh expiry on active use (up to 30 min)
     session_info["expires_at"] = now + timedelta(minutes=ADMIN_SESSION_TTL_MINUTES)
 
     return current_user

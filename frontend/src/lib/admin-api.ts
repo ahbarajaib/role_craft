@@ -170,11 +170,14 @@ function getAdminHeaders(): HeadersInit {
   if (jwt) {
     headers["Authorization"] = `Bearer ${jwt}`;
   }
-  const sessionToken = getAdminSessionToken();
-  if (sessionToken) {
-    headers["X-Admin-Token"] = sessionToken;
-  }
   return headers;
+}
+
+function withAdminToken(urlStr: string): string {
+  const token = getAdminSessionToken();
+  if (!token) return urlStr;
+  const separator = urlStr.includes("?") ? "&" : "?";
+  return `${urlStr}${separator}admin_token=${encodeURIComponent(token)}`;
 }
 
 async function handleAdminResponse<T>(res: Response): Promise<T> {
@@ -243,21 +246,21 @@ export async function verifyAdminPinStep2(pin: string) {
 }
 
 export async function fetchOverviewStats(): Promise<AdminOverviewStats> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/admin/stats/overview`, {
+  const res = await fetch(withAdminToken(`${API_BASE_URL}/api/v1/admin/stats/overview`), {
     headers: getAdminHeaders(),
   });
   return handleAdminResponse<AdminOverviewStats>(res);
 }
 
 export async function fetchSignupStats(days: number = 30): Promise<AdminSignupStat[]> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/admin/stats/signups?days=${days}`, {
+  const res = await fetch(withAdminToken(`${API_BASE_URL}/api/v1/admin/stats/signups?days=${days}`), {
     headers: getAdminHeaders(),
   });
   return handleAdminResponse<AdminSignupStat[]>(res);
 }
 
 export async function fetchUsageStats(days: number = 30): Promise<AdminUsageStat[]> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/admin/stats/usage?days=${days}`, {
+  const res = await fetch(withAdminToken(`${API_BASE_URL}/api/v1/admin/stats/usage?days=${days}`), {
     headers: getAdminHeaders(),
   });
   return handleAdminResponse<AdminUsageStat[]>(res);
@@ -281,22 +284,22 @@ export async function fetchUsers(params: {
   if (params.sort_by) url.searchParams.set("sort_by", params.sort_by);
   if (params.sort_order) url.searchParams.set("sort_order", params.sort_order);
 
-  const res = await fetch(url.toString(), {
+  const res = await fetch(withAdminToken(url.toString()), {
     headers: getAdminHeaders(),
   });
   return handleAdminResponse<AdminUserListResponse>(res);
 }
 
 export async function fetchUserDetail(userId: number): Promise<AdminUserDetail> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/admin/users/${userId}`, {
+  const res = await fetch(withAdminToken(`${API_BASE_URL}/api/v1/admin/users/${userId}`), {
     headers: getAdminHeaders(),
   });
   return handleAdminResponse<AdminUserDetail>(res);
 }
 
 export async function updateUserCredits(userId: number, amount: number, mode: "set" | "add" = "set") {
-  const res = await fetch(`${API_BASE_URL}/api/v1/admin/users/${userId}/credits`, {
-    method: "PATCH",
+  const res = await fetch(withAdminToken(`${API_BASE_URL}/api/v1/admin/users/${userId}/credits`), {
+    method: "POST",
     headers: getAdminHeaders(),
     body: JSON.stringify({ amount, mode }),
   });
@@ -304,8 +307,8 @@ export async function updateUserCredits(userId: number, amount: number, mode: "s
 }
 
 export async function updateUserPlan(userId: number, plan_type: string, subscription_status: string) {
-  const res = await fetch(`${API_BASE_URL}/api/v1/admin/users/${userId}/plan`, {
-    method: "PATCH",
+  const res = await fetch(withAdminToken(`${API_BASE_URL}/api/v1/admin/users/${userId}/plan`), {
+    method: "POST",
     headers: getAdminHeaders(),
     body: JSON.stringify({ plan_type, subscription_status }),
   });
@@ -313,8 +316,8 @@ export async function updateUserPlan(userId: number, plan_type: string, subscrip
 }
 
 export async function toggleUserAdmin(userId: number, is_admin: boolean) {
-  const res = await fetch(`${API_BASE_URL}/api/v1/admin/users/${userId}/admin`, {
-    method: "PATCH",
+  const res = await fetch(withAdminToken(`${API_BASE_URL}/api/v1/admin/users/${userId}/admin`), {
+    method: "POST",
     headers: getAdminHeaders(),
     body: JSON.stringify({ is_admin }),
   });
@@ -333,15 +336,15 @@ export async function fetchSupportTickets(params: {
   if (params.status && params.status !== "all") url.searchParams.set("status", params.status);
   if (params.issue_type && params.issue_type !== "all") url.searchParams.set("issue_type", params.issue_type);
 
-  const res = await fetch(url.toString(), {
+  const res = await fetch(withAdminToken(url.toString()), {
     headers: getAdminHeaders(),
   });
   return handleAdminResponse<AdminSupportListResponse>(res);
 }
 
 export async function updateSupportStatus(reportId: number, status: "open" | "investigating" | "resolved") {
-  const res = await fetch(`${API_BASE_URL}/api/v1/admin/support/${reportId}/status`, {
-    method: "PATCH",
+  const res = await fetch(withAdminToken(`${API_BASE_URL}/api/v1/admin/support/${reportId}/status`), {
+    method: "POST",
     headers: getAdminHeaders(),
     body: JSON.stringify({ status }),
   });
@@ -349,15 +352,15 @@ export async function updateSupportStatus(reportId: number, status: "open" | "in
 }
 
 export async function fetchSiteConfig(): Promise<AdminConfigResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/admin/config`, {
+  const res = await fetch(withAdminToken(`${API_BASE_URL}/api/v1/admin/config`), {
     headers: getAdminHeaders(),
   });
   return handleAdminResponse<AdminConfigResponse>(res);
 }
 
 export async function updateSiteConfig(key: string, value: unknown) {
-  const res = await fetch(`${API_BASE_URL}/api/v1/admin/config`, {
-    method: "PATCH",
+  const res = await fetch(withAdminToken(`${API_BASE_URL}/api/v1/admin/config`), {
+    method: "POST",
     headers: getAdminHeaders(),
     body: JSON.stringify({ key, value }),
   });
@@ -365,7 +368,7 @@ export async function updateSiteConfig(key: string, value: unknown) {
 }
 
 export async function fetchBillingDashboard(): Promise<AdminBillingResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/admin/billing/subscriptions`, {
+  const res = await fetch(withAdminToken(`${API_BASE_URL}/api/v1/admin/billing/subscriptions`), {
     headers: getAdminHeaders(),
   });
   return handleAdminResponse<AdminBillingResponse>(res);
@@ -381,8 +384,9 @@ export async function fetchActivityLogs(params: {
   if (params.limit) url.searchParams.set("limit", params.limit.toString());
   if (params.action && params.action !== "all") url.searchParams.set("action", params.action);
 
-  const res = await fetch(url.toString(), {
+  const res = await fetch(withAdminToken(url.toString()), {
     headers: getAdminHeaders(),
   });
   return handleAdminResponse<AdminActivityLogResponse>(res);
 }
+
