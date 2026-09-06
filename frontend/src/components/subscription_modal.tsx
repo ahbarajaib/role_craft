@@ -16,6 +16,7 @@ const API_BASE_URL = rawApiUrl.replace(/\/api\/v1\/?$/, "");
 export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
   const { user, token, refreshMe } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<"pro" | "elite">("pro");
+  const [billingType, setBillingType] = useState<"one_time" | "recurring">("one_time");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,14 +48,14 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         throw new Error("Failed to load payment checkout script. Check your internet connection.");
       }
 
-      // 1. Create subscription session on the backend
+      // 1. Create checkout session on the backend (one-time pass or recurring subscription)
       const response = await fetch(`${API_BASE_URL}/api/v1/payment/subscribe`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ plan_type: selectedPlan }),
+        body: JSON.stringify({ plan_type: selectedPlan, billing_type: billingType }),
       });
 
       if (!response.ok) {
@@ -85,13 +86,19 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         return;
       }
 
-      // 3. Launch live Razorpay Checkout checkout modal
-      const options = {
+      // 3. Launch live Razorpay Checkout modal
+      const options: any = {
         key: session.key,
-        subscription_id: session.subscription_id,
+        amount: session.amount,
         name: "Role Craft Engine",
         description: session.description,
-        image: "/logo.svg",
+        image: "/icon.png",
+        prefill: {
+          email: user?.email || "",
+        },
+        theme: {
+          color: "#0d9488", // brand teal
+        },
         handler: async function (checkoutResponse: any) {
           setIsSubmitting(true);
           try {
@@ -104,9 +111,11 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
               },
               body: JSON.stringify({
                 razorpay_payment_id: checkoutResponse.razorpay_payment_id,
-                razorpay_subscription_id: checkoutResponse.razorpay_subscription_id,
+                razorpay_subscription_id: checkoutResponse.razorpay_subscription_id || session.subscription_id,
+                razorpay_order_id: checkoutResponse.razorpay_order_id || session.order_id,
                 razorpay_signature: checkoutResponse.razorpay_signature,
                 plan_type: selectedPlan,
+                billing_type: billingType,
               }),
             });
 
@@ -126,13 +135,13 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             setIsSubmitting(false);
           }
         },
-        prefill: {
-          email: user?.email || "",
-        },
-        theme: {
-          color: "#2563eb", // brand blue
-        },
       };
+
+      if (session.order_id) {
+        options.order_id = session.order_id;
+      } else if (session.subscription_id) {
+        options.subscription_id = session.subscription_id;
+      }
 
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.open();
@@ -167,6 +176,39 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
           <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
             Unlock professional resume optimizations, unlimited AI rewrites, and instant downloads.
           </p>
+        </div>
+
+        {/* Billing Type Toggle */}
+        <div className="flex flex-col items-center gap-1.5 pt-1">
+          <div className="flex items-center p-1 bg-slate-100 rounded-2xl max-w-sm w-full border border-slate-200/80">
+            <button
+              type="button"
+              onClick={() => setBillingType("one_time")}
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                billingType === "one_time"
+                  ? "bg-white text-teal-800 shadow-xs ring-1 ring-slate-900/5 font-extrabold"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              <span>30-Day Pass (One-Off)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingType("recurring")}
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                billingType === "recurring"
+                  ? "bg-white text-teal-800 shadow-xs ring-1 ring-slate-900/5 font-extrabold"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              <span>Monthly Auto-Renew</span>
+            </button>
+          </div>
+          <span className="text-[11px] text-teal-700 font-medium">
+            {billingType === "one_time"
+              ? "⚡ Pay once with UPI/GPay/Card — Zero auto-debits or recurring charges"
+              : "🔄 Automatic monthly renewals — Cancel anytime with one click"}
+          </span>
         </div>
 
         {/* Error Notification */}
@@ -206,12 +248,14 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-black text-slate-900">₹399</span>
                 <span className="text-xs text-slate-400 line-through">₹2,000</span>
-                <span className="text-[10px] text-slate-500 font-semibold">/ mo</span>
+                <span className="text-[10px] text-slate-500 font-semibold">
+                  {billingType === "one_time" ? "for 30 days" : "/ mo"}
+                </span>
               </div>
               <ul className="space-y-2.5 text-xs text-slate-600 border-t border-slate-200/80 pt-4">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span><strong className="text-slate-900">{PRO_CREDITS} Optimization Credits</strong> / mo</span>
+                  <span><strong className="text-slate-900">{PRO_CREDITS} Optimization Credits</strong> {billingType === "one_time" ? "granted" : "/ mo"}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
@@ -255,12 +299,14 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-black text-slate-900">₹599</span>
                 <span className="text-xs text-slate-400 line-through">₹3,000</span>
-                <span className="text-[10px] text-slate-500 font-semibold">/ mo</span>
+                <span className="text-[10px] text-slate-500 font-semibold">
+                  {billingType === "one_time" ? "for 30 days" : "/ mo"}
+                </span>
               </div>
               <ul className="space-y-2.5 text-xs text-slate-600 border-t border-slate-200/80 pt-4">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span><strong className="text-slate-900">{ELITE_CREDITS} Optimization Credits</strong> / mo</span>
+                  <span><strong className="text-slate-900">{ELITE_CREDITS} Optimization Credits</strong> {billingType === "one_time" ? "granted" : "/ mo"}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
@@ -284,18 +330,22 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
         <button
           onClick={handleSubscribe}
           disabled={isSubmitting}
-          className="w-full py-3.5 rounded-xl btn-primary text-sm shadow-lg shadow-teal-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+          className="w-full py-3.5 rounded-xl btn-primary text-sm shadow-lg shadow-teal-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed font-bold"
         >
           {isSubmitting ? (
             <RefreshCw className="h-4 w-4 animate-spin" />
+          ) : billingType === "one_time" ? (
+            `Get 30-Day ${selectedPlan.toUpperCase()} Pass (₹${selectedPlan === "pro" ? "399" : "599"} · One-Off)`
           ) : (
-            `Upgrade to ${selectedPlan.toUpperCase()} Plan`
+            `Subscribe to ${selectedPlan.toUpperCase()} (₹${selectedPlan === "pro" ? "399" : "599"} / mo)`
           )}
         </button>
 
         {/* Footer Disclaimer */}
         <p className="text-[10px] text-center text-slate-400 leading-relaxed">
-          Cancel subscription anytime. Your payments are processed securely via Razorpay. Billed monthly. Simulated Sandbox upgrades apply immediately without actual charges if API keys are missing.
+          {billingType === "one_time"
+            ? "Single one-time payment for 30 days of access. Zero recurring commitments or auto-debits. Works with all UPI apps (GPay, PhonePe, Paytm), NetBanking, and Cards."
+            : "Cancel subscription anytime. Billed monthly via Razorpay auto-debit. Simulated Sandbox upgrades apply immediately without actual charges if API keys are missing."}
         </p>
 
       </div>

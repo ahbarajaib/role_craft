@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import Depends, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -26,7 +27,15 @@ def get_current_user(
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise UnauthorizedError("User profile not found.")
-    
+
+    # Auto-expire one-off passes if period has elapsed
+    if getattr(user, "plan_expires_at", None) and not user.razorpay_subscription_id and user.subscription_status == "active":
+        if datetime.utcnow() > user.plan_expires_at:
+            user.subscription_status = "expired"
+            user.plan_type = "free"
+            db.commit()
+            db.refresh(user)
+
     return user
 
 def get_optional_current_user(

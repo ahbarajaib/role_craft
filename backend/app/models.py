@@ -19,6 +19,7 @@ class User(Base):
     credits: Mapped[int] = mapped_column(Integer, default=15, nullable=False)
     plan_type: Mapped[str] = mapped_column(String, default="free", nullable=False)  # "free" or "pro"
     subscription_status: Mapped[str] = mapped_column(String, default="inactive", nullable=False)  # "active" or "inactive"
+    plan_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     razorpay_subscription_id: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
     razorpay_customer_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     base_resume_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)

@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta
+import time
+from typing import Optional
 from fastapi import APIRouter, Depends, Request, Header
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -14,6 +17,7 @@ router = APIRouter(prefix="/payment", tags=["Billing & Payments"])
 
 class SubscriptionRequest(BaseModel):
     plan_type: str # "pro" or "elite"
+    billing_type: Optional[str] = "one_time" # "one_time" (30-day pass) or "recurring" (monthly subscription)
 
 @router.post("/subscribe")
 def create_subscription(
@@ -21,12 +25,53 @@ def create_subscription(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    """Initiate a monthly Razorpay Subscription session for Pro/Elite upgrades."""
-    plan_clean = req.plan_type.lower()
+    """Initiate a Razorpay payment session for Pro/Elite upgrades (supports one-off 30-day pass or recurring)."""
+    plan_clean = req.plan_type.lower().strip()
     if plan_clean not in ["pro", "elite"]:
         raise BadRequestError("Invalid plan type. Must be 'pro' or 'elite'.")
 
-    # If Razorpay keys are not configured, fallback to Sandbox simulation mode
+    billing_type = (req.billing_type or "one_time").lower().strip()
+    amount = 39900 if plan_clean == "pro" else 59900
+
+    # Handle One-Time 30-day pass (Standard Razorpay Order - zero recurring auto-debit)
+    if billing_type == "one_time":
+        if not settings.RAZORPAY_KEY_ID:
+            simulated_ord_id = f"order_mock_{plan_clean}_{user.id}"
+            return {
+                "order_id": simulated_ord_id,
+                "key": "rzp_test_sandbox_mock",
+                "amount": amount,
+                "name": f"Role Craft {plan_clean.capitalize()} (30-Day Pass)",
+                "description": "One-time pass for 30 days (Sandbox mode)",
+                "billing_type": "one_time",
+                "is_sandbox": True
+            }
+
+        try:
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            order = client.order.create({
+                "amount": amount,
+                "currency": "INR",
+                "receipt": f"rc_{user.id}_{int(time.time())}",
+                "notes": {
+                    "user_id": str(user.id),
+                    "plan_type": plan_clean,
+                    "billing_type": "one_time"
+                }
+            })
+            return {
+                "order_id": order["id"],
+                "key": settings.RAZORPAY_KEY_ID,
+                "amount": amount,
+                "name": f"Role Craft {plan_clean.capitalize()} (30-Day Pass)",
+                "description": "One-time 30-day access (no recurring commitment)",
+                "billing_type": "one_time",
+                "is_sandbox": False
+            }
+        except Exception as e:
+            raise BadRequestError(f"Razorpay Order Error: {str(e)}")
+
+    # Handle Recurring Monthly Subscription (Auto-debit mandate)
     if not settings.RAZORPAY_KEY_ID:
         simulated_sub_id = f"sub_mock_{plan_clean}_{user.id}"
         user.razorpay_subscription_id = simulated_sub_id
@@ -34,18 +79,17 @@ def create_subscription(
         return {
             "subscription_id": simulated_sub_id,
             "key": "rzp_test_sandbox_mock",
-            "amount": 39900 if plan_clean == "pro" else 59900,
-            "name": f"Role Craft {plan_clean.capitalize()} (Simulated Sandbox)",
-            "description": "Sandbox testing checkout session",
+            "amount": amount,
+            "name": f"Role Craft {plan_clean.capitalize()} (Monthly Recurring)",
+            "description": "Sandbox recurring monthly session",
+            "billing_type": "recurring",
             "is_sandbox": True
         }
 
-    # Live integration
     try:
         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
         plan_id = settings.RAZORPAY_PLAN_PRO_ID if plan_clean == "pro" else settings.RAZORPAY_PLAN_ELITE_ID
         
-        # Build subscription payload
         subscription_payload = {
             "plan_id": plan_id,
             "total_count": 12, # recurring monthly for 1 year
@@ -60,13 +104,14 @@ def create_subscription(
         return {
             "subscription_id": subscription["id"],
             "key": settings.RAZORPAY_KEY_ID,
-            "amount": 39900 if plan_clean == "pro" else 59900,
-            "name": "Role Craft Pro" if plan_clean == "pro" else "Role Craft Elite",
-            "description": "Monthly subscription membership",
+            "amount": amount,
+            "name": f"Role Craft {plan_clean.capitalize()} (Monthly Recurring)",
+            "description": "Monthly recurring auto-renewing subscription",
+            "billing_type": "recurring",
             "is_sandbox": False
         }
     except Exception as e:
-        raise BadRequestError(f"Razorpay API Error: {str(e)}")
+        raise BadRequestError(f"Razorpay Subscription API Error: {str(e)}")
 
 @router.post("/webhook")
 async def razorpay_webhook(
@@ -157,9 +202,11 @@ def simulate_payment_success(
 
 class VerifySubscriptionRequest(BaseModel):
     razorpay_payment_id: str
-    razorpay_subscription_id: str
+    razorpay_subscription_id: Optional[str] = None
+    razorpay_order_id: Optional[str] = None
     razorpay_signature: str
     plan_type: str = "pro"
+    billing_type: Optional[str] = "one_time"
 
 
 @router.post("/verify")
@@ -168,27 +215,52 @@ def verify_subscription(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    """Instantly verify subscription checkout signature and activate membership."""
-    # If live keys are present, verify signature
-    if settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET:
-        try:
-            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-            client.utility.verify_subscription_payment_signature({
-                "razorpay_payment_id": req.razorpay_payment_id,
-                "razorpay_subscription_id": req.razorpay_subscription_id,
-                "razorpay_signature": req.razorpay_signature,
-            })
-        except Exception as e:
-            raise BadRequestError(f"Payment signature verification failed: {str(e)}")
-
+    """Instantly verify checkout payment/subscription signature and activate membership."""
     plan_clean = (req.plan_type or "pro").lower().strip()
     if plan_clean not in ["pro", "elite"]:
         plan_clean = "pro"
 
-    # Set subscription details
-    user.razorpay_subscription_id = req.razorpay_subscription_id
-    user.plan_type = plan_clean
-    user.subscription_status = "active"
+    # 1. Handle One-Off (Standard Order) Verification
+    if req.razorpay_order_id:
+        if settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET:
+            try:
+                client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+                client.utility.verify_payment_signature({
+                    "razorpay_order_id": req.razorpay_order_id,
+                    "razorpay_payment_id": req.razorpay_payment_id,
+                    "razorpay_signature": req.razorpay_signature,
+                })
+            except Exception as e:
+                raise BadRequestError(f"Payment signature verification failed: {str(e)}")
+
+        user.plan_type = plan_clean
+        user.subscription_status = "active"
+        user.plan_expires_at = datetime.utcnow() + timedelta(days=30)
+        user.razorpay_subscription_id = None  # One-off pass has no recurring auto-debit
+
+    # 2. Handle Recurring Subscription Verification
+    elif req.razorpay_subscription_id:
+        if settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET:
+            try:
+                client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+                client.utility.verify_subscription_payment_signature({
+                    "razorpay_payment_id": req.razorpay_payment_id,
+                    "razorpay_subscription_id": req.razorpay_subscription_id,
+                    "razorpay_signature": req.razorpay_signature,
+                })
+            except Exception as e:
+                raise BadRequestError(f"Subscription signature verification failed: {str(e)}")
+
+        user.plan_type = plan_clean
+        user.subscription_status = "active"
+        user.razorpay_subscription_id = req.razorpay_subscription_id
+        user.plan_expires_at = None
+
+    else:
+        # Fallback simulation
+        user.plan_type = plan_clean
+        user.subscription_status = "active"
+        user.plan_expires_at = datetime.utcnow() + timedelta(days=30)
 
     # Auto-grant full tier monthly credits (top up if below quota)
     tier_credits = settings.ELITE_CREDITS if plan_clean == "elite" else settings.PRO_CREDITS
@@ -204,5 +276,6 @@ def verify_subscription(
         "subscription_status": user.subscription_status,
         "credits": user.credits,
         "subscription_id": user.razorpay_subscription_id,
+        "expires_at": user.plan_expires_at.isoformat() if user.plan_expires_at else None,
     }
 

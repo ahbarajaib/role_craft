@@ -25,6 +25,7 @@ def init_db() -> None:
         ("linkedin_url", "VARCHAR(255)"),
         ("missing_skills_tracker", "TEXT"),
         ("is_admin", "BOOLEAN DEFAULT 0 NOT NULL"),
+        ("plan_expires_at", "DATETIME"),
     ]
     for col_name, col_type in columns_to_add:
         try:

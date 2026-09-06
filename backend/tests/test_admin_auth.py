@@ -7,13 +7,16 @@ from fastapi.testclient import TestClient
 from main import app
 from app.core.config import get_settings
 from app.core.security import create_access_token
-from app.core.database import SessionLocal
+from app.core.database import SessionLocal, init_db
 from app.models import User
 
 client = TestClient(app)
 settings = get_settings()
 
 def test_admin_flow():
+    # Run migrations
+    init_db()
+
     # Configure a test ADMIN_SECRET
     settings.ADMIN_SECRET = "test_super_secret_pin_1234"
 
