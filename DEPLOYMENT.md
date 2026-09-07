@@ -104,6 +104,8 @@ sudo apt install nginx certbot python3-certbot-nginx -y
 3. Configure the **Environment Variables** in the Vercel panel:
    * `NEXT_PUBLIC_API_URL` = `https://api.rolecraft.tech`
    * `NEXT_PUBLIC_GOOGLE_CLIENT_ID` = `your-google-developer-client-id`
+   * `NEXT_PUBLIC_CLARITY_PROJECT_ID` = `yef56jqa3h`
+   * `NEXT_PUBLIC_SENTRY_DSN` = `your-sentry-dsn` (Optional for crash monitoring)
 4. Click **Deploy**. Vercel will automatically build and deploy the frontend on every git push to the `main` branch.
 5. In your Vercel project settings, navigate to **Domains** and add your custom domain `rolecraft.tech`.
 

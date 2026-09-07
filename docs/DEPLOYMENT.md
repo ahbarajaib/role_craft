@@ -86,6 +86,14 @@ Create a secure `.env` file in production with the following configurations.
 | `ADMIN_SECRET` | `...` | Secret PIN for Admin Portal Layer 2 |
 | `RAZORPAY_KEY_ID` | `rzp_live_...` | Razorpay billing key |
 | `RAZORPAY_KEY_SECRET` | `...` | Razorpay billing secret |
+| `SENTRY_DSN` | `https://...@o0.ingest.sentry.io/0` | (Optional) Sentry crash monitoring DSN for FastAPI |
+
+### Frontend Configurations (Vercel / Next.js)
+| Variable | Value/Type | Purpose |
+| :--- | :--- | :--- |
+| `NEXT_PUBLIC_API_URL` | `https://api.rolecraft.tech` | FastAPI backend URL |
+| `NEXT_PUBLIC_CLARITY_PROJECT_ID` | `yef56jqa3h` | Microsoft Clarity Project ID for session replays |
+| `NEXT_PUBLIC_SENTRY_DSN` | `https://...@o0.ingest.sentry.io/0` | (Optional) Sentry client crash monitoring DSN |
 
 ---
 

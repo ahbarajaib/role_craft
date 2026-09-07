@@ -196,6 +196,14 @@ Production
 
 ---
 
+# Telemetry, Analytics & Monitoring
+
+- **Microsoft Clarity**: Free unlimited session replays, click & scroll heatmaps, dead click & rage click alerts, and custom funnel events (`trackEvent`)
+- **Vercel Analytics**: Privacy-friendly traffic, referral, and top page analytics
+- **Sentry**: Free-tier crash reporting, unhandled 500 error detection, and frontend exception capture (FastAPI via `sentry-sdk` + Next.js client via `@sentry/browser`)
+
+---
+
 # Guiding Principles
 
 Prefer mature libraries over trendy libraries.

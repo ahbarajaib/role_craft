@@ -27,6 +27,7 @@
 - [x] Phase 10 – LinkedIn Job Copier Chrome Extension (backend-gated distribution, ExtensionModal, FAQ)
 - [x] Phase 11 – Admin Dashboard & Platform Control Center (2-layer PIN auth, metrics, user management, support triage, live config, audit logs)
 - [x] Phase 12 – Dual Billing Architecture & Admin User Deletion (One-Off 30-Day Pass [Orders API] + Recurring Subscriptions [Subscriptions API], instant checkout verification `/api/v1/payment/verify`, auto-expiration `plan_expires_at`, admin user deletion cascade `/api/v1/admin/users/{id}/delete`, auto tier credits, container-bundled extension files)
+- [x] Phase 13 – Telemetry, Funnel Tracking & Crash Monitoring (Microsoft Clarity user identity linking, core funnel milestone events [upload, analyze, auto-tailor, download], and zero-overhead Sentry crash monitoring across Next.js and FastAPI)
 - [x] Mobile Bottom Navigation Bar (`mobile_bottom_nav.tsx`)
 - [x] Razorpay instant payment verification & auto tier credit allocation
 

@@ -117,6 +117,9 @@ class Settings(BaseSettings):
     # ── Admin Dashboard ───────────────────────────────────────────────────────
     ADMIN_SECRET: str = ""
 
+    # ── Monitoring & Error Tracking ──────────────────────────────────────────
+    SENTRY_DSN: str = ""
+
 
 
 @lru_cache(maxsize=1)

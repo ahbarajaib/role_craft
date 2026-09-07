@@ -13,6 +13,7 @@ The application allows users to:
 8. Extract job details in 1 click from LinkedIn via a Chrome Extension (Manifest V3) gated to Pro/Elite users.
 9. Dual billing modes: One-Off 30-Day Pass (zero recurring auto-debit) or Monthly Auto-Renewing Subscriptions via Razorpay, with immediate checkout verification (`/api/v1/payment/verify`).
 10. Admin Control Center (`admin.rolecraft.tech` / `/xrc-control/`) with two-layer authentication (JWT + PIN), financial & growth analytics, user management, credit adjustment, account deletion, support ticket triage, and live configuration editing.
+11. Telemetry, Funnel Milestones & Crash Monitoring: Microsoft Clarity session recordings and heatmaps with authenticated user identity linking (`clarity('identify')`), micro-funnel milestone tracking (`resume_uploaded`, `analysis_started`, `tailor_started`, `resume_downloaded`, `cover_letter_downloaded`), and Sentry crash monitoring across Next.js and FastAPI.
 
 ---
 

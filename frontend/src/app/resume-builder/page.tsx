@@ -43,6 +43,7 @@ import {
 import TemplateSelector, { TEMPLATES } from "@/components/template_selector";
 import ResumeSectionEditor from "@/components/resume_section_editor";
 import { useAuth } from "@/components/auth_provider";
+import { trackEvent, trackError } from "@/lib/telemetry";
 import AuthModal from "@/components/auth_modal";
 import { ProfileModal } from "@/components/profile_modal";
 import { WordLogoIcon, PdfLogoIcon } from "@/components/file_format_icons";
@@ -409,8 +410,14 @@ export default function ResumeBuilderPage() {
       const name = resume.contact_info?.full_name || "Resume";
       const filename = `${name} - ${selectedTemplate.replace("_", " ").toUpperCase()}.${format}`;
       await downloadStructuredResume(selectedTemplate, format, filename);
+      trackEvent("resume_downloaded", {
+        template: selectedTemplate,
+        format,
+        source: "resume_builder",
+      });
     } catch (err: any) {
       console.error("Download error:", err);
+      trackError("resume_download_failed", err, { template: selectedTemplate, format, source: "resume_builder" });
       setStatusMsg({ type: "error", text: err?.message || "Failed to download file. Please try again." });
     } finally {
       setIsExporting(null);

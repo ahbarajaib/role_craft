@@ -109,6 +109,11 @@ def _error_response(request: Request, status_code: int, detail: str) -> JSONResp
 async def _app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     if exc.status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR:
         logger.error(f"Unhandled application error: {exc.detail} | path={request.url.path}", exc_info=exc)
+        try:
+            import sentry_sdk
+            sentry_sdk.capture_exception(exc)
+        except Exception:
+            pass
     else:
         logger.warning(f"Application error: {exc.detail} | path={request.url.path}")
     return _error_response(request, exc.status_code, exc.detail)
@@ -116,6 +121,11 @@ async def _app_error_handler(request: Request, exc: AppError) -> JSONResponse:
 
 async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.exception("Unhandled exception", path=request.url.path)
+    try:
+        import sentry_sdk
+        sentry_sdk.capture_exception(exc)
+    except Exception:
+        pass
     return _error_response(
         request,
         status.HTTP_500_INTERNAL_SERVER_ERROR,

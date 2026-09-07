@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { identifyUser, clearUserTracking } from "@/lib/telemetry";
 
 export interface User {
   id: number;
@@ -56,6 +57,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      identifyUser({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        plan_type: user.plan_type,
+        credits: user.credits,
+        provider: user.provider,
+      });
+    }
+  }, [user]);
 
   const fetchMe = async (authToken: string) => {
     try {
@@ -141,6 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     setUser(null);
     localStorage.removeItem("rc_token");
+    clearUserTracking();
   };
 
   const refreshMe = async () => {

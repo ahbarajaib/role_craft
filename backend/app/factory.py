@@ -68,6 +68,24 @@ def create_app() -> FastAPI:
     settings = get_settings()
     setup_logging(settings)
 
+    if settings.SENTRY_DSN:
+        try:
+            import sentry_sdk
+            from sentry_sdk.integrations.fastapi import FastApiIntegration
+            from sentry_sdk.integrations.loguru import LoguruIntegration
+
+            sentry_sdk.init(
+                dsn=settings.SENTRY_DSN,
+                environment=settings.ENVIRONMENT,
+                traces_sample_rate=1.0 if settings.ENVIRONMENT == "development" else 0.2,
+                integrations=[FastApiIntegration(), LoguruIntegration()],
+            )
+            logger.info("Sentry monitoring initialised", environment=settings.ENVIRONMENT)
+        except ImportError:
+            logger.warning("SENTRY_DSN provided but sentry-sdk is not installed. Skipping Sentry setup.")
+        except Exception as e:
+            logger.error("Failed to initialise Sentry", error=str(e))
+
     app = FastAPI(
         title=settings.APP_NAME,
         version=settings.APP_VERSION,

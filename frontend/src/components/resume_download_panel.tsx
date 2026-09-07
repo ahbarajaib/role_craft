@@ -10,6 +10,7 @@ import {
   exportOriginalResume,
   downloadTailoredResume,
 } from "@/lib/structured_resume_api";
+import { trackEvent, trackError } from "@/lib/telemetry";
 
 interface ResumeDownloadPanelProps {
   /** "docx" if user uploaded a DOCX (original design available), "pdf" or null otherwise */
@@ -97,9 +98,15 @@ export default function ResumeDownloadPanel({
           await downloadStructuredResume(templateId, format, filename);
         }
       }
+      trackEvent("resume_downloaded", {
+        template: templateId,
+        format,
+        is_tailored: tailoredResumeId != null,
+      });
       setSuccessTemplate(templateId);
       setTimeout(() => setSuccessTemplate(null), 1000);
     } catch (err: any) {
+      trackError("resume_download_failed", err, { template: templateId, format });
       if (templateId === "original" && err.message?.includes("injection")) {
         // Graceful fallback to Clean Classic
         setError("Original design injection failed for this complex layout — downloading Clean Classic instead.");

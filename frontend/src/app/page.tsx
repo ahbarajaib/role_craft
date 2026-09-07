@@ -87,6 +87,7 @@ import {
   tailorResume,
   TailorResponse,
 } from "@/lib/structured_resume_api";
+import { trackEvent, trackError } from "@/lib/telemetry";
 
 interface DiffToken {
   value: string;
@@ -2173,8 +2174,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setSuccessNotification(`Exporting Cover Letter as ${format.toUpperCase()}...`);
       await downloadCoverLetterFile(coverLetterDownloadId, format);
       setSuccessNotification(`✨ Cover Letter (${format.toUpperCase()}) downloaded successfully!`);
+      trackEvent("cover_letter_downloaded", { format });
     } catch (err: any) {
       console.error("Cover letter download error, attempting direct fallback:", err);
+      trackError("cover_letter_download_failed", err, { format });
       try {
         const fallbackUrl = `${API_BASE_URL}/api/v1/resume/download/${coverLetterDownloadId}/cover-letter?format=${format}`;
         window.open(fallbackUrl, "_blank");
@@ -2555,6 +2558,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         return;
       }
 
+      trackEvent("tailor_started", { sections_count: sectionsToTailor.length });
+
       // Set instant inline loading cue on all target section cards right away
       const loadingMap: Record<string, boolean> = {};
       const expandedMap: Record<string, boolean> = { ...expandedSections };
@@ -2696,6 +2701,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         if (result?.overall_summary?.job_title || finalAppliedTitle) parts.push("Target Role");
         if (sectionsToTailor.length > 0) parts.push(`${sectionsToTailor.length} section${sectionsToTailor.length > 1 ? "s" : ""}`);
         setSuccessNotification(`⚡ 1-Click Auto-Tailored in ~2s: Resume Ready! (${parts.join(", ")})`);
+        trackEvent("tailor_completed", {
+          tailored_sections_count: Object.keys(newRewrites).length,
+        });
 
         if (refreshMe) refreshMe();
       }
@@ -2756,6 +2764,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             setCustomTargetRole(clRes.target_role);
           }
           setIsEditingCoverLetter(false);
+          trackEvent("cover_letter_generated");
           console.log("✨ [RoleCraft Audit] Background Cover Letter Generated:", clRes.download_id);
         } catch (clErr) {
           console.error("❌ [RoleCraft Audit] Auto Cover Letter Generation Failed:", clErr);
@@ -2765,6 +2774,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       })();
     } catch (err: any) {
       console.error("❌ [RoleCraft Audit] Auto-tailor error:", err);
+      trackError("tailor_failed", err);
       setError(err?.message || "Auto-tailor failed. Please try again.");
     } finally {
       setIsAutoTailoring(false);
@@ -3231,6 +3241,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setDownloadUrl(null);
       setIsPatchingApplied(false);
       setSuccessNotification("Resume uploaded & parsed successfully.");
+      trackEvent("resume_uploaded", {
+        format: uploadFile.name.endsWith(".docx") ? "docx" : "pdf",
+        filename: uploadFile.name,
+      });
 
       if (structuredParse) {
         setMasterResume(structuredParse);
@@ -3263,6 +3277,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     },
     onError: (err: any) => {
       console.error("❌ [RoleCraft Audit] File Upload Failed:", err);
+      trackError("resume_upload_failed", err, { filename: file?.name });
       setError(err?.message || "File upload failed. Only .docx files up to 5MB are accepted.");
       setFile(null);
     }
@@ -3280,6 +3295,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       if (jobDescription.trim().length < 50) {
         throw new Error("Job description must be at least 50 characters long");
       }
+      trackEvent("analysis_started", {
+        has_doc_id: Boolean(documentId),
+        jd_length: jobDescription.length,
+      });
       // JSON-first: pass documentId as optional (backend uses structured JSON if available)
       return analyzeResume(jobDescription, documentId || undefined);
     },
@@ -3296,6 +3315,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           sections: data.sections,
         }
       );
+      trackEvent("analysis_completed", {
+        overall_score: data.overall_summary?.overall_coverage_percentage,
+        sections_count: data.sections?.length,
+        sections_to_improve: data.overall_summary?.sections_to_improve,
+      });
       setAnalysisResult(data);
       setError(null);
       setRewrittenSections({});
@@ -3327,6 +3351,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     },
     onError: (err: any) => {
       console.error("❌ [RoleCraft Audit] Resume Analysis Failed:", err);
+      trackError("analysis_failed", err);
       setError(err?.message || "Analysis failed. Please check your backend connection and OpenAI API Key.");
       const errMsg = (err?.message || "").toLowerCase();
       if (
@@ -3335,6 +3360,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         errMsg.includes("limit") ||
         errMsg.includes("upgrade")
       ) {
+        trackEvent("credits_depleted_modal_shown", { source: "analysis", plan: user?.plan_type });
         if (token) {
           const targetPlan = (user?.plan_type || "").toLowerCase() === "pro" ? "elite" : "pro";
           openUpgradeModal("out_of_credits", targetPlan);
