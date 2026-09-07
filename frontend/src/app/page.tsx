@@ -4932,10 +4932,32 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
                 {/* Job Description Input Container */}
                 <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Target Job Description
-                    </label>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Target Job Description
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isProOrElite) {
+                            setIsExtensionModalOpen(true);
+                          } else {
+                            setIsExtensionPreviewModalOpen(true);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200/80 text-[10px] font-bold transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+                        title="1-Click LinkedIn Job Details Copier"
+                      >
+                        <Zap className="h-2.5 w-2.5 text-teal-600 shrink-0" />
+                        <span>LinkedIn Copier</span>
+                        {!isProOrElite && (
+                          <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-100/80 px-1 rounded">
+                            PRO
+                          </span>
+                        )}
+                      </button>
+                    </div>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
