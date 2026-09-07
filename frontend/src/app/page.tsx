@@ -730,9 +730,21 @@ function SectionCard({
                 ✨ AI Tailoring Section...
               </span>
             ) : rewrittenText ? (
-              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/90 border border-emerald-300 dark:border-emerald-700 px-2 py-0.5 rounded-full animate-fade-in-up">
-                <Sparkles className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" />
-                Tailored
+              <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full border animate-fade-in-up ${isPatchingApplied
+                  ? "text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/90 border-emerald-300 dark:border-emerald-700"
+                  : "text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/90 border-amber-300 dark:border-amber-700"
+                }`}>
+                {isPatchingApplied ? (
+                  <>
+                    <CheckCircle className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" />
+                    Applied
+                  </>
+                ) : (
+                  <>
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    Apply Pending
+                  </>
+                )}
               </span>
             ) : null}
           </h3>
@@ -1974,6 +1986,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [customTargetRole, setCustomTargetRole] = useState<string>("");
+  const [isEditingTargetRole, setIsEditingTargetRole] = useState<boolean>(false);
+  const [targetRoleDraft, setTargetRoleDraft] = useState<string>("");
   const [keywordFilterTab, setKeywordFilterTab] = useState<'all' | 'matched' | 'supported' | 'missing'>('all');
   const [keywordSearchQuery, setKeywordSearchQuery] = useState<string>("");
 
@@ -1987,6 +2001,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
   // ── Per-section excluded bullet indexes (for DOCX patch filtering) ─────────
   const [excludedBullets, setExcludedBullets] = useState<Record<string, Set<number>>>({});
+  const handleBulletExclusionChange = (sectionName: string, excluded: Set<number>) => {
+    setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }));
+    setIsPatchingApplied(false);
+  };
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
@@ -5506,45 +5524,130 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             {(() => {
                               const rawJobTitle = analysisResult.overall_summary.job_title || "";
                               const isGenericTitle = !rawJobTitle || ["full job description", "job description", "about the role", "overview", "target role", "description"].includes(rawJobTitle.toLowerCase().trim());
-                              const displayTitle = customTargetRole || rewrittenSections["header"] || (!isGenericTitle ? rawJobTitle : "Target Role");
-                              const canApply = Boolean(displayTitle && displayTitle !== "Target Role");
-                              const isApplied = (rewrittenSections["header"] === displayTitle || (isPatchingApplied && rewrittenSections["header"])) && Boolean(displayTitle);
+                              const activeTitle = (customTargetRole !== "" ? customTargetRole : (rewrittenSections["header"] || (!isGenericTitle ? rawJobTitle : "Target Role"))).trim();
+                              const appliedTitle = (rewrittenSections["header"] || "").trim();
+                              const isTitleApplied = Boolean(appliedTitle && appliedTitle.toLowerCase() === activeTitle.toLowerCase() && isPatchingApplied);
+                              const isTitlePending = Boolean(activeTitle && activeTitle !== "Target Role" && (!appliedTitle || appliedTitle.toLowerCase() !== activeTitle.toLowerCase() || !isPatchingApplied));
+                              const canApply = Boolean(activeTitle && activeTitle !== "Target Role");
 
                               return (
-                                <>
-                                  <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                                    <span>{displayTitle}</span>
-                                  </h3>
-                                  {canApply && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleApplyTargetTitle(displayTitle)}
-                                      disabled={isApplyingTitle || applyMutation.isPending}
-                                      className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${isApplied
-                                        ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
-                                        : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white border-emerald-500/30 shadow-emerald-500/20 hover:scale-105"
-                                        }`}
-                                      title="Apply this target job title directly to your resume header and DOCX file"
-                                    >
-                                      {isApplyingTitle ? (
-                                        <>
-                                          <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin shrink-0" />
-                                          <span>Applying Title...</span>
-                                        </>
-                                      ) : isApplied ? (
-                                        <>
-                                          <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                                          <span>Title Applied & Saved</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <CheckCircle className="h-3.5 w-3.5 text-white shrink-0" />
-                                          <span>Apply Job Title</span>
-                                        </>
-                                      )}
-                                    </button>
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 flex-wrap">
+                                  {isEditingTargetRole ? (
+                                    <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+                                      <input
+                                        type="text"
+                                        value={targetRoleDraft}
+                                        onChange={(e) => setTargetRoleDraft(e.target.value)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter") {
+                                            const updated = targetRoleDraft.trim();
+                                            if (updated) {
+                                              setCustomTargetRole(updated);
+                                              setIsEditingTargetRole(false);
+                                            }
+                                          } else if (e.key === "Escape") {
+                                            setIsEditingTargetRole(false);
+                                          }
+                                        }}
+                                        placeholder="e.g. Senior Full Stack Engineer"
+                                        autoFocus
+                                        className="w-full sm:w-auto min-w-[220px] max-w-[360px] px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl border border-teal-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-inner focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                                      />
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const updated = targetRoleDraft.trim();
+                                            if (updated) {
+                                              setCustomTargetRole(updated);
+                                              setIsEditingTargetRole(false);
+                                            }
+                                          }}
+                                          className="px-3 py-1.5 text-xs font-black rounded-xl bg-teal-600 hover:bg-teal-500 text-white shadow-xs transition-all cursor-pointer"
+                                        >
+                                          Done
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setIsEditingTargetRole(false)}
+                                          className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                                          title="Cancel"
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                                        <span>{activeTitle}</span>
+                                      </h3>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setTargetRoleDraft(activeTitle);
+                                          setIsEditingTargetRole(true);
+                                        }}
+                                        className="px-2 py-1 text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1 text-[11px] font-bold border border-transparent hover:border-teal-200 dark:hover:border-slate-700"
+                                        title="Click to edit target job title"
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                        <span>Edit</span>
+                                      </button>
+                                    </div>
                                   )}
-                                </>
+
+                                  {/* Status Badges and Apply Button */}
+                                  {canApply && !isEditingTargetRole && (
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      {isTitlePending && (
+                                        <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                                          <span className="relative flex h-1.5 w-1.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                                          </span>
+                                          Apply Pending
+                                        </span>
+                                      )}
+
+                                      <button
+                                        type="button"
+                                        onClick={() => handleApplyTargetTitle(activeTitle)}
+                                        disabled={isApplyingTitle || applyMutation.isPending}
+                                        className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${
+                                          isTitlePending
+                                            ? "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-white border-amber-400/40 shadow-amber-500/25 hover:scale-105"
+                                            : isTitleApplied
+                                            ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
+                                            : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white border-emerald-500/30 shadow-emerald-500/20 hover:scale-105"
+                                        }`}
+                                        title={isTitlePending ? "Save this new title to your resume header" : "Apply this title to resume"}
+                                      >
+                                        {isApplyingTitle ? (
+                                          <>
+                                            <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin shrink-0" />
+                                            <span>Applying Title...</span>
+                                          </>
+                                        ) : isTitlePending ? (
+                                          <>
+                                            <Sparkles className="h-3.5 w-3.5 text-amber-200 animate-pulse shrink-0" />
+                                            <span>{appliedTitle ? "Re-Apply Title" : "Apply Job Title"}</span>
+                                          </>
+                                        ) : isTitleApplied ? (
+                                          <>
+                                            <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                                            <span>Title Applied & Saved</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <CheckCircle className="h-3.5 w-3.5 text-white shrink-0" />
+                                            <span>Apply Job Title</span>
+                                          </>
+                                        )}
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               );
                             })()}
                           </div>
@@ -6371,7 +6474,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                     onImproveClick={handleImproveClick}
                                     inlineLoadingSections={inlineLoadingSections}
                                     triggerInlineRewrite={triggerInlineRewrite}
-                                    onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
+                                    onBulletExclusionChange={handleBulletExclusionChange}
                                     isPatchingApplied={isPatchingApplied}
                                     masterResume={masterResume}
                                     isTailoringEnabled={
@@ -6407,7 +6510,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                     onImproveClick={handleImproveClick}
                                     inlineLoadingSections={inlineLoadingSections}
                                     triggerInlineRewrite={triggerInlineRewrite}
-                                    onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
+                                    onBulletExclusionChange={handleBulletExclusionChange}
                                     isPatchingApplied={isPatchingApplied}
                                     masterResume={masterResume}
                                     isTailoringEnabled={
@@ -6443,7 +6546,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                     onImproveClick={handleImproveClick}
                                     inlineLoadingSections={inlineLoadingSections}
                                     triggerInlineRewrite={triggerInlineRewrite}
-                                    onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
+                                    onBulletExclusionChange={handleBulletExclusionChange}
                                     isPatchingApplied={isPatchingApplied}
                                     masterResume={masterResume}
                                   />

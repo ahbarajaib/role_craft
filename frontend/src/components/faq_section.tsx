@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { ChevronDown, HelpCircle } from "lucide-react";
 import { FREE_TIER_CREDITS, PRO_CREDITS, ELITE_CREDITS } from "@/lib/constants";
+import { Card } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 export default function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -39,36 +41,47 @@ export default function FaqSection() {
   ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-4">
+    <div className="w-full max-w-4xl mx-auto space-y-3.5">
       {faqs.map((faq, idx) => {
         const isOpen = openIndex === idx;
         return (
-          <div
+          <Card
             key={idx}
-            className={`rounded-2xl border transition-all overflow-hidden shadow-sm ${
-              isOpen ? "border-teal-300 bg-white ring-1 ring-teal-500/10 shadow-md" : "border-slate-200 bg-white hover:border-teal-200"
-            }`}
+            variant="default"
+            className={cn(
+              "overflow-hidden transition-all duration-200",
+              isOpen
+                ? "border-teal-300 ring-2 ring-teal-500/10 shadow-md"
+                : "border-slate-200/90 hover:border-teal-200"
+            )}
           >
             <button
+              type="button"
               onClick={() => setOpenIndex(isOpen ? null : idx)}
               className="w-full p-5 text-left font-bold text-sm sm:text-base text-slate-900 flex items-center justify-between gap-4 cursor-pointer select-none"
             >
               <span className="flex items-center gap-2.5">
-                <HelpCircle className={`h-4 w-4 shrink-0 transition-colors ${isOpen ? "text-teal-600" : "text-teal-500"}`} />
+                <HelpCircle
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-colors",
+                    isOpen ? "text-teal-600" : "text-teal-500"
+                  )}
+                />
                 {faq.q}
               </span>
               <ChevronDown
-                className={`h-4 w-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-                  isOpen ? "rotate-180 text-teal-600" : ""
-                }`}
+                className={cn(
+                  "h-4 w-4 text-slate-400 shrink-0 transition-transform duration-200",
+                  isOpen && "rotate-180 text-teal-600"
+                )}
               />
             </button>
             {isOpen && (
-              <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-blue-50 pt-3">
+              <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3.5 animate-fade-in">
                 {faq.a}
               </div>
             )}
-          </div>
+          </Card>
         );
       })}
     </div>

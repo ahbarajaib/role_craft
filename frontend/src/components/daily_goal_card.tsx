@@ -2,7 +2,8 @@
 
 import React from "react";
 import { DailyTargetSummary } from "@/lib/api";
-import { Target, History, Sparkles, Trophy, X } from "lucide-react";
+import { History, X } from "lucide-react";
+import { Badge, Button } from "@/components/ui";
 
 interface DailyGoalCardProps {
   dailyGoal: DailyTargetSummary;
@@ -38,15 +39,12 @@ export function DailyGoalCard({
           <span className="font-extrabold text-slate-900 text-xs truncate">
             Today: <span className="text-teal-700 font-black">{dailyGoal.today_completed}/{dailyGoal.daily_target}</span> Tailored
           </span>
-          <span
-            className={`px-1.5 py-0.5 rounded font-black text-[10px] uppercase border shrink-0 ${
-              isComplete
-                ? "bg-emerald-500 text-white border-emerald-600"
-                : "bg-teal-50 text-teal-700 border-teal-200"
-            }`}
+          <Badge
+            variant={isComplete ? "success" : "default"}
+            size="sm"
           >
             {percentage}%
-          </span>
+          </Badge>
           <span className="hidden md:inline text-[11px] text-slate-500 font-medium truncate">
             • {isComplete ? "Daily target smashed!" : `${remaining} more to hit today's target`}
           </span>
@@ -93,15 +91,15 @@ export function DailyGoalCard({
           </button>
         </div>
 
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="xs"
           onClick={onOpenHistory}
-          className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-bold shadow-2xs transition-all cursor-pointer flex items-center gap-1 select-none"
+          leftIcon={<History className="h-3 w-3 text-teal-600" />}
           title="View detailed activity history & chart"
         >
-          <History className="h-3 w-3 text-teal-600" />
           <span className="hidden sm:inline">Stats</span>
-        </button>
+        </Button>
 
         {onHide && (
           <button

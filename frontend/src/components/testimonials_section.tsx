@@ -1,6 +1,8 @@
 "use client";
 
-import { Star, CheckCircle, TrendingUp, ShieldCheck, Zap, Briefcase, Award } from "lucide-react";
+import { Star, CheckCircle, TrendingUp } from "lucide-react";
+import { Card, Badge } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 export default function TestimonialsSection() {
   const testimonials = [
@@ -9,7 +11,8 @@ export default function TestimonialsSection() {
       role: "Senior Full Stack Engineer",
       company: "Placed at Series B Tech Unicorn",
       salaryGain: "From 1 call/mo → 5 calls/week",
-      comment: "RoleCraft changed my job hunt completely. The 1-Click Auto-Tailor filled missing keywords into my experience section without breaking my DOCX formatting. Got 4 interview callbacks in my first week!",
+      comment:
+        "RoleCraft changed my job hunt completely. The 1-Click Auto-Tailor filled missing keywords into my experience section without breaking my DOCX formatting. Got 4 interview callbacks in my first week!",
       rating: 5,
       roleTag: "Software Engineering",
     },
@@ -18,7 +21,8 @@ export default function TestimonialsSection() {
       role: "AI & Data Specialist",
       company: "Placed at Global Analytics Firm",
       salaryGain: "+45% Callback Improvement",
-      comment: "The Google XYZ formula rewriter is magic. My old bullet points sounded like plain task lists, but RoleCraft transformed them into quantified metrics. Landed 3 final rounds within 10 days.",
+      comment:
+        "The Google XYZ formula rewriter is magic. My old bullet points sounded like plain task lists, but RoleCraft transformed them into quantified metrics. Landed 3 final rounds within 10 days.",
       rating: 5,
       roleTag: "Data & AI",
     },
@@ -27,7 +31,8 @@ export default function TestimonialsSection() {
       role: "Solutions & Cloud Architect",
       company: "Enterprise Cloud Placement",
       salaryGain: "Bypassed Workday & Lever ATS",
-      comment: "I used to spend 2 hours tailoring my resume for every single job posting. RoleCraft does it in under 15 seconds while keeping my exact custom margins and font styling 100% untouched.",
+      comment:
+        "I used to spend 2 hours tailoring my resume for every single job posting. RoleCraft does it in under 15 seconds while keeping my exact custom margins and font styling 100% untouched.",
       rating: 5,
       roleTag: "Cloud Architecture",
     },
@@ -38,11 +43,14 @@ export default function TestimonialsSection() {
       {/* Candidate Testimonial Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {testimonials.map((t, i) => (
-          <div
+          <Card
             key={i}
-            className={`rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm hover:shadow-xl hover:shadow-teal-500/10 hover:border-teal-300 transition-all flex flex-col justify-between space-y-6 glass-card-interactive relative overflow-hidden reveal-on-scroll ${
+            variant="interactive"
+            padding="lg"
+            className={cn(
+              "flex flex-col justify-between space-y-6 glass-card-interactive relative overflow-hidden reveal-on-scroll",
               i === 1 ? "reveal-delay-1" : i === 2 ? "reveal-delay-2" : ""
-            }`}
+            )}
           >
             <div className="space-y-4">
               {/* Header with stars & conversion pill */}
@@ -52,10 +60,13 @@ export default function TestimonialsSection() {
                     <Star key={idx} className="h-4 w-4 fill-amber-400" />
                   ))}
                 </div>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#E6F7F4] text-teal-800 border border-[#99F6E4] shadow-2xs">
-                  <TrendingUp className="h-3 w-3 text-teal-600" />
+                <Badge
+                  variant="default"
+                  size="sm"
+                  leftIcon={<TrendingUp className="h-3 w-3 text-teal-600" />}
+                >
                   {t.salaryGain}
-                </span>
+                </Badge>
               </div>
 
               {/* Quote */}
@@ -78,14 +89,13 @@ export default function TestimonialsSection() {
                   <p className="text-[11px] text-slate-500 font-semibold">{t.role}</p>
                 </div>
               </div>
-              <span className="hidden sm:inline-block px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold">
+              <Badge variant="secondary" size="sm" className="hidden sm:inline-flex">
                 {t.roleTag}
-              </span>
+              </Badge>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </div>
   );
 }
-
