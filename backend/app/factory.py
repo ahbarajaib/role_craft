@@ -78,6 +78,7 @@ def create_app() -> FastAPI:
                 dsn=settings.SENTRY_DSN,
                 environment=settings.ENVIRONMENT,
                 traces_sample_rate=1.0 if settings.ENVIRONMENT == "development" else 0.2,
+                send_default_pii=True,
                 integrations=[FastApiIntegration(), LoguruIntegration()],
             )
             logger.info("Sentry monitoring initialised", environment=settings.ENVIRONMENT)
