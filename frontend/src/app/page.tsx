@@ -564,6 +564,27 @@ function getRewrittenTextForSection(
   return undefined;
 }
 
+// ─── Helper: clean cover letter word-splitting and kerning artifacts ─────────
+function cleanCoverLetterText(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/\bto\s+jo\s*n\b/gi, "to join")
+    .replace(/\bdel\s*ver\b/gi, "deliver")
+    .replace(/\brel\s*iabl\s*e\b/gi, "reliable")
+    .replace(/\butil\s*iz\s*ing\b/gi, "utilizing")
+    .replace(/\bfacil\s*itated\b/gi, "facilitated")
+    .replace(/\benabl\s*ing\b/gi, "enabling")
+    .replace(/\bequi\s*p\s+me\b/gi, "equip me")
+    .replace(/\bworkfl\s*ows\b/gi, "workflows")
+    .replace(/\bspecifcat\s*ons\b/gi, "specifications")
+    .replace(/\bexcel\s*ence\b/gi, "excellence")
+    .replace(/\bw\s+th\b/gi, "with")
+    .replace(/Node\s*\.\s*j\s*s/gi, "Node.js")
+    .replace(/React\s*\.\s*j\s*s/gi, "React.js")
+    .replace(/\baFull\s+Stack/gi, "a Full Stack")
+    .replace(/Full\s+Stack\s+Devel\s*oper/gi, "Full Stack Developer");
+}
+
 // ─── Helper: parse bullet lines from a rewritten text block ───────────────────
 function parseBulletsFromText(text: string): { line: string; isBullet: boolean; isHeader?: boolean; isCompany?: boolean }[] {
   if (!text) return [];
@@ -676,23 +697,23 @@ function SectionCard({
     });
   };
 
-  // Status-based styles
+  // Status-based styles with elegant left accent border
   const statusStyles = {
-    improve: "border-amber-300 hover:border-amber-400 bg-amber-50/20 shadow-sm",
-    keep: "border-emerald-300 hover:border-emerald-400 bg-emerald-50/20 shadow-sm",
-    reduce_emphasis: "border-slate-200 bg-slate-50/60 opacity-80"
+    improve: "border-amber-200/90 hover:border-amber-300 bg-amber-50/15 shadow-2xs border-l-4 border-l-amber-400",
+    keep: "border-teal-200/80 hover:border-teal-300 bg-teal-50/10 shadow-2xs border-l-4 border-l-teal-500",
+    reduce_emphasis: "border-slate-200 bg-slate-50/50 opacity-80 border-l-4 border-l-slate-300"
   };
 
   const badgeStyles = {
-    improve: "bg-amber-100 text-amber-900 border-amber-300 font-extrabold",
-    keep: "bg-emerald-100 text-emerald-900 border-emerald-300 font-extrabold",
-    reduce_emphasis: "bg-slate-100 text-slate-800 border-slate-300 font-bold"
+    improve: "bg-amber-50 text-amber-900 border-amber-200 font-extrabold",
+    keep: "bg-[#E6F7F4] text-teal-900 border-[#99F6E4] font-extrabold",
+    reduce_emphasis: "bg-slate-100 text-slate-700 border-slate-200 font-bold"
   };
 
   const priorityStyles = {
-    high: "bg-rose-100 text-rose-900 border-rose-300 font-extrabold",
-    medium: "bg-amber-100 text-amber-900 border-amber-300 font-extrabold",
-    low: "bg-emerald-100 text-emerald-900 border-emerald-300 font-extrabold"
+    high: "bg-rose-50 text-rose-700 border-rose-200 font-black",
+    medium: "bg-amber-50 text-amber-700 border-amber-200 font-bold",
+    low: "bg-slate-100 text-slate-600 border-slate-200 font-medium"
   };
 
   const parsedBullets = rewrittenText ? parseBulletsFromText(rewrittenText) : [];
@@ -705,34 +726,34 @@ function SectionCard({
   return (
     <div
       key={`${section.section_name}-${idx}`}
-      className={`rounded-2xl border transition-all duration-300 bg-white shadow-xs ${statusStyles[section.review_status]}`}
+      className={`rounded-2xl border transition-all duration-300 bg-white shadow-2xs ${statusStyles[section.review_status]}`}
     >
       {/* Clickable Header for Collapsing */}
       <div
         onClick={onToggle}
-        className="flex flex-wrap items-center justify-between gap-4 p-5 cursor-pointer select-none"
+        className="flex items-center justify-between gap-3 p-3.5 sm:p-4 cursor-pointer select-none"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <span
-            className={`px-2.5 py-1 text-[11px] font-black rounded-lg border uppercase tracking-wider ${badgeStyles[section.review_status]}`}
+            className={`px-2 py-0.5 text-[10px] font-black rounded-md border uppercase tracking-wider shrink-0 ${badgeStyles[section.review_status]}`}
           >
             {section.review_status === "improve"
-              ? "Needs Improvement"
+              ? "Needs Review"
               : section.review_status === "keep"
                 ? "Good As Is"
                 : "Reduce Emphasis"}
           </span>
-          <h3 className="font-black text-slate-900 dark:text-white text-base md:text-lg flex items-center gap-2">
-            {section.section_name}
+          <h3 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm md:text-base truncate flex items-center gap-1.5">
+            <span className="truncate">{section.section_name}</span>
             {inlineLoadingSections[section.section_name] ? (
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-teal-700 dark:text-teal-300 bg-[#E6F7F4] dark:bg-slate-900/90 border border-teal-300 dark:border-teal-700 px-2.5 py-0.5 rounded-full animate-pulse">
-                <div className="h-2.5 w-2.5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin shrink-0" />
-                ✨ AI Tailoring Section...
+              <span className="inline-flex items-center gap-1 text-[10px] font-black text-teal-700 dark:text-teal-300 bg-[#E6F7F4] dark:bg-slate-900/90 border border-teal-300 dark:border-teal-700 px-2 py-0.5 rounded-full animate-pulse shrink-0">
+                <div className="h-2 w-2 border-2 border-teal-600 border-t-transparent rounded-full animate-spin shrink-0" />
+                Tailoring...
               </span>
             ) : rewrittenText ? (
-              <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full border animate-fade-in-up ${isPatchingApplied
-                  ? "text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/90 border-emerald-300 dark:border-emerald-700"
-                  : "text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/90 border-amber-300 dark:border-amber-700"
+              <span className={`inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border shrink-0 ${isPatchingApplied
+                  ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/90 border-emerald-300"
+                  : "text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/90 border-amber-300"
                 }`}>
                 {isPatchingApplied ? (
                   <>
@@ -741,8 +762,8 @@ function SectionCard({
                   </>
                 ) : (
                   <>
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                    Apply Pending
+                    <span className="h-1 w-1 rounded-full bg-amber-500 animate-pulse" />
+                    Pending
                   </>
                 )}
               </span>
@@ -750,7 +771,7 @@ function SectionCard({
           </h3>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           {onToggleTailoring && (
             <button
               type="button"
@@ -758,35 +779,37 @@ function SectionCard({
                 e.stopPropagation();
                 onToggleTailoring(section.section_name);
               }}
-              className={`px-3 py-1 rounded-full text-[11px] font-extrabold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs select-none ${isTailoringEnabled
-                  ? "bg-teal-600 text-white hover:bg-teal-700 shadow-teal-500/20 ring-2 ring-teal-400/30"
-                  : "bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700"
+              className={`px-2 py-1 rounded-lg text-[10px] font-extrabold transition-all flex items-center gap-1 cursor-pointer select-none ${isTailoringEnabled
+                  ? "bg-teal-600 hover:bg-teal-700 text-white shadow-2xs"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 border border-slate-200 dark:border-slate-700"
                 }`}
-              title={isTailoringEnabled ? "AI Tailoring ENABLED for this section. Click to LOCK / DISABLE." : "AI Tailoring DISABLED for this section. Click to ENABLE."}
+              title={isTailoringEnabled ? "AI Tailoring ENABLED for this section. Click to DISABLE." : "AI Tailoring DISABLED for this section. Click to ENABLE."}
             >
               {isTailoringEnabled ? (
                 <>
-                  <Zap className="h-3.5 w-3.5 text-amber-300 fill-amber-300" />
-                  <span>AI Tailor ON</span>
+                  <Zap className="h-3 w-3 text-amber-300 fill-amber-300 shrink-0" />
+                  <span className="hidden sm:inline">Tailor: </span>
+                  <span>ON</span>
                 </>
               ) : (
                 <>
-                  <Lock className="h-3.5 w-3.5 text-slate-400" />
-                  <span>AI Tailor OFF</span>
+                  <Lock className="h-3 w-3 text-slate-400 shrink-0" />
+                  <span className="hidden sm:inline">Tailor: </span>
+                  <span>OFF</span>
                 </>
               )}
             </button>
           )}
 
           <span
-            className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md border uppercase tracking-wider ${priorityStyles[section.priority]}`}
+            className={`hidden md:inline-block px-1.5 py-0.5 text-[9px] font-extrabold rounded border uppercase tracking-wider shrink-0 ${priorityStyles[section.priority]}`}
           >
-            {section.priority} Priority
+            {section.priority}
           </span>
           {isExpanded ? (
-            <ChevronUp className="h-5 w-5 text-slate-400" />
+            <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
           ) : (
-            <ChevronDown className="h-5 w-5 text-slate-400" />
+            <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
           )}
         </div>
       </div>
@@ -6041,22 +6064,22 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   })()}
 
                   {/* ✉️ Tailored Cover Letter Card */}
-                  <div className={`glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 space-y-4 shadow-xl ${mobileResultsTab === "rewrites" || mobileResultsTab === "export" ? "block" : "hidden lg:block"}`}>
+                  <div className={`glass-panel rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 space-y-4 shadow-xl ${mobileResultsTab === "rewrites" || mobileResultsTab === "export" ? "block" : "hidden lg:block"}`}>
                     <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
+                        <div className="h-9 w-9 rounded-xl bg-teal-500/10 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400 flex items-center justify-center border border-teal-500/20 shrink-0">
                           <FileText className="h-4.5 w-4.5" />
                         </div>
                         <div>
-                          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                             Tailored Cover Letter
                             {coverLetterText && (
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E6F7F4] text-teal-900 border border-[#99F6E4] font-extrabold">
                                 Ready
                               </span>
                             )}
                           </h3>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
                             Generate a 3-paragraph executive cover letter tailored to the job description & your resume.
                           </p>
                         </div>
@@ -6067,7 +6090,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           type="button"
                           onClick={handleGenerateCoverLetter}
                           disabled={isGeneratingCoverLetter}
-                          className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-600/20 disabled:opacity-50"
+                          className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white shadow-md shadow-teal-500/20 disabled:opacity-50 active:scale-95"
                         >
                           {isGeneratingCoverLetter ? (
                             <>
@@ -6076,7 +6099,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             </>
                           ) : (
                             <>
-                              <Sparkles className="h-3.5 w-3.5 text-purple-200 animate-pulse" />
+                              <Sparkles className="h-3.5 w-3.5 text-teal-200 animate-pulse" />
                               ✨ Generate Cover Letter (1-Click)
                             </>
                           )}
@@ -6085,26 +6108,28 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </div>
 
                     {/* Editable Target Designation & Contact Header Controls */}
-                    <div className="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                    <div className="p-3 bg-slate-50/80 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">
                           Target Designation:
                         </span>
-                        <input
-                          type="text"
-                          value={customTargetRole}
-                          onChange={(e) => setCustomTargetRole(e.target.value)}
-                          placeholder="e.g. Full Stack Developer"
-                          className="flex-1 min-w-[200px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-purple-500/30"
-                        />
-                        <button
-                          type="button"
-                          disabled={isGeneratingCoverLetter}
-                          onClick={handleGenerateCoverLetter}
-                          className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer disabled:opacity-50 shadow-sm"
-                        >
-                          Update Header
-                        </button>
+                        <div className="flex-1 min-w-[200px] flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={customTargetRole}
+                            onChange={(e) => setCustomTargetRole(e.target.value)}
+                            placeholder="e.g. Full Stack Developer"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                          />
+                          <button
+                            type="button"
+                            disabled={isGeneratingCoverLetter}
+                            onClick={handleGenerateCoverLetter}
+                            className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer disabled:opacity-50 shadow-2xs active:scale-95"
+                          >
+                            Update Header
+                          </button>
+                        </div>
                       </div>
                       {user && (user.address || user.phone_number || user.linkedin_url) ? (
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
@@ -6124,29 +6149,29 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     {/* Cover Letter Content Body */}
                     {coverLetterText ? (
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between gap-2 flex-wrap bg-slate-50 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+                        <div className="flex items-center justify-between gap-2 flex-wrap bg-slate-50/80 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
                           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium">
-                            <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                            <CheckCircle className="h-4 w-4 text-teal-600 shrink-0" />
                             <span>Cover Letter tailored to job description</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={handleCopyCoverLetterText}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border ${isCoverLetterCopied
-                                ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
-                                : "bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 border-purple-500/20"
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border select-none ${isCoverLetterCopied
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-300"
+                                : "bg-teal-50 text-teal-800 dark:text-teal-300 hover:bg-teal-100 border-teal-200"
                                 }`}
                               title="Copy full cover letter text content"
                             >
                               {isCoverLetterCopied ? (
                                 <>
-                                  <Check className="h-3 w-3 text-emerald-500" />
+                                  <Check className="h-3 w-3 text-emerald-600" />
                                   <span>Copied!</span>
                                 </>
                               ) : (
                                 <>
-                                  <Copy className="h-3 w-3 text-purple-500" />
+                                  <Copy className="h-3 w-3 text-teal-600" />
                                   <span>Copy Text</span>
                                 </>
                               )}
@@ -6154,7 +6179,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             <button
                               type="button"
                               onClick={() => setIsEditingCoverLetter(!isEditingCoverLetter)}
-                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-1 cursor-pointer border border-slate-200/80 select-none"
                             >
                               <Edit className="h-3 w-3" />
                               {isEditingCoverLetter ? "Done Editing" : "Edit Text"}
@@ -6163,7 +6188,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               type="button"
                               disabled={isGeneratingCoverLetter}
                               onClick={handleGenerateCoverLetter}
-                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-50 text-teal-800 dark:text-teal-300 hover:bg-teal-100 border border-teal-200/80 transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50 select-none"
                             >
                               <RefreshCw className={`h-3 w-3 ${isGeneratingCoverLetter ? "animate-spin" : ""}`} />
                               Regenerate
@@ -6178,14 +6203,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               value={coverLetterText}
                               onChange={(e) => setCoverLetterText(e.target.value)}
                               rows={12}
-                              className="w-full p-3.5 rounded-xl border border-purple-300 dark:border-purple-800/60 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-purple-500/30 resize-y font-sans"
+                              className="w-full p-4 rounded-xl border border-teal-300 dark:border-teal-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-y font-sans"
                               placeholder="Edit your cover letter here..."
                             />
                             <button
                               type="button"
                               disabled={isUpdatingCoverLetter}
                               onClick={() => handleUpdateCoverLetterText(coverLetterText)}
-                              className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                              className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 shadow-xs"
                             >
                               {isUpdatingCoverLetter ? (
                                 <div className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -6196,8 +6221,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             </button>
                           </div>
                         ) : (
-                          <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-slate-800 dark:text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-sans space-y-2 shadow-inner">
-                            {coverLetterText}
+                          <div className="p-4 sm:p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 text-slate-800 dark:text-slate-200 text-sm leading-relaxed whitespace-pre-wrap font-sans space-y-3 shadow-2xs">
+                            {cleanCoverLetterText(coverLetterText)}
                           </div>
                         )}
 
@@ -6209,30 +6234,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             </span>
                             <button
                               type="button"
-                              onClick={handleCopyCoverLetterText}
-                              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${isCoverLetterCopied
-                                ? "bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20"
-                                : "bg-purple-600 hover:bg-purple-500 text-white border-purple-500/40 shadow-md shadow-purple-600/20 hover:scale-105 active:scale-95"
-                                }`}
-                              title="Copy text content of cover letter"
-                            >
-                              {isCoverLetterCopied ? (
-                                <>
-                                  <Check className="h-4 w-4 shrink-0" />
-                                  <span>Copied Text!</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="h-4 w-4 shrink-0" />
-                                  <span>Copy Text Content</span>
-                                </>
-                              )}
-                            </button>
-                            <button
-                              type="button"
                               onClick={() => handleDownloadCoverLetter("docx")}
                               disabled={downloadingCoverLetterFormat !== null}
-                              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-md shadow-teal-600/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 hover:scale-105 active:scale-95 select-none"
+                              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white shadow-md shadow-teal-600/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 select-none active:scale-[0.98]"
                               title="Download formatted DOCX cover letter"
                             >
                               {downloadingCoverLetterFormat === "docx" ? (
@@ -6246,7 +6250,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               type="button"
                               onClick={() => handleDownloadCoverLetter("pdf")}
                               disabled={downloadingCoverLetterFormat !== null}
-                              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer border border-slate-700/60 disabled:opacity-60 hover:scale-105 active:scale-95 select-none"
+                              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-all flex items-center gap-1.5 cursor-pointer border border-slate-700/60 disabled:opacity-60 select-none active:scale-[0.98]"
                               title="Download high-fidelity PDF cover letter"
                             >
                               {downloadingCoverLetterFormat === "pdf" ? (
@@ -6365,15 +6369,15 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         <>
                           {/* AI Section Tailoring Master Controls Bar */}
                           {analysisResult?.sections && analysisResult.sections.length > 0 && (
-                            <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-50/80 via-indigo-50/60 to-purple-50/50 border border-teal-200/80 text-slate-800 shadow-xs space-y-3">
-                              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-teal-200/60 pb-2.5">
+                            <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-teal-50/80 via-emerald-50/40 to-slate-50 border border-teal-200/80 text-slate-800 shadow-2xs space-y-2.5">
+                              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-teal-200/60 pb-2">
                                 <div className="flex items-center gap-2">
-                                  <SlidersHorizontal className="h-4 w-4 text-teal-600" />
+                                  <SlidersHorizontal className="h-4 w-4 text-teal-600 shrink-0" />
                                   <span className="text-xs font-black tracking-tight text-slate-800 uppercase">
-                                    ⚡ AI Section Controls (Toggle ON/OFF for Auto-Tailor)
+                                    AI Section Controls (Toggle for Auto-Tailor)
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5">
                                   <button
                                     type="button"
                                     onClick={() => {
@@ -6381,7 +6385,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                       (analysisResult.sections || []).forEach((s) => { allOn[s.section_name] = true; });
                                       setTailoringSectionToggles(allOn);
                                     }}
-                                    className="text-[10px] font-extrabold text-teal-700 hover:text-teal-900 bg-white hover:bg-teal-50/80 border border-teal-200 px-2 py-0.5 rounded-md transition-all cursor-pointer shadow-2xs"
+                                    className="text-[10px] font-extrabold text-teal-800 hover:text-teal-900 bg-white hover:bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-md transition-all cursor-pointer shadow-2xs"
                                   >
                                     Enable All
                                   </button>
@@ -6399,8 +6403,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                 </div>
                               </div>
 
-                              {/* Section Toggle Chips */}
-                              <div className="flex flex-wrap gap-2 pt-1">
+                              {/* Section Toggle Chips - Swipeable carousel on mobile, wrapping on desktop */}
+                              <div className="chip-scroll horizontal-scroll-mask sm:flex-wrap sm:overflow-visible py-1">
                                 {(analysisResult.sections || []).map((sec, idx) => {
                                   const isEnabled = tailoringSectionToggles[sec.section_name] !== undefined
                                     ? tailoringSectionToggles[sec.section_name]
@@ -6410,19 +6414,19 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                       key={`${sec.section_name}-${idx}`}
                                       type="button"
                                       onClick={() => handleToggleSectionTailoring(sec.section_name)}
-                                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none border ${isEnabled
-                                          ? "bg-teal-600 text-white border-teal-500 shadow-xs hover:bg-teal-500"
+                                      className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none shrink-0 border ${isEnabled
+                                          ? "bg-teal-600 text-white border-teal-500 shadow-2xs hover:bg-teal-700"
                                           : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
                                         }`}
                                     >
                                       {isEnabled ? (
                                         <>
-                                          <Zap className="h-3 w-3 text-amber-300 fill-amber-300" />
+                                          <Zap className="h-3 w-3 text-amber-300 fill-amber-300 shrink-0" />
                                           <span>{sec.section_name}: ON</span>
                                         </>
                                       ) : (
                                         <>
-                                          <Lock className="h-3 w-3 text-slate-400" />
+                                          <Lock className="h-3 w-3 text-slate-400 shrink-0" />
                                           <span>{sec.section_name}: OFF</span>
                                         </>
                                       )}
