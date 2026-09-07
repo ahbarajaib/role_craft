@@ -8,17 +8,34 @@ import { X, Check, ShieldAlert, Sparkles, Zap, Award, RefreshCw } from "lucide-r
 interface SubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialReason?: "out_of_credits" | "extension_upsell" | "general";
+  initialPlan?: "pro" | "elite";
 }
 
 const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const API_BASE_URL = rawApiUrl.replace(/\/api\/v1\/?$/, "");
 
-export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
+export default function SubscriptionModal({
+  isOpen,
+  onClose,
+  initialReason = "general",
+  initialPlan,
+}: SubscriptionModalProps) {
   const { user, token, refreshMe } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<"pro" | "elite">("pro");
   const [billingType, setBillingType] = useState<"one_time" | "recurring">("one_time");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (initialPlan) {
+      setSelectedPlan(initialPlan);
+    } else if (user?.plan_type === "pro") {
+      setSelectedPlan("elite");
+    } else {
+      setSelectedPlan("pro");
+    }
+  }, [isOpen, initialPlan, user?.plan_type]);
 
   if (!isOpen) return null;
 
@@ -171,12 +188,27 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
             <Sparkles className="h-5 w-5 text-white" />
           </div>
           <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
-            Upgrade to RoleCraft Premium
+            {initialReason === "out_of_credits" ? "Unlock More Tailoring Credits" : "Upgrade to RoleCraft Premium"}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-            Unlock professional resume optimizations, unlimited AI rewrites, and instant downloads.
+            {initialReason === "out_of_credits"
+              ? "You've depleted your credits. Upgrade to Pro (200 credits) or Elite (400 credits) to continue tailoring your resumes."
+              : "Unlock professional resume optimizations, unlimited AI rewrites, and instant downloads."}
           </p>
         </div>
+
+        {/* Contextual Out-of-Credits Banner */}
+        {initialReason === "out_of_credits" && (
+          <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200 text-amber-950 text-xs flex items-start gap-3 shadow-2xs">
+            <Zap className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="font-bold text-slate-900">Credits Depleted (0 CR Remaining)</p>
+              <p className="text-slate-600 text-[11px] leading-relaxed">
+                Choose a plan below to immediately add fresh credits. Your uploaded resume and target job details will be ready to analyze immediately after upgrading.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Billing Type Toggle */}
         <div className="flex flex-col items-center gap-1.5 pt-1">

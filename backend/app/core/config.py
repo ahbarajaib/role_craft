@@ -84,7 +84,7 @@ class Settings(BaseSettings):
     # ── Authentication ────────────────────────────────────────────────────────
     JWT_SECRET: str = "supersecretrolecraftkey"
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRY_MINUTES: int = 43200  # 30 days
+    JWT_EXPIRY_MINUTES: int = 10080  # 7 days (7 * 24 * 60 minutes)
     GOOGLE_CLIENT_ID: str = ""
 
     # ── Razorpay Billing ──────────────────────────────────────────────────────

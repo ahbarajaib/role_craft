@@ -237,7 +237,7 @@ export default function AdminLoginPage() {
         {/* Security badge footer */}
         <div className="mt-8 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
           <Lock className="w-3.5 h-3.5" />
-          <span>Restricted Portal · 2-Factor Enforced · 30m Session Expiry</span>
+          <span>Restricted Portal · 2-Factor Enforced · 7-Day Session Expiry</span>
         </div>
       </div>
     </div>

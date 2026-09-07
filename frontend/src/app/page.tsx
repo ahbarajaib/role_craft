@@ -68,6 +68,7 @@ import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
 import ExtensionModal from "@/components/extension_modal";
+import ExtensionPreviewModal from "@/components/extension_preview_modal";
 import HistoryModal from "@/components/history_modal";
 import FeaturesShowcase from "@/components/features_showcase";
 import TestimonialsSection from "@/components/testimonials_section";
@@ -744,11 +745,10 @@ function SectionCard({
                 e.stopPropagation();
                 onToggleTailoring(section.section_name);
               }}
-              className={`px-3 py-1 rounded-full text-[11px] font-extrabold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs select-none ${
-                isTailoringEnabled
+              className={`px-3 py-1 rounded-full text-[11px] font-extrabold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs select-none ${isTailoringEnabled
                   ? "bg-teal-600 text-white hover:bg-teal-700 shadow-teal-500/20 ring-2 ring-teal-400/30"
                   : "bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700"
-              }`}
+                }`}
               title={isTailoringEnabled ? "AI Tailoring ENABLED for this section. Click to LOCK / DISABLE." : "AI Tailoring DISABLED for this section. Click to ENABLE."}
             >
               {isTailoringEnabled ? (
@@ -974,10 +974,10 @@ function SectionCard({
                 }
               }}
               className={`mt-2 w-full py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2.5 shadow-md transition-all duration-200 select-none ${inlineLoadingSections[section.section_name]
-                  ? "bg-slate-900 dark:bg-slate-950 text-white border border-slate-700 shadow-slate-900/30 cursor-wait"
-                  : section.review_status === "improve"
-                    ? "bg-teal-600 hover:bg-teal-700 text-white shadow-teal-600/20 cursor-pointer"
-                    : "bg-slate-800 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white shadow-slate-900/20 cursor-pointer"
+                ? "bg-slate-900 dark:bg-slate-950 text-white border border-slate-700 shadow-slate-900/30 cursor-wait"
+                : section.review_status === "improve"
+                  ? "bg-teal-600 hover:bg-teal-700 text-white shadow-teal-600/20 cursor-pointer"
+                  : "bg-slate-800 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white shadow-slate-900/20 cursor-pointer"
                 }`}
             >
               {inlineLoadingSections[section.section_name] ? (
@@ -1127,7 +1127,7 @@ function LoadingState() {
             {/* Multi-layered ambient background glow light */}
             <div className="absolute -inset-6 rounded-full bg-gradient-to-tr from-blue-500/35 via-indigo-500/30 to-cyan-400/35 blur-2xl animate-pulse" />
             <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-[#0F172A] via-teal-700 to-[#14B8A6] opacity-60 blur-sm animate-pulse" />
-            
+
             {/* Logo container with soft halo */}
             <div className="relative h-18 w-18 flex items-center justify-center">
               <img
@@ -1138,7 +1138,7 @@ function LoadingState() {
               />
             </div>
           </div>
-          
+
           <div className="space-y-1 max-w-md">
             <h3 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center justify-center gap-2">
               <span>AI Analysis in Progress</span>
@@ -1164,13 +1164,12 @@ function LoadingState() {
             return (
               <div
                 key={idx}
-                className={`relative flex items-start gap-3.5 px-4 py-3 rounded-xl transition-all duration-500 ${
-                  isCurrent
+                className={`relative flex items-start gap-3.5 px-4 py-3 rounded-xl transition-all duration-500 ${isCurrent
                     ? "bg-teal-50 border border-teal-200 shadow-sm"
                     : isDone
-                    ? "bg-emerald-50/50 border border-emerald-100"
-                    : "border border-transparent"
-                }`}
+                      ? "bg-emerald-50/50 border border-emerald-100"
+                      : "border border-transparent"
+                  }`}
               >
                 {/* Left timeline line */}
                 {idx < PIPELINE_STEPS.length - 1 && (
@@ -1178,13 +1177,12 @@ function LoadingState() {
                 )}
 
                 {/* Step circle */}
-                <div className={`relative shrink-0 h-7 w-7 rounded-full flex items-center justify-center mt-0.5 z-10 transition-all duration-500 ${
-                  isDone
+                <div className={`relative shrink-0 h-7 w-7 rounded-full flex items-center justify-center mt-0.5 z-10 transition-all duration-500 ${isDone
                     ? "bg-emerald-500 shadow-md shadow-emerald-500/30"
                     : isCurrent
-                    ? "bg-white border-2 border-teal-500 shadow-md shadow-teal-500/20"
-                    : "bg-white border-2 border-slate-200"
-                }`}>
+                      ? "bg-white border-2 border-teal-500 shadow-md shadow-teal-500/20"
+                      : "bg-white border-2 border-slate-200"
+                  }`}>
                   {isDone ? (
                     <CheckCircle className="h-3.5 w-3.5 text-white" />
                   ) : isCurrent ? (
@@ -1197,9 +1195,8 @@ function LoadingState() {
                 {/* Step content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={`text-sm font-bold leading-tight transition-colors duration-300 ${
-                      isDone ? "text-emerald-700" : isCurrent ? "text-teal-700" : "text-slate-400"
-                    }`}>
+                    <span className={`text-sm font-bold leading-tight transition-colors duration-300 ${isDone ? "text-emerald-700" : isCurrent ? "text-teal-700" : "text-slate-400"
+                      }`}>
                       {step.label}
                     </span>
                     {isCurrent && (
@@ -1211,17 +1208,15 @@ function LoadingState() {
                       <span className="text-[10px] font-bold text-emerald-600 shrink-0">✓ Done</span>
                     )}
                   </div>
-                  <p className={`text-xs mt-0.5 transition-colors duration-300 ${
-                    isDone ? "text-emerald-600/70" : isCurrent ? "text-teal-600/80" : "text-slate-400"
-                  }`}>
+                  <p className={`text-xs mt-0.5 transition-colors duration-300 ${isDone ? "text-emerald-600/70" : isCurrent ? "text-teal-600/80" : "text-slate-400"
+                    }`}>
                     {step.sub}
                   </p>
                 </div>
 
                 {/* Step icon */}
-                <div className={`shrink-0 p-1.5 rounded-lg transition-all duration-300 ${
-                  isDone ? "bg-emerald-100 text-emerald-600" : isCurrent ? "bg-[#E6F7F4] text-teal-600" : "bg-slate-100 text-slate-300"
-                }`}>
+                <div className={`shrink-0 p-1.5 rounded-lg transition-all duration-300 ${isDone ? "bg-emerald-100 text-emerald-600" : isCurrent ? "bg-[#E6F7F4] text-teal-600" : "bg-slate-100 text-slate-300"
+                  }`}>
                   <StepIcon className="h-3.5 w-3.5" />
                 </div>
               </div>
@@ -1388,23 +1383,21 @@ function AutoTailoringProgressModal({
             return (
               <div
                 key={idx}
-                className={`p-3 rounded-xl border transition-all duration-300 flex items-center justify-between gap-3 ${
-                  isCurrent
+                className={`p-3 rounded-xl border transition-all duration-300 flex items-center justify-between gap-3 ${isCurrent
                     ? "bg-teal-50/90 border-teal-300 text-[#0F172A] shadow-xs"
                     : isDone
-                    ? "bg-emerald-50/70 border-emerald-200 text-emerald-900"
-                    : "bg-slate-50 border-slate-200/80 text-slate-400"
-                }`}
+                      ? "bg-emerald-50/70 border-emerald-200 text-emerald-900"
+                      : "bg-slate-50 border-slate-200/80 text-slate-400"
+                  }`}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div
-                    className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 border ${
-                      isDone
+                    className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 border ${isDone
                         ? "bg-emerald-100 border-emerald-200 text-emerald-700"
                         : isCurrent
-                        ? "bg-[#E6F7F4] border-teal-200 text-teal-700"
-                        : "bg-white border-slate-200 text-slate-400"
-                    }`}
+                          ? "bg-[#E6F7F4] border-teal-200 text-teal-700"
+                          : "bg-white border-slate-200 text-slate-400"
+                      }`}
                   >
                     {isDone ? (
                       <Check className="h-4 w-4 text-emerald-600" />
@@ -1416,13 +1409,12 @@ function AutoTailoringProgressModal({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p
-                      className={`text-xs font-bold truncate ${
-                        isDone
+                      className={`text-xs font-bold truncate ${isDone
                           ? "text-emerald-900"
                           : isCurrent
-                          ? "text-[#0F172A] font-extrabold"
-                          : "text-slate-500"
-                      }`}
+                            ? "text-[#0F172A] font-extrabold"
+                            : "text-slate-500"
+                        }`}
                     >
                       {step.title}
                     </p>
@@ -1553,22 +1545,22 @@ function isActualATSKeyword(kw: string): boolean {
 
 function getSkillCategory(skillName: string): { label: string; badgeColor: string } {
   const s = skillName.toLowerCase();
-  
+
   // Leadership, Strategy, Collaboration & Management
   if (/lead|manage|direct|coordinat|supervis|stakeholder|communicat|collaborat|team|agile|scrum|strategy|negotiat|client|talent|recruit|train|hiring|cross-functional/i.test(s)) {
     return { label: "Leadership & Strategy", badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200" };
   }
-  
+
   // Compliance, Standards, Regulations, Audits & Quality
   if (/complian|gaap|hipaa|sox|iso|audit|standard|regul|govern|quality|qa|qc|protocol|safety|customs|tax|law|legal|policy/i.test(s)) {
     return { label: "Compliance & Standards", badgeColor: "bg-amber-50 text-amber-700 border-amber-200" };
   }
-  
+
   // Analytics, Data, Financial & Quantitative
   if (/financ|budget|analyt|data|metric|report|forecast|model|p&l|revenue|cost|ledger|reconcil|math|statist|econom|pricing|kpi/i.test(s)) {
     return { label: "Analytics & Finance", badgeColor: "bg-purple-50 text-purple-700 border-purple-200" };
   }
-  
+
   // Tools, Systems, Platforms & Software
   if (/system|software|tool|platform|portal|app|erp|crm|sap|oracle|cloud|db|database|server|net|api|hubspot|salesforce|jira|figma|git|linux/i.test(s) || (skillName.length <= 5 && skillName === skillName.toUpperCase())) {
     return { label: "Systems & Tools", badgeColor: "bg-teal-50 text-teal-700 border-teal-200" };
@@ -1785,7 +1777,19 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [rewrittenSections, setRewrittenSections] = useState<Record<string, string>>({});
   const [previousRewrittenSections, setPreviousRewrittenSections] = useState<Record<string, string>>({});
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [subscriptionModalReason, setSubscriptionModalReason] = useState<"out_of_credits" | "extension_upsell" | "general">("general");
+  const [subscriptionInitialPlan, setSubscriptionInitialPlan] = useState<"pro" | "elite">("pro");
   const [isExtensionModalOpen, setIsExtensionModalOpen] = useState(false);
+  const [isExtensionPreviewModalOpen, setIsExtensionPreviewModalOpen] = useState(false);
+
+  const openUpgradeModal = (
+    reason: "out_of_credits" | "extension_upsell" | "general" = "general",
+    plan: "pro" | "elite" = "pro"
+  ) => {
+    setSubscriptionModalReason(reason);
+    setSubscriptionInitialPlan(plan);
+    setIsSubscriptionModalOpen(true);
+  };
   const [isRewriteModalOpen, setIsRewriteModalOpen] = useState(false);
   const [activeRewriteSection, setActiveRewriteSection] = useState<string | null>(null);
   const [rewriteData, setRewriteData] = useState<any | null>(null);
@@ -2713,52 +2717,52 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         }
       })();
 
-        // ── Auto-generate Tailored Cover Letter asynchronously in background ──
-        console.log("📝 [RoleCraft Audit] Auto-generating Tailored Cover Letter in background...");
-        setIsGeneratingCoverLetter(true);
-        (async () => {
-          try {
-            const originalMatched = (result?.top_strengths || []).map((s: any) =>
-              typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
-            );
-            const updatedConfirmedMatchedSkills = Array.from(
-              new Set([
-                ...originalMatched,
-                ...appliedWovenKeywords.map((k) => cleanKeywordName(k)),
-              ])
-            ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
+      // ── Auto-generate Tailored Cover Letter asynchronously in background ──
+      console.log("📝 [RoleCraft Audit] Auto-generating Tailored Cover Letter in background...");
+      setIsGeneratingCoverLetter(true);
+      (async () => {
+        try {
+          const originalMatched = (result?.top_strengths || []).map((s: any) =>
+            typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
+          );
+          const updatedConfirmedMatchedSkills = Array.from(
+            new Set([
+              ...originalMatched,
+              ...appliedWovenKeywords.map((k) => cleanKeywordName(k)),
+            ])
+          ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
 
-            const contactInfoParts = [
-              user?.address,
-              user?.phone_number,
-              user?.email,
-              user?.linkedin_url,
-            ].filter(Boolean);
-            const contactInfoStr = contactInfoParts.length > 0 ? contactInfoParts.join(" | ") : undefined;
+          const contactInfoParts = [
+            user?.address,
+            user?.phone_number,
+            user?.email,
+            user?.linkedin_url,
+          ].filter(Boolean);
+          const contactInfoStr = contactInfoParts.length > 0 ? contactInfoParts.join(" | ") : undefined;
 
-            const effectiveTargetRole = newRewrites["header"] || customTargetRole || result?.overall_summary?.job_title || undefined;
-            const clRes = await generateCoverLetter({
-              document_id: documentId,
-              job_description_text: jobDescription,
-              target_role: effectiveTargetRole,
-              contact_info: contactInfoStr,
-              rewritten_sections: newRewrites,
-              confirmed_matched_skills: updatedConfirmedMatchedSkills,
-            });
+          const effectiveTargetRole = newRewrites["header"] || customTargetRole || result?.overall_summary?.job_title || undefined;
+          const clRes = await generateCoverLetter({
+            document_id: documentId,
+            job_description_text: jobDescription,
+            target_role: effectiveTargetRole,
+            contact_info: contactInfoStr,
+            rewritten_sections: newRewrites,
+            confirmed_matched_skills: updatedConfirmedMatchedSkills,
+          });
 
-            setCoverLetterText(clRes.cover_letter_text);
-            setCoverLetterDownloadId(clRes.download_id);
-            if (clRes.target_role) {
-              setCustomTargetRole(clRes.target_role);
-            }
-            setIsEditingCoverLetter(false);
-            console.log("✨ [RoleCraft Audit] Background Cover Letter Generated:", clRes.download_id);
-          } catch (clErr) {
-            console.error("❌ [RoleCraft Audit] Auto Cover Letter Generation Failed:", clErr);
-          } finally {
-            setIsGeneratingCoverLetter(false);
+          setCoverLetterText(clRes.cover_letter_text);
+          setCoverLetterDownloadId(clRes.download_id);
+          if (clRes.target_role) {
+            setCustomTargetRole(clRes.target_role);
           }
-        })();
+          setIsEditingCoverLetter(false);
+          console.log("✨ [RoleCraft Audit] Background Cover Letter Generated:", clRes.download_id);
+        } catch (clErr) {
+          console.error("❌ [RoleCraft Audit] Auto Cover Letter Generation Failed:", clErr);
+        } finally {
+          setIsGeneratingCoverLetter(false);
+        }
+      })();
     } catch (err: any) {
       console.error("❌ [RoleCraft Audit] Auto-tailor error:", err);
       setError(err?.message || "Auto-tailor failed. Please try again.");
@@ -3324,11 +3328,23 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     onError: (err: any) => {
       console.error("❌ [RoleCraft Audit] Resume Analysis Failed:", err);
       setError(err?.message || "Analysis failed. Please check your backend connection and OpenAI API Key.");
+      const errMsg = (err?.message || "").toLowerCase();
       if (
-        err?.message?.toLowerCase().includes("limit") ||
-        err?.message?.toLowerCase().includes("credits") ||
-        err?.message?.toLowerCase().includes("log in") ||
-        err?.message?.toLowerCase().includes("sign up")
+        errMsg.includes("credits") ||
+        errMsg.includes("depleted") ||
+        errMsg.includes("limit") ||
+        errMsg.includes("upgrade")
+      ) {
+        if (token) {
+          const targetPlan = (user?.plan_type || "").toLowerCase() === "pro" ? "elite" : "pro";
+          openUpgradeModal("out_of_credits", targetPlan);
+        } else {
+          setShowAuthModal(true);
+        }
+      } else if (
+        errMsg.includes("log in") ||
+        errMsg.includes("sign up") ||
+        errMsg.includes("auth")
       ) {
         setShowAuthModal(true);
       }
@@ -3517,8 +3533,22 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
   const handleAnalyze = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!documentId) {
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
+    if (!documentId && !user?.base_resume_id) {
       setError("Please wait for the file to finish uploading.");
+      return;
+    }
+    if (jobDescription.trim().length < 50) {
+      setError("Job description must be at least 50 characters long.");
+      return;
+    }
+    // Intercept when out of credits and show upgrade paywall immediately
+    if (user && user.credits <= 0) {
+      const targetPlan = (user.plan_type || "").toLowerCase() === "pro" ? "elite" : "pro";
+      openUpgradeModal("out_of_credits", targetPlan);
       return;
     }
     analyzeMutation.mutate();
@@ -3615,7 +3645,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         {/* Desktop Nav Links (landing page only) */}
         {activeNavTab === "landing" && (
           <nav className="hidden lg:flex items-center gap-0.5 text-xs font-bold text-slate-600">
-            {[{label: "Features", href: "#features"}, {label: "Pricing", href: "#pricing"}, {label: "FAQ", href: "#faq"}].map(({label, href}) => (
+            {[{ label: "Features", href: "#features" }, { label: "Pricing", href: "#pricing" }, { label: "FAQ", href: "#faq" }].map(({ label, href }) => (
               <a
                 key={label}
                 href={href}
@@ -3644,10 +3674,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           <button
             type="button"
             onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
-            className={`hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs ${
-                activeNavTab === "workspace"
-                  ? "bg-[#E6F7F4] hover:bg-[#ccfbf1] text-teal-900 border border-[#99F6E4] ring-1 ring-teal-500/20"
-                  : "btn-primary"
+            className={`hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs ${activeNavTab === "workspace"
+                ? "bg-[#E6F7F4] hover:bg-[#ccfbf1] text-teal-900 border border-[#99F6E4] ring-1 ring-teal-500/20"
+                : "btn-primary"
               }`}
           >
             <Sparkles className="h-3.5 w-3.5 text-[#FF6B4A] shrink-0" />
@@ -3659,11 +3688,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             <button
               type="button"
               onClick={() => setIsHistoryModalOpen(true)}
-              className={`touch-target flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-105 select-none ${
-                dailyGoal.goal_achieved
+              className={`touch-target flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-105 select-none ${dailyGoal.goal_achieved
                   ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 ring-1 ring-emerald-500/20"
                   : "bg-white hover:bg-teal-50 text-slate-700 hover:text-teal-800 border-slate-200 hover:border-teal-300"
-              }`}
+                }`}
               title={`Daily Target: ${dailyGoal.today_completed}/${dailyGoal.daily_target} tailored (${dailyGoal.progress_percentage}%). Click to view full analytics.`}
             >
               <div className="flex items-center gap-1">
@@ -3677,9 +3705,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               </div>
               <div className="w-8 sm:w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden shrink-0">
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    dailyGoal.goal_achieved ? "bg-emerald-500" : "bg-gradient-to-r from-teal-500 to-indigo-500"
-                  }`}
+                  className={`h-full rounded-full transition-all duration-500 ${dailyGoal.goal_achieved ? "bg-emerald-500" : "bg-gradient-to-r from-teal-500 to-indigo-500"
+                    }`}
                   style={{ width: `${Math.min(100, dailyGoal.progress_percentage)}%` }}
                 />
               </div>
@@ -3762,16 +3789,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               <button
                                 type="button"
                                 onClick={toggleDailyGoalBanner}
-                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                  showDailyGoalBanner ? "bg-teal-600" : "bg-slate-300"
-                                }`}
+                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${showDailyGoalBanner ? "bg-teal-600" : "bg-slate-300"
+                                  }`}
                                 role="switch"
                                 aria-checked={showDailyGoalBanner}
                               >
                                 <span
-                                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                    showDailyGoalBanner ? "translate-x-4" : "translate-x-0"
-                                  }`}
+                                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${showDailyGoalBanner ? "translate-x-4" : "translate-x-0"
+                                    }`}
                                 />
                               </button>
                             </div>
@@ -3790,7 +3815,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               <span className="flex items-center gap-2"><User className="h-4 w-4 text-teal-600" /> Profile & Base Docs</span>
                               {user && <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">{calculateProfileCompletion(user).totalPercentage}%</span>}
                             </button>
-                            <button type="button" onClick={() => { setIsProfileMenuOpen(false); setIsExtensionModalOpen(true); }} className="touch-target w-full py-3 px-4 rounded-xl bg-teal-50/70 hover:bg-teal-100/70 text-teal-950 border border-teal-200/80 font-bold text-sm transition-all flex items-center justify-between cursor-pointer">
+                            <button type="button" onClick={() => { setIsProfileMenuOpen(false); if (isProOrElite) { setIsExtensionModalOpen(true); } else { setIsExtensionPreviewModalOpen(true); } }} className="touch-target w-full py-3 px-4 rounded-xl bg-teal-50/70 hover:bg-teal-100/70 text-teal-950 border border-teal-200/80 font-bold text-sm transition-all flex items-center justify-between cursor-pointer">
                               <span className="flex items-center gap-2"><Zap className="h-4 w-4 text-teal-600" /> LinkedIn Chrome Extension</span>
                               <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs">{isProOrElite ? "Download" : "Pro"}</span>
                             </button>
@@ -3854,16 +3879,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           <button
                             type="button"
                             onClick={toggleDailyGoalBanner}
-                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                              showDailyGoalBanner ? "bg-teal-600" : "bg-slate-300 dark:bg-slate-700"
-                            }`}
+                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${showDailyGoalBanner ? "bg-teal-600" : "bg-slate-300 dark:bg-slate-700"
+                              }`}
                             role="switch"
                             aria-checked={showDailyGoalBanner}
                           >
                             <span
-                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                showDailyGoalBanner ? "translate-x-4" : "translate-x-0"
-                              }`}
+                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${showDailyGoalBanner ? "translate-x-4" : "translate-x-0"
+                                }`}
                             />
                           </button>
                         </div>
@@ -3882,7 +3905,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           <span className="flex items-center gap-2"><User className="h-3.5 w-3.5 text-teal-600" /> Profile & Base Docs</span>
                           {user && <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">{calculateProfileCompletion(user).totalPercentage}%</span>}
                         </button>
-                        <button type="button" onClick={() => { setIsProfileMenuOpen(false); setIsExtensionModalOpen(true); }} className="w-full py-2.5 px-3 rounded-xl bg-teal-50/80 hover:bg-teal-100/80 text-teal-950 border border-teal-200 font-bold text-xs transition-all flex items-center justify-between cursor-pointer shadow-2xs">
+                        <button type="button" onClick={() => { setIsProfileMenuOpen(false); if (isProOrElite) { setIsExtensionModalOpen(true); } else { setIsExtensionPreviewModalOpen(true); } }} className="w-full py-2.5 px-3 rounded-xl bg-teal-50/80 hover:bg-teal-100/80 text-teal-950 border border-teal-200 font-bold text-xs transition-all flex items-center justify-between cursor-pointer shadow-2xs">
                           <span className="flex items-center gap-2"><Zap className="h-3.5 w-3.5 text-teal-600" /> LinkedIn Chrome Extension</span>
                           <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs">{isProOrElite ? "Download" : "Pro"}</span>
                         </button>
@@ -3951,7 +3974,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             </div>
             {/* Nav Links */}
             <div className="px-4 py-4 space-y-2">
-              {[{label: "Features", href: "#features"}, {label: "Pricing", href: "#pricing"}, {label: "FAQ", href: "#faq"}].map(({label, href}) => (
+              {[{ label: "Features", href: "#features" }, { label: "Pricing", href: "#pricing" }, { label: "FAQ", href: "#faq" }].map(({ label, href }) => (
                 <a
                   key={label}
                   href={href}
@@ -4030,7 +4053,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 {/* Trust signal */}
                 <p className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                  {/* UPDATE: replace with real signup count from /xrc-control/dashboard/users */}
+                  {27 /* UPDATE: replace with real signup count from /xrc-control/dashboard/users */}
                   Join early adopters tailoring smarter — free to start
                 </p>
               </div>
@@ -4060,7 +4083,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
                 {/* Main Resume Window Container */}
                 <div className="relative rounded-3xl bg-white/95 border border-slate-200 shadow-2xl p-5 sm:p-7 backdrop-blur-md transition-all hover:shadow-teal-500/10">
-                  
+
                   {/* Internal Layout: Left Mini Tool Rail + Paper Content */}
                   <div className="flex items-start gap-4">
                     {/* Left Mini Icon Rail */}
@@ -4694,1872 +4717,1899 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Form Panel */}
-          <div className={`lg:col-span-4 space-y-6 animate-fade-in-up ${mobileTab !== "setup" ? "hidden lg:block" : "block"}`} style={{ animationDelay: "0.1s" }}>
-            <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
-              <h2 className="text-lg font-bold text-slate-800 border-b border-teal-100 pb-3 flex items-center gap-2">
-                <Layers className="h-5 w-5 text-teal-500" />
-                Configure Analysis
-              </h2>
+            {/* Left Form Panel */}
+            <div className={`lg:col-span-4 space-y-6 animate-fade-in-up ${mobileTab !== "setup" ? "hidden lg:block" : "block"}`} style={{ animationDelay: "0.1s" }}>
+              <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
+                <h2 className="text-lg font-bold text-slate-800 border-b border-teal-100 pb-3 flex items-center gap-2">
+                  <Layers className="h-5 w-5 text-teal-500" />
+                  Configure Analysis
+                </h2>
 
-              {/* Resume Upload Box */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
-                  Upload Resume (DOCX only)
-                </label>
+                {/* Resume Upload Box */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+                    Upload Resume (DOCX only)
+                  </label>
 
-                {!file ? (
-                  <div
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    className="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-teal-500/50 rounded-xl p-6 sm:p-8 text-center bg-slate-100/30 dark:bg-slate-900/30 hover:bg-slate-200/40 dark:hover:bg-slate-900/50 transition-all duration-300 min-h-[140px] flex flex-col items-center justify-center"
-                  >
-                    <input
-                      type="file"
-                      title=""
-                      accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
-                      onChange={handleFileChange}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                    />
-                    <UploadCloud className="h-10 w-10 text-slate-400 dark:text-slate-500 group-hover:text-teal-500 dark:group-hover:text-teal-400 mx-auto mb-3 transition-colors" />
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                      <span className="hidden sm:inline">Drag &amp; drop or click to upload</span>
-                      <span className="sm:hidden">Tap to upload resume</span>
-                    </p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                      Word (.docx) &amp; PDF (.pdf) up to 5MB
-                    </p>
-                  </div>
-                ) : isUploading ? (
-                  <div className="relative overflow-hidden p-5 rounded-2xl bg-white border border-teal-200/90 shadow-md shadow-teal-500/5 space-y-4 text-slate-800">
-                    {/* Ambient Glow Background Effect */}
-                    <div className="absolute -top-10 -right-10 w-36 h-36 bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-emerald-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" />
-                    <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-gradient-to-tr from-purple-500/10 via-indigo-500/10 to-teal-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" />
-
-                    {/* Header & Stage Chip */}
-                    <div className="flex items-start justify-between gap-3 relative z-10">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-teal-500/20 ring-2 ring-teal-400/20">
-                          <Sparkles className="h-5 w-5 text-white animate-spin" />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="text-xs font-black tracking-tight text-slate-900 flex items-center gap-2">
-                            <span>AI Resume Extraction</span>
-                          </h4>
-                          <p className="text-[11px] text-slate-500 font-medium truncate max-w-[170px]" title={file.name}>
-                            {file.name}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-50 border border-teal-200 text-[10px] font-extrabold text-teal-700 uppercase tracking-wider shrink-0 shadow-2xs animate-pulse">
-                        <div className="h-1.5 w-1.5 rounded-full bg-teal-600 animate-ping shrink-0" />
-                        <span>Parsing Resume</span>
-                      </div>
-                    </div>
-
-                    {/* Animated Shimmer Bar with Glowing Leading Beam */}
-                    <div className="space-y-1.5 relative z-10">
-                      <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200 shadow-inner">
-                        <div className="bg-gradient-to-r from-blue-600 via-indigo-500 to-teal-500 h-full rounded-full animate-pulse w-5/6 relative overflow-hidden shadow-xs">
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
-                        <span>Extracting text, skills & experience</span>
-                        <span className="text-teal-600 font-extrabold">Processing...</span>
-                      </div>
-                    </div>
-
-                    {/* AI Pipeline Step Indicator Badges */}
-                    <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-100 relative z-10">
-                      <div className="flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
-                        <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
-                        <span className="truncate">DOCX Text</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[10px] font-semibold text-teal-700 bg-teal-50 border border-teal-200 px-2 py-1 rounded-lg animate-pulse">
-                        <Cpu className="h-3 w-3 shrink-0 text-teal-600 animate-spin" />
-                        <span className="truncate">Roles & Skills</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-1 rounded-lg">
-                        <Sparkles className="h-3 w-3 shrink-0 text-slate-400" />
-                        <span className="truncate">Master JSON</span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3.5 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden gap-3">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="h-9 w-9 rounded-lg bg-teal-500/10 flex items-center justify-center border border-teal-500/20 shrink-0">
-                          <WordLogoIcon className="h-5 w-5 shrink-0 shadow-sm" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" title={file.name}>
-                            {file.name}
-                          </p>
-                          {file.size > 0 ? (
-                            <p className="text-[11px] text-slate-400 dark:text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
-                          ) : (
-                            <p className="text-[11px] text-teal-500 dark:text-teal-400 font-medium">
-                              Base Resume
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button
-                          type="button"
-                          onClick={handleOpenMasterResume}
-                          className="px-2.5 py-1 rounded-lg text-xs font-bold bg-teal-50 hover:bg-[#E6F7F4] dark:bg-slate-900/50 dark:hover:bg-slate-900/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-slate-800 transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
-                          title="View & Edit Master Resume Fields"
-                        >
-                          <Edit className="h-3 w-3" />
-                          <span>Edit</span>
-                        </button>
-                        {documentId ? (
-                          <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
-                            <CheckCircle className="h-3.5 w-3.5" />
-                            Ready
-                          </span>
-                        ) : null}
-                        <button
-                          type="button"
-                          onClick={clearFile}
-                          className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
-                          title="Remove and upload a different resume"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                    {/* Use different resume option */}
-                    <label className="flex items-center gap-2 cursor-pointer group">
+                  {!file ? (
+                    <div
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                      className="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-teal-500/50 rounded-xl p-6 sm:p-8 text-center bg-slate-100/30 dark:bg-slate-900/30 hover:bg-slate-200/40 dark:hover:bg-slate-900/50 transition-all duration-300 min-h-[140px] flex flex-col items-center justify-center"
+                    >
                       <input
                         type="file"
+                        title=""
                         accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
                         onChange={handleFileChange}
-                        className="hidden"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       />
-                      <span className="text-xs text-teal-500 dark:text-teal-400 hover:underline group-hover:text-teal-600 transition-colors">
-                        ↑ Upload a different resume for this session
-                      </span>
-                    </label>
+                      <UploadCloud className="h-10 w-10 text-slate-400 dark:text-slate-500 group-hover:text-teal-500 dark:group-hover:text-teal-400 mx-auto mb-3 transition-colors" />
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                        <span className="hidden sm:inline">Drag &amp; drop or click to upload</span>
+                        <span className="sm:hidden">Tap to upload resume</span>
+                      </p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                        Word (.docx) &amp; PDF (.pdf) up to 5MB
+                      </p>
+                    </div>
+                  ) : isUploading ? (
+                    <div className="relative overflow-hidden p-5 rounded-2xl bg-white border border-teal-200/90 shadow-md shadow-teal-500/5 space-y-4 text-slate-800">
+                      {/* Ambient Glow Background Effect */}
+                      <div className="absolute -top-10 -right-10 w-36 h-36 bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-emerald-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" />
+                      <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-gradient-to-tr from-purple-500/10 via-indigo-500/10 to-teal-500/10 rounded-full blur-2xl animate-pulse pointer-events-none" />
+
+                      {/* Header & Stage Chip */}
+                      <div className="flex items-start justify-between gap-3 relative z-10">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-teal-500/20 ring-2 ring-teal-400/20">
+                            <Sparkles className="h-5 w-5 text-white animate-spin" />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-black tracking-tight text-slate-900 flex items-center gap-2">
+                              <span>AI Resume Extraction</span>
+                            </h4>
+                            <p className="text-[11px] text-slate-500 font-medium truncate max-w-[170px]" title={file.name}>
+                              {file.name}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-50 border border-teal-200 text-[10px] font-extrabold text-teal-700 uppercase tracking-wider shrink-0 shadow-2xs animate-pulse">
+                          <div className="h-1.5 w-1.5 rounded-full bg-teal-600 animate-ping shrink-0" />
+                          <span>Parsing Resume</span>
+                        </div>
+                      </div>
+
+                      {/* Animated Shimmer Bar with Glowing Leading Beam */}
+                      <div className="space-y-1.5 relative z-10">
+                        <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200 shadow-inner">
+                          <div className="bg-gradient-to-r from-blue-600 via-indigo-500 to-teal-500 h-full rounded-full animate-pulse w-5/6 relative overflow-hidden shadow-xs">
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+                          <span>Extracting text, skills & experience</span>
+                          <span className="text-teal-600 font-extrabold">Processing...</span>
+                        </div>
+                      </div>
+
+                      {/* AI Pipeline Step Indicator Badges */}
+                      <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-100 relative z-10">
+                        <div className="flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
+                          <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
+                          <span className="truncate">DOCX Text</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px] font-semibold text-teal-700 bg-teal-50 border border-teal-200 px-2 py-1 rounded-lg animate-pulse">
+                          <Cpu className="h-3 w-3 shrink-0 text-teal-600 animate-spin" />
+                          <span className="truncate">Roles & Skills</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-1 rounded-lg">
+                          <Sparkles className="h-3 w-3 shrink-0 text-slate-400" />
+                          <span className="truncate">Master JSON</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-3.5 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden gap-3">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="h-9 w-9 rounded-lg bg-teal-500/10 flex items-center justify-center border border-teal-500/20 shrink-0">
+                            <WordLogoIcon className="h-5 w-5 shrink-0 shadow-sm" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" title={file.name}>
+                              {file.name}
+                            </p>
+                            {file.size > 0 ? (
+                              <p className="text-[11px] text-slate-400 dark:text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
+                            ) : (
+                              <p className="text-[11px] text-teal-500 dark:text-teal-400 font-medium">
+                                Base Resume
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={handleOpenMasterResume}
+                            className="px-2.5 py-1 rounded-lg text-xs font-bold bg-teal-50 hover:bg-[#E6F7F4] dark:bg-slate-900/50 dark:hover:bg-slate-900/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-slate-800 transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                            title="View & Edit Master Resume Fields"
+                          >
+                            <Edit className="h-3 w-3" />
+                            <span>Edit</span>
+                          </button>
+                          {documentId ? (
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
+                              <CheckCircle className="h-3.5 w-3.5" />
+                              Ready
+                            </span>
+                          ) : null}
+                          <button
+                            type="button"
+                            onClick={clearFile}
+                            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
+                            title="Remove and upload a different resume"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      {/* Use different resume option */}
+                      <label className="flex items-center gap-2 cursor-pointer group">
+                        <input
+                          type="file"
+                          accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                        <span className="text-xs text-teal-500 dark:text-teal-400 hover:underline group-hover:text-teal-600 transition-colors">
+                          ↑ Upload a different resume for this session
+                        </span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                {/* Pre-Analysis Section AI Tailoring Controls Box (on parsed content before analyze) */}
+                {masterResume && masterResume.sections && masterResume.sections.length > 0 && (
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-teal-50/70 via-indigo-50/40 to-white border border-teal-200/80 text-slate-800 space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-teal-200/60 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <SlidersHorizontal className="h-4 w-4 text-teal-600" />
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-700">
+                          Pre-Analysis AI Section Controls
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleOpenMasterResume}
+                        className="text-[10px] font-extrabold text-teal-700 hover:text-teal-900 bg-white hover:bg-teal-50/80 border border-teal-200 px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                      >
+                        <Edit className="h-3 w-3" />
+                        <span>Edit Master</span>
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 pt-0.5">
+                      {masterResume.sections.map((sec, secIdx) => {
+                        const isEnabled = tailoringSectionToggles[sec.section_title] !== undefined
+                          ? tailoringSectionToggles[sec.section_title]
+                          : sec.visible !== false && !(sec.section_title.toLowerCase().includes("education") || sec.section_title.toLowerCase().includes("certification"));
+
+                        return (
+                          <button
+                            key={`${sec.section_title}-${secIdx}`}
+                            type="button"
+                            onClick={() => handleToggleSectionTailoring(sec.section_title)}
+                            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border select-none ${isEnabled
+                                ? "bg-teal-600 text-white border-teal-500 shadow-xs hover:bg-teal-500"
+                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                              }`}
+                            title={isEnabled ? `AI Tailoring ENABLED for ${sec.section_title}. Click to Lock/Disable.` : `AI Tailoring DISABLED for ${sec.section_title}. Click to Enable.`}
+                          >
+                            {isEnabled ? (
+                              <>
+                                <Zap className="h-3 w-3 text-amber-300 fill-amber-300 shrink-0" />
+                                <span>{sec.section_title}: ON</span>
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="h-3 w-3 text-slate-400 shrink-0" />
+                                <span>{sec.section_title}: OFF</span>
+                              </>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[10px] text-slate-500 italic">
+                      💡 Toggle sections OFF before analyzing to lock them 100% untouched as original text.
+                    </p>
                   </div>
                 )}
-              </div>
 
-              {/* Pre-Analysis Section AI Tailoring Controls Box (on parsed content before analyze) */}
-              {masterResume && masterResume.sections && masterResume.sections.length > 0 && (
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-teal-50/70 via-indigo-50/40 to-white border border-teal-200/80 text-slate-800 space-y-3 shadow-xs">
-                  <div className="flex items-center justify-between border-b border-teal-200/60 pb-2.5">
+                {/* Job Description Input Container */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Target Job Description
+                    </label>
                     <div className="flex items-center gap-2">
-                      <SlidersHorizontal className="h-4 w-4 text-teal-600" />
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-700">
-                        Pre-Analysis AI Section Controls
-                      </span>
+                      <button
+                        type="button"
+                        onClick={handlePasteClipboardJD}
+                        className="text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100/80 border border-teal-200/80 px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105 active:scale-95"
+                        title="Paste job description text from your clipboard"
+                      >
+                        <Copy className="h-3 w-3 text-teal-600" />
+                        <span>Paste Clipboard</span>
+                      </button>
+                      {(jobDescription || analysisResult) && (
+                        <button
+                          type="button"
+                          onClick={() => handleResetWorkspace(true)}
+                          className="text-xs text-slate-500 hover:text-red-500 font-bold flex items-center gap-1 cursor-pointer transition-colors p-1"
+                          title="Clear job description and reset analysis"
+                        >
+                          <RotateCcw className="h-3 w-3" /> Clear
+                        </button>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleOpenMasterResume}
-                      className="text-[10px] font-extrabold text-teal-700 hover:text-teal-900 bg-white hover:bg-teal-50/80 border border-teal-200 px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
-                    >
-                      <Edit className="h-3 w-3" />
-                      <span>Edit Master</span>
-                    </button>
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5 pt-0.5">
-                    {masterResume.sections.map((sec, secIdx) => {
-                      const isEnabled = tailoringSectionToggles[sec.section_title] !== undefined
-                        ? tailoringSectionToggles[sec.section_title]
-                        : sec.visible !== false && !(sec.section_title.toLowerCase().includes("education") || sec.section_title.toLowerCase().includes("certification"));
+                  {/* LinkedIn Companion Extension Contextual Banner */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-gradient-to-r from-teal-50/90 via-teal-50/50 to-slate-50 border border-teal-200/80 rounded-xl px-3.5 py-2.5 text-xs shadow-2xs">
+                    <div className="flex items-center gap-2.5 text-slate-800 min-w-0">
+                      <span className="flex h-6 w-6 rounded-lg bg-teal-600 text-white items-center justify-center shrink-0 shadow-2xs">
+                        <Zap className="h-3.5 w-3.5" />
+                      </span>
+                      <div className="min-w-0 flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] text-slate-800">
+                          <strong className="text-teal-950 font-bold">Applying from LinkedIn?</strong> Extract clean requirements in 1 click.
+                        </span>
+                        {!isProOrElite && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-800 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                            <Sparkles className="h-2.5 w-2.5 text-amber-600" /> Pro Exclusive
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => setIsExtensionPreviewModalOpen(true)}
+                        className="text-[11px] font-bold text-teal-700 hover:text-teal-900 bg-white hover:bg-teal-50 border border-teal-200 rounded-lg px-2.5 py-1 flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+                        title="Preview how button looks on LinkedIn"
+                      >
+                        <Info className="h-3.5 w-3.5 text-teal-600" />
+                        <span>Preview (i)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isProOrElite) {
+                            setIsExtensionModalOpen(true);
+                          } else {
+                            setIsExtensionPreviewModalOpen(true);
+                          }
+                        }}
+                        className="font-black text-xs text-white bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 rounded-lg px-3 py-1 flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+                      >
+                        <span>{isProOrElite ? "Download Extension" : "Unlock with Pro"}</span>
+                        <ArrowRight className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
 
-                      return (
-                        <button
-                          key={`${sec.section_title}-${secIdx}`}
-                          type="button"
-                          onClick={() => handleToggleSectionTailoring(sec.section_title)}
-                          className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border select-none ${
-                            isEnabled
-                              ? "bg-teal-600 text-white border-teal-500 shadow-xs hover:bg-teal-500"
-                              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                  <div className="relative">
+                    <textarea
+                      value={jobDescription}
+                      onChange={(e) => setJobDescription(e.target.value)}
+                      placeholder="Paste the target job description or requirement spec here (minimum 50 characters)..."
+                      rows={7}
+                      maxLength={8000}
+                      className="w-full bg-white text-slate-900 border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-xl p-3.5 text-xs sm:text-sm placeholder-slate-400 transition-all outline-none resize-y shadow-inner leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Visual Character & Quality Meter */}
+                  <div className="space-y-1.5 pt-0.5">
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 rounded-full ${jobDescription.length < 50
+                            ? "bg-amber-400"
+                            : jobDescription.length < 250
+                              ? "bg-teal-500"
+                              : "bg-emerald-500"
                           }`}
-                          title={isEnabled ? `AI Tailoring ENABLED for ${sec.section_title}. Click to Lock/Disable.` : `AI Tailoring DISABLED for ${sec.section_title}. Click to Enable.`}
+                        style={{ width: `${Math.min(100, Math.round((jobDescription.length / 350) * 100))}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      {jobDescription.length < 50 ? (
+                        <span className="text-amber-600 font-bold flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {50 - jobDescription.length} more characters needed for analysis
+                        </span>
+                      ) : jobDescription.length < 250 ? (
+                        <span className="text-teal-700 font-bold flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3 text-teal-600" />
+                          Ready for audit (detailed JD gives higher accuracy)
+                        </span>
+                      ) : (
+                        <span className="text-emerald-700 font-bold flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                          Ideal comprehensive JD length for precision ATS matching
+                        </span>
+                      )}
+                      <span className="text-slate-400 font-medium text-[10.5px]">
+                        {jobDescription.length.toLocaleString()} / 8,000
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-xs">
+                    <div className="flex items-start gap-2.5">
+                      <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
+                      <span className="flex-1 leading-relaxed">{error}</span>
+                    </div>
+                    {analyzeMutation.isError && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          analyzeMutation.mutate();
+                        }}
+                        className="self-end mt-1 px-3 py-1 bg-red-100 dark:bg-red-500/20 hover:bg-red-200 dark:hover:bg-red-500/30 text-red-700 dark:text-red-200 border border-red-300 dark:border-red-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        Retry Analysis
+                      </button>
+                    )}
+                    {uploadMutation.isError && file && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          uploadMutation.mutate(file);
+                        }}
+                        className="self-end mt-1 px-3 py-1 bg-red-100 dark:bg-red-500/20 hover:bg-red-200 dark:hover:bg-red-500/30 text-red-700 dark:text-red-200 border border-red-300 dark:border-red-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        Retry Upload
+                      </button>
+                    )}
+                  </div>
+                )}
+                {/* Visual Out-of-Credits Banner if user has 0 credits */}
+                {user && user.credits <= 0 && (
+                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/90 shadow-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
+                        <Zap className="h-3.5 w-3.5 text-amber-600" />
+                        0 Credits Remaining
+                      </span>
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-200/70 text-amber-900">
+                        {user.plan_type === "pro" ? "Pro Quota Depleted" : "Free Credits Used"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-amber-900 leading-relaxed">
+                      {user.plan_type === "pro"
+                        ? "You've used all 200 Pro credits this month. Upgrade to Elite (400 credits/mo) to continue tailoring your resumes."
+                        : "You've used all 15 free credits. Upgrade to Pro (200 credits/mo) or Elite (400 credits/mo) to keep tailoring without limits."}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => openUpgradeModal("out_of_credits", user.plan_type === "pro" ? "elite" : "pro")}
+                      className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold text-xs transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <span>{user.plan_type === "pro" ? "Upgrade to Elite (400 Credits) →" : "Upgrade to Pro (200 Credits) →"}</span>
+                    </button>
+                  </div>
+                )}
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-3">
+                  <button
+                    type="submit"
+                    disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing}
+                    className={`w-full py-3.5 px-4 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-between gap-2 shadow-lg ${documentId && jobDescription.trim().length >= 50 && !isAnalyzing
+                        ? "bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:via-teal-700 hover:to-teal-500 text-white shadow-teal-500/20 hover:scale-[1.01] active:scale-[0.99] cursor-pointer ring-2 ring-teal-400/30"
+                        : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isAnalyzing ? (
+                        <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 text-[#FF6B4A]" />
+                      )}
+                      <span>{isAnalyzing ? "Running Recruiter AI Analysis..." : "Analyze Gaps & Fit"}</span>
+                    </div>
+
+                    <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${documentId && jobDescription.trim().length >= 50 && !isAnalyzing
+                        ? "bg-white/20 text-white border border-white/30"
+                        : "bg-slate-300 text-slate-500"
+                      }`}>
+                      {user?.plan_type === "free" ? "1 Credit" : "AI Audit"}
+                    </span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Right Results Panel */}
+            <div className={`lg:col-span-8 space-y-6 animate-fade-in-up ${mobileTab !== "results" ? "hidden lg:block" : "block"}`} style={{ animationDelay: "0.2s" }}>
+              {isAnalyzing ? (
+                <LoadingState />
+              ) : !analysisResult ? (
+                <div className="relative rounded-3xl bg-white border border-slate-200/90 shadow-xl shadow-teal-500/5 overflow-hidden p-6 sm:p-8 space-y-7 animate-fade-in">
+                  {/* Ambient background glow */}
+                  <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#FF6B4A]/5 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
+
+                  {/* Top Header Banner */}
+                  <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                    <div className="space-y-1.5">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E6F7F4] border border-[#99F6E4] text-[#0D9488] text-xs font-black uppercase tracking-wider shadow-2xs">
+                        <Sparkles className="h-3.5 w-3.5 text-[#FF6B4A]" />
+                        <span>RoleCraft Intelligence Engine</span>
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
+                        ATS Match, Gap Analysis &amp; 1-Click Tailor
+                      </h2>
+                      <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-xl">
+                        Upload your resume on the left and paste the target job description to run a multi-vector recruiter audit.
+                      </p>
+                    </div>
+
+                    {/* Live System Indicator — sonar pulse rings */}
+                    <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-teal-50 border border-teal-200/80 shadow-sm shrink-0 self-start md:self-auto">
+                      <div className="relative flex h-3 w-3 text-teal-500">
+                        <span className="sonar-dot relative inline-flex rounded-full h-3 w-3 bg-teal-500" />
+                      </div>
+                      <span className="text-xs font-extrabold text-teal-800">AI Engine Ready</span>
+                    </div>
+                  </div>
+
+                  {/* Feature Highlight Cards Grid — with rich before/after & live previews */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
+                    {/* Card 1: ATS Matrix — teal glow */}
+                    <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="ai-icon-wrap glow-teal">
+                          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-teal-100 to-teal-50 text-teal-700 flex items-center justify-center border border-teal-200 group-hover:scale-105 transition-transform shadow-sm">
+                            <Target className="h-5 w-5 text-teal-600" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-extrabold text-[#0F172A]">ATS Keyword Matrix</h4>
+                          <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                            Categorizes hard &amp; soft competencies with evidence verification (Confirmed, In Evidence, or Gap).
+                          </p>
+                        </div>
+                      </div>
+                      <div className="pt-2 flex flex-wrap gap-1.5 border-t border-slate-100">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-teal-50 text-teal-700 border border-teal-200">
+                          ✓ React / TS
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                          ⚡ Cloud Infra
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-[#FFF1EE] text-[#FF6B4A] border border-[#FFCFC4]">
+                          ✗ Redis Cache
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Card 2: Google XYZ Formula — coral glow */}
+                    <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="ai-icon-wrap glow-coral">
+                          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 text-orange-600 flex items-center justify-center border border-orange-200 group-hover:scale-105 transition-transform shadow-sm">
+                            <Sparkles className="h-5 w-5 text-[#FF6B4A]" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-extrabold text-[#0F172A]">Google XYZ Formula</h4>
+                          <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                            Transforms passive bullets into high-impact metrics (Accomplished [X] by [Y], resulting in [Z]).
+                          </p>
+                        </div>
+                      </div>
+                      <div className="pt-2 p-2.5 rounded-xl bg-white border border-slate-200/90 text-[10.5px] space-y-1 font-sans">
+                        <div className="text-slate-400 line-through truncate" title="Responsible for backend APIs">
+                          &quot;Responsible for backend APIs&quot;
+                        </div>
+                        <div className="text-emerald-700 font-bold flex items-center justify-between">
+                          <span className="truncate">&quot;Engineered microservices, cutting latency by 38%&quot;</span>
+                          <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1 rounded ml-1 shrink-0">+38%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 3: DOCX XML Precision — blue glow */}
+                    <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div className="ai-icon-wrap glow-blue">
+                          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-700 flex items-center justify-center border border-blue-200 group-hover:scale-105 transition-transform shadow-sm">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-extrabold text-[#0F172A]">100% DOCX Format Match</h4>
+                          <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                            Patches paragraphs and tables directly at the XML run level without template or font drift.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="pt-2 flex items-center justify-between text-[10px] font-extrabold text-blue-700 border-t border-slate-100">
+                        <span className="flex items-center gap-1">
+                          <CheckCircle className="h-3.5 w-3.5 text-blue-600" />
+                          Zero Layout Drift
+                        </span>
+                        <span className="bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                          XML-Level Lock
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3-Step Live Interactive Workflow Stepper */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#E6F7F4] via-teal-50/70 to-slate-50 border border-[#99F6E4]/90 text-[#0F172A] shadow-xs space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black uppercase tracking-wider text-[#0D9488] flex items-center gap-1.5">
+                        <Zap className="h-3.5 w-3.5 fill-[#0D9488]" />
+                        Audit Readiness Workflow
+                      </span>
+                      <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-teal-900 bg-white/90 px-2.5 py-1 rounded-lg border border-teal-200/90 shadow-2xs">
+                        <Shield className="h-3 w-3 text-teal-600" />
+                        <span>Strict Recruiter Verification</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {/* Step 1 */}
+                      <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${documentId || file
+                          ? "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs"
+                          : "bg-white/80 border-slate-200 text-slate-700"
+                        }`}>
+                        <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${documentId || file
+                            ? "bg-emerald-600 text-white"
+                            : "bg-slate-200 text-slate-600"
+                          }`}>
+                          {documentId || file ? "✓" : "1"}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold truncate">
+                            {documentId || file ? "Resume Ready" : "Upload Resume"}
+                          </p>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {file?.name || (documentId ? "Base Resume" : "DOCX file")}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Step 2 */}
+                      <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${jobDescription.trim().length >= 50
+                          ? "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs"
+                          : "bg-white/80 border-slate-200 text-slate-700"
+                        }`}>
+                        <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${jobDescription.trim().length >= 50
+                            ? "bg-emerald-600 text-white"
+                            : "bg-slate-200 text-slate-600"
+                          }`}>
+                          {jobDescription.trim().length >= 50 ? "✓" : "2"}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold truncate">
+                            {jobDescription.trim().length >= 50 ? "Job Spec Set" : "Paste Job Spec"}
+                          </p>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {jobDescription.trim().length >= 50
+                              ? `${jobDescription.trim().length} chars loaded`
+                              : "Min 50 characters"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Step 3 */}
+                      <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${(documentId || file) && jobDescription.trim().length >= 50
+                          ? "bg-teal-600 text-white border-teal-500 shadow-md shadow-teal-600/20 animate-pulse"
+                          : "bg-white/80 border-slate-200 text-slate-700"
+                        }`}>
+                        <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${(documentId || file) && jobDescription.trim().length >= 50
+                            ? "bg-white text-teal-800 font-extrabold"
+                            : "bg-slate-200 text-slate-600"
+                          }`}>
+                          3
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold truncate">
+                            {(documentId || file) && jobDescription.trim().length >= 50
+                              ? "Ready to Audit!"
+                              : "Run Audit"}
+                          </p>
+                          <p className={`text-[10px] truncate ${(documentId || file) && jobDescription.trim().length >= 50
+                              ? "text-teal-100"
+                              : "text-slate-500"
+                            }`}>
+                            {(documentId || file) && jobDescription.trim().length >= 50
+                              ? "Click Analyze Gaps & Fit"
+                              : "Multi-vector match"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Mobile Results Segmented Bar (iPhone 16 Pro & Mobile Zero-Scroll Experience) */}
+                  <div className="lg:hidden sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md py-2 border-b border-slate-200 dark:border-slate-800 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-xs mb-3">
+                    <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                      {[
+                        { id: "score", label: "📊 Score & Fit" },
+                        { id: "keywords", label: "🎯 Keywords" },
+                        { id: "rewrites", label: "✨ Rewrites" },
+                        { id: "export", label: "📥 Export" },
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setMobileResultsTab(tab.id as any)}
+                          className={`flex-1 py-2 px-1 text-center rounded-lg text-xs font-black transition-all cursor-pointer select-none ${mobileResultsTab === tab.id
+                              ? "bg-white dark:bg-slate-700 text-teal-700 dark:text-teal-300 shadow-xs ring-1 ring-teal-500/20"
+                              : "text-slate-500 hover:text-slate-900 dark:text-slate-400"
+                            }`}
                         >
-                          {isEnabled ? (
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* ⚡ 1-Click Auto-Tailor Hero Banner (Under Score & Fit tab on mobile, top of right col on desktop) */}
+                  {(() => {
+                    const hasAutoTailored = Boolean(isPatchingApplied && Object.keys(rewrittenSections).length > 0);
+                    return (
+                      <div className={`relative overflow-hidden rounded-2xl p-5.5 border transition-all duration-300 backdrop-blur-xl animate-fade-in ${mobileResultsTab === "score" ? "block" : "hidden lg:block"
+                        } ${hasAutoTailored
+                          ? "border-emerald-300/90 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white text-slate-900 shadow-xl shadow-emerald-500/10"
+                          : "border-[#99f6e4]/80 bg-gradient-to-r from-[#E6F7F4]/90 via-white to-[#F1F5F9] text-slate-900 shadow-xl shadow-teal-500/5"
+                        }`}>
+                        <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+                        <div className={`absolute -left-12 -top-12 w-48 h-48 rounded-full blur-3xl pointer-events-none ${hasAutoTailored ? "bg-emerald-500/10" : "bg-[#FF6B4A]/10"}`} />
+
+                        <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg shrink-0 ring-1 ring-white/50 transition-all ${hasAutoTailored
+                                ? "bg-gradient-to-br from-emerald-800 via-teal-700 to-teal-500 text-white shadow-emerald-500/20"
+                                : "bg-gradient-to-br from-[#0F172A] via-[#0F766E] to-[#14B8A6] text-white shadow-teal-500/20"
+                              }`}>
+                              {hasAutoTailored ? (
+                                <CheckCircle2 className="h-6 w-6 text-emerald-300 animate-pulse" />
+                              ) : (
+                                <Sparkles className="h-6 w-6 animate-pulse text-[#FF6B4A]" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="text-base font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
+                                  ⚡ 1-Click Full Resume Auto-Tailor
+                                </h4>
+                                {hasAutoTailored && (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase tracking-wider animate-scale-in">
+                                    <Check className="h-3 w-3 text-emerald-700 stroke-[3]" />
+                                    Tailored
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-600 mt-0.5 max-w-md leading-relaxed">
+                                {hasAutoTailored
+                                  ? "Resume successfully tailored for role. Click Re-Auto-Tailor anytime to re-evaluate with new settings or updated JD."
+                                  : "Automatically rewrite weak sections, weave missing ATS keywords, & add Google XYZ impact metrics in one click."}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={handleAutoTailor}
+                              disabled={isAutoTailoring}
+                              className={`px-6 py-3.5 rounded-xl font-extrabold text-xs text-white shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20 ${isAutoTailoring
+                                  ? "bg-slate-700 opacity-90 cursor-wait"
+                                  : hasAutoTailored
+                                    ? "bg-gradient-to-r from-emerald-700 via-teal-700 to-teal-600 hover:from-emerald-600 hover:to-teal-500 shadow-emerald-600/25 hover:shadow-emerald-600/40 ring-2 ring-emerald-400/30"
+                                    : "bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:to-teal-500 shadow-teal-600/20 hover:shadow-teal-600/35"
+                                }`}
+                            >
+                              {isAutoTailoring ? (
+                                <>
+                                  <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                  ⚡ Auto-Tailoring Resume...
+                                </>
+                              ) : hasAutoTailored ? (
+                                <>
+                                  <RotateCcw className="h-4 w-4 text-emerald-200 transition-transform duration-300 group-hover:-rotate-180" />
+                                  🔄 Re-Auto-Tailor Full Resume
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="h-4 w-4 text-amber-200" />
+                                  ⚡ Auto-Tailor Full Resume (1-Click)
+                                </>
+                              )}
+                            </button>
+
+                            {/* ⚙️ 1-Click Scope Settings Trigger Button */}
+                            {(() => {
+                              const configSections = getAutoTailorConfigSections();
+                              const activeCount = configSections.filter((s) => isSectionTailorEnabled(s.id, s.defaultOn)).length;
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => setIsAutoTailorSettingsOpen(true)}
+                                  title="Configure which sections are updated during 1-Click Auto-Tailor"
+                                  className="p-3 sm:px-3.5 sm:py-3.5 rounded-xl font-extrabold text-xs border transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md select-none bg-white hover:bg-slate-50 text-slate-800 border-slate-200 hover:border-slate-300 hover:scale-[1.02] active:scale-[0.98]"
+                                >
+                                  <SlidersHorizontal className="h-4 w-4 text-teal-600" />
+                                  <span className="hidden md:inline">Settings</span>
+                                  <span className="px-1.5 py-0.5 rounded-md text-[10px] font-black border bg-teal-50 text-teal-700 border-teal-200">
+                                    {activeCount}/{configSections.length} ON
+                                  </span>
+                                </button>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Summary Dashboard Card */}
+                  <div className={`glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-r from-white/90 via-indigo-500/5 to-white/90 dark:from-slate-900/90 dark:via-indigo-950/20 dark:to-slate-900/90 shadow-xl ${mobileResultsTab === "score" ? "block" : "hidden lg:block"}`}>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div className="flex items-center gap-4">
+                        {masterResume?.profile_photo_url && (
+                          <div
+                            onClick={() => setIsCompletionModalOpen(true)}
+                            className="relative group shrink-0 cursor-pointer"
+                            title="Click to view/change profile photo"
+                          >
+                            <img
+                              src={getFullProfilePhotoUrl(masterResume.profile_photo_url) || ""}
+                              alt="Candidate Avatar"
+                              className="w-14 h-14 rounded-2xl object-cover ring-2 ring-teal-500/40 shadow-md bg-white dark:bg-slate-800 hover:scale-105 transition-transform"
+                            />
+                          </div>
+                        )}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/20 dark:border-teal-500/30 uppercase tracking-wider">
+                              Target Role Detected
+                            </span>
+                            {masterResume?.contact_info?.full_name && (
+                              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                                • {masterResume.contact_info.full_name}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            {(() => {
+                              const rawJobTitle = analysisResult.overall_summary.job_title || "";
+                              const isGenericTitle = !rawJobTitle || ["full job description", "job description", "about the role", "overview", "target role", "description"].includes(rawJobTitle.toLowerCase().trim());
+                              const displayTitle = customTargetRole || rewrittenSections["header"] || (!isGenericTitle ? rawJobTitle : "Target Role");
+                              const canApply = Boolean(displayTitle && displayTitle !== "Target Role");
+                              const isApplied = (rewrittenSections["header"] === displayTitle || (isPatchingApplied && rewrittenSections["header"])) && Boolean(displayTitle);
+
+                              return (
+                                <>
+                                  <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                                    <span>{displayTitle}</span>
+                                  </h3>
+                                  {canApply && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleApplyTargetTitle(displayTitle)}
+                                      disabled={isApplyingTitle || applyMutation.isPending}
+                                      className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${isApplied
+                                        ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
+                                        : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white border-emerald-500/30 shadow-emerald-500/20 hover:scale-105"
+                                        }`}
+                                      title="Apply this target job title directly to your resume header and DOCX file"
+                                    >
+                                      {isApplyingTitle ? (
+                                        <>
+                                          <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin shrink-0" />
+                                          <span>Applying Title...</span>
+                                        </>
+                                      ) : isApplied ? (
+                                        <>
+                                          <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                                          <span>Title Applied & Saved</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <CheckCircle className="h-3.5 w-3.5 text-white shrink-0" />
+                                          <span>Apply Job Title</span>
+                                        </>
+                                      )}
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Overall Score Circle */}
+                      <div className="flex items-center gap-4 bg-white/90 dark:bg-slate-950/70 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-md">
+                        <div className="relative flex items-center justify-center">
+                          {/* SVG Gauge */}
+                          <svg className="w-20 h-20 transform -rotate-90">
+                            <circle
+                              cx="40"
+                              cy="40"
+                              r="34"
+                              stroke="currentColor"
+                              strokeWidth="6"
+                              fill="transparent"
+                              className="text-slate-200 dark:text-slate-800"
+                            />
+                            <circle
+                              cx="40"
+                              cy="40"
+                              r="34"
+                              stroke="currentColor"
+                              strokeWidth="6"
+                              fill="transparent"
+                              strokeDasharray={2 * Math.PI * 34}
+                              strokeDashoffset={2 * Math.PI * 34 * (1 - currentScore / 100)}
+                              className="text-teal-500 transition-all duration-1000"
+                            />
+                          </svg>
+                          <span className="absolute text-base font-black text-slate-900 dark:text-white">
+                            {currentScore}%
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Overall Fit</p>
+                          <p className="text-xs font-medium text-slate-600 dark:text-slate-300 mt-0.5">
+                            <span className="font-bold text-teal-600 dark:text-teal-400">{sectionsStillNeedingImprovement} of {totalNeeded}</span> sections need improvement
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Interactive ATS Skill & Keyword Matrix Card */}
+                  {(() => {
+                    // Compute matched skills
+                    const originalMatched = new Set(
+                      (analysisResult.top_strengths || [])
+                        .map((s: any) => cleanKeywordName(typeof s === "string" ? s : s.name))
+                        .filter((k) => isActualATSKeyword(k))
+                        .map((k) => k.toLowerCase())
+                    );
+                    const wovenMatchedLower = new Set(
+                      appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
+                    );
+                    const allMatched = Array.from(
+                      new Set([
+                        ...(analysisResult.top_strengths || [])
+                          .map((s: any) => cleanKeywordName(typeof s === "string" ? s : s.name))
+                          .filter((k) => isActualATSKeyword(k)),
+                        ...appliedWovenKeywords.map((k) => cleanKeywordName(k)).filter((k) => isActualATSKeyword(k)),
+                      ])
+                    ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
+
+                    const matchedLower = new Set(allMatched.map((s) => s.toLowerCase()));
+
+                    // Compute evidence-supported keywords (From section strengths only)
+                    const rawEvidence = (analysisResult.sections || []).flatMap((s: any) => s.strengths || []);
+                    const allEvidence = Array.from(
+                      new Set(
+                        rawEvidence
+                          .flatMap((e) => extractStrictKeywordsFromRaw(e))
+                          .filter((k) => isActualATSKeyword(k))
+                      )
+                    ).filter((kw) => !matchedLower.has(kw.toLowerCase()));
+
+                    // Compute missing JD keywords (From section missing_keywords only)
+                    const rawMissing = (analysisResult.sections || []).flatMap((s: any) => s.missing_keywords || []);
+                    const allMissing = Array.from(
+                      new Set(
+                        rawMissing
+                          .flatMap((m) => extractStrictKeywordsFromRaw(m))
+                          .filter((k) => isActualATSKeyword(k))
+                      )
+                    ).filter((kw) => !matchedLower.has(kw.toLowerCase()) && !allEvidence.some((e) => e.toLowerCase() === kw.toLowerCase()));
+
+                    const totalKeywords = allMatched.length + allEvidence.length + allMissing.length;
+                    const matchPercentage = totalKeywords > 0 ? Math.round((allMatched.length / (allMatched.length + allMissing.length || 1)) * 100) : 100;
+
+                    // Apply search query filter
+                    const q = keywordSearchQuery.trim().toLowerCase();
+                    const filterMatch = (k: string) => !q || k.toLowerCase().includes(q);
+
+                    const filteredMatched = allMatched.filter(filterMatch);
+                    const filteredEvidence = allEvidence.filter(filterMatch);
+                    const filteredMissing = allMissing.filter(filterMatch);
+
+                    const showMatched = keywordFilterTab === 'all' || keywordFilterTab === 'matched';
+                    const showEvidence = keywordFilterTab === 'all' || keywordFilterTab === 'supported';
+                    const showMissing = keywordFilterTab === 'all' || keywordFilterTab === 'missing';
+
+                    return (
+                      <div className={`glass-panel rounded-3xl p-6 sm:p-7 border border-slate-200/90 bg-white shadow-xl shadow-teal-500/5 space-y-6 ${mobileResultsTab === "keywords" ? "block" : "hidden lg:block"}`}>
+                        {/* Header */}
+                        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 pb-5">
+                          <div className="flex items-center gap-3.5">
+                            <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0 ring-1 ring-white/60">
+                              <Layers className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2.5">
+                                <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
+                                  ATS Skill & Keyword Matrix
+                                </h3>
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-teal-50 text-teal-700 border border-teal-200 shadow-2xs">
+                                  {matchPercentage}% Match Rate
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500 mt-0.5">
+                                {allMatched.length} confirmed in resume &bull; {allEvidence.length} in bullet evidence &bull; {allMissing.length} high-value JD gaps
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={openKeywordWeaveModal}
+                              disabled={isWeavingKeywords}
+                              className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md border ${isKeywordsWoven
+                                  ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500/40 shadow-emerald-600/20"
+                                  : "bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white border-white/20 shadow-teal-600/20 hover:scale-[1.02] active:scale-[0.98]"
+                                }`}
+                            >
+                              {isWeavingKeywords ? (
+                                <>
+                                  <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                  Weaving Keywords...
+                                </>
+                              ) : isKeywordsWoven ? (
+                                <>
+                                  <CheckCircle className="h-4 w-4 text-emerald-200" />
+                                  ✓ Keywords Woven & Applied
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="h-4 w-4 text-amber-200" />
+                                  ⚡ Auto-Weave All Keywords (1-Click)
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Tri-Color Match Progress Bar */}
+                        <div className="space-y-2">
+                          <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden flex border border-slate-200 p-0.5">
+                            <div
+                              className="bg-emerald-500 h-full rounded-l-full transition-all duration-500"
+                              style={{ width: `${totalKeywords > 0 ? (allMatched.length / totalKeywords) * 100 : 33}%` }}
+                              title={`${allMatched.length} Confirmed Matched`}
+                            />
+                            <div
+                              className="bg-amber-400 h-full transition-all duration-500"
+                              style={{ width: `${totalKeywords > 0 ? (allEvidence.length / totalKeywords) * 100 : 33}%` }}
+                              title={`${allEvidence.length} Supported in Evidence`}
+                            />
+                            <div
+                              className="bg-rose-400 h-full rounded-r-full transition-all duration-500"
+                              style={{ width: `${totalKeywords > 0 ? (allMissing.length / totalKeywords) * 100 : 34}%` }}
+                              title={`${allMissing.length} Missing from JD`}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Filter Bar & Search */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+                          {/* Segmented Filter Tabs */}
+                          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 border border-slate-200 text-xs font-bold overflow-x-auto">
+                            <button
+                              type="button"
+                              onClick={() => setKeywordFilterTab('all')}
+                              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${keywordFilterTab === 'all'
+                                  ? "bg-white text-slate-900 shadow-2xs"
+                                  : "text-slate-500 hover:text-slate-800"
+                                }`}
+                            >
+                              All ({totalKeywords})
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setKeywordFilterTab('matched')}
+                              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${keywordFilterTab === 'matched'
+                                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs"
+                                  : "text-slate-500 hover:text-emerald-700"
+                                }`}
+                            >
+                              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                              Matched ({allMatched.length})
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setKeywordFilterTab('supported')}
+                              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${keywordFilterTab === 'supported'
+                                  ? "bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs"
+                                  : "text-slate-500 hover:text-amber-700"
+                                }`}
+                            >
+                              <span className="h-2 w-2 rounded-full bg-amber-400" />
+                              In Evidence ({allEvidence.length})
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setKeywordFilterTab('missing')}
+                              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${keywordFilterTab === 'missing'
+                                  ? "bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs"
+                                  : "text-slate-500 hover:text-rose-700"
+                                }`}
+                            >
+                              <span className="h-2 w-2 rounded-full bg-rose-400" />
+                              Missing ({allMissing.length})
+                            </button>
+                          </div>
+
+                          {/* Search Input */}
+                          <div className="relative min-w-[200px] sm:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                            <input
+                              type="text"
+                              value={keywordSearchQuery}
+                              onChange={(e) => setKeywordSearchQuery(e.target.value)}
+                              placeholder="Filter skills..."
+                              className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all"
+                            />
+                            {keywordSearchQuery && (
+                              <button
+                                type="button"
+                                onClick={() => setKeywordSearchQuery("")}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Skill Pills Matrix */}
+                        <div className="space-y-5 pt-2">
+                          {/* 🟢 Confirmed Matched Skills */}
+                          {showMatched && filteredMatched.length > 0 && (
+                            <div className="space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-extrabold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                                  <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                                  Confirmed Matched Skills ({filteredMatched.length})
+                                </span>
+                                <span className="text-[11px] text-slate-400">Verified in resume &bull; click to remove</span>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {filteredMatched.map((skillName, idx) => {
+                                  const skillLower = skillName.toLowerCase();
+                                  const isWoven = wovenMatchedLower.has(skillLower);
+                                  const isOriginal = originalMatched.has(skillLower);
+                                  const cat = getSkillCategory(skillName);
+
+                                  return (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => {
+                                        if (isWoven) {
+                                          setAppliedWovenKeywords((prev) => {
+                                            const next = prev.filter((k) => cleanKeywordName(k).toLowerCase() !== skillLower);
+                                            if (next.length === 0) setIsKeywordsWoven(false);
+                                            return next;
+                                          });
+                                        } else {
+                                          setManuallyRemovedSkills((prev) => {
+                                            const next = new Set(prev);
+                                            next.add(skillLower);
+                                            return next;
+                                          });
+                                        }
+                                        removeSkillFromRewrites(skillName);
+                                      }}
+                                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-50/80 hover:bg-rose-50 text-emerald-900 hover:text-rose-700 border border-emerald-200/90 hover:border-rose-300 transition-all duration-150 cursor-pointer group shadow-2xs"
+                                      title={isWoven ? `Click to move '${skillName}' back to ${isOriginal ? "supported" : "missing"} keywords` : `Click to remove '${skillName}' from matched skills`}
+                                    >
+                                      <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
+                                        {cat.label}
+                                      </span>
+                                      <span>{skillName}</span>
+                                      <Check className="h-3 w-3 text-emerald-600 group-hover:hidden" />
+                                      <X className="h-3 w-3 text-rose-600 hidden group-hover:block" />
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* 🟡 Supported in Evidence */}
+                          {showEvidence && filteredEvidence.length > 0 && (
+                            <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-extrabold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                                  <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                                  Supported in Project & Experience Evidence ({filteredEvidence.length})
+                                </span>
+                                <span className="text-[11px] text-slate-400">Click to weave into Technical Skills</span>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {filteredEvidence.map((kw, idx) => {
+                                  const cat = getSkillCategory(kw);
+                                  return (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => handleQuickWeaveKeyword(kw)}
+                                      disabled={weavingSingleKeyword === kw}
+                                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100/80 text-amber-900 border border-amber-200 transition-all duration-150 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 group"
+                                      title={`Click to weave '${kw}' into Technical Skills section`}
+                                    >
+                                      <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
+                                        {cat.label}
+                                      </span>
+                                      <span>{kw}</span>
+                                      {weavingSingleKeyword === kw ? (
+                                        <div className="h-3 w-3 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin shrink-0" />
+                                      ) : (
+                                        <Plus className="h-3 w-3 text-amber-600 group-hover:scale-125 transition-transform" />
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* 🔴 Missing ATS Keywords */}
+                          {showMissing && filteredMissing.length > 0 && (
+                            <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-extrabold text-rose-800 uppercase tracking-wider flex items-center gap-1.5">
+                                  <Plus className="h-3.5 w-3.5 text-rose-600" />
+                                  Missing High-Priority Job Competencies ({filteredMissing.length})
+                                </span>
+                                <span className="text-[11px] text-slate-400">In Job Description &bull; click to weave</span>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {filteredMissing.map((kw, idx) => {
+                                  const cat = getSkillCategory(kw);
+                                  return (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => handleQuickWeaveKeyword(kw)}
+                                      disabled={weavingSingleKeyword === kw}
+                                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100/80 text-rose-900 border border-rose-200 transition-all duration-150 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 group"
+                                      title={`Click to weave '${kw}' into Technical Skills section`}
+                                    >
+                                      <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
+                                        {cat.label}
+                                      </span>
+                                      <span>{kw}</span>
+                                      {weavingSingleKeyword === kw ? (
+                                        <div className="h-3 w-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin shrink-0" />
+                                      ) : (
+                                        <Plus className="h-3 w-3 text-rose-600 group-hover:scale-125 transition-transform" />
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Empty Search / Filter State */}
+                          {filteredMatched.length === 0 && filteredEvidence.length === 0 && filteredMissing.length === 0 && (
+                            <div className="text-center py-8 text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1">
+                              <p className="font-bold text-slate-600">No skills match &quot;{keywordSearchQuery}&quot;</p>
+                              <p>Try clearing your search query or switching tabs.</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ✉️ Tailored Cover Letter Card */}
+                  <div className={`glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 space-y-4 shadow-xl ${mobileResultsTab === "rewrites" || mobileResultsTab === "export" ? "block" : "hidden lg:block"}`}>
+                    <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-8 w-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
+                          <FileText className="h-4.5 w-4.5" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            Tailored Cover Letter
+                            {coverLetterText && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
+                                Ready
+                              </span>
+                            )}
+                          </h3>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            Generate a 3-paragraph executive cover letter tailored to the job description & your resume.
+                          </p>
+                        </div>
+                      </div>
+
+                      {!coverLetterText && (
+                        <button
+                          type="button"
+                          onClick={handleGenerateCoverLetter}
+                          disabled={isGeneratingCoverLetter}
+                          className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-600/20 disabled:opacity-50"
+                        >
+                          {isGeneratingCoverLetter ? (
                             <>
-                              <Zap className="h-3 w-3 text-amber-300 fill-amber-300 shrink-0" />
-                              <span>{sec.section_title}: ON</span>
+                              <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                              Generating Cover Letter...
                             </>
                           ) : (
                             <>
-                              <Lock className="h-3 w-3 text-slate-400 shrink-0" />
-                              <span>{sec.section_title}: OFF</span>
+                              <Sparkles className="h-3.5 w-3.5 text-purple-200 animate-pulse" />
+                              ✨ Generate Cover Letter (1-Click)
                             </>
                           )}
                         </button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-[10px] text-slate-500 italic">
-                    💡 Toggle sections OFF before analyzing to lock them 100% untouched as original text.
-                  </p>
-                </div>
-              )}
-
-              {/* Job Description Input Container */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Target Job Description
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handlePasteClipboardJD}
-                      className="text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100/80 border border-teal-200/80 px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105 active:scale-95"
-                      title="Paste job description text from your clipboard"
-                    >
-                      <Copy className="h-3 w-3 text-teal-600" />
-                      <span>Paste Clipboard</span>
-                    </button>
-                    {(jobDescription || analysisResult) && (
-                      <button
-                        type="button"
-                        onClick={() => handleResetWorkspace(true)}
-                        className="text-xs text-slate-500 hover:text-red-500 font-bold flex items-center gap-1 cursor-pointer transition-colors p-1"
-                        title="Clear job description and reset analysis"
-                      >
-                        <RotateCcw className="h-3 w-3" /> Clear
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* LinkedIn Companion Extension Contextual Banner */}
-                <div className="flex items-center justify-between bg-gradient-to-r from-teal-50/90 via-teal-50/50 to-slate-50 border border-teal-200/80 rounded-xl px-3 py-2 text-xs shadow-2xs">
-                  <div className="flex items-center gap-2 text-slate-800 min-w-0">
-                    <span className="flex h-5 w-5 rounded-lg bg-teal-600 text-white items-center justify-center shrink-0 shadow-2xs">
-                      <Zap className="h-3 w-3" />
-                    </span>
-                    <span className="text-[11px] truncate">
-                      <strong className="text-teal-950 font-bold">Applying from LinkedIn?</strong> Extract clean job requirements in 1 click.
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsExtensionModalOpen(true)}
-                    className="font-bold text-teal-700 hover:text-teal-900 flex items-center gap-1 hover:underline cursor-pointer ml-2 shrink-0 text-[11px]"
-                  >
-                    <span>{isProOrElite ? "Download Extension" : "Get Extension (Pro)"}</span>
-                    <ArrowRight className="h-3 w-3" />
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <textarea
-                    value={jobDescription}
-                    onChange={(e) => setJobDescription(e.target.value)}
-                    placeholder="Paste the target job description or requirement spec here (minimum 50 characters)..."
-                    rows={7}
-                    maxLength={8000}
-                    className="w-full bg-white text-slate-900 border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-xl p-3.5 text-xs sm:text-sm placeholder-slate-400 transition-all outline-none resize-y shadow-inner leading-relaxed"
-                  />
-                </div>
-
-                {/* Visual Character & Quality Meter */}
-                <div className="space-y-1.5 pt-0.5">
-                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-300 rounded-full ${
-                        jobDescription.length < 50
-                          ? "bg-amber-400"
-                          : jobDescription.length < 250
-                          ? "bg-teal-500"
-                          : "bg-emerald-500"
-                      }`}
-                      style={{ width: `${Math.min(100, Math.round((jobDescription.length / 350) * 100))}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-[11px]">
-                    {jobDescription.length < 50 ? (
-                      <span className="text-amber-600 font-bold flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        {50 - jobDescription.length} more characters needed for analysis
-                      </span>
-                    ) : jobDescription.length < 250 ? (
-                      <span className="text-teal-700 font-bold flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3 text-teal-600" />
-                        Ready for audit (detailed JD gives higher accuracy)
-                      </span>
-                    ) : (
-                      <span className="text-emerald-700 font-bold flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                        Ideal comprehensive JD length for precision ATS matching
-                      </span>
-                    )}
-                    <span className="text-slate-400 font-medium text-[10.5px]">
-                      {jobDescription.length.toLocaleString()} / 8,000
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Error Message */}
-              {error && (
-                <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-xs">
-                  <div className="flex items-start gap-2.5">
-                    <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
-                    <span className="flex-1 leading-relaxed">{error}</span>
-                  </div>
-                  {analyzeMutation.isError && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        analyzeMutation.mutate();
-                      }}
-                      className="self-end mt-1 px-3 py-1 bg-red-100 dark:bg-red-500/20 hover:bg-red-200 dark:hover:bg-red-500/30 text-red-700 dark:text-red-200 border border-red-300 dark:border-red-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                      Retry Analysis
-                    </button>
-                  )}
-                  {uploadMutation.isError && file && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        uploadMutation.mutate(file);
-                      }}
-                      className="self-end mt-1 px-3 py-1 bg-red-100 dark:bg-red-500/20 hover:bg-red-200 dark:hover:bg-red-500/30 text-red-700 dark:text-red-200 border border-red-300 dark:border-red-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                      Retry Upload
-                    </button>
-                  )}
-                </div>
-              )}
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-3">
-                <button
-                  type="submit"
-                  disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing}
-                  className={`w-full py-3.5 px-4 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-between gap-2 shadow-lg ${
-                    documentId && jobDescription.trim().length >= 50 && !isAnalyzing
-                      ? "bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:via-teal-700 hover:to-teal-500 text-white shadow-teal-500/20 hover:scale-[1.01] active:scale-[0.99] cursor-pointer ring-2 ring-teal-400/30"
-                      : "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {isAnalyzing ? (
-                      <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4 text-[#FF6B4A]" />
-                    )}
-                    <span>{isAnalyzing ? "Running Recruiter AI Analysis..." : "Analyze Gaps & Fit"}</span>
-                  </div>
-
-                  <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                    documentId && jobDescription.trim().length >= 50 && !isAnalyzing
-                      ? "bg-white/20 text-white border border-white/30"
-                      : "bg-slate-300 text-slate-500"
-                  }`}>
-                    {user?.plan_type === "free" ? "1 Credit" : "AI Audit"}
-                  </span>
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Right Results Panel */}
-          <div className={`lg:col-span-8 space-y-6 animate-fade-in-up ${mobileTab !== "results" ? "hidden lg:block" : "block"}`} style={{ animationDelay: "0.2s" }}>
-            {isAnalyzing ? (
-              <LoadingState />
-            ) : !analysisResult ? (
-              <div className="relative rounded-3xl bg-white border border-slate-200/90 shadow-xl shadow-teal-500/5 overflow-hidden p-6 sm:p-8 space-y-7 animate-fade-in">
-                {/* Ambient background glow */}
-                <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#FF6B4A]/5 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
-
-                {/* Top Header Banner */}
-                <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-                  <div className="space-y-1.5">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E6F7F4] border border-[#99F6E4] text-[#0D9488] text-xs font-black uppercase tracking-wider shadow-2xs">
-                      <Sparkles className="h-3.5 w-3.5 text-[#FF6B4A]" />
-                      <span>RoleCraft Intelligence Engine</span>
-                    </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
-                      ATS Match, Gap Analysis &amp; 1-Click Tailor
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-xl">
-                      Upload your resume on the left and paste the target job description to run a multi-vector recruiter audit.
-                    </p>
-                  </div>
-
-                  {/* Live System Indicator — sonar pulse rings */}
-                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-teal-50 border border-teal-200/80 shadow-sm shrink-0 self-start md:self-auto">
-                    <div className="relative flex h-3 w-3 text-teal-500">
-                      <span className="sonar-dot relative inline-flex rounded-full h-3 w-3 bg-teal-500" />
-                    </div>
-                    <span className="text-xs font-extrabold text-teal-800">AI Engine Ready</span>
-                  </div>
-                </div>
-
-                {/* Feature Highlight Cards Grid — with rich before/after & live previews */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
-                  {/* Card 1: ATS Matrix — teal glow */}
-                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs flex flex-col justify-between">
-                    <div className="space-y-3">
-                      <div className="ai-icon-wrap glow-teal">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-teal-100 to-teal-50 text-teal-700 flex items-center justify-center border border-teal-200 group-hover:scale-105 transition-transform shadow-sm">
-                          <Target className="h-5 w-5 text-teal-600" />
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-extrabold text-[#0F172A]">ATS Keyword Matrix</h4>
-                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                          Categorizes hard &amp; soft competencies with evidence verification (Confirmed, In Evidence, or Gap).
-                        </p>
-                      </div>
-                    </div>
-                    <div className="pt-2 flex flex-wrap gap-1.5 border-t border-slate-100">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-teal-50 text-teal-700 border border-teal-200">
-                        ✓ React / TS
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
-                        ⚡ Cloud Infra
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-[#FFF1EE] text-[#FF6B4A] border border-[#FFCFC4]">
-                        ✗ Redis Cache
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Card 2: Google XYZ Formula — coral glow */}
-                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs flex flex-col justify-between">
-                    <div className="space-y-3">
-                      <div className="ai-icon-wrap glow-coral">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 text-orange-600 flex items-center justify-center border border-orange-200 group-hover:scale-105 transition-transform shadow-sm">
-                          <Sparkles className="h-5 w-5 text-[#FF6B4A]" />
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-extrabold text-[#0F172A]">Google XYZ Formula</h4>
-                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                          Transforms passive bullets into high-impact metrics (Accomplished [X] by [Y], resulting in [Z]).
-                        </p>
-                      </div>
-                    </div>
-                    <div className="pt-2 p-2.5 rounded-xl bg-white border border-slate-200/90 text-[10.5px] space-y-1 font-sans">
-                      <div className="text-slate-400 line-through truncate" title="Responsible for backend APIs">
-                        &quot;Responsible for backend APIs&quot;
-                      </div>
-                      <div className="text-emerald-700 font-bold flex items-center justify-between">
-                        <span className="truncate">&quot;Engineered microservices, cutting latency by 38%&quot;</span>
-                        <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1 rounded ml-1 shrink-0">+38%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card 3: DOCX XML Precision — blue glow */}
-                  <div className="p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 space-y-3.5 group shadow-2xs flex flex-col justify-between">
-                    <div className="space-y-3">
-                      <div className="ai-icon-wrap glow-blue">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-700 flex items-center justify-center border border-blue-200 group-hover:scale-105 transition-transform shadow-sm">
-                          <FileText className="h-5 w-5 text-blue-600" />
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-extrabold text-[#0F172A]">100% DOCX Format Match</h4>
-                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                          Patches paragraphs and tables directly at the XML run level without template or font drift.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="pt-2 flex items-center justify-between text-[10px] font-extrabold text-blue-700 border-t border-slate-100">
-                      <span className="flex items-center gap-1">
-                        <CheckCircle className="h-3.5 w-3.5 text-blue-600" />
-                        Zero Layout Drift
-                      </span>
-                      <span className="bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                        XML-Level Lock
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3-Step Live Interactive Workflow Stepper */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#E6F7F4] via-teal-50/70 to-slate-50 border border-[#99F6E4]/90 text-[#0F172A] shadow-xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase tracking-wider text-[#0D9488] flex items-center gap-1.5">
-                      <Zap className="h-3.5 w-3.5 fill-[#0D9488]" />
-                      Audit Readiness Workflow
-                    </span>
-                    <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-teal-900 bg-white/90 px-2.5 py-1 rounded-lg border border-teal-200/90 shadow-2xs">
-                      <Shield className="h-3 w-3 text-teal-600" />
-                      <span>Strict Recruiter Verification</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    {/* Step 1 */}
-                    <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${
-                      documentId || file
-                        ? "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs"
-                        : "bg-white/80 border-slate-200 text-slate-700"
-                    }`}>
-                      <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
-                        documentId || file
-                          ? "bg-emerald-600 text-white"
-                          : "bg-slate-200 text-slate-600"
-                      }`}>
-                        {documentId || file ? "✓" : "1"}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold truncate">
-                          {documentId || file ? "Resume Ready" : "Upload Resume"}
-                        </p>
-                        <p className="text-[10px] text-slate-500 truncate">
-                          {file?.name || (documentId ? "Base Resume" : "DOCX file")}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Step 2 */}
-                    <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${
-                      jobDescription.trim().length >= 50
-                        ? "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs"
-                        : "bg-white/80 border-slate-200 text-slate-700"
-                    }`}>
-                      <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
-                        jobDescription.trim().length >= 50
-                          ? "bg-emerald-600 text-white"
-                          : "bg-slate-200 text-slate-600"
-                      }`}>
-                        {jobDescription.trim().length >= 50 ? "✓" : "2"}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold truncate">
-                          {jobDescription.trim().length >= 50 ? "Job Spec Set" : "Paste Job Spec"}
-                        </p>
-                        <p className="text-[10px] text-slate-500 truncate">
-                          {jobDescription.trim().length >= 50
-                            ? `${jobDescription.trim().length} chars loaded`
-                            : "Min 50 characters"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Step 3 */}
-                    <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${
-                      (documentId || file) && jobDescription.trim().length >= 50
-                        ? "bg-teal-600 text-white border-teal-500 shadow-md shadow-teal-600/20 animate-pulse"
-                        : "bg-white/80 border-slate-200 text-slate-700"
-                    }`}>
-                      <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
-                        (documentId || file) && jobDescription.trim().length >= 50
-                          ? "bg-white text-teal-800 font-extrabold"
-                          : "bg-slate-200 text-slate-600"
-                      }`}>
-                        3
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold truncate">
-                          {(documentId || file) && jobDescription.trim().length >= 50
-                            ? "Ready to Audit!"
-                            : "Run Audit"}
-                        </p>
-                        <p className={`text-[10px] truncate ${
-                          (documentId || file) && jobDescription.trim().length >= 50
-                            ? "text-teal-100"
-                            : "text-slate-500"
-                        }`}>
-                          {(documentId || file) && jobDescription.trim().length >= 50
-                            ? "Click Analyze Gaps & Fit"
-                            : "Multi-vector match"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Mobile Results Segmented Bar (iPhone 16 Pro & Mobile Zero-Scroll Experience) */}
-                <div className="lg:hidden sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md py-2 border-b border-slate-200 dark:border-slate-800 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-xs mb-3">
-                  <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                    {[
-                      { id: "score", label: "📊 Score & Fit" },
-                      { id: "keywords", label: "🎯 Keywords" },
-                      { id: "rewrites", label: "✨ Rewrites" },
-                      { id: "export", label: "📥 Export" },
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setMobileResultsTab(tab.id as any)}
-                        className={`flex-1 py-2 px-1 text-center rounded-lg text-xs font-black transition-all cursor-pointer select-none ${
-                          mobileResultsTab === tab.id
-                            ? "bg-white dark:bg-slate-700 text-teal-700 dark:text-teal-300 shadow-xs ring-1 ring-teal-500/20"
-                            : "text-slate-500 hover:text-slate-900 dark:text-slate-400"
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* ⚡ 1-Click Auto-Tailor Hero Banner (Under Score & Fit tab on mobile, top of right col on desktop) */}
-                {(() => {
-                  const hasAutoTailored = Boolean(isPatchingApplied && Object.keys(rewrittenSections).length > 0);
-                  return (
-                    <div className={`relative overflow-hidden rounded-2xl p-5.5 border transition-all duration-300 backdrop-blur-xl animate-fade-in ${
-                      mobileResultsTab === "score" ? "block" : "hidden lg:block"
-                    } ${
-                      hasAutoTailored
-                        ? "border-emerald-300/90 bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white text-slate-900 shadow-xl shadow-emerald-500/10"
-                        : "border-[#99f6e4]/80 bg-gradient-to-r from-[#E6F7F4]/90 via-white to-[#F1F5F9] text-slate-900 shadow-xl shadow-teal-500/5"
-                    }`}>
-                      <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-                      <div className={`absolute -left-12 -top-12 w-48 h-48 rounded-full blur-3xl pointer-events-none ${hasAutoTailored ? "bg-emerald-500/10" : "bg-[#FF6B4A]/10"}`} />
-
-                      <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                          <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg shrink-0 ring-1 ring-white/50 transition-all ${
-                            hasAutoTailored
-                              ? "bg-gradient-to-br from-emerald-800 via-teal-700 to-teal-500 text-white shadow-emerald-500/20"
-                              : "bg-gradient-to-br from-[#0F172A] via-[#0F766E] to-[#14B8A6] text-white shadow-teal-500/20"
-                          }`}>
-                            {hasAutoTailored ? (
-                              <CheckCircle2 className="h-6 w-6 text-emerald-300 animate-pulse" />
-                            ) : (
-                              <Sparkles className="h-6 w-6 animate-pulse text-[#FF6B4A]" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="text-base font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
-                                ⚡ 1-Click Full Resume Auto-Tailor
-                              </h4>
-                              {hasAutoTailored && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase tracking-wider animate-scale-in">
-                                  <Check className="h-3 w-3 text-emerald-700 stroke-[3]" />
-                                  Tailored
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-slate-600 mt-0.5 max-w-md leading-relaxed">
-                              {hasAutoTailored
-                                ? "Resume successfully tailored for role. Click Re-Auto-Tailor anytime to re-evaluate with new settings or updated JD."
-                                : "Automatically rewrite weak sections, weave missing ATS keywords, & add Google XYZ impact metrics in one click."}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={handleAutoTailor}
-                            disabled={isAutoTailoring}
-                            className={`px-6 py-3.5 rounded-xl font-extrabold text-xs text-white shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20 ${
-                              isAutoTailoring
-                                ? "bg-slate-700 opacity-90 cursor-wait"
-                                : hasAutoTailored
-                                  ? "bg-gradient-to-r from-emerald-700 via-teal-700 to-teal-600 hover:from-emerald-600 hover:to-teal-500 shadow-emerald-600/25 hover:shadow-emerald-600/40 ring-2 ring-emerald-400/30"
-                                  : "bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:to-teal-500 shadow-teal-600/20 hover:shadow-teal-600/35"
-                            }`}
-                          >
-                            {isAutoTailoring ? (
-                              <>
-                                <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                ⚡ Auto-Tailoring Resume...
-                              </>
-                            ) : hasAutoTailored ? (
-                              <>
-                                <RotateCcw className="h-4 w-4 text-emerald-200 transition-transform duration-300 group-hover:-rotate-180" />
-                                🔄 Re-Auto-Tailor Full Resume
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="h-4 w-4 text-amber-200" />
-                                ⚡ Auto-Tailor Full Resume (1-Click)
-                              </>
-                            )}
-                          </button>
-
-                          {/* ⚙️ 1-Click Scope Settings Trigger Button */}
-                          {(() => {
-                            const configSections = getAutoTailorConfigSections();
-                            const activeCount = configSections.filter((s) => isSectionTailorEnabled(s.id, s.defaultOn)).length;
-                            return (
-                              <button
-                                type="button"
-                                onClick={() => setIsAutoTailorSettingsOpen(true)}
-                                title="Configure which sections are updated during 1-Click Auto-Tailor"
-                                className="p-3 sm:px-3.5 sm:py-3.5 rounded-xl font-extrabold text-xs border transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md select-none bg-white hover:bg-slate-50 text-slate-800 border-slate-200 hover:border-slate-300 hover:scale-[1.02] active:scale-[0.98]"
-                              >
-                                <SlidersHorizontal className="h-4 w-4 text-teal-600" />
-                                <span className="hidden md:inline">Settings</span>
-                                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-black border bg-teal-50 text-teal-700 border-teal-200">
-                                  {activeCount}/{configSections.length} ON
-                                </span>
-                              </button>
-                            );
-                          })()}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Summary Dashboard Card */}
-                <div className={`glass-panel rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-r from-white/90 via-indigo-500/5 to-white/90 dark:from-slate-900/90 dark:via-indigo-950/20 dark:to-slate-900/90 shadow-xl ${mobileResultsTab === "score" ? "block" : "hidden lg:block"}`}>
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                      {masterResume?.profile_photo_url && (
-                        <div
-                          onClick={() => setIsCompletionModalOpen(true)}
-                          className="relative group shrink-0 cursor-pointer"
-                          title="Click to view/change profile photo"
-                        >
-                          <img
-                            src={getFullProfilePhotoUrl(masterResume.profile_photo_url) || ""}
-                            alt="Candidate Avatar"
-                            className="w-14 h-14 rounded-2xl object-cover ring-2 ring-teal-500/40 shadow-md bg-white dark:bg-slate-800 hover:scale-105 transition-transform"
-                          />
-                        </div>
                       )}
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/20 dark:border-teal-500/30 uppercase tracking-wider">
-                            Target Role Detected
-                          </span>
-                          {masterResume?.contact_info?.full_name && (
-                            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                              • {masterResume.contact_info.full_name}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 flex-wrap">
-                          {(() => {
-                            const rawJobTitle = analysisResult.overall_summary.job_title || "";
-                            const isGenericTitle = !rawJobTitle || ["full job description", "job description", "about the role", "overview", "target role", "description"].includes(rawJobTitle.toLowerCase().trim());
-                            const displayTitle = customTargetRole || rewrittenSections["header"] || (!isGenericTitle ? rawJobTitle : "Target Role");
-                            const canApply = Boolean(displayTitle && displayTitle !== "Target Role");
-                            const isApplied = (rewrittenSections["header"] === displayTitle || (isPatchingApplied && rewrittenSections["header"])) && Boolean(displayTitle);
-
-                            return (
-                              <>
-                                <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                                  <span>{displayTitle}</span>
-                                </h3>
-                                {canApply && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleApplyTargetTitle(displayTitle)}
-                                    disabled={isApplyingTitle || applyMutation.isPending}
-                                    className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${isApplied
-                                        ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
-                                        : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white border-emerald-500/30 shadow-emerald-500/20 hover:scale-105"
-                                      }`}
-                                    title="Apply this target job title directly to your resume header and DOCX file"
-                                  >
-                                    {isApplyingTitle ? (
-                                      <>
-                                        <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin shrink-0" />
-                                        <span>Applying Title...</span>
-                                      </>
-                                    ) : isApplied ? (
-                                      <>
-                                        <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                                        <span>Title Applied & Saved</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <CheckCircle className="h-3.5 w-3.5 text-white shrink-0" />
-                                        <span>Apply Job Title</span>
-                                      </>
-                                    )}
-                                  </button>
-                                )}
-                              </>
-                            );
-                          })()}
-                        </div>
-                      </div>
                     </div>
 
-                    {/* Overall Score Circle */}
-                    <div className="flex items-center gap-4 bg-white/90 dark:bg-slate-950/70 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-md">
-                      <div className="relative flex items-center justify-center">
-                        {/* SVG Gauge */}
-                        <svg className="w-20 h-20 transform -rotate-90">
-                          <circle
-                            cx="40"
-                            cy="40"
-                            r="34"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="transparent"
-                            className="text-slate-200 dark:text-slate-800"
-                          />
-                          <circle
-                            cx="40"
-                            cy="40"
-                            r="34"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="transparent"
-                            strokeDasharray={2 * Math.PI * 34}
-                            strokeDashoffset={2 * Math.PI * 34 * (1 - currentScore / 100)}
-                            className="text-teal-500 transition-all duration-1000"
-                          />
-                        </svg>
-                        <span className="absolute text-base font-black text-slate-900 dark:text-white">
-                          {currentScore}%
+                    {/* Editable Target Designation & Contact Header Controls */}
+                    <div className="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">
+                          Target Designation:
                         </span>
-                      </div>
-                      <div>
-                        <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Overall Fit</p>
-                        <p className="text-xs font-medium text-slate-600 dark:text-slate-300 mt-0.5">
-                          <span className="font-bold text-teal-600 dark:text-teal-400">{sectionsStillNeedingImprovement} of {totalNeeded}</span> sections need improvement
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Interactive ATS Skill & Keyword Matrix Card */}
-                {(() => {
-                  // Compute matched skills
-                  const originalMatched = new Set(
-                    (analysisResult.top_strengths || [])
-                      .map((s: any) => cleanKeywordName(typeof s === "string" ? s : s.name))
-                      .filter((k) => isActualATSKeyword(k))
-                      .map((k) => k.toLowerCase())
-                  );
-                  const wovenMatchedLower = new Set(
-                    appliedWovenKeywords.map((k) => cleanKeywordName(k).toLowerCase())
-                  );
-                  const allMatched = Array.from(
-                    new Set([
-                      ...(analysisResult.top_strengths || [])
-                        .map((s: any) => cleanKeywordName(typeof s === "string" ? s : s.name))
-                        .filter((k) => isActualATSKeyword(k)),
-                      ...appliedWovenKeywords.map((k) => cleanKeywordName(k)).filter((k) => isActualATSKeyword(k)),
-                    ])
-                  ).filter(Boolean).filter((skill) => !manuallyRemovedSkills.has(skill.toLowerCase()));
-
-                  const matchedLower = new Set(allMatched.map((s) => s.toLowerCase()));
-
-                  // Compute evidence-supported keywords (From section strengths only)
-                  const rawEvidence = (analysisResult.sections || []).flatMap((s: any) => s.strengths || []);
-                  const allEvidence = Array.from(
-                    new Set(
-                      rawEvidence
-                        .flatMap((e) => extractStrictKeywordsFromRaw(e))
-                        .filter((k) => isActualATSKeyword(k))
-                    )
-                  ).filter((kw) => !matchedLower.has(kw.toLowerCase()));
-
-                  // Compute missing JD keywords (From section missing_keywords only)
-                  const rawMissing = (analysisResult.sections || []).flatMap((s: any) => s.missing_keywords || []);
-                  const allMissing = Array.from(
-                    new Set(
-                      rawMissing
-                        .flatMap((m) => extractStrictKeywordsFromRaw(m))
-                        .filter((k) => isActualATSKeyword(k))
-                    )
-                  ).filter((kw) => !matchedLower.has(kw.toLowerCase()) && !allEvidence.some((e) => e.toLowerCase() === kw.toLowerCase()));
-
-                  const totalKeywords = allMatched.length + allEvidence.length + allMissing.length;
-                  const matchPercentage = totalKeywords > 0 ? Math.round((allMatched.length / (allMatched.length + allMissing.length || 1)) * 100) : 100;
-
-                  // Apply search query filter
-                  const q = keywordSearchQuery.trim().toLowerCase();
-                  const filterMatch = (k: string) => !q || k.toLowerCase().includes(q);
-
-                  const filteredMatched = allMatched.filter(filterMatch);
-                  const filteredEvidence = allEvidence.filter(filterMatch);
-                  const filteredMissing = allMissing.filter(filterMatch);
-
-                  const showMatched = keywordFilterTab === 'all' || keywordFilterTab === 'matched';
-                  const showEvidence = keywordFilterTab === 'all' || keywordFilterTab === 'supported';
-                  const showMissing = keywordFilterTab === 'all' || keywordFilterTab === 'missing';
-
-                  return (
-                    <div className={`glass-panel rounded-3xl p-6 sm:p-7 border border-slate-200/90 bg-white shadow-xl shadow-teal-500/5 space-y-6 ${mobileResultsTab === "keywords" ? "block" : "hidden lg:block"}`}>
-                      {/* Header */}
-                      <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 pb-5">
-                        <div className="flex items-center gap-3.5">
-                          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0 ring-1 ring-white/60">
-                            <Layers className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2.5">
-                              <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
-                                ATS Skill & Keyword Matrix
-                              </h3>
-                              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-teal-50 text-teal-700 border border-teal-200 shadow-2xs">
-                                {matchPercentage}% Match Rate
-                              </span>
-                            </div>
-                            <p className="text-xs text-slate-500 mt-0.5">
-                              {allMatched.length} confirmed in resume &bull; {allEvidence.length} in bullet evidence &bull; {allMissing.length} high-value JD gaps
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={openKeywordWeaveModal}
-                            disabled={isWeavingKeywords}
-                            className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md border ${
-                              isKeywordsWoven
-                                ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500/40 shadow-emerald-600/20"
-                                : "bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white border-white/20 shadow-teal-600/20 hover:scale-[1.02] active:scale-[0.98]"
-                            }`}
-                          >
-                            {isWeavingKeywords ? (
-                              <>
-                                <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                Weaving Keywords...
-                              </>
-                            ) : isKeywordsWoven ? (
-                              <>
-                                <CheckCircle className="h-4 w-4 text-emerald-200" />
-                                ✓ Keywords Woven & Applied
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="h-4 w-4 text-amber-200" />
-                                ⚡ Auto-Weave All Keywords (1-Click)
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Tri-Color Match Progress Bar */}
-                      <div className="space-y-2">
-                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden flex border border-slate-200 p-0.5">
-                          <div
-                            className="bg-emerald-500 h-full rounded-l-full transition-all duration-500"
-                            style={{ width: `${totalKeywords > 0 ? (allMatched.length / totalKeywords) * 100 : 33}%` }}
-                            title={`${allMatched.length} Confirmed Matched`}
-                          />
-                          <div
-                            className="bg-amber-400 h-full transition-all duration-500"
-                            style={{ width: `${totalKeywords > 0 ? (allEvidence.length / totalKeywords) * 100 : 33}%` }}
-                            title={`${allEvidence.length} Supported in Evidence`}
-                          />
-                          <div
-                            className="bg-rose-400 h-full rounded-r-full transition-all duration-500"
-                            style={{ width: `${totalKeywords > 0 ? (allMissing.length / totalKeywords) * 100 : 34}%` }}
-                            title={`${allMissing.length} Missing from JD`}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Filter Bar & Search */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
-                        {/* Segmented Filter Tabs */}
-                        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 border border-slate-200 text-xs font-bold overflow-x-auto">
-                          <button
-                            type="button"
-                            onClick={() => setKeywordFilterTab('all')}
-                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                              keywordFilterTab === 'all'
-                                ? "bg-white text-slate-900 shadow-2xs"
-                                : "text-slate-500 hover:text-slate-800"
-                            }`}
-                          >
-                            All ({totalKeywords})
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setKeywordFilterTab('matched')}
-                            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                              keywordFilterTab === 'matched'
-                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs"
-                                : "text-slate-500 hover:text-emerald-700"
-                            }`}
-                          >
-                            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                            Matched ({allMatched.length})
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setKeywordFilterTab('supported')}
-                            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                              keywordFilterTab === 'supported'
-                                ? "bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs"
-                                : "text-slate-500 hover:text-amber-700"
-                            }`}
-                          >
-                            <span className="h-2 w-2 rounded-full bg-amber-400" />
-                            In Evidence ({allEvidence.length})
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setKeywordFilterTab('missing')}
-                            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                              keywordFilterTab === 'missing'
-                                ? "bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs"
-                                : "text-slate-500 hover:text-rose-700"
-                            }`}
-                          >
-                            <span className="h-2 w-2 rounded-full bg-rose-400" />
-                            Missing ({allMissing.length})
-                          </button>
-                        </div>
-
-                        {/* Search Input */}
-                        <div className="relative min-w-[200px] sm:w-64">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                          <input
-                            type="text"
-                            value={keywordSearchQuery}
-                            onChange={(e) => setKeywordSearchQuery(e.target.value)}
-                            placeholder="Filter skills..."
-                            className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 transition-all"
-                          />
-                          {keywordSearchQuery && (
-                            <button
-                              type="button"
-                              onClick={() => setKeywordSearchQuery("")}
-                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Skill Pills Matrix */}
-                      <div className="space-y-5 pt-2">
-                        {/* 🟢 Confirmed Matched Skills */}
-                        {showMatched && filteredMatched.length > 0 && (
-                          <div className="space-y-2.5">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-extrabold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                                <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
-                                Confirmed Matched Skills ({filteredMatched.length})
-                              </span>
-                              <span className="text-[11px] text-slate-400">Verified in resume &bull; click to remove</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {filteredMatched.map((skillName, idx) => {
-                                const skillLower = skillName.toLowerCase();
-                                const isWoven = wovenMatchedLower.has(skillLower);
-                                const isOriginal = originalMatched.has(skillLower);
-                                const cat = getSkillCategory(skillName);
-
-                                return (
-                                  <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => {
-                                      if (isWoven) {
-                                        setAppliedWovenKeywords((prev) => {
-                                          const next = prev.filter((k) => cleanKeywordName(k).toLowerCase() !== skillLower);
-                                          if (next.length === 0) setIsKeywordsWoven(false);
-                                          return next;
-                                        });
-                                      } else {
-                                        setManuallyRemovedSkills((prev) => {
-                                          const next = new Set(prev);
-                                          next.add(skillLower);
-                                          return next;
-                                        });
-                                      }
-                                      removeSkillFromRewrites(skillName);
-                                    }}
-                                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-50/80 hover:bg-rose-50 text-emerald-900 hover:text-rose-700 border border-emerald-200/90 hover:border-rose-300 transition-all duration-150 cursor-pointer group shadow-2xs"
-                                    title={isWoven ? `Click to move '${skillName}' back to ${isOriginal ? "supported" : "missing"} keywords` : `Click to remove '${skillName}' from matched skills`}
-                                  >
-                                    <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
-                                      {cat.label}
-                                    </span>
-                                    <span>{skillName}</span>
-                                    <Check className="h-3 w-3 text-emerald-600 group-hover:hidden" />
-                                    <X className="h-3 w-3 text-rose-600 hidden group-hover:block" />
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 🟡 Supported in Evidence */}
-                        {showEvidence && filteredEvidence.length > 0 && (
-                          <div className="space-y-2.5 pt-2 border-t border-slate-100">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-extrabold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-                                <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                                Supported in Project & Experience Evidence ({filteredEvidence.length})
-                              </span>
-                              <span className="text-[11px] text-slate-400">Click to weave into Technical Skills</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {filteredEvidence.map((kw, idx) => {
-                                const cat = getSkillCategory(kw);
-                                return (
-                                  <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => handleQuickWeaveKeyword(kw)}
-                                    disabled={weavingSingleKeyword === kw}
-                                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100/80 text-amber-900 border border-amber-200 transition-all duration-150 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 group"
-                                    title={`Click to weave '${kw}' into Technical Skills section`}
-                                  >
-                                    <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
-                                      {cat.label}
-                                    </span>
-                                    <span>{kw}</span>
-                                    {weavingSingleKeyword === kw ? (
-                                      <div className="h-3 w-3 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin shrink-0" />
-                                    ) : (
-                                      <Plus className="h-3 w-3 text-amber-600 group-hover:scale-125 transition-transform" />
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 🔴 Missing ATS Keywords */}
-                        {showMissing && filteredMissing.length > 0 && (
-                          <div className="space-y-2.5 pt-2 border-t border-slate-100">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-extrabold text-rose-800 uppercase tracking-wider flex items-center gap-1.5">
-                                <Plus className="h-3.5 w-3.5 text-rose-600" />
-                                Missing High-Priority Job Competencies ({filteredMissing.length})
-                              </span>
-                              <span className="text-[11px] text-slate-400">In Job Description &bull; click to weave</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {filteredMissing.map((kw, idx) => {
-                                const cat = getSkillCategory(kw);
-                                return (
-                                  <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => handleQuickWeaveKeyword(kw)}
-                                    disabled={weavingSingleKeyword === kw}
-                                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100/80 text-rose-900 border border-rose-200 transition-all duration-150 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 group"
-                                    title={`Click to weave '${kw}' into Technical Skills section`}
-                                  >
-                                    <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
-                                      {cat.label}
-                                    </span>
-                                    <span>{kw}</span>
-                                    {weavingSingleKeyword === kw ? (
-                                      <div className="h-3 w-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin shrink-0" />
-                                    ) : (
-                                      <Plus className="h-3 w-3 text-rose-600 group-hover:scale-125 transition-transform" />
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Empty Search / Filter State */}
-                        {filteredMatched.length === 0 && filteredEvidence.length === 0 && filteredMissing.length === 0 && (
-                          <div className="text-center py-8 text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1">
-                            <p className="font-bold text-slate-600">No skills match &quot;{keywordSearchQuery}&quot;</p>
-                            <p>Try clearing your search query or switching tabs.</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* ✉️ Tailored Cover Letter Card */}
-                <div className={`glass-panel rounded-2xl p-6 border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 space-y-4 shadow-xl ${mobileResultsTab === "rewrites" || mobileResultsTab === "export" ? "block" : "hidden lg:block"}`}>
-                  <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="h-8 w-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
-                        <FileText className="h-4.5 w-4.5" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                          Tailored Cover Letter
-                          {coverLetterText && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
-                              Ready
-                            </span>
-                          )}
-                        </h3>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          Generate a 3-paragraph executive cover letter tailored to the job description & your resume.
-                        </p>
-                      </div>
-                    </div>
-
-                    {!coverLetterText && (
-                      <button
-                        type="button"
-                        onClick={handleGenerateCoverLetter}
-                        disabled={isGeneratingCoverLetter}
-                        className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-600/20 disabled:opacity-50"
-                      >
-                        {isGeneratingCoverLetter ? (
-                          <>
-                            <div className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                            Generating Cover Letter...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="h-3.5 w-3.5 text-purple-200 animate-pulse" />
-                            ✨ Generate Cover Letter (1-Click)
-                          </>
-                        )}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Editable Target Designation & Contact Header Controls */}
-                  <div className="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">
-                        Target Designation:
-                      </span>
-                      <input
-                        type="text"
-                        value={customTargetRole}
-                        onChange={(e) => setCustomTargetRole(e.target.value)}
-                        placeholder="e.g. Full Stack Developer"
-                        className="flex-1 min-w-[200px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-purple-500/30"
-                      />
-                      <button
-                        type="button"
-                        disabled={isGeneratingCoverLetter}
-                        onClick={handleGenerateCoverLetter}
-                        className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer disabled:opacity-50 shadow-sm"
-                      >
-                        Update Header
-                      </button>
-                    </div>
-                    {user && (user.address || user.phone_number || user.linkedin_url) ? (
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                        <strong>Header Contact Line:</strong> {[user.address, user.phone_number, user.email, user.linkedin_url].filter(Boolean).join(" | ")}
-                      </p>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setIsProfileModalOpen(true)}
-                        className="text-[11px] text-teal-600 dark:text-teal-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
-                      >
-                        + Add Address, Phone & LinkedIn to Profile for Cover Letter Header
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Cover Letter Content Body */}
-                  {coverLetterText ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between gap-2 flex-wrap bg-slate-50 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
-                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium">
-                          <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                          <span>Cover Letter tailored to job description</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={handleCopyCoverLetterText}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border ${isCoverLetterCopied
-                                ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
-                                : "bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 border-purple-500/20"
-                              }`}
-                            title="Copy full cover letter text content"
-                          >
-                            {isCoverLetterCopied ? (
-                              <>
-                                <Check className="h-3 w-3 text-emerald-500" />
-                                <span>Copied!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="h-3 w-3 text-purple-500" />
-                                <span>Copy Text</span>
-                              </>
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setIsEditingCoverLetter(!isEditingCoverLetter)}
-                            className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all flex items-center gap-1 cursor-pointer"
-                          >
-                            <Edit className="h-3 w-3" />
-                            {isEditingCoverLetter ? "Done Editing" : "Edit Text"}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={isGeneratingCoverLetter}
-                            onClick={handleGenerateCoverLetter}
-                            className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                          >
-                            <RefreshCw className={`h-3 w-3 ${isGeneratingCoverLetter ? "animate-spin" : ""}`} />
-                            Regenerate
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Preview / Edit Area */}
-                      {isEditingCoverLetter ? (
-                        <div className="space-y-2">
-                          <textarea
-                            value={coverLetterText}
-                            onChange={(e) => setCoverLetterText(e.target.value)}
-                            rows={12}
-                            className="w-full p-3.5 rounded-xl border border-purple-300 dark:border-purple-800/60 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-purple-500/30 resize-y font-sans"
-                            placeholder="Edit your cover letter here..."
-                          />
-                          <button
-                            type="button"
-                            disabled={isUpdatingCoverLetter}
-                            onClick={() => handleUpdateCoverLetterText(coverLetterText)}
-                            className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                          >
-                            {isUpdatingCoverLetter ? (
-                              <div className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                            ) : (
-                              <CheckCircle className="h-3.5 w-3.5" />
-                            )}
-                            Save Changes to Cover Letter
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-slate-800 dark:text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-sans space-y-2 shadow-inner">
-                          {coverLetterText}
-                        </div>
-                      )}
-
-                      {/* Download Buttons Bar */}
-                      {coverLetterDownloadId && (
-                        <div className="flex items-center justify-end flex-wrap gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mr-auto">
-                            Export Cover Letter:
-                          </span>
-                          <button
-                            type="button"
-                            onClick={handleCopyCoverLetterText}
-                            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${isCoverLetterCopied
-                                ? "bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20"
-                                : "bg-purple-600 hover:bg-purple-500 text-white border-purple-500/40 shadow-md shadow-purple-600/20 hover:scale-105 active:scale-95"
-                              }`}
-                            title="Copy text content of cover letter"
-                          >
-                            {isCoverLetterCopied ? (
-                              <>
-                                <Check className="h-4 w-4 shrink-0" />
-                                <span>Copied Text!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="h-4 w-4 shrink-0" />
-                                <span>Copy Text Content</span>
-                              </>
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDownloadCoverLetter("docx")}
-                            disabled={downloadingCoverLetterFormat !== null}
-                            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-md shadow-teal-600/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 hover:scale-105 active:scale-95 select-none"
-                            title="Download formatted DOCX cover letter"
-                          >
-                            {downloadingCoverLetterFormat === "docx" ? (
-                              <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-                            ) : (
-                              <WordLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
-                            )}
-                            <span>Download Cover Letter (.DOCX)</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDownloadCoverLetter("pdf")}
-                            disabled={downloadingCoverLetterFormat !== null}
-                            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer border border-slate-700/60 disabled:opacity-60 hover:scale-105 active:scale-95 select-none"
-                            title="Download high-fidelity PDF cover letter"
-                          >
-                            {downloadingCoverLetterFormat === "pdf" ? (
-                              <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-                            ) : (
-                              <PdfLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
-                            )}
-                            <span>Download Cover Letter (.PDF)</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950/20 text-center space-y-2">
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Click the button above to generate an executive 3-paragraph cover letter tailored to this role and your resume achievements.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* 📥 Dedicated Mobile Export View (Clean, 1-Tap Download Panel for Phones) */}
-                {mobileResultsTab === "export" && (
-                  <div className="lg:hidden glass-panel rounded-3xl p-6 border border-slate-200/90 bg-white shadow-xl shadow-teal-500/5 space-y-5 animate-fade-in">
-                    <div className="flex items-center gap-3.5 border-b border-slate-100 pb-4">
-                      <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0 ring-1 ring-white/60">
-                        <Download className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-black text-slate-900 tracking-tight">
-                          Export Tailored Resume
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          Recruiter-grade resume with 100% visual layout preservation.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      {/* Primary DOCX Download */}
-                      <a
-                        href={downloadUrl ? `${API_BASE_URL}${downloadUrl}` : (downloadId ? `${API_BASE_URL}/api/v1/resume/download/${downloadId}` : undefined)}
-                        download
-                        onClick={() => {
-                          if (!downloadUrl && !downloadId) {
-                            handleApplyRewrites();
-                          } else {
-                            setSuccessNotification("Downloading tailored DOCX...");
-                          }
-                        }}
-                        className={`w-full py-4 px-5 rounded-2xl font-black text-sm text-white shadow-xl flex items-center justify-between transition-all active:scale-95 ${
-                          downloadUrl || downloadId
-                            ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-teal-500 shadow-emerald-600/25"
-                            : "btn-primary shadow-teal-600/25"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <WordLogoIcon className="h-6 w-6 shrink-0" />
-                          <div className="text-left">
-                            <p className="font-black text-sm">Download Tailored DOCX</p>
-                            <p className="text-[11px] text-teal-100 font-medium">100% Word format & template preserved</p>
-                          </div>
-                        </div>
-                        <Download className="h-5 w-5 text-white/90" />
-                      </a>
-
-                      {/* PDF Download (if available) */}
-                      {downloadId && (
-                        <a
-                          href={`${API_BASE_URL}/api/v1/resume/download-pdf/${downloadId}?t=${encodeURIComponent(
-                            localStorage.getItem("token") || ""
-                          )}`}
-                          download
-                          onClick={() => setSuccessNotification("Downloading PDF...")}
-                          className="w-full py-3.5 px-5 rounded-2xl font-bold text-xs bg-slate-900 hover:bg-slate-800 text-white shadow-md flex items-center justify-between transition-all active:scale-95"
-                        >
-                          <div className="flex items-center gap-3">
-                            <PdfLogoIcon className="h-5 w-5 shrink-0" />
-                            <span className="font-bold">Download Tailored PDF</span>
-                          </div>
-                          <Download className="h-4 w-4 text-white/70" />
-                        </a>
-                      )}
-
-                      {/* PDF Preview */}
-                      {downloadId && (
+                        <input
+                          type="text"
+                          value={customTargetRole}
+                          onChange={(e) => setCustomTargetRole(e.target.value)}
+                          placeholder="e.g. Full Stack Developer"
+                          className="flex-1 min-w-[200px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                        />
                         <button
                           type="button"
-                          onClick={() => setIsPdfPreviewOpen(true)}
-                          className="w-full py-3 px-5 rounded-2xl font-bold text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 shadow-xs flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+                          disabled={isGeneratingCoverLetter}
+                          onClick={handleGenerateCoverLetter}
+                          className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer disabled:opacity-50 shadow-sm"
                         >
-                          <Eye className="h-4 w-4 text-slate-600" />
-                          <span>Preview PDF in Browser</span>
+                          Update Header
+                        </button>
+                      </div>
+                      {user && (user.address || user.phone_number || user.linkedin_url) ? (
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                          <strong>Header Contact Line:</strong> {[user.address, user.phone_number, user.email, user.linkedin_url].filter(Boolean).join(" | ")}
+                        </p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsProfileModalOpen(true)}
+                          className="text-[11px] text-teal-600 dark:text-teal-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                        >
+                          + Add Address, Phone & LinkedIn to Profile for Cover Letter Header
                         </button>
                       )}
                     </div>
-                  </div>
-                )}
 
-                {/* Section Analysis Breakdown (Actionable cards shown at the top for maximum speed) */}
-                <div className={`space-y-6 ${mobileResultsTab === "rewrites" ? "block" : "hidden lg:block"}`}>
-                  {(() => {
-                    const sectionsToImprove = (analysisResult.sections || [])
-                      .filter((s) => s.review_status === "improve" || (s.recommendations && s.recommendations.length > 0))
-                      .sort((a, b) => {
-                        const priorityMap = { high: 3, medium: 2, low: 1 };
-                        return (priorityMap[b.priority] || 0) - (priorityMap[a.priority] || 0);
-                      });
+                    {/* Cover Letter Content Body */}
+                    {coverLetterText ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between gap-2 flex-wrap bg-slate-50 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+                          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium">
+                            <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                            <span>Cover Letter tailored to job description</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={handleCopyCoverLetterText}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border ${isCoverLetterCopied
+                                ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                                : "bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 border-purple-500/20"
+                                }`}
+                              title="Copy full cover letter text content"
+                            >
+                              {isCoverLetterCopied ? (
+                                <>
+                                  <Check className="h-3 w-3 text-emerald-500" />
+                                  <span>Copied!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="h-3 w-3 text-purple-500" />
+                                  <span>Copy Text</span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setIsEditingCoverLetter(!isEditingCoverLetter)}
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all flex items-center gap-1 cursor-pointer"
+                            >
+                              <Edit className="h-3 w-3" />
+                              {isEditingCoverLetter ? "Done Editing" : "Edit Text"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isGeneratingCoverLetter}
+                              onClick={handleGenerateCoverLetter}
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            >
+                              <RefreshCw className={`h-3 w-3 ${isGeneratingCoverLetter ? "animate-spin" : ""}`} />
+                              Regenerate
+                            </button>
+                          </div>
+                        </div>
 
-                    const sectionsToKeep = (analysisResult.sections || [])
-                      .filter((s) => s.review_status === "keep" && (!s.recommendations || s.recommendations.length === 0));
-
-                    const sectionsToReduce = (analysisResult.sections || [])
-                      .filter((s) => s.review_status === "reduce_emphasis");
-
-                    return (
-                      <>
-                        {/* AI Section Tailoring Master Controls Bar */}
-                        {analysisResult?.sections && analysisResult.sections.length > 0 && (
-                          <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-50/80 via-indigo-50/60 to-purple-50/50 border border-teal-200/80 text-slate-800 shadow-xs space-y-3">
-                            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-teal-200/60 pb-2.5">
-                              <div className="flex items-center gap-2">
-                                <SlidersHorizontal className="h-4 w-4 text-teal-600" />
-                                <span className="text-xs font-black tracking-tight text-slate-800 uppercase">
-                                  ⚡ AI Section Controls (Toggle ON/OFF for Auto-Tailor)
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const allOn: Record<string, boolean> = {};
-                                    (analysisResult.sections || []).forEach((s) => { allOn[s.section_name] = true; });
-                                    setTailoringSectionToggles(allOn);
-                                  }}
-                                  className="text-[10px] font-extrabold text-teal-700 hover:text-teal-900 bg-white hover:bg-teal-50/80 border border-teal-200 px-2 py-0.5 rounded-md transition-all cursor-pointer shadow-2xs"
-                                >
-                                  Enable All
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const allOff: Record<string, boolean> = {};
-                                    (analysisResult.sections || []).forEach((s) => { allOff[s.section_name] = false; });
-                                    setTailoringSectionToggles(allOff);
-                                  }}
-                                  className="text-[10px] font-extrabold text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md transition-all cursor-pointer shadow-2xs"
-                                >
-                                  Disable All
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Section Toggle Chips */}
-                            <div className="flex flex-wrap gap-2 pt-1">
-                              {(analysisResult.sections || []).map((sec, idx) => {
-                                const isEnabled = tailoringSectionToggles[sec.section_name] !== undefined
-                                  ? tailoringSectionToggles[sec.section_name]
-                                  : !(sec.section_name.toLowerCase().includes("education") || sec.section_name.toLowerCase().includes("certification"));
-                                return (
-                                  <button
-                                    key={`${sec.section_name}-${idx}`}
-                                    type="button"
-                                    onClick={() => handleToggleSectionTailoring(sec.section_name)}
-                                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none border ${
-                                      isEnabled
-                                        ? "bg-teal-600 text-white border-teal-500 shadow-xs hover:bg-teal-500"
-                                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
-                                    }`}
-                                  >
-                                    {isEnabled ? (
-                                      <>
-                                        <Zap className="h-3 w-3 text-amber-300 fill-amber-300" />
-                                        <span>{sec.section_name}: ON</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Lock className="h-3 w-3 text-slate-400" />
-                                        <span>{sec.section_name}: OFF</span>
-                                      </>
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            </div>
+                        {/* Preview / Edit Area */}
+                        {isEditingCoverLetter ? (
+                          <div className="space-y-2">
+                            <textarea
+                              value={coverLetterText}
+                              onChange={(e) => setCoverLetterText(e.target.value)}
+                              rows={12}
+                              className="w-full p-3.5 rounded-xl border border-purple-300 dark:border-purple-800/60 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-purple-500/30 resize-y font-sans"
+                              placeholder="Edit your cover letter here..."
+                            />
+                            <button
+                              type="button"
+                              disabled={isUpdatingCoverLetter}
+                              onClick={() => handleUpdateCoverLetterText(coverLetterText)}
+                              className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                            >
+                              {isUpdatingCoverLetter ? (
+                                <div className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                              ) : (
+                                <CheckCircle className="h-3.5 w-3.5" />
+                              )}
+                              Save Changes to Cover Letter
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-slate-800 dark:text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-sans space-y-2 shadow-inner">
+                            {coverLetterText}
                           </div>
                         )}
 
-                        {/* Improve Sections (🟡) */}
-                        {sectionsToImprove.length > 0 && (
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-900 pb-2">
-                              <h3 className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                                <span>🟡 Recommendations to Improve ({sectionsToImprove.length})</span>
-                              </h3>
-                              <button
-                                type="button"
-                                disabled={isImprovingAll || Object.values(inlineLoadingSections).some(Boolean)}
-                                onClick={() => handleImproveAllClick(sectionsToImprove)}
-                                className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 disabled:bg-slate-100 dark:disabled:bg-slate-900 text-amber-700 dark:text-amber-400 disabled:text-slate-400 dark:disabled:text-slate-600 border border-amber-500/25 disabled:border-slate-200 dark:disabled:border-slate-800 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed select-none"
-                              >
-                                {isImprovingAll ? (
-                                  <>
-                                    <RefreshCw className="h-3 w-3 animate-spin" />
-                                    Improving All...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Sparkles className="h-3 w-3 animate-pulse" />
-                                    Improve All with AI
-                                  </>
-                                )}
-                              </button>
-                            </div>
-                             <div className="space-y-4">
-                              {sectionsToImprove.map((section, idx) => (
-                                <SectionCard
-                                  key={`${section.section_name}-${idx}`}
-                                  section={section}
-                                  idx={idx}
-                                  isExpanded={!!expandedSections[section.section_name]}
-                                  onToggle={() => toggleSection(section.section_name)}
-                                  rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections, (section as any).section_type)}
-                                  previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections, (section as any).section_type)}
-                                  onRevert={handleRevert}
-                                  onUndoLastRewrite={handleUndoLastRewrite}
-                                  onImproveClick={handleImproveClick}
-                                  inlineLoadingSections={inlineLoadingSections}
-                                  triggerInlineRewrite={triggerInlineRewrite}
-                                  onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
-                                  isPatchingApplied={isPatchingApplied}
-                                  masterResume={masterResume}
-                                  isTailoringEnabled={
-                                    tailoringSectionToggles[section.section_name] !== undefined
-                                      ? tailoringSectionToggles[section.section_name]
-                                      : !(section.section_name.toLowerCase().includes("education") || section.section_name.toLowerCase().includes("certification"))
-                                  }
-                                  onToggleTailoring={handleToggleSectionTailoring}
-                                />
-                              ))}
-                            </div>
+                        {/* Download Buttons Bar */}
+                        {coverLetterDownloadId && (
+                          <div className="flex items-center justify-end flex-wrap gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mr-auto">
+                              Export Cover Letter:
+                            </span>
+                            <button
+                              type="button"
+                              onClick={handleCopyCoverLetterText}
+                              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${isCoverLetterCopied
+                                ? "bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20"
+                                : "bg-purple-600 hover:bg-purple-500 text-white border-purple-500/40 shadow-md shadow-purple-600/20 hover:scale-105 active:scale-95"
+                                }`}
+                              title="Copy text content of cover letter"
+                            >
+                              {isCoverLetterCopied ? (
+                                <>
+                                  <Check className="h-4 w-4 shrink-0" />
+                                  <span>Copied Text!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="h-4 w-4 shrink-0" />
+                                  <span>Copy Text Content</span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadCoverLetter("docx")}
+                              disabled={downloadingCoverLetterFormat !== null}
+                              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-md shadow-teal-600/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 hover:scale-105 active:scale-95 select-none"
+                              title="Download formatted DOCX cover letter"
+                            >
+                              {downloadingCoverLetterFormat === "docx" ? (
+                                <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                              ) : (
+                                <WordLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
+                              )}
+                              <span>Download Cover Letter (.DOCX)</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadCoverLetter("pdf")}
+                              disabled={downloadingCoverLetterFormat !== null}
+                              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer border border-slate-700/60 disabled:opacity-60 hover:scale-105 active:scale-95 select-none"
+                              title="Download high-fidelity PDF cover letter"
+                            >
+                              {downloadingCoverLetterFormat === "pdf" ? (
+                                <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                              ) : (
+                                <PdfLogoIcon className="h-4 w-4 shrink-0 shadow-sm" />
+                              )}
+                              <span>Download Cover Letter (.PDF)</span>
+                            </button>
                           </div>
                         )}
-
-                        {/* Keep Sections (🟢) */}
-                        {sectionsToKeep.length > 0 && (
-                          <div className="space-y-3">
-                            <h3 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-900 pb-2">
-                              <span>🟢 Keep As-Is ({sectionsToKeep.length})</span>
-                            </h3>
-                            <div className="space-y-4">
-                              {sectionsToKeep.map((section, idx) => (
-                                <SectionCard
-                                  key={`${section.section_name}-${idx}`}
-                                  section={section}
-                                  idx={idx}
-                                  isExpanded={!!expandedSections[section.section_name]}
-                                  onToggle={() => toggleSection(section.section_name)}
-                                  rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections, (section as any).section_type)}
-                                  previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections, (section as any).section_type)}
-                                  onRevert={handleRevert}
-                                  onUndoLastRewrite={handleUndoLastRewrite}
-                                  onImproveClick={handleImproveClick}
-                                  inlineLoadingSections={inlineLoadingSections}
-                                  triggerInlineRewrite={triggerInlineRewrite}
-                                  onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
-                                  isPatchingApplied={isPatchingApplied}
-                                  masterResume={masterResume}
-                                  isTailoringEnabled={
-                                    tailoringSectionToggles[section.section_name] !== undefined
-                                      ? tailoringSectionToggles[section.section_name]
-                                      : !(section.section_name.toLowerCase().includes("education") || section.section_name.toLowerCase().includes("certification"))
-                                  }
-                                  onToggleTailoring={handleToggleSectionTailoring}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Reduce Emphasis Sections (⚪) */}
-                        {sectionsToReduce.length > 0 && (
-                          <div className="space-y-3">
-                            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-900 pb-2">
-                              <span>⚪ Reduce Emphasis ({sectionsToReduce.length})</span>
-                            </h3>
-                            <div className="space-y-4">
-                              {sectionsToReduce.map((section, idx) => (
-                                <SectionCard
-                                  key={`${section.section_name}-${idx}`}
-                                  section={section}
-                                  idx={idx}
-                                  isExpanded={!!expandedSections[section.section_name]}
-                                  onToggle={() => toggleSection(section.section_name)}
-                                  rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections, (section as any).section_type)}
-                                  previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections, (section as any).section_type)}
-                                  onRevert={handleRevert}
-                                  onUndoLastRewrite={handleUndoLastRewrite}
-                                  onImproveClick={handleImproveClick}
-                                  inlineLoadingSections={inlineLoadingSections}
-                                  triggerInlineRewrite={triggerInlineRewrite}
-                                  onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
-                                  isPatchingApplied={isPatchingApplied}
-                                  masterResume={masterResume}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-
-                {/* Detailed Recruitment Insights Toggle (Shown under Score & Fit on mobile, bottom of column on desktop) */}
-                <div className={mobileResultsTab === "score" ? "block" : "hidden lg:block"}>
-                  <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-                    <button
-                      type="button"
-                      onClick={() => setShowDetailedInsights(!showDetailedInsights)}
-                      className="w-full py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-2 select-none cursor-pointer"
-                    >
-                      <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showDetailedInsights ? "transform rotate-180" : ""}`} />
-                      {showDetailedInsights ? "Hide Detailed Recruiter Insights" : "Show Detailed Recruiter Insights (Strengths & Gap Highlights)"}
-                    </button>
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950/20 text-center space-y-2">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Click the button above to generate an executive 3-paragraph cover letter tailored to this role and your resume achievements.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
-                {showDetailedInsights && (
-                  <div className="space-y-6 pt-2 animate-fade-in-up">
-                    {/* Top Strengths Panel */}
-                    {analysisResult.top_strengths && analysisResult.top_strengths.length > 0 && (
-                      <div className="rounded-2xl p-6 border border-emerald-200 bg-emerald-50/60 space-y-4 shadow-sm">
-                        <h3 className="text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-2 border-b border-emerald-200 pb-2">
-                          <TrendingUp className="h-4 w-4 text-emerald-600" />
-                          Top Strengths Match
-                        </h3>
-                        <div className="grid grid-cols-1 gap-3">
-                          {analysisResult.top_strengths.map((strength, i) => (
-                            <div key={i} className="flex items-start gap-3 bg-white p-3.5 rounded-xl border border-emerald-200/80 shadow-xs">
-                              <div className="h-7 w-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 mt-0.5">
-                                <CategoryIcon category={strength.category} className="h-4 w-4 text-emerald-700" />
-                              </div>
-                              <div className="space-y-1">
+                  {/* 📥 Dedicated Mobile Export View (Clean, 1-Tap Download Panel for Phones) */}
+                  {mobileResultsTab === "export" && (
+                    <div className="lg:hidden glass-panel rounded-3xl p-6 border border-slate-200/90 bg-white shadow-xl shadow-teal-500/5 space-y-5 animate-fade-in">
+                      <div className="flex items-center gap-3.5 border-b border-slate-100 pb-4">
+                        <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0 ring-1 ring-white/60">
+                          <Download className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-black text-slate-900 tracking-tight">
+                            Export Tailored Resume
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Recruiter-grade resume with 100% visual layout preservation.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {/* Primary DOCX Download */}
+                        <a
+                          href={downloadUrl ? `${API_BASE_URL}${downloadUrl}` : (downloadId ? `${API_BASE_URL}/api/v1/resume/download/${downloadId}` : undefined)}
+                          download
+                          onClick={() => {
+                            if (!downloadUrl && !downloadId) {
+                              handleApplyRewrites();
+                            } else {
+                              setSuccessNotification("Downloading tailored DOCX...");
+                            }
+                          }}
+                          className={`w-full py-4 px-5 rounded-2xl font-black text-sm text-white shadow-xl flex items-center justify-between transition-all active:scale-95 ${downloadUrl || downloadId
+                              ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-teal-500 shadow-emerald-600/25"
+                              : "btn-primary shadow-teal-600/25"
+                            }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <WordLogoIcon className="h-6 w-6 shrink-0" />
+                            <div className="text-left">
+                              <p className="font-black text-sm">Download Tailored DOCX</p>
+                              <p className="text-[11px] text-teal-100 font-medium">100% Word format & template preserved</p>
+                            </div>
+                          </div>
+                          <Download className="h-5 w-5 text-white/90" />
+                        </a>
+
+                        {/* PDF Download (if available) */}
+                        {downloadId && (
+                          <a
+                            href={`${API_BASE_URL}/api/v1/resume/download-pdf/${downloadId}?t=${encodeURIComponent(
+                              localStorage.getItem("token") || ""
+                            )}`}
+                            download
+                            onClick={() => setSuccessNotification("Downloading PDF...")}
+                            className="w-full py-3.5 px-5 rounded-2xl font-bold text-xs bg-slate-900 hover:bg-slate-800 text-white shadow-md flex items-center justify-between transition-all active:scale-95"
+                          >
+                            <div className="flex items-center gap-3">
+                              <PdfLogoIcon className="h-5 w-5 shrink-0" />
+                              <span className="font-bold">Download Tailored PDF</span>
+                            </div>
+                            <Download className="h-4 w-4 text-white/70" />
+                          </a>
+                        )}
+
+                        {/* PDF Preview */}
+                        {downloadId && (
+                          <button
+                            type="button"
+                            onClick={() => setIsPdfPreviewOpen(true)}
+                            className="w-full py-3 px-5 rounded-2xl font-bold text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 shadow-xs flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+                          >
+                            <Eye className="h-4 w-4 text-slate-600" />
+                            <span>Preview PDF in Browser</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section Analysis Breakdown (Actionable cards shown at the top for maximum speed) */}
+                  <div className={`space-y-6 ${mobileResultsTab === "rewrites" ? "block" : "hidden lg:block"}`}>
+                    {(() => {
+                      const sectionsToImprove = (analysisResult.sections || [])
+                        .filter((s) => s.review_status === "improve" || (s.recommendations && s.recommendations.length > 0))
+                        .sort((a, b) => {
+                          const priorityMap = { high: 3, medium: 2, low: 1 };
+                          return (priorityMap[b.priority] || 0) - (priorityMap[a.priority] || 0);
+                        });
+
+                      const sectionsToKeep = (analysisResult.sections || [])
+                        .filter((s) => s.review_status === "keep" && (!s.recommendations || s.recommendations.length === 0));
+
+                      const sectionsToReduce = (analysisResult.sections || [])
+                        .filter((s) => s.review_status === "reduce_emphasis");
+
+                      return (
+                        <>
+                          {/* AI Section Tailoring Master Controls Bar */}
+                          {analysisResult?.sections && analysisResult.sections.length > 0 && (
+                            <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-50/80 via-indigo-50/60 to-purple-50/50 border border-teal-200/80 text-slate-800 shadow-xs space-y-3">
+                              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-teal-200/60 pb-2.5">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm font-bold text-slate-900">{strength.name}</span>
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase font-extrabold">
-                                    {strength.category}
+                                  <SlidersHorizontal className="h-4 w-4 text-teal-600" />
+                                  <span className="text-xs font-black tracking-tight text-slate-800 uppercase">
+                                    ⚡ AI Section Controls (Toggle ON/OFF for Auto-Tailor)
                                   </span>
                                 </div>
-                                <p className="text-xs text-slate-700 font-medium leading-relaxed">{strength.reason}</p>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const allOn: Record<string, boolean> = {};
+                                      (analysisResult.sections || []).forEach((s) => { allOn[s.section_name] = true; });
+                                      setTailoringSectionToggles(allOn);
+                                    }}
+                                    className="text-[10px] font-extrabold text-teal-700 hover:text-teal-900 bg-white hover:bg-teal-50/80 border border-teal-200 px-2 py-0.5 rounded-md transition-all cursor-pointer shadow-2xs"
+                                  >
+                                    Enable All
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const allOff: Record<string, boolean> = {};
+                                      (analysisResult.sections || []).forEach((s) => { allOff[s.section_name] = false; });
+                                      setTailoringSectionToggles(allOff);
+                                    }}
+                                    className="text-[10px] font-extrabold text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md transition-all cursor-pointer shadow-2xs"
+                                  >
+                                    Disable All
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Section Toggle Chips */}
+                              <div className="flex flex-wrap gap-2 pt-1">
+                                {(analysisResult.sections || []).map((sec, idx) => {
+                                  const isEnabled = tailoringSectionToggles[sec.section_name] !== undefined
+                                    ? tailoringSectionToggles[sec.section_name]
+                                    : !(sec.section_name.toLowerCase().includes("education") || sec.section_name.toLowerCase().includes("certification"));
+                                  return (
+                                    <button
+                                      key={`${sec.section_name}-${idx}`}
+                                      type="button"
+                                      onClick={() => handleToggleSectionTailoring(sec.section_name)}
+                                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none border ${isEnabled
+                                          ? "bg-teal-600 text-white border-teal-500 shadow-xs hover:bg-teal-500"
+                                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                                        }`}
+                                    >
+                                      {isEnabled ? (
+                                        <>
+                                          <Zap className="h-3 w-3 text-amber-300 fill-amber-300" />
+                                          <span>{sec.section_name}: ON</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Lock className="h-3 w-3 text-slate-400" />
+                                          <span>{sec.section_name}: OFF</span>
+                                        </>
+                                      )}
+                                    </button>
+                                  );
+                                })}
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                          )}
 
-                    {/* Top Improvements Panel */}
-                    {analysisResult.top_improvements && analysisResult.top_improvements.length > 0 && (
-                      <div className="rounded-2xl p-6 border border-amber-200 bg-amber-50/60 space-y-4 shadow-sm">
-                        <h3 className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-2 border-b border-amber-200 pb-2">
-                          <ShieldAlert className="h-4 w-4 text-amber-600" />
-                          Top Recommended Improvements
-                        </h3>
-                        <div className="grid grid-cols-1 gap-3">
-                          {(() => {
-                            const sortedImprovements = [...(analysisResult.top_improvements || [])].sort(
-                              (a, b) => a.priority - b.priority
-                            );
-
-                            return sortedImprovements.map((imp, i) => {
-                              const isExpanded = !!expandedImprovements[imp.name];
-                              const priorityColor = [
-                                "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
-                                "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
-                                "bg-amber-100 text-amber-800 border-amber-300 font-extrabold",
-                                "bg-sky-100 text-sky-800 border-sky-300 font-extrabold",
-                                "bg-slate-100 text-slate-800 border-slate-300 font-bold"
-                              ][imp.priority - 1] || "bg-slate-100 text-slate-800 border-slate-300 font-bold";
-
-                              return (
-                                <div
-                                  key={i}
-                                  className="rounded-xl border border-slate-200 hover:border-slate-300 transition-all duration-300 bg-white shadow-xs"
+                          {/* Improve Sections (🟡) */}
+                          {sectionsToImprove.length > 0 && (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-900 pb-2">
+                                <h3 className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                  <span>🟡 Recommendations to Improve ({sectionsToImprove.length})</span>
+                                </h3>
+                                <button
+                                  type="button"
+                                  disabled={isImprovingAll || Object.values(inlineLoadingSections).some(Boolean)}
+                                  onClick={() => handleImproveAllClick(sectionsToImprove)}
+                                  className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 disabled:bg-slate-100 dark:disabled:bg-slate-900 text-amber-700 dark:text-amber-400 disabled:text-slate-400 dark:disabled:text-slate-600 border border-amber-500/25 disabled:border-slate-200 dark:disabled:border-slate-800 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed select-none"
                                 >
-                                  {/* Clickable Header for Collapsing */}
-                                  <div
-                                    onClick={() => toggleImprovement(imp.name)}
-                                    className="flex flex-wrap items-center justify-between gap-4 p-4 cursor-pointer select-none"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <span className={`text-[10px] px-2.5 py-0.5 rounded-full border uppercase ${priorityColor}`}>
-                                        Priority #{imp.priority}
-                                      </span>
-                                      <span className="text-sm font-bold text-slate-900">{imp.name}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${isExpanded ? "transform rotate-180" : ""}`} />
-                                    </div>
-                                  </div>
-
-                                  {/* Collapsible Details */}
-                                  {isExpanded && (
-                                    <div className="px-4 pb-4 border-t border-slate-200 pt-3 space-y-3.5 animate-fade-in-up">
-                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                                        {/* Rationale */}
-                                        <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                          <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider block">
-                                            Hiring Manager Rationale
-                                          </span>
-                                          <p className="text-[11px] text-slate-700 font-medium leading-relaxed italic">
-                                            "{imp.reason}"
-                                          </p>
-                                        </div>
-
-                                        {/* Expected Impact */}
-                                        <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                          <span className="text-[10px] font-black text-teal-900 uppercase tracking-wider block">
-                                            Expected Interview Impact
-                                          </span>
-                                          <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
-                                            {imp.expected_interview_impact}
-                                          </p>
-                                        </div>
-                                      </div>
-
-                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                                        {/* Evidence Reused */}
-                                        <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                          <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider block">
-                                            Evidence Reused or Adjacent Skills
-                                          </span>
-                                          <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
-                                            {imp.evidence_reused || "No direct/adjacent evidence found. Recommended with caution."}
-                                          </p>
-                                        </div>
-
-                                        {/* Metrics (Section & Confidence) */}
-                                        <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                          <div className="flex items-center justify-between text-[11px]">
-                                            <span className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Target Section</span>
-                                            <span className="text-slate-900 font-bold capitalize">{imp.section}</span>
-                                          </div>
-                                          <div className="space-y-1 pt-1 border-t border-slate-200">
-                                            <div className="flex items-center justify-between text-[11px]">
-                                              <span className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Recruiter Confidence</span>
-                                              <span className="text-teal-700 font-extrabold">{Math.round(imp.confidence * 100)}%</span>
-                                            </div>
-                                            <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
-                                              <div
-                                                className="h-full bg-teal-600 rounded-full transition-all duration-500"
-                                                style={{ width: `${imp.confidence * 100}%` }}
-                                              />
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
+                                  {isImprovingAll ? (
+                                    <>
+                                      <RefreshCw className="h-3 w-3 animate-spin" />
+                                      Improving All...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles className="h-3 w-3 animate-pulse" />
+                                      Improve All with AI
+                                    </>
                                   )}
+                                </button>
+                              </div>
+                              <div className="space-y-4">
+                                {sectionsToImprove.map((section, idx) => (
+                                  <SectionCard
+                                    key={`${section.section_name}-${idx}`}
+                                    section={section}
+                                    idx={idx}
+                                    isExpanded={!!expandedSections[section.section_name]}
+                                    onToggle={() => toggleSection(section.section_name)}
+                                    rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections, (section as any).section_type)}
+                                    previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections, (section as any).section_type)}
+                                    onRevert={handleRevert}
+                                    onUndoLastRewrite={handleUndoLastRewrite}
+                                    onImproveClick={handleImproveClick}
+                                    inlineLoadingSections={inlineLoadingSections}
+                                    triggerInlineRewrite={triggerInlineRewrite}
+                                    onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
+                                    isPatchingApplied={isPatchingApplied}
+                                    masterResume={masterResume}
+                                    isTailoringEnabled={
+                                      tailoringSectionToggles[section.section_name] !== undefined
+                                        ? tailoringSectionToggles[section.section_name]
+                                        : !(section.section_name.toLowerCase().includes("education") || section.section_name.toLowerCase().includes("certification"))
+                                    }
+                                    onToggleTailoring={handleToggleSectionTailoring}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Keep Sections (🟢) */}
+                          {sectionsToKeep.length > 0 && (
+                            <div className="space-y-3">
+                              <h3 className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-900 pb-2">
+                                <span>🟢 Keep As-Is ({sectionsToKeep.length})</span>
+                              </h3>
+                              <div className="space-y-4">
+                                {sectionsToKeep.map((section, idx) => (
+                                  <SectionCard
+                                    key={`${section.section_name}-${idx}`}
+                                    section={section}
+                                    idx={idx}
+                                    isExpanded={!!expandedSections[section.section_name]}
+                                    onToggle={() => toggleSection(section.section_name)}
+                                    rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections, (section as any).section_type)}
+                                    previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections, (section as any).section_type)}
+                                    onRevert={handleRevert}
+                                    onUndoLastRewrite={handleUndoLastRewrite}
+                                    onImproveClick={handleImproveClick}
+                                    inlineLoadingSections={inlineLoadingSections}
+                                    triggerInlineRewrite={triggerInlineRewrite}
+                                    onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
+                                    isPatchingApplied={isPatchingApplied}
+                                    masterResume={masterResume}
+                                    isTailoringEnabled={
+                                      tailoringSectionToggles[section.section_name] !== undefined
+                                        ? tailoringSectionToggles[section.section_name]
+                                        : !(section.section_name.toLowerCase().includes("education") || section.section_name.toLowerCase().includes("certification"))
+                                    }
+                                    onToggleTailoring={handleToggleSectionTailoring}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Reduce Emphasis Sections (⚪) */}
+                          {sectionsToReduce.length > 0 && (
+                            <div className="space-y-3">
+                              <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-900 pb-2">
+                                <span>⚪ Reduce Emphasis ({sectionsToReduce.length})</span>
+                              </h3>
+                              <div className="space-y-4">
+                                {sectionsToReduce.map((section, idx) => (
+                                  <SectionCard
+                                    key={`${section.section_name}-${idx}`}
+                                    section={section}
+                                    idx={idx}
+                                    isExpanded={!!expandedSections[section.section_name]}
+                                    onToggle={() => toggleSection(section.section_name)}
+                                    rewrittenText={getRewrittenTextForSection(section.section_name, rewrittenSections, (section as any).section_type)}
+                                    previousRewrittenText={getRewrittenTextForSection(section.section_name, previousRewrittenSections, (section as any).section_type)}
+                                    onRevert={handleRevert}
+                                    onUndoLastRewrite={handleUndoLastRewrite}
+                                    onImproveClick={handleImproveClick}
+                                    inlineLoadingSections={inlineLoadingSections}
+                                    triggerInlineRewrite={triggerInlineRewrite}
+                                    onBulletExclusionChange={(sectionName, excluded) => setExcludedBullets((prev) => ({ ...prev, [sectionName]: excluded }))}
+                                    isPatchingApplied={isPatchingApplied}
+                                    masterResume={masterResume}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Detailed Recruitment Insights Toggle (Shown under Score & Fit on mobile, bottom of column on desktop) */}
+                  <div className={mobileResultsTab === "score" ? "block" : "hidden lg:block"}>
+                    <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setShowDetailedInsights(!showDetailedInsights)}
+                        className="w-full py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-2 select-none cursor-pointer"
+                      >
+                        <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showDetailedInsights ? "transform rotate-180" : ""}`} />
+                        {showDetailedInsights ? "Hide Detailed Recruiter Insights" : "Show Detailed Recruiter Insights (Strengths & Gap Highlights)"}
+                      </button>
+                    </div>
+
+                    {showDetailedInsights && (
+                      <div className="space-y-6 pt-2 animate-fade-in-up">
+                        {/* Top Strengths Panel */}
+                        {analysisResult.top_strengths && analysisResult.top_strengths.length > 0 && (
+                          <div className="rounded-2xl p-6 border border-emerald-200 bg-emerald-50/60 space-y-4 shadow-sm">
+                            <h3 className="text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-2 border-b border-emerald-200 pb-2">
+                              <TrendingUp className="h-4 w-4 text-emerald-600" />
+                              Top Strengths Match
+                            </h3>
+                            <div className="grid grid-cols-1 gap-3">
+                              {analysisResult.top_strengths.map((strength, i) => (
+                                <div key={i} className="flex items-start gap-3 bg-white p-3.5 rounded-xl border border-emerald-200/80 shadow-xs">
+                                  <div className="h-7 w-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 mt-0.5">
+                                    <CategoryIcon category={strength.category} className="h-4 w-4 text-emerald-700" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-bold text-slate-900">{strength.name}</span>
+                                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase font-extrabold">
+                                        {strength.category}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-slate-700 font-medium leading-relaxed">{strength.reason}</p>
+                                  </div>
                                 </div>
-                              );
-                            });
-                          })()}
-                        </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Top Improvements Panel */}
+                        {analysisResult.top_improvements && analysisResult.top_improvements.length > 0 && (
+                          <div className="rounded-2xl p-6 border border-amber-200 bg-amber-50/60 space-y-4 shadow-sm">
+                            <h3 className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-2 border-b border-amber-200 pb-2">
+                              <ShieldAlert className="h-4 w-4 text-amber-600" />
+                              Top Recommended Improvements
+                            </h3>
+                            <div className="grid grid-cols-1 gap-3">
+                              {(() => {
+                                const sortedImprovements = [...(analysisResult.top_improvements || [])].sort(
+                                  (a, b) => a.priority - b.priority
+                                );
+
+                                return sortedImprovements.map((imp, i) => {
+                                  const isExpanded = !!expandedImprovements[imp.name];
+                                  const priorityColor = [
+                                    "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
+                                    "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
+                                    "bg-amber-100 text-amber-800 border-amber-300 font-extrabold",
+                                    "bg-sky-100 text-sky-800 border-sky-300 font-extrabold",
+                                    "bg-slate-100 text-slate-800 border-slate-300 font-bold"
+                                  ][imp.priority - 1] || "bg-slate-100 text-slate-800 border-slate-300 font-bold";
+
+                                  return (
+                                    <div
+                                      key={i}
+                                      className="rounded-xl border border-slate-200 hover:border-slate-300 transition-all duration-300 bg-white shadow-xs"
+                                    >
+                                      {/* Clickable Header for Collapsing */}
+                                      <div
+                                        onClick={() => toggleImprovement(imp.name)}
+                                        className="flex flex-wrap items-center justify-between gap-4 p-4 cursor-pointer select-none"
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <span className={`text-[10px] px-2.5 py-0.5 rounded-full border uppercase ${priorityColor}`}>
+                                            Priority #{imp.priority}
+                                          </span>
+                                          <span className="text-sm font-bold text-slate-900">{imp.name}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${isExpanded ? "transform rotate-180" : ""}`} />
+                                        </div>
+                                      </div>
+
+                                      {/* Collapsible Details */}
+                                      {isExpanded && (
+                                        <div className="px-4 pb-4 border-t border-slate-200 pt-3 space-y-3.5 animate-fade-in-up">
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                            {/* Rationale */}
+                                            <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                              <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider block">
+                                                Hiring Manager Rationale
+                                              </span>
+                                              <p className="text-[11px] text-slate-700 font-medium leading-relaxed italic">
+                                                "{imp.reason}"
+                                              </p>
+                                            </div>
+
+                                            {/* Expected Impact */}
+                                            <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                              <span className="text-[10px] font-black text-teal-900 uppercase tracking-wider block">
+                                                Expected Interview Impact
+                                              </span>
+                                              <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
+                                                {imp.expected_interview_impact}
+                                              </p>
+                                            </div>
+                                          </div>
+
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                            {/* Evidence Reused */}
+                                            <div className="space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                              <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider block">
+                                                Evidence Reused or Adjacent Skills
+                                              </span>
+                                              <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
+                                                {imp.evidence_reused || "No direct/adjacent evidence found. Recommended with caution."}
+                                              </p>
+                                            </div>
+
+                                            {/* Metrics (Section & Confidence) */}
+                                            <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                              <div className="flex items-center justify-between text-[11px]">
+                                                <span className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Target Section</span>
+                                                <span className="text-slate-900 font-bold capitalize">{imp.section}</span>
+                                              </div>
+                                              <div className="space-y-1 pt-1 border-t border-slate-200">
+                                                <div className="flex items-center justify-between text-[11px]">
+                                                  <span className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Recruiter Confidence</span>
+                                                  <span className="text-teal-700 font-extrabold">{Math.round(imp.confidence * 100)}%</span>
+                                                </div>
+                                                <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                                                  <div
+                                                    className="h-full bg-teal-600 rounded-full transition-all duration-500"
+                                                    style={{ width: `${imp.confidence * 100}%` }}
+                                                  />
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
           </div>
         </main>
       )}
@@ -6636,8 +6686,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             <label
                               key={i}
                               className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${isChecked
-                                  ? "bg-amber-50 border-amber-300"
-                                  : "bg-slate-50 border-slate-200 hover:border-slate-300 opacity-60"
+                                ? "bg-amber-50 border-amber-300"
+                                : "bg-slate-50 border-slate-200 hover:border-slate-300 opacity-60"
                                 }`}
                             >
                               <div
@@ -6684,8 +6734,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             <label
                               key={i}
                               className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${isChecked
-                                  ? "bg-rose-50 border-rose-300"
-                                  : "bg-slate-50 border-slate-200 hover:border-slate-300 opacity-60"
+                                ? "bg-rose-50 border-rose-300"
+                                : "bg-slate-50 border-slate-200 hover:border-slate-300 opacity-60"
                                 }`}
                             >
                               <div
@@ -7209,8 +7259,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               onClick={handleApplyRewrites}
               disabled={applyMutation.isPending}
               className={`px-3.5 py-1.5 ${isPatchingApplied
-                  ? "bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold"
-                  : "bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white border border-white/20 shadow-md shadow-emerald-500/20 text-xs font-black hover:scale-105 active:scale-95"
+                ? "bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold"
+                : "bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white border border-white/20 shadow-md shadow-emerald-500/20 text-xs font-black hover:scale-105 active:scale-95"
                 } disabled:opacity-50 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer`}
             >
               {applyMutation.isPending ? (
@@ -7325,13 +7375,27 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       <AuthModal />
 
       {/* Popover Billing & Subscription Modal */}
-      <SubscriptionModal isOpen={isSubscriptionModalOpen} onClose={() => setIsSubscriptionModalOpen(false)} />
+      <SubscriptionModal
+        isOpen={isSubscriptionModalOpen}
+        onClose={() => setIsSubscriptionModalOpen(false)}
+        initialReason={subscriptionModalReason}
+        initialPlan={subscriptionInitialPlan}
+      />
 
       {/* Popover LinkedIn Chrome Extension Modal */}
       <ExtensionModal
         isOpen={isExtensionModalOpen}
         onClose={() => setIsExtensionModalOpen(false)}
-        onOpenSubscribe={() => setIsSubscriptionModalOpen(true)}
+        onOpenSubscribe={() => openUpgradeModal("extension_upsell", "pro")}
+        onOpenPreview={() => setIsExtensionPreviewModalOpen(true)}
+      />
+
+      {/* Popover LinkedIn Chrome Extension Interactive Preview Modal */}
+      <ExtensionPreviewModal
+        isOpen={isExtensionPreviewModalOpen}
+        onClose={() => setIsExtensionPreviewModalOpen(false)}
+        onOpenSubscribe={() => openUpgradeModal("extension_upsell", "pro")}
+        isProOrElite={isProOrElite}
       />
 
       {/* Live PDF Preview Modal */}
@@ -7538,20 +7602,18 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       key={sec.id}
                       type="button"
                       onClick={() => handleToggleSectionTailoring(sec.id, sec.defaultOn)}
-                      className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between gap-4 cursor-pointer select-none group ${
-                        isEnabled
+                      className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between gap-4 cursor-pointer select-none group ${isEnabled
                           ? "bg-teal-50/70 hover:bg-teal-50 border-teal-200/90 shadow-2xs"
                           : "bg-slate-50/70 hover:bg-slate-100/70 border-slate-200/80 opacity-75 hover:opacity-100"
-                      }`}
+                        }`}
                     >
                       {/* Left icon & text */}
                       <div className="flex items-center gap-3.5 min-w-0 flex-1">
                         <div
-                          className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
-                            isEnabled
+                          className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 border transition-all ${isEnabled
                               ? "bg-[#E6F7F4] border-teal-200 text-teal-700 shadow-2xs"
                               : "bg-white border-slate-200 text-slate-400"
-                          }`}
+                            }`}
                         >
                           <SecIcon className="h-5 w-5" />
                         </div>
@@ -7580,14 +7642,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
                       {/* Right iOS Toggle Switch */}
                       <div
-                        className={`w-12 h-6.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out shrink-0 border ${
-                          isEnabled ? "bg-emerald-500 border-emerald-500" : "bg-slate-200 border-slate-300"
-                        }`}
+                        className={`w-12 h-6.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out shrink-0 border ${isEnabled ? "bg-emerald-500 border-emerald-500" : "bg-slate-200 border-slate-300"
+                          }`}
                       >
                         <div
-                          className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
-                            isEnabled ? "translate-x-5.5" : "translate-x-0"
-                          }`}
+                          className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${isEnabled ? "translate-x-5.5" : "translate-x-0"
+                            }`}
                         />
                       </div>
                     </button>

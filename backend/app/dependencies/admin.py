@@ -21,7 +21,7 @@ PIN_RATE_LIMITS: Dict[str, Dict[str, Any]] = {}
 
 MAX_PIN_ATTEMPTS = 5
 LOCKOUT_MINUTES = 15
-ADMIN_SESSION_TTL_MINUTES = 30
+ADMIN_SESSION_TTL_MINUTES = 7 * 24 * 60  # 7 days (10,080 minutes)
 
 
 def check_pin_rate_limit(client_id: str) -> None:
@@ -59,7 +59,7 @@ def reset_pin_attempts(client_id: str) -> None:
 
 
 def create_admin_session(user: User) -> str:
-    """Issue a new random admin session token with 30 min TTL."""
+    """Issue a new random admin session token with 7 days TTL."""
     # Clean up any expired sessions
     now = datetime.utcnow()
     expired_keys = [k for k, v in ADMIN_SESSIONS.items() if v["expires_at"] < now]

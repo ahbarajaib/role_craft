@@ -6,3 +6,10 @@
 export const FREE_TIER_CREDITS = 15;
 export const PRO_CREDITS = 200;
 export const ELITE_CREDITS = 400;
+
+/**
+ * Microsoft Clarity public tracking ID.
+ * Safe to include on client bundle (public web tag).
+ */
+export const CLARITY_PROJECT_ID = "yef56jqa3h";
+

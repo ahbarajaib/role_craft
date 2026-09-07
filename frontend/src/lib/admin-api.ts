@@ -120,39 +120,45 @@ export interface AdminActivityLogResponse {
   total_pages: number;
 }
 
-// Storage helpers - use sessionStorage so tokens automatically expire on window/tab close
+// Storage helpers - use localStorage so admin session persists across browser/tab closes for the 7-day TTL
 export const ADMIN_JWT_KEY = "rc_admin_jwt";
 export const ADMIN_SESSION_TOKEN_KEY = "rc_admin_token";
 export const ADMIN_EMAIL_KEY = "rc_admin_email";
 
 export function getAdminJwt(): string | null {
   if (typeof window === "undefined") return null;
-  return sessionStorage.getItem(ADMIN_JWT_KEY) || localStorage.getItem("rc_token");
+  return localStorage.getItem(ADMIN_JWT_KEY) || sessionStorage.getItem(ADMIN_JWT_KEY) || localStorage.getItem("rc_token");
 }
 
 export function getAdminSessionToken(): string | null {
   if (typeof window === "undefined") return null;
-  return sessionStorage.getItem(ADMIN_SESSION_TOKEN_KEY);
+  return localStorage.getItem(ADMIN_SESSION_TOKEN_KEY) || sessionStorage.getItem(ADMIN_SESSION_TOKEN_KEY);
 }
 
 export function getAdminEmail(): string | null {
   if (typeof window === "undefined") return null;
-  return sessionStorage.getItem(ADMIN_EMAIL_KEY);
+  return localStorage.getItem(ADMIN_EMAIL_KEY) || sessionStorage.getItem(ADMIN_EMAIL_KEY);
 }
 
 export function setAdminAuth(jwt: string, email: string): void {
   if (typeof window === "undefined") return;
+  localStorage.setItem(ADMIN_JWT_KEY, jwt);
+  localStorage.setItem(ADMIN_EMAIL_KEY, email);
   sessionStorage.setItem(ADMIN_JWT_KEY, jwt);
   sessionStorage.setItem(ADMIN_EMAIL_KEY, email);
 }
 
 export function setAdminSessionToken(token: string): void {
   if (typeof window === "undefined") return;
+  localStorage.setItem(ADMIN_SESSION_TOKEN_KEY, token);
   sessionStorage.setItem(ADMIN_SESSION_TOKEN_KEY, token);
 }
 
 export function clearAdminSession(): void {
   if (typeof window === "undefined") return;
+  localStorage.removeItem(ADMIN_JWT_KEY);
+  localStorage.removeItem(ADMIN_SESSION_TOKEN_KEY);
+  localStorage.removeItem(ADMIN_EMAIL_KEY);
   sessionStorage.removeItem(ADMIN_JWT_KEY);
   sessionStorage.removeItem(ADMIN_SESSION_TOKEN_KEY);
   sessionStorage.removeItem(ADMIN_EMAIL_KEY);

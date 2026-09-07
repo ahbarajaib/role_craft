@@ -17,18 +17,21 @@ import {
   AlertCircle,
   HelpCircle,
   FileCode2,
+  Info,
 } from "lucide-react";
 
 interface ExtensionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenSubscribe?: () => void;
+  onOpenPreview?: () => void;
 }
 
 export default function ExtensionModal({
   isOpen,
   onClose,
   onOpenSubscribe,
+  onOpenPreview,
 }: ExtensionModalProps) {
   const { user, token } = useAuth();
   const [isDownloading, setIsDownloading] = useState(false);
@@ -241,6 +244,21 @@ export default function ExtensionModal({
                 <p className="text-xs text-slate-600 max-w-sm mx-auto">
                   Applying to 10+ jobs a day? Our Chrome Extension extracts titles, companies, and clean descriptions directly to your clipboard in 1 click.
                 </p>
+                {onOpenPreview && (
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenPreview();
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                    >
+                      <Info className="h-3.5 w-3.5 text-teal-600" />
+                      <span>See how it looks on LinkedIn (Interactive Preview) →</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Feature Highlights Grid */}
