@@ -1716,7 +1716,7 @@ function cleanSectionModalTitle(title: string): string {
 }
 
 export default function Home({ initialTab }: { initialTab?: "landing" | "workspace" } = {}) {
-  const { user, token, logout, setShowAuthModal, refreshMe } = useAuth();
+  const { user, token, logout, setShowAuthModal, openAuthModal, refreshMe } = useAuth();
   const isProOrElite = Boolean(user?.plan_type === "pro" || user?.plan_type === "elite" || user?.subscription_status === "active");
   const pathname = usePathname();
   const router = useRouter();
@@ -1734,6 +1734,15 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [dailyGoal, setDailyGoal] = useState<DailyTargetSummary | null>(null);
   const [showDailyGoalBanner, setShowDailyGoalBanner] = useState<boolean>(true);
   const [isUpdatingDailyTarget, setIsUpdatingDailyTarget] = useState<boolean>(false);
+
+  // ── Guest Mode State ──────────────────────────────────────────────────────
+  // guestResumeText: plain text extracted client-side from DOCX (for ATS scoring only)
+  // The original File object stays in `file` state — intact for upload after sign-in
+  const [guestResumeText, setGuestResumeText] = useState<string | null>(null);
+  const [guestMode, setGuestMode] = useState(false);
+  const [isRunningGuestAnalysis, setIsRunningGuestAnalysis] = useState(false);
+  // Stores the action to replay after sign-in completes
+  const pendingActionAfterLoginRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -1825,6 +1834,17 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     setSubscriptionModalReason(reason);
     setSubscriptionInitialPlan(plan);
     setIsSubscriptionModalOpen(true);
+  };
+
+  const showGuestUpgradeModal = (trigger: string, pendingAction?: () => void) => {
+    if (pendingAction) {
+      pendingActionAfterLoginRef.current = pendingAction;
+    }
+    const score =
+      analysisResult?.overall_summary?.overall_coverage_percentage ??
+      (analysisResult?.overall_summary as any)?.match_percentage ??
+      undefined;
+    openAuthModal({ score, trigger });
   };
   const [isRewriteModalOpen, setIsRewriteModalOpen] = useState(false);
   const [activeRewriteSection, setActiveRewriteSection] = useState<string | null>(null);
@@ -2139,11 +2159,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   };
 
   const handleGenerateCoverLetter = async () => {
-    if (!documentId || !jobDescription) return;
     if (!token) {
-      setShowAuthModal(true);
+      showGuestUpgradeModal("cover_letter", () => handleGenerateCoverLetter());
       return;
     }
+    if (!documentId || !jobDescription) return;
 
     const originalMatched = (analysisResult?.top_strengths || []).map((s: any) =>
       typeof s === "string" ? cleanKeywordName(s) : cleanKeywordName(s.name)
@@ -2435,11 +2455,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       "background: #059669; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
       { sectionName, recommendations, documentId }
     );
-    if (!documentId) return;
     if (!token) {
-      setShowAuthModal(true);
+      showGuestUpgradeModal("improve_section", () => triggerInlineRewrite(sectionName, recommendations));
       return;
     }
+    if (!documentId) return;
     setInlineLoadingSections((prev) => ({ ...prev, [sectionName]: true }));
     try {
       const { rewriteSection } = require("@/lib/api");
@@ -2516,11 +2536,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       "background: #7c3aed; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
       { count: sectionsToImprove.length, sections: sectionsToImprove.map((s) => s.section_name) }
     );
-    if (!documentId || sectionsToImprove.length === 0) return;
     if (!token) {
-      setShowAuthModal(true);
+      showGuestUpgradeModal("improve_all", () => handleImproveAllClick(sectionsToImprove));
       return;
     }
+    if (!documentId || sectionsToImprove.length === 0) return;
     setIsImprovingAll(true);
     try {
       await Promise.all(
@@ -2540,11 +2560,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       "background: #0284c7; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
       { documentId }
     );
-    if (!documentId) return;
     if (!token) {
-      setShowAuthModal(true);
+      showGuestUpgradeModal("auto_tailor", () => handleAutoTailor());
       return;
     }
+    if (!documentId) return;
     if (jobDescription.trim().length < 50) return;
 
     setIsAutoTailoring(true);
@@ -2976,11 +2996,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       "background: #4f46e5; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
       { sectionName, recommendations, documentId }
     );
-    if (!documentId) return;
     if (!token) {
-      setShowAuthModal(true);
+      showGuestUpgradeModal("improve_modal", () => handleImproveClick(sectionName, recommendations));
       return;
     }
+    if (!documentId) return;
     setActiveRewriteSection(sectionName);
     setRewriteData(null);
     setDraftRewrittenText("");
@@ -3066,11 +3086,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       "background: #059669; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
       { rewrittenSectionsKeys: Object.keys(rewrittenSections), documentId }
     );
-    if (!documentId) return;
     if (!token) {
-      setShowAuthModal(true);
+      showGuestUpgradeModal("patch_docx", () => handleApplyRewrites());
       return;
     }
+    if (!documentId) return;
     const rewrites = Object.entries(rewrittenSections).map(([sectionName, rewrittenText]) => {
       const section = (analysisResult?.sections || []).find(
         (s) => s.section_name.toLowerCase() === sectionName.toLowerCase()
@@ -3100,11 +3120,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [isApplyingTitle, setIsApplyingTitle] = useState(false);
 
   const handleApplyTargetTitle = async (titleToApply: string) => {
-    if (!documentId) return;
     if (!token) {
-      setShowAuthModal(true);
+      showGuestUpgradeModal("apply_title", () => handleApplyTargetTitle(titleToApply));
       return;
     }
+    if (!documentId) return;
 
     setIsApplyingTitle(true);
     const updatedRewrites = {
@@ -3147,11 +3167,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [weavingSingleKeyword, setWeavingSingleKeyword] = useState<string | null>(null);
 
   const handleQuickWeaveKeyword = async (kw: string) => {
-    if (!analysisResult || !documentId) return;
     if (!token) {
-      setShowAuthModal(true);
+      showGuestUpgradeModal("weave_keyword", () => handleQuickWeaveKeyword(kw));
       return;
     }
+    if (!analysisResult || !documentId) return;
 
     setWeavingSingleKeyword(kw);
     setAppliedWovenKeywords((prev) => Array.from(new Set([...prev, kw])));
@@ -3443,7 +3463,19 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setIsEditingCoverLetter(false);
       setAppliedWovenKeywords([]);
       setIsKeywordsWoven(false);
-      uploadMutation.mutate(selectedFile);
+      setGuestResumeText(null);
+      setGuestMode(false);
+      if (token) {
+        // Authenticated: upload normally
+        uploadMutation.mutate(selectedFile);
+      } else {
+        // Guest: extract text client-side; original binary stays in `file` for later upload
+        import("@/lib/guest-analyze").then(({ extractDocxText }) => {
+          extractDocxText(selectedFile)
+            .then((text) => setGuestResumeText(text))
+            .catch((err) => console.warn("[RoleCraft Guest] DOCX text extraction warning:", err));
+        });
+      }
     }
   };
 
@@ -3472,7 +3504,22 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setDownloadId(null);
       setDownloadUrl(null);
       setIsPatchingApplied(false);
-      uploadMutation.mutate(droppedFile);
+      setCoverLetterText(null);
+      setCoverLetterDownloadId(null);
+      setIsEditingCoverLetter(false);
+      setAppliedWovenKeywords([]);
+      setIsKeywordsWoven(false);
+      setGuestResumeText(null);
+      setGuestMode(false);
+      if (token) {
+        uploadMutation.mutate(droppedFile);
+      } else {
+        import("@/lib/guest-analyze").then(({ extractDocxText }) => {
+          extractDocxText(droppedFile)
+            .then((text) => setGuestResumeText(text))
+            .catch((err) => console.warn("[RoleCraft Guest] DOCX text extraction warning:", err));
+        });
+      }
     }
   };
 
@@ -3600,16 +3647,64 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
   const handleAnalyze = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) {
-      setShowAuthModal(true);
-      return;
-    }
-    if (!documentId && !user?.base_resume_id) {
-      setError("Please wait for the file to finish uploading.");
-      return;
-    }
+
     if (jobDescription.trim().length < 50) {
       setError("Job description must be at least 50 characters long.");
+      return;
+    }
+
+    // ── Guest path (no token) ─────────────────────────────────────────────
+    if (!token) {
+      if (!file) {
+        setError("Please upload your resume first.");
+        return;
+      }
+      if (!guestResumeText) {
+        setError("Still extracting your resume — please try again in a moment.");
+        return;
+      }
+      setIsRunningGuestAnalysis(true);
+      setError(null);
+      import("@/lib/guest-analyze").then(({ runGuestAnalysis }) => {
+        runGuestAnalysis(guestResumeText, jobDescription)
+          .then((data) => {
+            setAnalysisResult(data);
+            setGuestMode(true);
+            setRewrittenSections({});
+            setPreviousRewrittenSections({});
+            setDownloadId(null);
+            setDownloadUrl(null);
+            setIsPatchingApplied(false);
+            setCoverLetterText(null);
+            setCoverLetterDownloadId(null);
+            setIsEditingCoverLetter(false);
+            setAppliedWovenKeywords([]);
+            setIsKeywordsWoven(false);
+            setCustomTargetRole(data.overall_summary?.job_title || "");
+            const initialExpanded: Record<string, boolean> = {};
+            (data.sections || []).forEach((sec: any) => {
+              if (sec.review_status === "improve") {
+                initialExpanded[sec.section_name] = true;
+              }
+            });
+            setExpandedSections(initialExpanded);
+            setSuccessNotification("Resume analysis complete! Sign in to fix it with AI.");
+            if (isMobile) {
+              setMobileTab("results");
+              setMobileResultsTab("score");
+            }
+          })
+          .catch((err: any) => {
+            setError(err?.message || "Guest analysis failed. Please try again.");
+          })
+          .finally(() => setIsRunningGuestAnalysis(false));
+      });
+      return;
+    }
+
+    // ── Authenticated path (unchanged) ────────────────────────────────────
+    if (!documentId && !user?.base_resume_id) {
+      setError("Please wait for the file to finish uploading.");
       return;
     }
     // Intercept when out of credits and show upgrade paywall immediately
@@ -3621,9 +3716,38 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     analyzeMutation.mutate();
   };
 
-  const isAnalyzing = analyzeMutation.isPending;
+
+  const isAnalyzing = analyzeMutation.isPending || isRunningGuestAnalysis;
   const isUploading = uploadMutation.isPending;
   const isMobile = useIsMobile(1024);
+
+  // ── Auto-upload original DOCX after guest signs in ────────────────────────
+  // When a guest (who has analysed without auth) signs in via Google, we
+  // automatically upload their original .docx binary so the patching pipeline
+  // can run on the real document — preserving all fonts, margins, and layout.
+  const prevTokenRef = useRef<string | null>(null);
+  useEffect(() => {
+    const wasGuest = guestMode && prevTokenRef.current === null && token !== null;
+    prevTokenRef.current = token;
+
+    if (wasGuest && file && token) {
+      setSuccessNotification("Welcome! Uploading your resume for AI patching...");
+      uploadMutation.mutate(file, {
+        onSuccess: () => {
+          setGuestMode(false);
+          // Replay any action the user was trying to do when they hit the auth wall
+          if (pendingActionAfterLoginRef.current) {
+            const action = pendingActionAfterLoginRef.current;
+            pendingActionAfterLoginRef.current = null;
+            // Small delay so documentId state has propagated
+            setTimeout(() => action(), 300);
+          } else {
+            setSuccessNotification("Your resume is uploaded and ready — start improving with AI!");
+          }
+        },
+      });
+    }
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Mobile / Tablet tab state (Setup / Results) ─────────────────────────
   const [mobileTab, setMobileTab] = useState<"setup" | "results">("setup");
@@ -4907,10 +5031,15 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             <Edit className="h-3 w-3" />
                             <span>Edit</span>
                           </button>
-                          {documentId ? (
+                          {documentId || (!token && file && guestResumeText) ? (
                             <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
                               <CheckCircle className="h-3.5 w-3.5" />
                               Ready
+                            </span>
+                          ) : !token && file && !guestResumeText ? (
+                            <span className="text-xs text-teal-600 dark:text-teal-400 flex items-center gap-1 font-medium">
+                              <RefreshCw className="h-3 w-3 animate-spin" />
+                              Preparing...
                             </span>
                           ) : null}
                           <button
@@ -5159,11 +5288,18 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 <div className="flex flex-col gap-3">
                   <button
                     type="submit"
-                    disabled={!documentId || jobDescription.trim().length < 50 || isAnalyzing}
-                    className={`w-full py-3.5 px-4 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-between gap-2 shadow-lg ${documentId && jobDescription.trim().length >= 50 && !isAnalyzing
+                    disabled={
+                      (!documentId && !(!token && file && guestResumeText) && !user?.base_resume_id) ||
+                      jobDescription.trim().length < 50 ||
+                      isAnalyzing
+                    }
+                    className={`w-full py-3.5 px-4 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-between gap-2 shadow-lg ${
+                      (documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
+                      jobDescription.trim().length >= 50 &&
+                      !isAnalyzing
                         ? "bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:via-teal-700 hover:to-teal-500 text-white shadow-teal-500/20 hover:scale-[1.01] active:scale-[0.99] cursor-pointer ring-2 ring-teal-400/30"
                         : "bg-slate-200 text-slate-400 cursor-not-allowed"
-                      }`}
+                    }`}
                   >
                     <div className="flex items-center gap-2">
                       {isAnalyzing ? (
@@ -5174,11 +5310,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       <span>{isAnalyzing ? "Running Recruiter AI Analysis..." : "Analyze Gaps & Fit"}</span>
                     </div>
 
-                    <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${documentId && jobDescription.trim().length >= 50 && !isAnalyzing
+                    <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                      (documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
+                      jobDescription.trim().length >= 50 &&
+                      !isAnalyzing
                         ? "bg-white/20 text-white border border-white/30"
                         : "bg-slate-300 text-slate-500"
-                      }`}>
-                      {user?.plan_type === "free" ? "1 Credit" : "AI Audit"}
+                    }`}>
+                      {!token ? "Free" : user?.plan_type === "free" ? "1 Credit" : "AI Audit"}
                     </span>
                   </button>
                 </div>

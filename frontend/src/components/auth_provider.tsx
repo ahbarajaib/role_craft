@@ -22,6 +22,11 @@ export interface User {
   missing_skills_tracker?: Record<string, number> | null;
   created_at: string;
 }
+export interface AuthModalContext {
+  score?: number;    // e.g. 52 — the guest's ATS match percentage
+  trigger?: string;  // e.g. "improve_section", "patch_docx", "download"
+}
+
 //change 
 interface AuthContextType {
   user: User | null;
@@ -34,6 +39,8 @@ interface AuthContextType {
   refreshMe: () => Promise<void>;
   showAuthModal: boolean;
   setShowAuthModal: (show: boolean) => void;
+  openAuthModal: (context?: AuthModalContext) => void;
+  authModalContext: AuthModalContext | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,6 +54,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalContext, setAuthModalContext] = useState<AuthModalContext | null>(null);
+
+  const openAuthModal = (context?: AuthModalContext) => {
+    setAuthModalContext(context ?? null);
+    setShowAuthModal(true);
+  };
 
   useEffect(() => {
     const savedToken = localStorage.getItem("rc_token");
@@ -175,6 +188,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshMe,
     showAuthModal,
     setShowAuthModal,
+    openAuthModal,
+    authModalContext,
   };
 
   if (GOOGLE_CLIENT_ID) {

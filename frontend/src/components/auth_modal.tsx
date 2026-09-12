@@ -7,7 +7,7 @@ import { FREE_TIER_CREDITS } from "@/lib/constants";
 import { X, Sparkles, Mail, Lock, AlertCircle, RefreshCw, User } from "lucide-react";
 
 export default function AuthModal() {
-  const { showAuthModal, setShowAuthModal, login, signup, googleLogin } = useAuth();
+  const { showAuthModal, setShowAuthModal, login, signup, googleLogin, authModalContext } = useAuth();
   const [authMode, setAuthMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -115,18 +115,33 @@ export default function AuthModal() {
           <div className="h-12 w-12 rounded-xl icon-gradient bg-gradient-to-br from-teal-600 to-teal-500 flex items-center justify-center mx-auto shadow-md">
             <Sparkles className="h-6 w-6 text-white animate-pulse" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900">
-            {authMode === "signup"
-              ? "Create your account"
-              : authMode === "forgot"
-              ? "Reset your password"
-              : "Sign in to RoleCraft"}
-          </h2>
-          <p className="text-xs text-slate-500">
-            {authMode === "forgot"
-              ? "Enter your email address to receive password reset instructions."
-              : `Get ${FREE_TIER_CREDITS} free optimization credits and unlock AI rewrites.`}
-          </p>
+          {authModalContext?.score != null && authMode !== "forgot" ? (
+            <>
+              <h2 className="text-xl font-bold text-slate-900 leading-snug">
+                Your resume scores{" "}
+                <span className="text-teal-600">{authModalContext.score}%</span>
+                {" "}&mdash; fix it with AI
+              </h2>
+              <p className="text-xs text-slate-500">
+                Sign in to unlock AI rewrites, keyword weaving, and DOCX patching.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-bold text-slate-900">
+                {authMode === "signup"
+                  ? "Create your account"
+                  : authMode === "forgot"
+                  ? "Reset your password"
+                  : "Sign in to RoleCraft"}
+              </h2>
+              <p className="text-xs text-slate-500">
+                {authMode === "forgot"
+                  ? "Enter your email address to receive password reset instructions."
+                  : `Get ${FREE_TIER_CREDITS} free optimization credits and unlock AI rewrites.`}
+              </p>
+            </>
+          )}
         </div>
 
         {/* Error Message */}
@@ -143,6 +158,33 @@ export default function AuthModal() {
             <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500" />
             <span className="flex-1 leading-relaxed">{successMessage}</span>
           </div>
+        )}
+
+        {/* Google Sign-In — Primary CTA (shown ABOVE email/password form) */}
+        {authMode !== "forgot" && (
+          <>
+            <div className="flex justify-center w-full overflow-hidden">
+              <div className="max-w-full overflow-hidden flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError("Google authentication failed.")}
+                  theme="outline"
+                  size="large"
+                  width="300px"
+                />
+              </div>
+            </div>
+            <p className="text-center text-[10px] text-slate-400 -mt-1">
+              Free to try &middot; No credit card &middot; {FREE_TIER_CREDITS} free AI rewrites included
+            </p>
+
+            {/* Separator */}
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-slate-200"></div>
+              <span className="flex-shrink mx-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Or continue with email</span>
+              <div className="flex-grow border-t border-slate-200"></div>
+            </div>
+          </>
         )}
 
         {/* Main Authentication Form */}
@@ -260,29 +302,7 @@ export default function AuthModal() {
           </button>
         </form>
 
-        {authMode !== "forgot" && (
-          <>
-            {/* Separator */}
-            <div className="relative flex py-1 items-center">
-              <div className="flex-grow border-t border-slate-200"></div>
-              <span className="flex-shrink mx-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Or</span>
-              <div className="flex-grow border-t border-slate-200"></div>
-            </div>
 
-            {/* Google Authentication Button Wrapper */}
-            <div className="flex justify-center w-full overflow-hidden">
-              <div className="max-w-full overflow-hidden flex justify-center">
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setError("Google authentication failed.")}
-                  theme="outline"
-                  size="large"
-                  width="300px"
-                />
-              </div>
-            </div>
-          </>
-        )}
 
         {/* Switch Auth mode text */}
         <div className="text-center text-xs text-slate-500">
