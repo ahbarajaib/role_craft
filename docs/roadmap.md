@@ -216,7 +216,33 @@
 
 ---
 
-## Phase 13 - Planned & Future Improvements
+## Phase 14 - Indeed Job Title Copier & Extension Feature Gate Architecture ✅
+
+- [x] **Indeed Job Title Copier** (`indeed-job-copier/`, Manifest V3):
+  - One-click "Copy Job Title" button injected on Indeed job pages (`viewjob`, `jobs/view`, `rc/clk` URLs)
+  - Indeed blue color scheme; multi-URL pattern matching
+  - **Elite-only** access
+
+- [x] **Extension Feature Gate System** (`backend/app/core/extension_config.py`):
+  - Single-source-of-truth config dict: `EXTENSION_FEATURE_GATES`, `EXTENSION_FEATURE_LABELS`, `EXTENSION_FEATURE_DIRS`, `EXTENSION_ZIP_FOLDER_NAMES`
+  - To change a gate (e.g. open Indeed to Pro): edit one dict, restart server — no endpoint code changes
+  - `get_accessible_features(plan_type, subscription_status)` helper returns `{linkedin: bool, indeed: bool}`
+  - Dynamic ZIP builder includes only unlocked feature folders
+
+- [x] **Backend `/extension/status` & `/extension/download` updated**:
+  - `/status` now returns `features: {linkedin, indeed}` and `feature_labels`
+  - `/download` builds dynamic multi-extension ZIP; filename reflects content (`rolecraft-extensions.zip` vs single)
+
+- [x] **Frontend `ExtensionModal` rewritten**:
+  - Dual download cards (LinkedIn + Indeed) with per-card Unlocked/Locked badges
+  - Single download action; plan flags derived client-side from `user.plan_type`
+
+- [x] **`docs/extension-feature-gates.md`** added — step-by-step guide for changing or adding extension feature gates
+
+---
+
+## Phase 15 - Planned & Future Improvements
+
 
 - [ ] PostgreSQL + Redis migration
 - [ ] Multi-language resume support (Arabic, French, German...)

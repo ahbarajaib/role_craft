@@ -3,101 +3,176 @@ import os
 import zipfile
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse
 from app.dependencies.auth import get_current_user, get_optional_current_user
 from app.models import User
+from app.core.extension_config import (
+    EXTENSION_FEATURE_DIRS,
+    EXTENSION_FEATURE_LABELS,
+    EXTENSION_ZIP_FOLDER_NAMES,
+    get_accessible_features,
+    has_any_feature_access,
+)
 
 router = APIRouter(prefix="/extension", tags=["extension"])
 
-def get_extension_dir() -> Path:
-    """Find the extension directory from known bundle/project locations."""
-    candidate_dirs = [
-        # 1. Bundled inside backend/app/extension_src
-        Path(__file__).resolve().parent.parent.parent / "extension_src",
-        # 2. Mounted into container at /app/linkedin-job-copier
-        Path("/app/linkedin-job-copier"),
-        # 3. Development root locations
-        Path(__file__).resolve().parents[4] / "linkedin-job-copier",
-        Path(__file__).resolve().parents[3] / "linkedin-job-copier",
-        Path("/opt/role_craft/linkedin-job-copier"),
+# ── Extension root resolution ─────────────────────────────────────────────────
+
+def get_project_root() -> Path:
+    """Resolve the project root — works in dev, Docker, and VPS deployments."""
+    candidate_roots = [
+        # Dev: walk up from this file (backend/app/api/v1/extension.py → project root)
+        Path(__file__).resolve().parents[4],
+        Path(__file__).resolve().parents[3],
+        # Docker: project mounted at /app
+        Path("/app"),
+        Path("/opt/role_craft"),
     ]
-    for p in candidate_dirs:
-        if p.exists() and (p / "manifest.json").exists():
-            return p
-    return candidate_dirs[0]
+    for root in candidate_roots:
+        # Validate by checking for at least one known extension folder
+        if any((root / folder).exists() for folder in EXTENSION_FEATURE_DIRS.values()):
+            return root
+    # Fallback: return grandparent of this file
+    return Path(__file__).resolve().parents[4]
 
 
-def is_user_pro_or_elite(user: User) -> bool:
-    """Check if the user is on Pro or Elite plan or has an active subscription."""
-    if not user:
-        return False
-    plan = (user.plan_type or "").lower()
-    return plan in ["pro", "elite"] or user.subscription_status == "active"
+def get_extension_dir(feature_key: str) -> Path:
+    """Return the source directory Path for the given extension feature."""
+    folder_name = EXTENSION_FEATURE_DIRS.get(feature_key)
+    if not folder_name:
+        raise ValueError(f"Unknown extension feature: {feature_key!r}")
+
+    project_root = get_project_root()
+    return project_root / folder_name
 
 
-def build_extension_zip() -> io.BytesIO:
-    """Builds a ZIP archive in memory containing all necessary extension files."""
-    ext_dir = get_extension_dir()
-    if not ext_dir.exists() or not (ext_dir / "manifest.json").exists():
+# ── ZIP builder ───────────────────────────────────────────────────────────────
+
+def build_extension_zip(features: dict[str, bool]) -> io.BytesIO:
+    """
+    Builds a ZIP containing only the extension sub-folders the user's plan
+    is allowed to access (features with value True).
+
+    Each sub-folder is nested under its own named directory inside the ZIP
+    so users can unzip and load each independently.
+
+    Example ZIP structure (Elite user):
+        rolecraft-linkedin-copier/
+            manifest.json
+            content.js
+            styles.css
+            icons/
+        rolecraft-indeed-copier/
+            manifest.json
+            content.js
+            styles.css
+            icons/
+    """
+    accessible = [key for key, allowed in features.items() if allowed]
+    if not accessible:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Extension source files not found on server (checked {ext_dir}).",
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your current plan does not include access to any RoleCraft browser extensions.",
         )
 
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        for root, dirs, files in os.walk(ext_dir):
-            for file in files:
-                # Exclude hidden files or git files if any
-                if file.startswith(".") or file.endswith(".tmp"):
-                    continue
-                file_path = Path(root) / file
-                arcname = file_path.relative_to(ext_dir)
-                # Nest inside folder rolecraft-linkedin-copier/ inside the zip for clean extraction
-                zf.write(file_path, arcname=f"rolecraft-linkedin-copier/{arcname}")
+        for feature_key in accessible:
+            ext_dir = get_extension_dir(feature_key)
+            zip_folder = EXTENSION_ZIP_FOLDER_NAMES.get(feature_key, feature_key)
+
+            if not ext_dir.exists() or not (ext_dir / "manifest.json").exists():
+                # Log and skip missing feature rather than hard-failing the whole download
+                continue
+
+            for root, dirs, files in os.walk(ext_dir):
+                # Skip hidden directories (e.g. .git)
+                dirs[:] = [d for d in dirs if not d.startswith(".")]
+                for file in files:
+                    if file.startswith(".") or file.endswith(".tmp"):
+                        continue
+                    file_path = Path(root) / file
+                    arcname = file_path.relative_to(ext_dir)
+                    zf.write(file_path, arcname=f"{zip_folder}/{arcname}")
 
     zip_buffer.seek(0)
     return zip_buffer
 
 
+# ── Endpoints ─────────────────────────────────────────────────────────────────
+
 @router.get("/status")
 def get_extension_status(user: User | None = Depends(get_optional_current_user)):
-    """Returns access eligibility status for the current user."""
+    """
+    Returns per-feature extension access flags for the current user.
+
+    Response shape:
+    {
+        "authenticated": bool,
+        "plan_type": str,
+        "features": {
+            "linkedin": bool,
+            "indeed": bool
+        },
+        "feature_labels": {
+            "linkedin": "LinkedIn 1-Click Job Copier",
+            "indeed": "Indeed Job Title Copier"
+        },
+        "version": "2.0.0"
+    }
+    """
     if not user:
         return {
             "authenticated": False,
-            "eligible": False,
             "plan_type": "guest",
-            "version": "1.0.0",
+            "features": {key: False for key in EXTENSION_FEATURE_DIRS},
+            "feature_labels": EXTENSION_FEATURE_LABELS,
+            "version": "2.0.0",
         }
 
-    eligible = is_user_pro_or_elite(user)
+    features = get_accessible_features(user.plan_type, user.subscription_status)
     return {
         "authenticated": True,
-        "eligible": eligible,
         "plan_type": user.plan_type,
-        "version": "1.0.0",
+        "features": features,
+        "feature_labels": EXTENSION_FEATURE_LABELS,
+        "version": "2.0.0",
     }
 
 
 @router.get("/download")
 def download_extension(user: User = Depends(get_current_user)):
-    """Downloads the RoleCraft LinkedIn Chrome Extension bundle (.zip).
-    
-    Protected route: Only available to Pro and Elite members.
     """
-    if not is_user_pro_or_elite(user):
+    Downloads a ZIP containing all extension bundles the user's plan unlocks.
+
+    - Pro users receive: rolecraft-linkedin-copier/
+    - Elite users receive: rolecraft-linkedin-copier/ + rolecraft-indeed-copier/
+
+    The gate is driven entirely by EXTENSION_FEATURE_GATES in extension_config.py —
+    changing a plan assignment there is sufficient, no code change required here.
+    """
+    features = get_accessible_features(user.plan_type, user.subscription_status)
+
+    if not any(features.values()):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="The LinkedIn Chrome Extension is exclusive to Pro and Elite members. Please upgrade your subscription to access it.",
+            detail=(
+                "RoleCraft Browser Extensions are exclusive to Pro and Elite members. "
+                "Please upgrade your subscription to access them."
+            ),
         )
 
-    zip_buffer = build_extension_zip()
+    zip_buffer = build_extension_zip(features)
+
+    # Dynamic filename based on what's included
+    accessible = [EXTENSION_ZIP_FOLDER_NAMES[k] for k, v in features.items() if v]
+    filename = "rolecraft-extensions.zip" if len(accessible) > 1 else f"{accessible[0]}.zip"
+
     return StreamingResponse(
         zip_buffer,
         media_type="application/zip",
         headers={
-            "Content-Disposition": 'attachment; filename="rolecraft-linkedin-copier.zip"',
+            "Content-Disposition": f'attachment; filename="{filename}"',
             "Access-Control-Expose-Headers": "Content-Disposition",
         },
     )

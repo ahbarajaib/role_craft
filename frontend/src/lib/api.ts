@@ -549,9 +549,14 @@ export function calculateProfileCompletion(user: any) {
 
 export interface ExtensionStatusResponse {
   authenticated: boolean;
-  eligible: boolean;
+  /** @deprecated use features.linkedin instead */
+  eligible?: boolean;
   plan_type: string;
   version: string;
+  /** Per-feature access flags — keys match EXTENSION_FEATURE_GATES on the backend */
+  features?: Record<string, boolean>;
+  /** Human-readable label for each feature key */
+  feature_labels?: Record<string, string>;
 }
 
 export async function getExtensionStatus(token?: string): Promise<ExtensionStatusResponse> {

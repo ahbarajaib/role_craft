@@ -10,7 +10,7 @@ The application allows users to:
 5. Review resume sections via AI (using GPT-4o-mini) to detect gaps and strengths.
 6. Generate targeted rewrites, approve/reject changes, and patch directly back into the original DOCX while preserving 100% of formatting.
 7. Build and manage Master Resumes with structured schemas, rendering high-fidelity ATS DOCX and PDF templates (`/resume-builder`).
-8. Extract job details in 1 click from LinkedIn via a Chrome Extension (Manifest V3) gated to Pro/Elite users.
+8. Extract job details in 1 click from LinkedIn (Pro & Elite) and job titles from Indeed (Elite) via modular Chrome Extensions (Manifest V3) with dynamic plan gating.
 9. Dual billing modes: One-Off 30-Day Pass (zero recurring auto-debit) or Monthly Auto-Renewing Subscriptions via Razorpay, with immediate checkout verification (`/api/v1/payment/verify`).
 10. Admin Control Center (`admin.rolecraft.tech` / `/xrc-control/`) with two-layer authentication (JWT + PIN), financial & growth analytics, user management, credit adjustment, account deletion, support ticket triage, and live configuration editing.
 11. Telemetry, Funnel Milestones & Crash Monitoring: Microsoft Clarity session recordings and heatmaps with authenticated user identity linking (`clarity('identify')`), micro-funnel milestone tracking (`resume_uploaded`, `analysis_started`, `tailor_started`, `resume_downloaded`, `cover_letter_downloaded`), and Sentry crash monitoring across Next.js and FastAPI.
@@ -69,6 +69,7 @@ backend/
     ├── factory.py              FastAPI App Builder (middleware, exception handlers)
     ├── core/
     │   ├── config.py           Pydantic Settings & Config validation
+    │   ├── extension_config.py Centralized extension feature gates (Single Source of Truth)
     │   ├── logging.py          Loguru custom setup
     │   └── exceptions.py       Custom AppError framework and FastAPI handlers
     ├── middleware/
@@ -222,8 +223,8 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 | `POST` | `/api/v1/resume/rewrite` | `RewriteSectionRequest` | `RewriteSectionResponse` | AI section rewrite with universal role & section routing. |
 | `POST` | `/api/v1/resume/apply` | `ApplyRewriteRequest` | `ApplyRewriteResponse` | Apply accepted rewrites to original DOCX. |
 | `GET` | `/api/v1/resume/download/{download_id}` | None | File Download | Stream the generated patched DOCX. |
-| `GET` | `/api/v1/extension/status` | None | `{available, plan_required}` | Returns whether the extension is available for the current user's plan. |
-| `GET` | `/api/v1/extension/download` | None | File (ZIP) | Streams `linkedin-job-copier.zip` to Pro/Elite subscribers only. Returns 403 for free users. |
+| `GET` | `/api/v1/extension/status` | None | `ExtensionStatusResponse` | Returns per-feature extension access flags (`linkedin`, `indeed`) for the user's plan. |
+| `GET` | `/api/v1/extension/download` | None | File (ZIP) | Streams ZIP with unlocked extensions (Pro: LinkedIn; Elite: LinkedIn + Indeed). Returns 403 for free users. |
 | `POST` | `/api/v1/payment/subscribe` | `SubscribeRequest` | `SubscribeResponse` | Creates checkout session: One-Off 30-Day Pass (Order) or Monthly Auto-Renew (Subscription). |
 | `POST` | `/api/v1/payment/verify` | `VerifyPaymentRequest` | `VerifyPaymentResponse` | Instantly verifies checkout signature, activates plan, and grants tier credits. |
 | `POST` | `/api/v1/payment/webhook` | Webhook JSON | `{"status": "ok"}` | Razorpay recurring lifecycle hooks (`subscription.charged`, `subscription.cancelled`). |
@@ -368,6 +369,16 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
   - Admin permanent user deletion with cascade cleanup (`POST /api/v1/admin/users/{id}/delete`)
   - Auto-grant tier credits on admin plan change (Pro: 200, Elite: 400)
   - In-container bundled Chrome extension files (`backend/app/extension_src/`) for reliable ZIP distribution
+- [x] **Indeed Job Title Copier Chrome Extension & Extension Feature Gates** (Phase 14):
+  - `indeed-job-copier/` directory: Manifest V3 extension with `content.js`, `styles.css`, icons, README
+  - One-click copy of job title on any Indeed job page (viewjob, jobs/view, rc/clk URLs)
+  - `backend/app/core/extension_config.py`: Centralized single-source-of-truth dict that maps feature keys → allowed plans. Edit one file to change any plan gate — no endpoint code changes needed.
+  - `EXTENSION_FEATURE_GATES`: LinkedIn → `[pro, elite]`, Indeed → `[elite]`; trivially extensible (Glassdoor, Naukri, etc.)
+  - Backend `/extension/download` now builds a dynamic ZIP including only the features the user's plan unlocks (Pro: LinkedIn only; Elite: LinkedIn + Indeed)
+  - Backend `/extension/status` now returns `features: {linkedin: bool, indeed: bool}` and `feature_labels` — plan-aware per-feature flags
+  - Frontend `ExtensionModal` rewritten with dual download cards (LinkedIn & Indeed), per-card Unlocked/Locked badge, single shared download action
+  - `frontend/src/lib/api.ts` `ExtensionStatusResponse` extended with `features` and `feature_labels` fields
+  - `docs/extension-feature-gates.md` added: step-by-step guide to add/remove/change any extension feature gate
 
 ## Features Intentionally Postponed
 - **PostgreSQL**: Kept as a future database option for production scale.

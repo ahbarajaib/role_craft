@@ -28,12 +28,13 @@
 - [x] Phase 11 – Admin Dashboard & Platform Control Center (2-layer PIN auth, metrics, user management, support triage, live config, audit logs)
 - [x] Phase 12 – Dual Billing Architecture & Admin User Deletion (One-Off 30-Day Pass [Orders API] + Recurring Subscriptions [Subscriptions API], instant checkout verification `/api/v1/payment/verify`, auto-expiration `plan_expires_at`, admin user deletion cascade `/api/v1/admin/users/{id}/delete`, auto tier credits, container-bundled extension files)
 - [x] Phase 13 – Telemetry, Funnel Tracking & Crash Monitoring (Microsoft Clarity user identity linking, core funnel milestone events [upload, analyze, auto-tailor, download], and zero-overhead Sentry crash monitoring across Next.js and FastAPI)
+- [x] Phase 14 – Indeed Job Title Copier Chrome Extension & Extension Feature Gate Architecture (`extension_config.py` single-source-of-truth, dynamic per-feature ZIP bundling, dual `ExtensionModal` cards, Elite-only Indeed gate, `docs/extension-feature-gates.md`)
 - [x] Mobile Bottom Navigation Bar (`mobile_bottom_nav.tsx`)
 - [x] Razorpay instant payment verification & auto tier credit allocation
 
 ## Backlog
 
-- [ ] Add testimonials / social proof to landing page hero section
+- [x] Add testimonials / social proof to landing page hero section (avatar stack + 4.9★ rating + pull-quote added to hero; full testimonial cards below pricing)
 - [ ] PostgreSQL migration (replace SQLite)
 - [ ] Redis + Celery for background AI jobs
 - [ ] Chrome Web Store submission (public extension listing)

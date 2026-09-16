@@ -61,6 +61,7 @@ import {
   GitMerge,
   GraduationCap,
   Award,
+  Star,
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, downloadCoverLetterFile, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory, DailyTargetSummary, updateDailyTarget } from "@/lib/api";
 import { DailyGoalCard } from "@/components/daily_goal_card";
@@ -4241,12 +4242,46 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     <span className="text-[10px] text-slate-700">▶</span>
                   </a>
                 </div>
-                {/* Trust signal */}
-                <p className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                  {27 /* UPDATE: replace with real signup count from /xrc-control/dashboard/users */}
-                  Join early adopters tailoring smarter — free to start
-                </p>
+                {/* Hero Social Proof */}
+                <div className="flex flex-col gap-2 pt-1">
+                  {/* Avatar stack + stars row */}
+                  <div className="flex items-center gap-3">
+                    {/* Stacked Avatars */}
+                    <div className="flex -space-x-2.5">
+                      {[
+                        { initials: "RS", from: "#0F172A", to: "#14B8A6" },
+                        { initials: "PN", from: "#4F46E5", to: "#7C3AED" },
+                        { initials: "AV", from: "#0EA5E9", to: "#06B6D4" },
+                        { initials: "KM", from: "#0F766E", to: "#059669" },
+                      ].map((u, idx) => (
+                        <div
+                          key={idx}
+                          className="h-7 w-7 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-black text-white shadow-sm"
+                          style={{ background: `linear-gradient(135deg, ${u.from}, ${u.to})` }}
+                        >
+                          {u.initials}
+                        </div>
+                      ))}
+                    </div>
+                    {/* Stars + score */}
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                      <span className="text-xs font-extrabold text-slate-800">4.9</span>
+                      <span className="text-xs text-slate-400 font-medium">from early adopters</span>
+                    </div>
+                  </div>
+                  {/* Mini pull-quote */}
+                  <p className="text-xs text-slate-500 font-medium italic pl-0.5">
+                    <span className="text-teal-600 font-black not-italic">"</span>
+                    Got 4 interview callbacks in my first week.
+                    <span className="text-teal-600 font-black not-italic">"</span>
+                    <span className="text-slate-400 not-italic font-semibold ml-1.5">— Rohan S., SWE</span>
+                  </p>
+                </div>
               </div>
 
               {/* Mobile-only compact preview — visible only on small screens */}

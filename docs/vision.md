@@ -84,4 +84,4 @@ The application should:
 - Prioritize recommendations by expected impact.
 - Never rewrite content without explicit user approval.
 - Be live and accessible at rolecraft.tech.
-- Ship a Chrome extension that copies LinkedIn job details in one click (available to Pro/Elite subscribers).
+- Ship Chrome extensions that copy job details in 1 click: LinkedIn (Pro & Elite) and Indeed job title (Elite), with a config-driven feature gate system for easy plan changes and new platform additions.
