@@ -2,20 +2,22 @@
 // RoleCraft — Indeed 1-Click Job Copier
 // Content Script (Manifest V3)
 // ============================================
-// Extracts complete job details (Title, Company,
-// Location, Metadata, Job URL, Description) from
-// Indeed job pages and copies them to the clipboard
-// formatted for RoleCraft ATS optimization.
-// ============================================
 
 (function () {
   'use strict';
+
+  // Ignore tiny frames (tracking pixels, ad widgets)
+  if (window.self !== window.top) {
+    if (window.innerWidth < 250 || window.innerHeight < 250) {
+      return;
+    }
+  }
 
   // ---- Constants ----
   const PREFIX = '[RoleCraft Indeed Copier]';
   const BUTTON_ID = 'rc-indeed-copy-btn';
   const RESET_DELAY_MS = 2500;
-  const WATCHDOG_INTERVAL_MS = 1200;
+  const WATCHDOG_INTERVAL_MS = 800;
 
   let lastJobSignature = '';
   let lastURL = window.location.href;
@@ -35,66 +37,141 @@
     console.error(PREFIX, ...args);
   }
 
-  // ---- 1. Container & Page Detection ----
+  // ---- 1. DOM Locators ----
 
   /**
-   * Find the container element where the currently selected job is displayed.
-   * On search pages (e.g. in.indeed.com/jobs?q=...), Indeed uses a split view
-   * with the right pane displaying the active job.
-   * On direct job pages (e.g. /viewjob?jk=...), the whole document/JobComponent is used.
+   * Locates the primary "Apply" button or action link.
+   * On Indeed, this is "Apply on company site", "Apply now", or "Easily apply".
    */
-  function getJobContainer() {
-    // Strategy 1: Split pane in search results view
-    const splitPaneSelectors = [
+  function findApplyButton(scope) {
+    const root = scope || document;
+
+    // 1. Direct text search across all buttons and links
+    const elements = root.querySelectorAll('button, a');
+    for (const el of elements) {
+      const txt = (el.textContent || '').trim();
+      if (
+        /^apply on company site/i.test(txt) ||
+        /^apply now/i.test(txt) ||
+        /^easily apply/i.test(txt) ||
+        /^apply\b/i.test(txt)
+      ) {
+        // Exclude small filter pills or left-pane badges
+        if (el.offsetWidth > 40 && el.offsetHeight > 20) {
+          return el;
+        }
+      }
+    }
+
+    // 2. Attribute-based search
+    const byAttr = root.querySelector(
+      '#applyButtonLinkContainer, [data-testid*="apply" i], a[aria-label*="apply" i], button[aria-label*="apply" i], .jobsearch-IndeedApplyButton-buttonWrapper'
+    );
+    if (byAttr) return byAttr;
+
+    return null;
+  }
+
+  /**
+   * Locates the container element holding the active job details.
+   */
+  function findJobPanel() {
+    // 1. Known Indeed split-view and job container selectors
+    const selectors = [
       '#jobsearch-ViewjobPaneWrapper',
       '[data-testid="jobsearch-ViewJobLayout"]',
       '.jobsearch-RightPane',
       '#vjs-container',
       '.fastviewjob',
+      'div[class*="jobsearch-ViewJobLayout"]',
+      'div[class*="RightPane"]',
+      'div[class*="viewjob-pane"]',
+      '.jobsearch-JobComponent',
     ];
 
-    for (const sel of splitPaneSelectors) {
-      const el = document.querySelector(sel);
-      if (el && el.offsetHeight > 0) {
-        return el;
+    for (const sel of selectors) {
+      try {
+        const el = document.querySelector(sel);
+        if (el && el.offsetHeight > 0) {
+          return el;
+        }
+      } catch (e) {}
+    }
+
+    // 2. Anchor from Apply button
+    const applyBtn = findApplyButton();
+    if (applyBtn) {
+      let parent = applyBtn.parentElement;
+      for (let i = 0; i < 8 && parent && parent !== document.body; i++) {
+        if (parent.offsetHeight > 250) {
+          return parent;
+        }
+        parent = parent.parentElement;
       }
+      return applyBtn.parentElement;
     }
 
-    // Strategy 2: Standalone job component
-    const jobComponent = document.querySelector('.jobsearch-JobComponent');
-    if (jobComponent && jobComponent.offsetHeight > 0) {
-      return jobComponent;
+    // 3. Anchor from #jobDescriptionText
+    const desc = document.getElementById('jobDescriptionText');
+    if (desc) {
+      let parent = desc.parentElement;
+      for (let i = 0; i < 8 && parent && parent !== document.body; i++) {
+        if (parent.offsetHeight > 250) {
+          return parent;
+        }
+        parent = parent.parentElement;
+      }
+      return desc.parentElement;
     }
 
-    return document;
+    return document.body;
   }
 
   /**
-   * Checks if an active job posting is currently visible on the page.
+   * Finds the Job Title heading element.
+   */
+  function findTitleElement(panel) {
+    const root = panel || findJobPanel() || document;
+    const headings = root.querySelectorAll(
+      'h1, h2, [data-testid*="title" i], [class*="jobTitle" i], [class*="JobInfoHeader-title" i]'
+    );
+
+    for (const h of headings) {
+      const txt = (h.textContent || '').trim();
+      if (
+        txt.length > 2 &&
+        txt.length < 150 &&
+        !/^(job details|benefits|qualifications|about the job|pay|job type|here's how|full stack developer jobs)$/i.test(txt)
+      ) {
+        return h;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Checks if a job listing is currently visible on the page.
    */
   function hasJobOnPage() {
-    const container = getJobContainer();
-
-    // Direct check: job description container is Indeed's most definitive element
-    const desc = container.querySelector(
-      '#jobDescriptionText, [data-testid="jobsearch-JobComponent-description"], .jobsearch-jobDescriptionText, .jobsearch-JobComponent-description'
-    );
-    if (desc && desc.textContent.trim().length > 30) {
+    // 1. Any Apply button present?
+    if (findApplyButton()) {
       return true;
     }
 
-    // Check if job header/title exists
-    const title = container.querySelector(
-      '[data-testid="jobsearch-JobInfoHeader-title"], h1[data-testid="jobTitle"], h1.jobsearch-JobInfoHeader-title, h1.jobTitle, [data-testid="jobsearch-JobInfoHeader-actions"]'
-    );
-    if (title) {
+    // 2. Job description container present?
+    if (document.getElementById('jobDescriptionText')) {
       return true;
     }
 
-    // URL indicates job page + any h1 present
+    // 3. Job title heading present?
+    if (findTitleElement()) {
+      return true;
+    }
+
+    // 4. URL contains job key parameter or path
     const url = window.location.href;
-    const isJobUrl = /viewjob|jobs\/view|rc\/clk|[?&]vjk=|[?&]jk=|\/job\//i.test(url);
-    if (isJobUrl && container.querySelector('h1')) {
+    if (/viewjob|jobs\/view|rc\/clk|[?&]vjk=|[?&]jk=/i.test(url)) {
       return true;
     }
 
@@ -102,7 +179,7 @@
   }
 
   /**
-   * Generates a signature for the currently viewed job to detect switches.
+   * Unique signature of the currently viewed job to detect card switches.
    */
   function getJobSignature() {
     try {
@@ -111,85 +188,40 @@
       if (vjk) return vjk;
     } catch (e) {}
 
-    const container = getJobContainer();
-    const titleEl = container.querySelector(
-      '[data-testid="jobsearch-JobInfoHeader-title"], h1[data-testid="jobTitle"], h1'
-    );
+    const titleEl = findTitleElement();
     return titleEl ? titleEl.textContent.trim() : '';
   }
 
   // ---- 2. Field Extractors ----
 
-  /**
-   * Extract Job Title using multiple prioritized strategies.
-   */
-  function extractJobTitle(container) {
-    const root = container || document;
-    const selectors = [
-      '[data-testid="jobsearch-JobInfoHeader-title"]',
-      'h1[data-testid="jobTitle"]',
-      'h1.jobsearch-JobInfoHeader-title',
-      'h1.jobTitle',
-      '[data-testid="jobsearch-JobInfoHeader-title"] h1',
-      '#jobsearch-ViewjobPaneWrapper h1',
-      '[data-testid="jobsearch-ViewJobLayout"] h1',
-      'h1',
-    ];
-
-    for (const sel of selectors) {
-      try {
-        const el = root.querySelector(sel);
-        if (el) {
-          const clone = el.cloneNode(true);
-          // Strip out "- job post", SVG icons, badges
-          clone.querySelectorAll('span, svg, button').forEach((sub) => {
-            if (/job post/i.test(sub.textContent) || sub.textContent.trim() === '-') {
-              sub.remove();
-            }
-          });
-          const text = clone.textContent.trim().replace(/\s*-\s*job post\s*$/i, '').trim();
-          if (text.length > 2 && text.length < 250) {
-            log(`Title extracted via selector: ${sel}`);
-            return text;
-          }
-        }
-      } catch (e) {}
+  function extractJobTitle() {
+    const titleEl = findTitleElement();
+    if (titleEl) {
+      const clone = titleEl.cloneNode(true);
+      clone.querySelectorAll('span, button, svg').forEach((s) => {
+        if (/job post/i.test(s.textContent) || s.textContent.trim() === '-') s.remove();
+      });
+      const txt = clone.textContent.trim().replace(/\s*-\s*job post\s*$/i, '').trim();
+      if (txt.length > 2 && txt.length < 180) {
+        log('Title extracted from heading:', txt);
+        return txt;
+      }
     }
 
-    // Strategy: Parse browser <title>
-    // Indeed format: "Job Title - Company Name - City, State | Indeed.com"
+    // Fallback: browser <title> ("Job Title - Company - Location | Indeed.com")
     if (document.title) {
       const parts = document.title.split(' - ');
-      if (parts.length >= 2) {
-        const candidate = parts[0].trim();
-        if (candidate.length > 2 && candidate.length < 200) {
-          log('Title extracted from page <title>');
-          return candidate;
-        }
+      if (parts.length >= 2 && parts[0].trim().length > 2) {
+        return parts[0].trim();
       }
     }
 
-    // Strategy: og:title meta tag
-    const og = document.querySelector('meta[property="og:title"]');
-    if (og) {
-      const content = og.getAttribute('content') || '';
-      const withoutBranding = content.replace(/\s*\|.*$/i, '').trim();
-      const withoutAt = withoutBranding.replace(/\s+at\s+.+$/i, '').trim();
-      if (withoutAt.length > 2) {
-        log('Title extracted from og:title');
-        return withoutAt;
-      }
-    }
-
-    warn('All title extraction strategies failed');
-    return null;
+    return 'Job Details';
   }
 
-  /**
-   * Extract Company Name.
-   */
-  function extractCompany(container) {
-    const root = container || document;
+  function extractCompany() {
+    const panel = findJobPanel();
+
     const selectors = [
       '[data-testid="inlineHeader-companyName"]',
       '[data-testid="jobsearch-JobInfoHeader-companyName"]',
@@ -199,79 +231,55 @@
       '[data-testid="company-name"]',
       '.jobsearch-CompanyInfoContainer a',
       '.jobsearch-CompanyInfoWithoutReviews',
-      '.jobsearch-CompanyReview--heading',
-      '[class*="companyName"]',
     ];
 
     for (const sel of selectors) {
-      try {
-        const el = root.querySelector(sel);
-        if (el) {
-          const text = el.textContent.trim();
-          if (text.length > 1 && text.length < 150) {
-            log(`Company extracted via selector: ${sel}`);
-            return text;
-          }
-        }
-      } catch (e) {}
+      const el = panel.querySelector(sel) || document.querySelector(sel);
+      if (el) {
+        const txt = el.textContent.trim();
+        if (txt.length > 1 && txt.length < 120) return txt;
+      }
     }
 
-    // Fallback: Parse from page title
-    if (document.title) {
-      const parts = document.title.split(' - ');
-      if (parts.length >= 3 && parts[1].trim().length > 1) {
-        return parts[1].trim();
+    // Look for any link near title
+    const links = panel.querySelectorAll('a');
+    for (const l of links) {
+      const href = l.getAttribute('href') || '';
+      const txt = l.textContent.trim();
+      if ((href.includes('/cmp/') || href.includes('/companies/')) && txt.length > 1) {
+        return txt;
       }
     }
 
     return null;
   }
 
-  /**
-   * Extract Location.
-   */
-  function extractLocation(container) {
-    const root = container || document;
+  function extractLocation() {
+    const panel = findJobPanel();
+
     const selectors = [
       '[data-testid="inlineHeader-companyLocation"]',
       '[data-testid="jobsearch-JobInfoHeader-companyLocation"]',
       'div[data-testid="job-location"]',
       '.jobsearch-JobInfoHeader-companyLocation',
       'div[class*="companyLocation"]',
-      '[data-testid="jobsearch-JobInfoHeader-companyLocation"] div',
     ];
 
     for (const sel of selectors) {
-      try {
-        const el = root.querySelector(sel);
-        if (el) {
-          const text = el.textContent.trim();
-          if (text.length > 2 && text.length < 150) {
-            log(`Location extracted via selector: ${sel}`);
-            return text;
-          }
-        }
-      } catch (e) {}
-    }
-
-    // Fallback: Parse from page title ("Title - Company - Location | Indeed.com")
-    if (document.title) {
-      const parts = document.title.split(' - ');
-      if (parts.length >= 3) {
-        const locPart = parts[2].split('|')[0].trim();
-        if (locPart.length > 2) return locPart;
+      const el = panel.querySelector(sel) || document.querySelector(sel);
+      if (el) {
+        const txt = el.textContent.trim();
+        if (txt.length > 1 && txt.length < 120) return txt;
       }
     }
 
     return null;
   }
 
-  /**
-   * Extract Salary, Job Type, or Key Metadata.
-   */
-  function extractMetadata(container) {
-    const root = container || document;
+  function extractMetadata() {
+    const panel = findJobPanel();
     const items = [];
+
     const selectors = [
       '#salaryInfoAndJobType',
       '[data-testid="jobsearch-OtherJobDetailsContainer"]',
@@ -281,11 +289,11 @@
 
     for (const sel of selectors) {
       try {
-        const el = root.querySelector(sel);
+        const el = panel.querySelector(sel) || document.querySelector(sel);
         if (el) {
-          const text = (el.innerText || el.textContent || '').trim();
-          if (text && !items.includes(text)) {
-            items.push(text);
+          const txt = (el.innerText || el.textContent || '').trim();
+          if (txt && !items.includes(txt)) {
+            items.push(txt);
           }
         }
       } catch (e) {}
@@ -294,64 +302,30 @@
     return items.length > 0 ? items.join('\n') : null;
   }
 
-  /**
-   * Extract or construct canonical Job URL.
-   */
-  function extractURL() {
-    const currentUrl = window.location.href;
-    try {
-      const parsed = new URL(currentUrl);
-      const vjk = parsed.searchParams.get('vjk') || parsed.searchParams.get('jk');
-      if (vjk) {
-        return `${parsed.origin}/viewjob?jk=${vjk}`;
-      }
-      if (parsed.pathname.includes('/viewjob')) {
-        return parsed.origin + parsed.pathname + (vjk ? `?jk=${vjk}` : parsed.search);
-      }
-    } catch (e) {}
-
-    const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical && canonical.href && canonical.href.includes('indeed.')) {
-      return canonical.href;
-    }
-
-    return currentUrl;
-  }
-
-  /**
-   * Clean description element into formatted plain text preserving bullet points.
-   */
   function cleanDescription(el) {
     const clone = el.cloneNode(true);
 
-    // Remove non-content elements
     clone.querySelectorAll('script, style, noscript, svg, [aria-hidden="true"]').forEach((n) => n.remove());
 
-    // Format list items with bullet points
     clone.querySelectorAll('li').forEach((li) => {
       li.textContent = '• ' + li.textContent.trim() + '\n';
     });
 
-    // Add newlines after paragraphs, headers, divisions
     clone.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, br').forEach((b) => {
       b.insertAdjacentText('afterend', '\n');
     });
 
     let text = clone.innerText || clone.textContent || '';
-    text = text
+    return text
       .replace(/\r\n/g, '\n')
       .replace(/[ \t]+/g, ' ')
       .replace(/\n{3,}/g, '\n\n')
       .trim();
-
-    return text;
   }
 
-  /**
-   * Extract Job Description text.
-   */
-  function extractDescription(container) {
-    const root = container || document;
+  function extractDescription() {
+    const panel = findJobPanel();
+
     const selectors = [
       '#jobDescriptionText',
       '[data-testid="jobsearch-JobComponent-description"]',
@@ -360,22 +334,28 @@
     ];
 
     for (const sel of selectors) {
-      try {
-        const el = root.querySelector(sel);
-        if (el && el.textContent.trim().length > 30) {
-          log(`Description extracted via selector: ${sel}`);
-          return cleanDescription(el);
-        }
-      } catch (e) {}
+      const el = panel.querySelector(sel) || document.querySelector(sel);
+      if (el && el.textContent.trim().length > 30) {
+        return cleanDescription(el);
+      }
     }
 
-    warn('All description extraction selectors failed');
     return null;
   }
 
-  /**
-   * Format all extracted details into RoleCraft clipboard format.
-   */
+  function extractURL() {
+    const currentUrl = window.location.href;
+    try {
+      const parsed = new URL(currentUrl);
+      const vjk = parsed.searchParams.get('vjk') || parsed.searchParams.get('jk');
+      if (vjk) {
+        return `${parsed.origin}/viewjob?jk=${vjk}`;
+      }
+    } catch (e) {}
+
+    return currentUrl;
+  }
+
   function formatForClipboard(details) {
     let output = '';
 
@@ -402,15 +382,15 @@
     return output.trim();
   }
 
-  // ---- 3. Clipboard Write ----
+  // ---- 3. Clipboard API ----
 
   async function copyToClipboard(text) {
     try {
       await navigator.clipboard.writeText(text);
-      log('Copied via Clipboard API');
+      log('Copied via modern Clipboard API');
       return true;
     } catch (e) {
-      warn('Clipboard API failed, trying execCommand fallback');
+      warn('Clipboard API failed, attempting execCommand fallback');
     }
 
     try {
@@ -426,13 +406,13 @@
         return true;
       }
     } catch (e) {
-      logError('execCommand fallback failed:', e.message);
+      logError('execCommand failed:', e.message);
     }
 
     return false;
   }
 
-  // ---- 4. Button Icons ----
+  // ---- 4. Button Icons & States ----
 
   function getCopyIcon() {
     return `<span class="rc-indeed-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></span>`;
@@ -445,8 +425,6 @@
   function getErrorIcon() {
     return `<span class="rc-indeed-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></span>`;
   }
-
-  // ---- 5. Button State ----
 
   function setButtonState(state) {
     const btn = document.getElementById(BUTTON_ID);
@@ -472,28 +450,20 @@
     }
   }
 
-  // ---- 6. Click Handler ----
-
   async function handleCopyClick(event) {
     event.preventDefault();
     event.stopPropagation();
 
-    log('Copy button clicked');
+    log('Copy Job Details clicked');
     setButtonState('extracting');
 
     try {
-      const container = getJobContainer();
-
-      const title = extractJobTitle(container);
-      const company = extractCompany(container);
-      const location = extractLocation(container);
-      const metadata = extractMetadata(container);
+      const title = extractJobTitle();
+      const company = extractCompany();
+      const location = extractLocation();
+      const metadata = extractMetadata();
       const url = extractURL();
-      const description = extractDescription(container);
-
-      if (!title && !description) {
-        throw new Error('Could not extract job title or description from this page');
-      }
+      const description = extractDescription();
 
       const formatted = formatForClipboard({
         title,
@@ -504,22 +474,22 @@
         description,
       });
 
-      const copied = await copyToClipboard(formatted);
-      if (!copied) {
+      const success = await copyToClipboard(formatted);
+      if (!success) {
         throw new Error('Clipboard write failed');
       }
 
-      log('Success! Job details copied to clipboard. Length:', formatted.length);
+      log('Job details copied! Character count:', formatted.length);
       setButtonState('success');
     } catch (err) {
-      logError('Failed to copy job details:', err.message);
+      logError('Error copying job details:', err.message);
       setButtonState('error');
     }
 
     setTimeout(() => setButtonState('ready'), RESET_DELAY_MS);
   }
 
-  // ---- 7. Button Injection ----
+  // ---- 5. Button Injection ----
 
   function createButton() {
     const btn = document.createElement('button');
@@ -538,76 +508,66 @@
       return;
     }
 
-    const container = getJobContainer();
-    const existingBtn = document.getElementById(BUTTON_ID);
-
-    // If button already exists inside the active container and is visible, keep it
-    if (existingBtn && container.contains(existingBtn)) {
-      return;
-    }
-
-    // If button was attached elsewhere (e.g. previous job pane), clean it up
-    if (existingBtn) {
-      existingBtn.remove();
+    const existing = document.getElementById(BUTTON_ID);
+    if (existing && document.body.contains(existing)) {
+      // If button already exists and is visible on screen, we're good
+      if (existing.offsetParent !== null) {
+        return;
+      }
+      existing.remove();
     }
 
     const btn = createButton();
     let injected = false;
 
-    // Strategy 1: Next to Apply button or action container
-    const actionContainers = [
-      container.querySelector('#applyButtonLinkContainer'),
-      container.querySelector('[data-testid="applyButton"]')?.parentElement,
-      container.querySelector('.jobsearch-IndeedApplyButton-buttonWrapper'),
-      container.querySelector('[data-testid="jobsearch-JobInfoHeader-actions"]'),
-      container.querySelector('.jobsearch-JobInfoHeader-actions'),
-      container.querySelector('[class*="jobsearch-JobInfoHeader-actions"]'),
-      container.querySelector('div[id*="applyButton"]'),
-      container.querySelector('[data-testid="applyButton"]'),
-    ];
-
-    for (const ac of actionContainers) {
-      if (ac && ac.parentElement) {
-        ac.parentElement.insertAdjacentElement('afterend', btn);
-        log('Button injected next to action container');
-        injected = true;
-        break;
-      }
+    // Strategy 1: Place directly adjacent to the primary Apply button
+    const applyBtn = findApplyButton();
+    if (applyBtn && applyBtn.parentElement) {
+      applyBtn.insertAdjacentElement('afterend', btn);
+      log('Button injected next to Apply button');
+      injected = true;
     }
 
-    // Strategy 2: Directly after job title container
+    // Strategy 2: Place in the action row container
     if (!injected) {
-      const titleContainer = container.querySelector(
-        '[data-testid="jobsearch-JobInfoHeader-title"], h1[data-testid="jobTitle"], h1.jobsearch-JobInfoHeader-title, h1.jobTitle, .jobsearch-JobInfoHeader-title'
+      const actionRow = document.querySelector(
+        '#applyButtonLinkContainer, [data-testid="jobsearch-JobInfoHeader-actions"], .jobsearch-JobInfoHeader-actions, div[class*="JobInfoHeader-actions"]'
       );
-      if (titleContainer && titleContainer.parentElement) {
-        titleContainer.parentElement.appendChild(btn);
-        log('Button injected inside/after title container');
+      if (actionRow) {
+        actionRow.appendChild(btn);
+        log('Button injected in action row container');
         injected = true;
       }
     }
 
-    // Strategy 3: Immediately before job description container
+    // Strategy 3: Place after the job title heading
     if (!injected) {
-      const descContainer = container.querySelector(
-        '#jobDescriptionText, [data-testid="jobsearch-JobComponent-description"]'
-      );
-      if (descContainer && descContainer.parentElement) {
-        descContainer.parentElement.insertAdjacentElement('beforebegin', btn);
-        log('Button injected before description container');
+      const titleEl = findTitleElement();
+      if (titleEl && titleEl.parentElement) {
+        titleEl.insertAdjacentElement('afterend', btn);
+        log('Button injected after job title');
         injected = true;
       }
     }
 
-    // Strategy 4: Fallback floating button
+    // Strategy 4: Place before job description
     if (!injected) {
-      log('Using floating button fallback');
+      const desc = document.getElementById('jobDescriptionText');
+      if (desc && desc.parentElement) {
+        desc.parentElement.insertAdjacentElement('beforebegin', btn);
+        log('Button injected before job description');
+        injected = true;
+      }
+    }
+
+    // Strategy 5: Floating fallback button (always visible)
+    if (!injected) {
+      log('Injecting fallback floating button');
       btn.classList.add('rc-indeed-floating');
       document.body.appendChild(btn);
     }
 
     lastJobSignature = getJobSignature();
-    log('Button ready for job:', lastJobSignature || 'Direct');
   }
 
   function removeButton() {
@@ -618,15 +578,15 @@
     }
   }
 
-  // ---- 8. Navigation & Job Change Watchers ----
+  // ---- 6. Dynamic SPA Watchers ----
 
   function checkJobSwitch() {
     const currentSig = getJobSignature();
     if (currentSig && currentSig !== lastJobSignature) {
-      log('Job switch detected:', lastJobSignature, '→', currentSig);
+      log('Job change detected:', lastJobSignature, '→', currentSig);
       lastJobSignature = currentSig;
       removeButton();
-      setTimeout(injectButton, 200);
+      setTimeout(injectButton, 150);
       return true;
     }
     return false;
@@ -636,14 +596,17 @@
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       checkJobSwitch();
-      if (hasJobOnPage() && !document.getElementById(BUTTON_ID)) {
-        injectButton();
+      if (hasJobOnPage()) {
+        const btn = document.getElementById(BUTTON_ID);
+        if (!btn || btn.offsetParent === null) {
+          injectButton();
+        }
       }
-    }, 300);
+    }, 200);
   }
 
   function setupNavigationDetection() {
-    // 1. History API interception (catches client-side route changes)
+    // 1. History API interception
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
 
@@ -659,42 +622,18 @@
 
     window.addEventListener('popstate', onNavigationChange);
 
-    // 2. MutationObserver: watches for dynamic DOM updates (job card clicks, split pane load)
-    const observer = new MutationObserver((mutations) => {
-      let shouldCheck = false;
-
-      for (const mutation of mutations) {
-        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          for (const node of mutation.addedNodes) {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              const el = /** @type {Element} */ (node);
-              if (
-                el.id === 'jobDescriptionText' ||
-                el.id === 'jobsearch-ViewjobPaneWrapper' ||
-                el.id === 'applyButtonLinkContainer' ||
-                el.querySelector?.('#jobDescriptionText') ||
-                el.querySelector?.('[data-testid="jobsearch-JobInfoHeader-title"]') ||
-                el.querySelector?.('[data-testid="applyButton"]') ||
-                el.querySelector?.('#jobsearch-ViewjobPaneWrapper')
-              ) {
-                shouldCheck = true;
-                break;
-              }
-            }
-          }
-        }
-        if (shouldCheck) break;
-      }
-
-      if (shouldCheck) {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          checkJobSwitch();
-          if (hasJobOnPage() && !document.getElementById(BUTTON_ID)) {
+    // 2. Global MutationObserver (catches React DOM re-renders without strict ID checks)
+    const observer = new MutationObserver(() => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        checkJobSwitch();
+        if (hasJobOnPage()) {
+          const btn = document.getElementById(BUTTON_ID);
+          if (!btn || btn.offsetParent === null) {
             injectButton();
           }
-        }, 200);
-      }
+        }
+      }, 200);
     });
 
     observer.observe(document.body, {
@@ -702,7 +641,7 @@
       subtree: true,
     });
 
-    // 3. Periodic Watchdog: ensures button stays present when jobs are loaded via AJAX
+    // 3. Periodic Watchdog (guarantees button stays injected)
     setInterval(() => {
       const currentURL = window.location.href;
       if (currentURL !== lastURL) {
@@ -713,31 +652,25 @@
 
       if (checkJobSwitch()) return;
 
-      if (hasJobOnPage() && !document.getElementById(BUTTON_ID)) {
-        injectButton();
+      if (hasJobOnPage()) {
+        const btn = document.getElementById(BUTTON_ID);
+        if (!btn || btn.offsetParent === null) {
+          injectButton();
+        }
       }
     }, WATCHDOG_INTERVAL_MS);
 
     log('Navigation & mutation detection ready');
   }
 
-  // ---- 9. Initialization ----
+  // ---- 7. Initialization ----
 
   function init() {
     log('Initializing Indeed 1-Click Job Copier...');
-
-    if (hasJobOnPage()) {
-      log('Job detected on initial page load');
-      setTimeout(injectButton, 600);
-    } else {
-      log('No job detected on initial load, watching for navigation/clicks');
-    }
-
+    setTimeout(injectButton, 400);
     setupNavigationDetection();
-    log('Initialization complete');
   }
 
-  // Run on load or idle
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
