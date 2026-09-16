@@ -6,7 +6,7 @@
 (function () {
   'use strict';
 
-  // Ignore tiny frames (tracking pixels, ad widgets)
+  // Ignore tiny frames (tracking pixels, ads)
   if (window.self !== window.top) {
     if (window.innerWidth < 250 || window.innerHeight < 250) {
       return;
@@ -46,7 +46,6 @@
   function findApplyButton(scope) {
     const root = scope || document;
 
-    // 1. Direct text search across all buttons and links
     const elements = root.querySelectorAll('button, a');
     for (const el of elements) {
       const txt = (el.textContent || '').trim();
@@ -56,14 +55,12 @@
         /^easily apply/i.test(txt) ||
         /^apply\b/i.test(txt)
       ) {
-        // Exclude small filter pills or left-pane badges
         if (el.offsetWidth > 40 && el.offsetHeight > 20) {
           return el;
         }
       }
     }
 
-    // 2. Attribute-based search
     const byAttr = root.querySelector(
       '#applyButtonLinkContainer, [data-testid*="apply" i], a[aria-label*="apply" i], button[aria-label*="apply" i], .jobsearch-IndeedApplyButton-buttonWrapper'
     );
@@ -73,10 +70,9 @@
   }
 
   /**
-   * Locates the container element holding the active job details.
+   * Locates the container element holding the active job details (Right Pane).
    */
   function findJobPanel() {
-    // 1. Known Indeed split-view and job container selectors
     const selectors = [
       '#jobsearch-ViewjobPaneWrapper',
       '[data-testid="jobsearch-ViewJobLayout"]',
@@ -98,25 +94,11 @@
       } catch (e) {}
     }
 
-    // 2. Anchor from Apply button
-    const applyBtn = findApplyButton();
-    if (applyBtn) {
-      let parent = applyBtn.parentElement;
-      for (let i = 0; i < 8 && parent && parent !== document.body; i++) {
-        if (parent.offsetHeight > 250) {
-          return parent;
-        }
-        parent = parent.parentElement;
-      }
-      return applyBtn.parentElement;
-    }
-
-    // 3. Anchor from #jobDescriptionText
     const desc = document.getElementById('jobDescriptionText');
     if (desc) {
       let parent = desc.parentElement;
       for (let i = 0; i < 8 && parent && parent !== document.body; i++) {
-        if (parent.offsetHeight > 250) {
+        if (parent.offsetHeight > 400) {
           return parent;
         }
         parent = parent.parentElement;
@@ -141,7 +123,7 @@
       if (
         txt.length > 2 &&
         txt.length < 150 &&
-        !/^(job details|benefits|qualifications|about the job|pay|job type|here's how|full stack developer jobs)$/i.test(txt)
+        !/^(job details|benefits|qualifications|about the job|pay|job type|here's how|full job description|full stack developer jobs)$/i.test(txt)
       ) {
         return h;
       }
@@ -151,29 +133,15 @@
   }
 
   /**
-   * Checks if a job listing is currently visible on the page.
+   * Checks if an active job listing is currently visible on the page.
    */
   function hasJobOnPage() {
-    // 1. Any Apply button present?
-    if (findApplyButton()) {
-      return true;
-    }
+    if (findApplyButton()) return true;
+    if (document.getElementById('jobDescriptionText')) return true;
+    if (findTitleElement()) return true;
 
-    // 2. Job description container present?
-    if (document.getElementById('jobDescriptionText')) {
-      return true;
-    }
-
-    // 3. Job title heading present?
-    if (findTitleElement()) {
-      return true;
-    }
-
-    // 4. URL contains job key parameter or path
     const url = window.location.href;
-    if (/viewjob|jobs\/view|rc\/clk|[?&]vjk=|[?&]jk=/i.test(url)) {
-      return true;
-    }
+    if (/viewjob|jobs\/view|rc\/clk|[?&]vjk=|[?&]jk=/i.test(url)) return true;
 
     return false;
   }
@@ -194,7 +162,33 @@
 
   // ---- 2. Field Extractors ----
 
+  /**
+   * Attempt to parse Google Jobs JSON-LD schema if embedded.
+   */
+  function getJsonLdData() {
+    try {
+      const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+      for (const s of scripts) {
+        const raw = s.textContent || '';
+        if (!raw.includes('JobPosting')) continue;
+        const data = JSON.parse(raw);
+        if (data['@type'] === 'JobPosting') return data;
+        if (Array.isArray(data['@graph'])) {
+          const found = data['@graph'].find((item) => item['@type'] === 'JobPosting');
+          if (found) return found;
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
   function extractJobTitle() {
+    const jsonLd = getJsonLdData();
+    if (jsonLd && jsonLd.title && jsonLd.title.trim().length > 2) {
+      log('Title extracted from JSON-LD:', jsonLd.title);
+      return jsonLd.title.trim();
+    }
+
     const titleEl = findTitleElement();
     if (titleEl) {
       const clone = titleEl.cloneNode(true);
@@ -208,7 +202,6 @@
       }
     }
 
-    // Fallback: browser <title> ("Job Title - Company - Location | Indeed.com")
     if (document.title) {
       const parts = document.title.split(' - ');
       if (parts.length >= 2 && parts[0].trim().length > 2) {
@@ -220,6 +213,12 @@
   }
 
   function extractCompany() {
+    const jsonLd = getJsonLdData();
+    if (jsonLd && jsonLd.hiringOrganization && jsonLd.hiringOrganization.name) {
+      log('Company extracted from JSON-LD:', jsonLd.hiringOrganization.name);
+      return jsonLd.hiringOrganization.name.trim();
+    }
+
     const panel = findJobPanel();
 
     const selectors = [
@@ -241,7 +240,6 @@
       }
     }
 
-    // Look for any link near title
     const links = panel.querySelectorAll('a');
     for (const l of links) {
       const href = l.getAttribute('href') || '';
@@ -251,18 +249,55 @@
       }
     }
 
+    if (document.title) {
+      const parts = document.title.split(' - ');
+      if (parts.length >= 3 && parts[1].trim().length > 1) {
+        return parts[1].trim();
+      }
+    }
+
     return null;
   }
 
   function extractLocation() {
+    // 1. Check JSON-LD
+    const jsonLd = getJsonLdData();
+    if (jsonLd && jsonLd.jobLocation) {
+      const loc = jsonLd.jobLocation;
+      if (loc.address) {
+        const parts = [loc.address.addressLocality, loc.address.addressRegion, loc.address.addressCountry].filter(Boolean);
+        if (parts.length > 0) return parts.join(', ');
+      }
+      if (typeof loc === 'string') return loc;
+    }
+
     const panel = findJobPanel();
 
+    // 2. Sibling text right next to / under Company Name
+    const companyEl = panel.querySelector('a[href*="/cmp/"], [data-testid*="companyName" i], [class*="companyName" i]');
+    if (companyEl) {
+      let next = companyEl.parentElement?.nextElementSibling;
+      while (next) {
+        const txt = next.textContent.trim();
+        // Location is typically "Remote", "City, State", etc., but not salary
+        if (txt.length > 2 && txt.length < 80 && !/[₹$€£]|\d{3,}|year|month|hour|full-time/i.test(txt)) {
+          log('Location extracted from company sibling:', txt);
+          return txt;
+        }
+        next = next.nextElementSibling;
+      }
+    }
+
+    // 3. Known location selectors
     const selectors = [
       '[data-testid="inlineHeader-companyLocation"]',
       '[data-testid="jobsearch-JobInfoHeader-companyLocation"]',
       'div[data-testid="job-location"]',
+      '[data-testid*="companyLocation" i]',
+      '[data-testid*="location" i]',
       '.jobsearch-JobInfoHeader-companyLocation',
       'div[class*="companyLocation"]',
+      'div[class*="jobLocation"]',
     ];
 
     for (const sel of selectors) {
@@ -270,6 +305,24 @@
       if (el) {
         const txt = el.textContent.trim();
         if (txt.length > 1 && txt.length < 120) return txt;
+      }
+    }
+
+    // 4. Fallback: Parse from page title ("Title - Company - Location | Indeed.com")
+    if (document.title) {
+      const parts = document.title.split(' - ');
+      if (parts.length >= 3) {
+        const locPart = parts[2].split('|')[0].trim();
+        if (locPart.length > 1 && locPart.length < 100) return locPart;
+      }
+    }
+
+    // 5. Fallback: Check active card in the left list
+    const selectedCard = document.querySelector('.job_seen_beacon, [class*="selected"], [data-jk]');
+    if (selectedCard) {
+      const cardLoc = selectedCard.querySelector('[data-testid="text-location"], [class*="companyLocation"]');
+      if (cardLoc && cardLoc.textContent.trim()) {
+        return cardLoc.textContent.trim();
       }
     }
 
@@ -291,9 +344,20 @@
       try {
         const el = panel.querySelector(sel) || document.querySelector(sel);
         if (el) {
-          const txt = (el.innerText || el.textContent || '').trim();
-          if (txt && !items.includes(txt)) {
-            items.push(txt);
+          const rawLines = (el.innerText || el.textContent || '').split('\n');
+          for (let line of rawLines) {
+            line = line.trim();
+            // Skip noisy conversational Indeed UI text
+            if (
+              !line ||
+              /^job details$/i.test(line) ||
+              /^here['’]s how the job details align with your profile.*$/i.test(line)
+            ) {
+              continue;
+            }
+            if (!items.includes(line)) {
+              items.push(line);
+            }
           }
         }
       } catch (e) {}
@@ -305,12 +369,15 @@
   function cleanDescription(el) {
     const clone = el.cloneNode(true);
 
-    clone.querySelectorAll('script, style, noscript, svg, [aria-hidden="true"]').forEach((n) => n.remove());
+    // Remove buttons, scripts, styles, svgs
+    clone.querySelectorAll('script, style, noscript, svg, button, nav, [aria-hidden="true"]').forEach((n) => n.remove());
 
+    // Format list items with clean bullet points
     clone.querySelectorAll('li').forEach((li) => {
       li.textContent = '• ' + li.textContent.trim() + '\n';
     });
 
+    // Add clean newlines for blocks
     clone.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, br').forEach((b) => {
       b.insertAdjacentText('afterend', '\n');
     });
@@ -323,23 +390,144 @@
       .trim();
   }
 
+  /**
+   * Multi-Strategy Job Description Extractor:
+   * 1. Heading search ("Full job description", "Job description", "About the job")
+   * 2. Embedded JSON-LD schema
+   * 3. Embedded mosaic provider script data
+   * 4. Known DOM selectors across the entire document
+   * 5. Largest rich-text content block in the job panel
+   */
   function extractDescription() {
-    const panel = findJobPanel();
+    // Strategy 1: Find heading "Full job description" or "Job description" in the DOM
+    const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6, div, span, p');
+    for (const h of allHeadings) {
+      const txt = (h.textContent || '').trim().toLowerCase();
+      if (txt === 'full job description' || txt === 'job description' || txt === 'about the job') {
+        // Next sibling
+        let sibling = h.nextElementSibling;
+        while (sibling) {
+          if (sibling.textContent.trim().length > 60) {
+            log('Description found via heading nextElementSibling');
+            return cleanDescription(sibling);
+          }
+          sibling = sibling.nextElementSibling;
+        }
 
-    const selectors = [
-      '#jobDescriptionText',
-      '[data-testid="jobsearch-JobComponent-description"]',
-      '.jobsearch-jobDescriptionText',
-      '.jobsearch-JobComponent-description',
-    ];
+        // Parent's next sibling
+        if (h.parentElement) {
+          let pSibling = h.parentElement.nextElementSibling;
+          while (pSibling) {
+            if (pSibling.textContent.trim().length > 60) {
+              log('Description found via heading parent nextElementSibling');
+              return cleanDescription(pSibling);
+            }
+            pSibling = pSibling.nextElementSibling;
+          }
 
-    for (const sel of selectors) {
-      const el = panel.querySelector(sel) || document.querySelector(sel);
-      if (el && el.textContent.trim().length > 30) {
-        return cleanDescription(el);
+          // Container enclosing the heading
+          if (h.parentElement.textContent.trim().length > 150) {
+            const clone = h.parentElement.cloneNode(true);
+            clone.querySelectorAll('*').forEach((c) => {
+              if (c.textContent.trim().toLowerCase() === txt) c.remove();
+            });
+            const text = cleanDescription(clone);
+            if (text.length > 60) {
+              log('Description found via heading parent container');
+              return text;
+            }
+          }
+        }
       }
     }
 
+    // Strategy 2: Check JSON-LD embedded schema
+    const jsonLd = getJsonLdData();
+    if (jsonLd && jsonLd.description && jsonLd.description.trim().length > 50) {
+      log('Description extracted from JSON-LD schema');
+      const temp = document.createElement('div');
+      temp.innerHTML = jsonLd.description;
+      return cleanDescription(temp);
+    }
+
+    // Strategy 3: Check mosaic provider script tags
+    const scripts = document.querySelectorAll('script');
+    for (const s of scripts) {
+      const content = s.textContent || '';
+      if (content.includes('sanitizedJobDescription') || content.includes('jobDescriptionText')) {
+        try {
+          const match = content.match(/"sanitizedJobDescription"\s*:\s*("(?:\\.|[^"\\])*")/);
+          if (match) {
+            const html = JSON.parse(match[1]);
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            const text = cleanDescription(temp);
+            if (text.length > 50) {
+              log('Description extracted from mosaic script tag');
+              return text;
+            }
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Strategy 4: Known ID and Data-Testid Selectors across the whole document
+    const selectors = [
+      '#jobDescriptionText',
+      '[data-testid="jobDescriptionText"]',
+      '[data-testid="jobsearch-JobComponent-description"]',
+      '.jobsearch-jobDescriptionText',
+      '.jobsearch-JobComponent-description',
+      '#jobDescriptionSection',
+      '[id*="jobDescription" i]',
+      '[class*="jobDescription" i]',
+      'div[class*="JobComponent-description"]',
+    ];
+
+    for (const sel of selectors) {
+      const elements = document.querySelectorAll(sel);
+      for (const el of elements) {
+        if (el.textContent.trim().length > 50) {
+          log('Description extracted from selector:', sel);
+          return cleanDescription(el);
+        }
+      }
+    }
+
+    // Strategy 5: Largest structured content block in the right pane
+    const pane = findJobPanel();
+    const candidateDivs = pane.querySelectorAll('div, section, article');
+    let bestBlock = null;
+    let highestScore = 0;
+
+    for (const block of candidateDivs) {
+      if (block.querySelector('input, [data-testid*="header" i]')) continue;
+      if (block.closest('.jobsearch-LeftPane, #mosaic-provider-jobcards, header, nav')) continue;
+
+      const txt = block.textContent.trim();
+      if (txt.length < 100 || txt.length > 40000) continue;
+
+      const liCount = block.querySelectorAll('li').length;
+      const pCount = block.querySelectorAll('p').length;
+      const hasKeywords = /requirements|responsibilities|qualifications|experience|skills|about the role|what you'll do|who you are|we are looking for/i.test(txt);
+
+      let score = txt.length;
+      if (liCount >= 2) score += 2000;
+      if (pCount >= 2) score += 1000;
+      if (hasKeywords) score += 3000;
+
+      if (score > highestScore) {
+        highestScore = score;
+        bestBlock = block;
+      }
+    }
+
+    if (bestBlock) {
+      log('Description extracted via largest content block');
+      return cleanDescription(bestBlock);
+    }
+
+    warn('All description extraction strategies failed');
     return null;
   }
 
@@ -510,7 +698,6 @@
 
     const existing = document.getElementById(BUTTON_ID);
     if (existing && document.body.contains(existing)) {
-      // If button already exists and is visible on screen, we're good
       if (existing.offsetParent !== null) {
         return;
       }
@@ -606,7 +793,6 @@
   }
 
   function setupNavigationDetection() {
-    // 1. History API interception
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
 
@@ -622,7 +808,6 @@
 
     window.addEventListener('popstate', onNavigationChange);
 
-    // 2. Global MutationObserver (catches React DOM re-renders without strict ID checks)
     const observer = new MutationObserver(() => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
@@ -641,7 +826,6 @@
       subtree: true,
     });
 
-    // 3. Periodic Watchdog (guarantees button stays injected)
     setInterval(() => {
       const currentURL = window.location.href;
       if (currentURL !== lastURL) {
