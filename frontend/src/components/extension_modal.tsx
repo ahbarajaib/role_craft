@@ -204,15 +204,13 @@ export default function ExtensionModal({
     try {
       setIsDownloading(true);
       setErrorMessage(null);
-      const blob = await downloadExtensionZip(token);
+      // API now returns { blob, filename } — filename comes from the server's Content-Disposition
+      const { blob, filename } = await downloadExtensionZip(token);
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      // Elite gets both, Pro gets linkedin only
-      a.download = isIndeedEligible
-        ? "rolecraft-extensions.zip"
-        : "rolecraft-linkedin-copier.zip";
+      a.download = filename; // e.g. "RoleCraft-LinkedIn-1-Click-Job-Copier.zip" or "RoleCraft-Browser-Extensions.zip"
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -401,7 +399,7 @@ export default function ExtensionModal({
 
           {/* Version footer */}
           <p className="text-center text-[10px] text-slate-400">
-            Version 1.0.0 • Manifest V3 • Zero telemetry • Safe &amp; Private
+            Version 2.0.0 • Manifest V3 • Zero telemetry • Safe &amp; Private
           </p>
         </div>
       </div>

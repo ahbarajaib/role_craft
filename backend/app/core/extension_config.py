@@ -38,8 +38,8 @@ EXTENSION_FEATURE_DIRS: dict[str, str] = {
 
 # Folder name used inside the downloaded ZIP for each feature
 EXTENSION_ZIP_FOLDER_NAMES: dict[str, str] = {
-    "linkedin": "rolecraft-linkedin-copier",
-    "indeed": "rolecraft-indeed-copier",
+    "linkedin": "RoleCraft-LinkedIn-1-Click-Job-Copier",
+    "indeed": "RoleCraft-Indeed-Job-Title-Copier",
 }
 
 

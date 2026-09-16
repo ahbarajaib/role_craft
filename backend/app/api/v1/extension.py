@@ -166,7 +166,7 @@ def download_extension(user: User = Depends(get_current_user)):
 
     # Dynamic filename based on what's included
     accessible = [EXTENSION_ZIP_FOLDER_NAMES[k] for k, v in features.items() if v]
-    filename = "rolecraft-extensions.zip" if len(accessible) > 1 else f"{accessible[0]}.zip"
+    filename = "RoleCraft-Browser-Extensions.zip" if len(accessible) > 1 else f"{accessible[0]}.zip"
 
     return StreamingResponse(
         zip_buffer,

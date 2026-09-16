@@ -571,7 +571,7 @@ export async function getExtensionStatus(token?: string): Promise<ExtensionStatu
   return response.json();
 }
 
-export async function downloadExtensionZip(token: string): Promise<Blob> {
+export async function downloadExtensionZip(token: string): Promise<{ blob: Blob; filename: string }> {
   const response = await fetch(`${API_BASE_URL}/api/v1/extension/download`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -581,7 +581,14 @@ export async function downloadExtensionZip(token: string): Promise<Blob> {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.detail || "Failed to download extension bundle");
   }
-  return response.blob();
+
+  // Read filename from Content-Disposition: attachment; filename="..."
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  const filename = match?.[1] ?? "RoleCraft-Browser-Extensions.zip";
+
+  const blob = await response.blob();
+  return { blob, filename };
 }
 
 

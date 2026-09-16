@@ -4008,8 +4008,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               {user && <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">{calculateProfileCompletion(user).totalPercentage}%</span>}
                             </button>
                             <button type="button" onClick={() => { setIsProfileMenuOpen(false); if (isProOrElite) { setIsExtensionModalOpen(true); } else { setIsExtensionPreviewModalOpen(true); } }} className="touch-target w-full py-3 px-4 rounded-xl bg-teal-50/70 hover:bg-teal-100/70 text-teal-950 border border-teal-200/80 font-bold text-sm transition-all flex items-center justify-between cursor-pointer">
-                              <span className="flex items-center gap-2"><Zap className="h-4 w-4 text-teal-600" /> LinkedIn Chrome Extension</span>
-                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs">{isProOrElite ? "Download" : "Pro"}</span>
+                              <span className="flex flex-col items-start gap-0.5">
+                                <span className="flex items-center gap-2"><Zap className="h-4 w-4 text-teal-600" /> Browser Extensions</span>
+                                <span className="text-[10px] font-semibold text-teal-600 pl-6">
+                                  {user?.plan_type === "elite" ? "LinkedIn + Indeed Copier" : "LinkedIn Job Copier"}
+                                </span>
+                              </span>
+                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs shrink-0">{isProOrElite ? "Download" : "Pro"}</span>
                             </button>
                             <button type="button" onClick={() => { setIsProfileMenuOpen(false); openIssueReport("general"); }} className="touch-target w-full py-3 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-sm transition-all flex items-center gap-2 cursor-pointer">
                               <LifeBuoy className="h-4 w-4 text-teal-600" />
@@ -4098,8 +4103,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           {user && <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">{calculateProfileCompletion(user).totalPercentage}%</span>}
                         </button>
                         <button type="button" onClick={() => { setIsProfileMenuOpen(false); if (isProOrElite) { setIsExtensionModalOpen(true); } else { setIsExtensionPreviewModalOpen(true); } }} className="w-full py-2.5 px-3 rounded-xl bg-teal-50/80 hover:bg-teal-100/80 text-teal-950 border border-teal-200 font-bold text-xs transition-all flex items-center justify-between cursor-pointer shadow-2xs">
-                          <span className="flex items-center gap-2"><Zap className="h-3.5 w-3.5 text-teal-600" /> LinkedIn Chrome Extension</span>
-                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs">{isProOrElite ? "Download" : "Pro"}</span>
+                          <span className="flex flex-col items-start gap-0.5">
+                            <span className="flex items-center gap-2"><Zap className="h-3.5 w-3.5 text-teal-600" /> Browser Extensions</span>
+                            <span className="text-[10px] font-semibold text-teal-500 pl-5">
+                              {user?.plan_type === "elite" ? "LinkedIn + Indeed Copier" : "LinkedIn Job Copier"}
+                            </span>
+                          </span>
+                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs shrink-0">{isProOrElite ? "Download" : "Pro"}</span>
                         </button>
                         <button type="button" onClick={() => { setIsProfileMenuOpen(false); openIssueReport("general"); }} className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer">
                           <LifeBuoy className="h-3.5 w-3.5 text-teal-600" />
@@ -5168,6 +5178,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Target Job Description
                       </label>
+                      {/* LinkedIn Copier badge — Pro & Elite */}
                       <button
                         type="button"
                         onClick={() => {
@@ -5185,6 +5196,27 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         {!isProOrElite && (
                           <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-100/80 px-1 rounded">
                             PRO
+                          </span>
+                        )}
+                      </button>
+                      {/* Indeed Copier badge — Elite only */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (user?.plan_type === "elite") {
+                            setIsExtensionModalOpen(true);
+                          } else {
+                            setIsExtensionPreviewModalOpen(true);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200/80 text-[10px] font-bold transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+                        title="1-Click Indeed Job Title Copier"
+                      >
+                        <Zap className="h-2.5 w-2.5 text-blue-500 shrink-0" />
+                        <span>Indeed Copier</span>
+                        {user?.plan_type !== "elite" && (
+                          <span className="text-[9px] font-black uppercase text-violet-600 bg-violet-100/80 px-1 rounded">
+                            ELITE
                           </span>
                         )}
                       </button>
