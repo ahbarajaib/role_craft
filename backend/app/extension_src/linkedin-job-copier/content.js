@@ -37,8 +37,8 @@
     /^see fewer.*$/i,
     /^show more$/i,
     /^see more$/i,
-    /^…more$/i,
-    /^\.\.\.more$/i,
+    /^…\s*more$/i,
+    /^\.\.\.\s*more$/i,
     /^more$/i,
     /^try premium.*$/i,
     /^premium$/i,
@@ -1260,14 +1260,14 @@
         continue;
       }
       if (foundAfter) {
-        const text = (child.textContent || '').trim();
+        const text = (child.nodeType === Node.ELEMENT_NODE ? domToText(child) : child.textContent || '').trim();
         if (text) {
           textParts.push(text);
         }
       }
     }
 
-    return textParts.join('\n');
+    return textParts.join('\n\n');
   }
 
   /**
@@ -1275,6 +1275,9 @@
    */
   function cleanText(text) {
     if (!text) return null;
+
+    // Strip trailing "... more" or "… more"
+    text = text.replace(/\s*(?:…|\.\.\.)\s*more\s*$/i, '').trim();
 
     // Split into lines
     let lines = text.split('\n');
@@ -1292,7 +1295,7 @@
     // Collapse multiple blank lines
     text = text.replace(/\n{3,}/g, '\n\n');
 
-    // Clean up excessive spaces
+    // Clean up excessive horizontal spaces
     text = text.replace(/[ \t]{2,}/g, ' ');
 
     return text.trim();
