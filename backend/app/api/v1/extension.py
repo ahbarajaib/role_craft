@@ -1,5 +1,6 @@
 import io
 import os
+import logging
 import zipfile
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -16,34 +17,47 @@ from app.core.extension_config import (
 
 router = APIRouter(prefix="/extension", tags=["extension"])
 
+logger = logging.getLogger(__name__)
+
+
 # ── Extension root resolution ─────────────────────────────────────────────────
 
-def get_project_root() -> Path:
-    """Resolve the project root — works in dev, Docker, and VPS deployments."""
-    candidate_roots = [
-        # Dev: walk up from this file (backend/app/api/v1/extension.py → project root)
-        Path(__file__).resolve().parents[4],
-        Path(__file__).resolve().parents[3],
-        # Docker: project mounted at /app
-        Path("/app"),
-        Path("/opt/role_craft"),
-    ]
-    for root in candidate_roots:
-        # Validate by checking for at least one known extension folder
-        if any((root / folder).exists() for folder in EXTENSION_FEATURE_DIRS.values()):
-            return root
-    # Fallback: return grandparent of this file
-    return Path(__file__).resolve().parents[4]
-
-
 def get_extension_dir(feature_key: str) -> Path:
-    """Return the source directory Path for the given extension feature."""
+    """
+    Resolve the source directory for the given extension feature.
+
+    Resolution order (first hit wins):
+    1. Bundled path: backend/app/extension_src/<feature_key>/
+       → Always present in Docker (Dockerfile copies app/ → /app/app/)
+    2. Project-root path: <project_root>/<feature_folder>/
+       → Works in local dev where the repo root is accessible
+    """
     folder_name = EXTENSION_FEATURE_DIRS.get(feature_key)
     if not folder_name:
         raise ValueError(f"Unknown extension feature: {feature_key!r}")
 
-    project_root = get_project_root()
-    return project_root / folder_name
+    # 1. Bundled inside the backend package (Docker-safe)
+    #    extension.py is at: backend/app/api/v1/extension.py
+    #    extension_src is at: backend/app/extension_src/
+    bundled = Path(__file__).resolve().parents[2] / "extension_src" / folder_name
+    if bundled.exists() and (bundled / "manifest.json").exists():
+        return bundled
+
+    # 2. Project-root fallback (local dev)
+    candidate_roots = [
+        Path(__file__).resolve().parents[4],  # project root in dev
+        Path(__file__).resolve().parents[3],
+        Path("/app"),
+        Path("/opt/role_craft"),
+    ]
+    for root in candidate_roots:
+        candidate = root / folder_name
+        if candidate.exists() and (candidate / "manifest.json").exists():
+            return candidate
+
+    # Return the bundled path even if not found — build_extension_zip will
+    # log a warning and skip it gracefully.
+    return bundled
 
 
 # ── ZIP builder ───────────────────────────────────────────────────────────────
@@ -82,7 +96,12 @@ def build_extension_zip(features: dict[str, bool]) -> io.BytesIO:
             zip_folder = EXTENSION_ZIP_FOLDER_NAMES.get(feature_key, feature_key)
 
             if not ext_dir.exists() or not (ext_dir / "manifest.json").exists():
-                # Log and skip missing feature rather than hard-failing the whole download
+                # Warn loudly so operators can spot misconfigured paths in logs
+                logger.warning(
+                    "Extension directory missing or invalid for feature %r — skipping. "
+                    "Expected path: %s",
+                    feature_key, ext_dir
+                )
                 continue
 
             for root, dirs, files in os.walk(ext_dir):
