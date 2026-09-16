@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "RoleCraft — Indeed Job Title Copier",
-  "version": "1.0.0",
-  "description": "Copy the job title from any Indeed job posting in 1 click for RoleCraft ATS optimization. Elite feature.",
+  "name": "RoleCraft — Indeed 1-Click Job Copier",
+  "version": "2.0.0",
+  "description": "Copy complete job details from any Indeed job posting in 1 click for RoleCraft ATS optimization. Elite feature.",
   "permissions": [
     "clipboardWrite",
     "activeTab"
@@ -10,12 +10,12 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.indeed.com/viewjob*",
-        "https://indeed.com/viewjob*",
-        "https://www.indeed.com/jobs/view*",
-        "https://indeed.com/jobs/view*",
-        "https://www.indeed.com/rc/clk*",
-        "https://indeed.com/rc/clk*"
+        "https://*.indeed.com/*",
+        "https://indeed.com/*",
+        "https://*.indeed.co.in/*",
+        "https://indeed.co.in/*",
+        "https://*.indeed.co.uk/*",
+        "https://indeed.co.uk/*"
       ],
       "js": [
         "content.js"

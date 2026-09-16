@@ -183,8 +183,8 @@ export default function ExtensionModal({
   onOpenPreview,
 }: ExtensionModalProps) {
   const { user, token } = useAuth();
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [downloadingFeature, setDownloadingFeature] = useState<string | null>(null);
+  const [downloadSuccessFeature, setDownloadSuccessFeature] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -196,32 +196,32 @@ export default function ExtensionModal({
   );
   const hasAnyAccess = isLinkedInEligible || isIndeedEligible;
 
-  const handleDownload = async () => {
+  const handleDownload = async (feature: string) => {
     if (!token) {
       setErrorMessage("Please log in to download the extension.");
       return;
     }
     try {
-      setIsDownloading(true);
+      setDownloadingFeature(feature);
       setErrorMessage(null);
-      // API now returns { blob, filename } — filename comes from the server's Content-Disposition
-      const { blob, filename } = await downloadExtensionZip(token);
+      // API returns { blob, filename } for the specific requested feature
+      const { blob, filename } = await downloadExtensionZip(token, feature);
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = filename; // e.g. "RoleCraft-LinkedIn-1-Click-Job-Copier.zip" or "RoleCraft-Browser-Extensions.zip"
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      setDownloadSuccess(true);
-      setTimeout(() => setDownloadSuccess(false), 5000);
+      setDownloadSuccessFeature(feature);
+      setTimeout(() => setDownloadSuccessFeature(null), 5000);
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to download extension archive.");
     } finally {
-      setIsDownloading(false);
+      setDownloadingFeature(null);
     }
   };
 
@@ -280,10 +280,10 @@ export default function ExtensionModal({
               description="Copies title, company, location & full description"
               planRequired="Pro & Elite"
               eligible={isLinkedInEligible}
-              isDownloading={isDownloading && !isIndeedEligible}
-              downloadSuccess={downloadSuccess && !isIndeedEligible}
-              zipFilename="rolecraft-linkedin-copier.zip"
-              onDownload={handleDownload}
+              isDownloading={downloadingFeature === "linkedin"}
+              downloadSuccess={downloadSuccessFeature === "linkedin"}
+              zipFilename="RoleCraft-LinkedIn-1-Click-Job-Copier.zip"
+              onDownload={() => handleDownload("linkedin")}
               onOpenSubscribe={onOpenSubscribe}
               onClose={onClose}
               onOpenPreview={onOpenPreview}
@@ -291,25 +291,23 @@ export default function ExtensionModal({
 
             <ExtensionCard
               feature="indeed"
-              label="Indeed Job Title Copier"
-              description="Copies the job title from any Indeed job page in 1 click"
+              label="Indeed 1-Click Job Copier"
+              description="Copies the full job description, title, company & location in 1 click"
               planRequired="Elite"
               eligible={isIndeedEligible}
-              isDownloading={isDownloading && isIndeedEligible}
-              downloadSuccess={downloadSuccess && isIndeedEligible}
-              zipFilename="rolecraft-extensions.zip"
-              onDownload={handleDownload}
+              isDownloading={downloadingFeature === "indeed"}
+              downloadSuccess={downloadSuccessFeature === "indeed"}
+              zipFilename="RoleCraft-Indeed-1-Click-Job-Copier.zip"
+              onDownload={() => handleDownload("indeed")}
               onOpenSubscribe={onOpenSubscribe}
               onClose={onClose}
             />
           </div>
 
-          {/* What's in the ZIP note */}
+          {/* Note */}
           {hasAnyAccess && (
             <p className="text-[11px] text-slate-400 text-center">
-              {isIndeedEligible
-                ? "Your download will include both extensions in a single ZIP."
-                : "Your download includes the LinkedIn extension."}
+              Each extension downloads as its own standalone ZIP archive.
             </p>
           )}
 

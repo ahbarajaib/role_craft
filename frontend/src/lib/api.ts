@@ -571,8 +571,15 @@ export async function getExtensionStatus(token?: string): Promise<ExtensionStatu
   return response.json();
 }
 
-export async function downloadExtensionZip(token: string): Promise<{ blob: Blob; filename: string }> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/extension/download`, {
+export async function downloadExtensionZip(
+  token: string,
+  feature?: string
+): Promise<{ blob: Blob; filename: string }> {
+  const url = feature
+    ? `${API_BASE_URL}/api/v1/extension/download?feature=${encodeURIComponent(feature)}`
+    : `${API_BASE_URL}/api/v1/extension/download`;
+
+  const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -585,7 +592,12 @@ export async function downloadExtensionZip(token: string): Promise<{ blob: Blob;
   // Read filename from Content-Disposition: attachment; filename="..."
   const disposition = response.headers.get("Content-Disposition") ?? "";
   const match = disposition.match(/filename="?([^"]+)"?/);
-  const filename = match?.[1] ?? "RoleCraft-Browser-Extensions.zip";
+  const defaultFilename = feature
+    ? feature === "indeed"
+      ? "RoleCraft-Indeed-1-Click-Job-Copier.zip"
+      : "RoleCraft-LinkedIn-1-Click-Job-Copier.zip"
+    : "RoleCraft-Browser-Extensions.zip";
+  const filename = match?.[1] ?? defaultFilename;
 
   const blob = await response.blob();
   return { blob, filename };

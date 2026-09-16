@@ -27,7 +27,7 @@ EXTENSION_FEATURE_GATES: dict[str, list[str]] = {
 # Human-readable labels for each feature (used in API responses & frontend)
 EXTENSION_FEATURE_LABELS: dict[str, str] = {
     "linkedin": "LinkedIn 1-Click Job Copier",
-    "indeed": "Indeed Job Title Copier",
+    "indeed": "Indeed 1-Click Job Copier",
 }
 
 # Folder name inside the project root for each feature's extension source
@@ -39,7 +39,7 @@ EXTENSION_FEATURE_DIRS: dict[str, str] = {
 # Folder name used inside the downloaded ZIP for each feature
 EXTENSION_ZIP_FOLDER_NAMES: dict[str, str] = {
     "linkedin": "RoleCraft-LinkedIn-1-Click-Job-Copier",
-    "indeed": "RoleCraft-Indeed-Job-Title-Copier",
+    "indeed": "RoleCraft-Indeed-1-Click-Job-Copier",
 }
 
 

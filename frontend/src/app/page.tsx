@@ -5210,7 +5210,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           }
                         }}
                         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200/80 text-[10px] font-bold transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
-                        title="1-Click Indeed Job Title Copier"
+                        title="1-Click Indeed Job Details Copier"
                       >
                         <Zap className="h-2.5 w-2.5 text-blue-500 shrink-0" />
                         <span>Indeed Copier</span>
