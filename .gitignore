@@ -5,10 +5,11 @@ __pycache__/
 
 # Virtual Environment
 .venv/
+venv/
+env/
 
-# Environment
-.env
-*.env
+# Dependencies
+node_modules/
 
 # IDE
 .vscode/
@@ -28,12 +29,14 @@ htmlcov/
 # Ruff
 .ruff_cache/
 
-# Build
+# Build & Bundles
 dist/
 build/
 *.egg-info/
+.next/
+out/
 
-# Uploads
+# Uploads & Generated files
 uploads/
 temp/
 output/
