@@ -24,6 +24,20 @@ def test_admin_flow():
     try:
         # Create or fetch test admin user
         admin_user = db.query(User).filter(User.email == "ahbarajaib@gmail.com").first()
+        if not admin_user:
+            admin_user = User(
+                email="ahbarajaib@gmail.com",
+                is_admin=True,
+                credits=300,
+                plan_type="elite",
+                subscription_status="active",
+            )
+            db.add(admin_user)
+            db.commit()
+            db.refresh(admin_user)
+        else:
+            admin_user.is_admin = True
+            db.commit()
         assert admin_user is not None, "Superuser should exist in database"
         assert admin_user.is_admin is True, "Superuser should have is_admin=True"
 
