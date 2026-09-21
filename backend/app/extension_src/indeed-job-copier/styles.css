@@ -87,23 +87,6 @@
   cursor: pointer;
 }
 
-/* ---- Floating button variant (fallback placement) ---- */
-#rc-indeed-copy-btn.rc-indeed-floating {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.3);
-  border-radius: 24px;
-  padding: 10px 20px;
-  height: 44px;
-  font-size: 14px;
-  z-index: 999999;
-}
-
-#rc-indeed-copy-btn.rc-indeed-floating:hover {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.38);
-}
-
 /* ---- Icon inside button ---- */
 .rc-indeed-icon {
   display: inline-flex;
