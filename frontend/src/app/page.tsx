@@ -1736,29 +1736,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [showDailyGoalBanner, setShowDailyGoalBanner] = useState<boolean>(true);
   const [isUpdatingDailyTarget, setIsUpdatingDailyTarget] = useState<boolean>(false);
 
-  // ── Onboarding / Empty State Tracking ──
-  const isResumeUploaded = !!file;
-  const isJDPopulated = jobDescription.trim().length > 20;
-  const isAnalyzed = !!analysisResult;
-  
-  let onboardingStep = 1;
-  if (isResumeUploaded) onboardingStep = 2;
-  if (isResumeUploaded && isJDPopulated) onboardingStep = 3;
-  if (isAnalyzed) onboardingStep = 4;
-
-  const loadSampleData = () => {
-    // 1. Set a dummy file name so the UI thinks a resume is uploaded
-    setFile(new File([""], "John_Doe_Software_Engineer.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }));
-    
-    // 2. Load a sample JD
-    setJobDescription("We are looking for a Senior Backend Engineer with deep expertise in Python, FastAPI, and PostgreSQL. You will architect event-driven microservices using Apache Kafka and deploy them on AWS/Kubernetes. The ideal candidate has experience reducing system latency and scaling APIs for high throughput (100k+ daily requests).");
-    
-    // Smooth scroll to the analyze button
-    setTimeout(() => {
-      document.getElementById("analyze-btn")?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
-  };
-
   // ── Guest Mode State ──────────────────────────────────────────────────────
   // guestResumeText: plain text extracted client-side from DOCX (for ATS scoring only)
   // The original File object stays in `file` state — intact for upload after sign-in
@@ -1850,6 +1827,29 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [subscriptionInitialPlan, setSubscriptionInitialPlan] = useState<"pro" | "elite">("pro");
   const [isExtensionModalOpen, setIsExtensionModalOpen] = useState(false);
   const [isExtensionPreviewModalOpen, setIsExtensionPreviewModalOpen] = useState(false);
+
+  // ── Onboarding / Empty State Tracking ──
+  const isResumeUploaded = !!file;
+  const isJDPopulated = jobDescription.trim().length > 20;
+  const isAnalyzed = !!analysisResult;
+  
+  let onboardingStep = 1;
+  if (isResumeUploaded) onboardingStep = 2;
+  if (isResumeUploaded && isJDPopulated) onboardingStep = 3;
+  if (isAnalyzed) onboardingStep = 4;
+
+  const loadSampleData = () => {
+    // 1. Set a dummy file name so the UI thinks a resume is uploaded
+    setFile(new File([""], "John_Doe_Software_Engineer.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }));
+    
+    // 2. Load a sample JD
+    setJobDescription("We are looking for a Senior Backend Engineer with deep expertise in Python, FastAPI, and PostgreSQL. You will architect event-driven microservices using Apache Kafka and deploy them on AWS/Kubernetes. The ideal candidate has experience reducing system latency and scaling APIs for high throughput (100k+ daily requests).");
+    
+    // Smooth scroll to the analyze button
+    setTimeout(() => {
+      document.getElementById("analyze-btn")?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
 
   const openUpgradeModal = (
     reason: "out_of_credits" | "extension_upsell" | "general" = "general",
