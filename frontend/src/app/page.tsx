@@ -5203,48 +5203,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         <span className={`flex items-center justify-center h-5 w-5 rounded-full text-[10px] text-white ${onboardingStep >= 2 ? 'bg-teal-600' : 'bg-slate-300'}`}>2</span>
                         Target Job Description
                       </label>
-                      {/* LinkedIn Copier badge — Pro & Elite */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (isProOrElite) {
-                            setIsExtensionModalOpen(true);
-                          } else {
-                            setIsExtensionPreviewModalOpen(true);
-                          }
-                        }}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200/80 text-[10px] font-bold transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
-                        title="1-Click LinkedIn Job Details Copier"
-                      >
-                        <Zap className="h-2.5 w-2.5 text-teal-600 shrink-0" />
-                        <span>LinkedIn Copier</span>
-                        {!isProOrElite && (
-                          <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-100/80 px-1 rounded">
-                            PRO
-                          </span>
-                        )}
-                      </button>
-                      {/* Indeed Copier badge — Elite only */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (user?.plan_type === "elite") {
-                            setIsExtensionModalOpen(true);
-                          } else {
-                            setIsExtensionPreviewModalOpen(true);
-                          }
-                        }}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200/80 text-[10px] font-bold transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
-                        title="1-Click Indeed Job Details Copier"
-                      >
-                        <Zap className="h-2.5 w-2.5 text-blue-500 shrink-0" />
-                        <span>Indeed Copier</span>
-                        {user?.plan_type !== "elite" && (
-                          <span className="text-[9px] font-black uppercase text-violet-600 bg-violet-100/80 px-1 rounded">
-                            ELITE
-                          </span>
-                        )}
-                      </button>
+
                     </div>
                     <div className="flex items-center gap-2">
                       <button
