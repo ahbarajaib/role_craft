@@ -1736,6 +1736,29 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [showDailyGoalBanner, setShowDailyGoalBanner] = useState<boolean>(true);
   const [isUpdatingDailyTarget, setIsUpdatingDailyTarget] = useState<boolean>(false);
 
+  // ── Onboarding / Empty State Tracking ──
+  const isResumeUploaded = !!file;
+  const isJDPopulated = jobDescription.trim().length > 20;
+  const isAnalyzed = !!analysisResult;
+  
+  let onboardingStep = 1;
+  if (isResumeUploaded) onboardingStep = 2;
+  if (isResumeUploaded && isJDPopulated) onboardingStep = 3;
+  if (isAnalyzed) onboardingStep = 4;
+
+  const loadSampleData = () => {
+    // 1. Set a dummy file name so the UI thinks a resume is uploaded
+    setFile(new File([""], "John_Doe_Software_Engineer.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }));
+    
+    // 2. Load a sample JD
+    setJobDescription("We are looking for a Senior Backend Engineer with deep expertise in Python, FastAPI, and PostgreSQL. You will architect event-driven microservices using Apache Kafka and deploy them on AWS/Kubernetes. The ideal candidate has experience reducing system latency and scaling APIs for high throughput (100k+ daily requests).");
+    
+    // Smooth scroll to the analyze button
+    setTimeout(() => {
+      document.getElementById("analyze-btn")?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
+
   // ── Guest Mode State ──────────────────────────────────────────────────────
   // guestResumeText: plain text extracted client-side from DOCX (for ATS scoring only)
   // The original File object stays in `file` state — intact for upload after sign-in
@@ -4962,8 +4985,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 </h2>
 
                 {/* Resume Upload Box */}
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+                <div className={`space-y-2 p-4 rounded-xl transition-all ${onboardingStep === 1 ? 'bg-teal-50/50 border border-teal-200 ring-2 ring-teal-500/20 shadow-md' : ''}`}>
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <span className={`flex items-center justify-center h-5 w-5 rounded-full text-[10px] text-white ${onboardingStep >= 1 ? 'bg-teal-600' : 'bg-slate-300'}`}>1</span>
                     Upload Resume (DOCX only)
                   </label>
 
@@ -5172,10 +5196,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 )}
 
                 {/* Job Description Input Container */}
-                <div className="space-y-2.5">
+                <div className={`space-y-2.5 p-4 rounded-xl transition-all ${onboardingStep === 2 ? 'bg-teal-50/50 border border-teal-200 ring-2 ring-teal-500/20 shadow-md' : ''} ${onboardingStep < 2 ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2">
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      <label className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        <span className={`flex items-center justify-center h-5 w-5 rounded-full text-[10px] text-white ${onboardingStep >= 2 ? 'bg-teal-600' : 'bg-slate-300'}`}>2</span>
                         Target Job Description
                       </label>
                       {/* LinkedIn Copier badge — Pro & Elite */}
@@ -5352,8 +5377,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   </div>
                 )}
                 {/* Action Buttons */}
-                <div className="flex flex-col gap-3">
+                <div className={`flex flex-col gap-3 pt-2 transition-all ${onboardingStep === 3 ? 'scale-[1.02]' : ''} ${onboardingStep < 3 ? 'opacity-40 grayscale' : ''}`}>
                   <button
+                    id="analyze-btn"
                     type="submit"
                     disabled={
                       (!documentId && !(!token && file && guestResumeText) && !user?.base_resume_id) ||
@@ -5418,11 +5444,26 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </div>
 
                     {/* Live System Indicator — sonar pulse rings */}
-                    <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-teal-50 border border-teal-200/80 shadow-sm shrink-0 self-start md:self-auto">
-                      <div className="relative flex h-3 w-3 text-teal-500">
-                        <span className="sonar-dot relative inline-flex rounded-full h-3 w-3 bg-teal-500" />
+                    <div className="flex flex-col items-end gap-3 self-start md:self-auto">
+                      <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-teal-50 border border-teal-200/80 shadow-sm shrink-0">
+                        <div className="relative flex h-3 w-3 text-teal-500">
+                          <span className="sonar-dot relative inline-flex rounded-full h-3 w-3 bg-teal-500" />
+                        </div>
+                        <span className="text-xs font-extrabold text-teal-800">AI Engine Ready</span>
                       </div>
-                      <span className="text-xs font-extrabold text-teal-800">AI Engine Ready</span>
+                      
+                      {/* Demo Button for new users */}
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          loadSampleData();
+                        }}
+                        className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-teal-700 hover:border-teal-400 hover:shadow-md transition-all font-bold text-xs flex items-center gap-2 shadow-sm cursor-pointer"
+                      >
+                        <FileText className="h-4 w-4 text-teal-500" />
+                        Don't have a resume? Try a sample
+                      </button>
                     </div>
                   </div>
 
