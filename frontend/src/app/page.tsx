@@ -3878,7 +3878,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           {/* Resume Builder — desktop only (mobile uses bottom nav bar) */}
           <Link
             href="/resume-builder"
-            className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
+            className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
             title="Create & Edit Structured Resume with ATS Templates"
           >
             <Sparkles className="h-3.5 w-3.5 text-teal-500 shrink-0" />
@@ -3889,7 +3889,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           <button
             type="button"
             onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
-            className={`hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs ${activeNavTab === "workspace"
+            className={`hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition-all cursor-pointer shadow-xs ${activeNavTab === "workspace"
                 ? "bg-[#E6F7F4] hover:bg-[#ccfbf1] text-teal-900 border border-[#99F6E4] ring-1 ring-teal-500/20"
                 : "btn-primary"
               }`}
@@ -4151,7 +4151,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           ) : (
             <button
               onClick={() => setShowAuthModal(true)}
-              className="touch-target flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
             >
               Sign In
             </button>
