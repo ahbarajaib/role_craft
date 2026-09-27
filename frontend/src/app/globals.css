@@ -171,6 +171,18 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Scale down the entire UI from the default 16px to 14px for better fit on laptops like 15-inch MacBooks.
+     This reduces all 'rem' based tailwind utility classes (spacing, text sizes, etc) proportionally. */
+  font-size: 14px;
+}
+
+@media (min-width: 1920px) {
+  html {
+    font-size: 16px; /* Restore to 16px on very large desktop monitors */
+  }
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
