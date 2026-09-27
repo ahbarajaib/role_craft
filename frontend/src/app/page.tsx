@@ -4932,6 +4932,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             </p>
             <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-500 flex-wrap">
               <a href="#how-it-works" onClick={() => switchNavTab("landing")} className="hover:text-teal-600 transition-colors">How It Works</a>
+              <Link href="/guide" className="hover:text-teal-600 transition-colors font-bold text-teal-700">Official Guide</Link>
               <a href="#features" onClick={() => switchNavTab("landing")} className="hover:text-teal-600 transition-colors">Features</a>
               <a href="#pricing" onClick={() => switchNavTab("landing")} className="hover:text-teal-600 transition-colors">Pricing</a>
               <button onClick={() => switchNavTab("workspace")} className="hover:text-teal-600 transition-colors cursor-pointer">Workspace</button>
