@@ -908,6 +908,30 @@
         }
       } catch (e) { /* skip */ }
     }
+    
+    // Strategy 4: Fallback to the top card container if action buttons are missing (e.g. already applied)
+    const fallbackSelectors = [
+      '.job-details-jobs-unified-top-card__content--two-pane',
+      '.jobs-unified-top-card__content--two-pane'
+    ];
+    
+    for (const sel of fallbackSelectors) {
+      try {
+        const container = document.querySelector(sel);
+        if (container) {
+          const wrapper = document.createElement('div');
+          wrapper.style.display = 'flex';
+          wrapper.style.flexWrap = 'wrap';
+          wrapper.style.gap = '8px';
+          wrapper.style.marginTop = '16px';
+          wrapper.style.marginBottom = '8px';
+          wrapper.appendChild(button);
+          container.appendChild(wrapper);
+          log('Button injected into top card fallback:', sel);
+          return true;
+        }
+      } catch (e) { /* skip */ }
+    }
 
     return false;
   }

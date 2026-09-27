@@ -10,7 +10,7 @@ import {
   Lock, 
   Edit3, 
   ShieldCheck, 
-  Chrome 
+  Globe 
 } from "lucide-react";
 
 export default function GuidePage() {
@@ -104,7 +104,7 @@ export default function GuidePage() {
             {/* Bento 1: Extension (Spans 2 columns) */}
             <div className="lg:col-span-2 p-6 rounded-3xl bg-slate-50/80 hover:bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all group overflow-hidden relative">
               <div className="absolute right-0 bottom-0 opacity-5 group-hover:opacity-10 transition-opacity transform translate-x-4 translate-y-4">
-                <Chrome className="w-32 h-32 text-blue-600" />
+                <Globe className="w-32 h-32 text-blue-600" />
               </div>
               <div className="h-10 w-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center border border-blue-200 mb-4 shadow-sm group-hover:scale-105 transition-transform">
                 <Zap className="h-5 w-5" />
