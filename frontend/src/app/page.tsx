@@ -2306,7 +2306,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const saved = localStorage.getItem("rc_workspace_state");
+      const saved = sessionStorage.getItem("rc_workspace_state");
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.jobDescription) setJobDescription(parsed.jobDescription);
@@ -2366,7 +2366,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       activeNavTab,
     };
     try {
-      localStorage.setItem("rc_workspace_state", JSON.stringify(stateToSave));
+      sessionStorage.setItem("rc_workspace_state", JSON.stringify(stateToSave));
     } catch (e) {
       console.warn("Failed to persist workspace state:", e);
     }
@@ -3608,7 +3608,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     try {
       if (typeof window !== "undefined") {
         if (!keepResume) {
-          localStorage.removeItem("rc_workspace_state");
+          sessionStorage.removeItem("rc_workspace_state");
         } else {
           // Keep resume info in storage so they don't have to re-upload
           const partial = {
@@ -3628,7 +3628,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             coverLetterDownloadId: null,
             activeNavTab,
           };
-          localStorage.setItem("rc_workspace_state", JSON.stringify(partial));
+          sessionStorage.setItem("rc_workspace_state", JSON.stringify(partial));
         }
       }
     } catch (e) {
@@ -4151,7 +4151,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           ) : (
             <button
               onClick={() => setShowAuthModal(true)}
-              className="touch-target px-3.5 sm:px-4 py-2 btn-primary text-xs cursor-pointer rounded-xl"
+              className="touch-target flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
             >
               Sign In
             </button>

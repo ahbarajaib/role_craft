@@ -168,6 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     setUser(null);
     localStorage.removeItem("rc_token");
+    sessionStorage.removeItem("rc_workspace_state");
     clearUserTracking();
   };
 
