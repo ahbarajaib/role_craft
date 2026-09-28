@@ -5458,7 +5458,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         title="Paste job description text from your clipboard"
                       >
                         <Copy className="h-3 w-3 text-teal-600" />
-                        <span>Paste Clipboard</span>
+                        <span>{jobDescription.trim().length > 0 ? "Replace from Clipboard" : "Paste Clipboard"}</span>
                       </button>
                       {(jobDescription || analysisResult) && (
                         <button
@@ -6182,39 +6182,53 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       </div>
 
                       {/* Overall Score Circle */}
-                      <div className="flex items-center gap-4 bg-white/90 dark:bg-slate-950/70 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-md">
-                        <div className="relative flex items-center justify-center">
-                          {/* SVG Gauge */}
-                          <svg className="w-20 h-20 transform -rotate-90">
-                            <circle
-                              cx="40"
-                              cy="40"
-                              r="34"
-                              stroke="currentColor"
-                              strokeWidth="6"
-                              fill="transparent"
-                              className="text-slate-200 dark:text-slate-800"
-                            />
-                            <circle
-                              cx="40"
-                              cy="40"
-                              r="34"
-                              stroke="currentColor"
-                              strokeWidth="6"
-                              fill="transparent"
-                              strokeDasharray={2 * Math.PI * 34}
-                              strokeDashoffset={2 * Math.PI * 34 * (1 - currentScore / 100)}
-                              className="text-teal-500 transition-all duration-1000"
-                            />
-                          </svg>
-                          <span className="absolute text-base font-black text-slate-900 dark:text-white">
-                            {currentScore}%
-                          </span>
+                      <div className="flex items-center gap-5 bg-white/90 dark:bg-slate-950/70 p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-md">
+                        <div className="flex items-center gap-3">
+                          {currentScore > initialScore && (
+                            <>
+                              <div className="flex flex-col items-center">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Before</span>
+                                <div className="relative flex items-center justify-center grayscale opacity-60 scale-90">
+                                  <svg className="w-14 h-14 transform -rotate-90">
+                                    <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-slate-200 dark:text-slate-800" />
+                                    <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray={2 * Math.PI * 24} strokeDashoffset={2 * Math.PI * 24 * (1 - initialScore / 100)} className="text-slate-400" />
+                                  </svg>
+                                  <span className="absolute text-xs font-bold text-slate-500">{initialScore}%</span>
+                                </div>
+                              </div>
+                              <div className="text-slate-300">
+                                <ArrowRight className="h-5 w-5" />
+                              </div>
+                            </>
+                          )}
+                          <div className="flex flex-col items-center">
+                            {currentScore > initialScore && <span className="text-[10px] font-black text-emerald-600 uppercase tracking-wider mb-1">Target Fit</span>}
+                            <div className="relative flex items-center justify-center">
+                              <svg className="w-20 h-20 transform -rotate-90">
+                                <circle cx="40" cy="40" r="34" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-200 dark:text-slate-800" />
+                                <circle cx="40" cy="40" r="34" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray={2 * Math.PI * 34} strokeDashoffset={2 * Math.PI * 34 * (1 - currentScore / 100)} className={`${currentScore > initialScore ? "text-emerald-500" : "text-teal-500"} transition-all duration-1000`} />
+                              </svg>
+                              <span className="absolute text-lg font-black text-slate-900 dark:text-white">
+                                {currentScore}%
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Overall Fit</p>
-                          <p className="text-xs font-medium text-slate-600 dark:text-slate-300 mt-0.5">
-                            <span className="font-bold text-teal-600 dark:text-teal-400">{sectionsStillNeedingImprovement} of {totalNeeded}</span> sections need improvement
+                        
+                        <div className="flex flex-col gap-1 ml-1">
+                          <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            {currentScore > initialScore ? "Resume Improved!" : "Overall Fit"}
+                          </p>
+                          <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-tight">
+                            {sectionsStillNeedingImprovement === 0 ? (
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                                <CheckCircle className="h-3.5 w-3.5" /> All sections optimized
+                              </span>
+                            ) : (
+                              <>
+                                <span className="font-bold text-teal-600 dark:text-teal-400">{sectionsStillNeedingImprovement} of {totalNeeded}</span> sections still need improvement
+                              </>
+                            )}
                           </p>
                         </div>
                       </div>
