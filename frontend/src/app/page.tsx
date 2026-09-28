@@ -2985,14 +2985,33 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           setCustomTargetRole(finalAppliedTitle);
         }
 
-        setRewrittenSections((prev) => ({ ...prev, header: finalAppliedTitle, ...newRewrites, ...batchRes.rewrites }));
-        if (batchRes.download_id) setDownloadId(batchRes.download_id);
-        if (batchRes.download_url) {
-          setDownloadUrl(batchRes.download_url);
+        const combinedRewrites = { ...newRewrites, ...batchRes.rewrites };
+        setRewrittenSections((prev) => ({ ...prev, header: finalAppliedTitle, ...combinedRewrites }));
+
+        // Build patch payload
+        const acceptedItems = Object.entries(combinedRewrites).map(([secKey, text]) => {
+          const origSec = (data.sections || []).find((s: any) => s.section_name.toLowerCase() === secKey.toLowerCase());
+          const excluded = excludedBullets[origSec?.section_name || secKey] || excludedBullets[secKey];
+          const filteredText = excluded && excluded.size > 0 ? filterBulletsByChecked(text as string, excluded) : text;
+          return {
+            section: origSec ? origSec.section_name : (secKey === "header" ? "header" : secKey),
+            rewritten_text: filteredText as string,
+          };
+        });
+
+        // Actually apply the rewrites to generate the PDF download URL
+        const applyRes = await applyMutation.mutateAsync({
+          document_id: documentId,
+          accepted_rewrites: acceptedItems,
+        });
+
+        if (applyRes.download_id) setDownloadId(applyRes.download_id);
+        if (applyRes.download_url) {
+          setDownloadUrl(applyRes.download_url);
           
           // Trigger download immediately
           const link = document.createElement('a');
-          link.href = batchRes.download_url;
+          link.href = applyRes.download_url;
           link.setAttribute('download', 'Tailored_Resume.pdf');
           document.body.appendChild(link);
           link.click();
