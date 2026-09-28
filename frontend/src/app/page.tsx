@@ -2867,6 +2867,179 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     }
   };
 
+  // ── 1-Click Auto-Everything (Analyze -> Tailor -> Download) ────────────────
+  const handleOneShotTailor = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (!token) {
+      showGuestUpgradeModal("auto_tailor", () => handleOneShotTailor());
+      return;
+    }
+    if (!documentId) return;
+    if (jobDescription.trim().length < 50) return;
+
+    if (user && user.credits <= 0) {
+      const targetPlan = (user.plan_type || "").toLowerCase() === "pro" ? "elite" : "pro";
+      openUpgradeModal("out_of_credits", targetPlan);
+      return;
+    }
+
+    setIsAutoTailoring(true); // Triggers the Progress Modal
+    
+    try {
+      // 1. Analyze
+      const data = await analyzeResume(jobDescription, documentId || undefined);
+      setAnalysisResult(data);
+      const initialExpanded: Record<string, boolean> = {};
+      (data.sections || []).forEach((sec: any) => {
+        if (sec.review_status === "improve") initialExpanded[sec.section_name] = true;
+      });
+      setExpandedSections(initialExpanded);
+      setCustomTargetRole(data.overall_summary?.job_title || "");
+      
+      // 2. Queue Sections
+      let baseSections = data.sections || [];
+      const sectionsToTailor = baseSections.filter((s: any) => {
+        const norm = (s.section_name || "").toLowerCase();
+        const isExplicitOff = tailoringSectionToggles[s.section_name] === false;
+        const isExplicitOn = tailoringSectionToggles[s.section_name] === true;
+        if (isExplicitOff) return false;
+        if (isExplicitOn) return true;
+        if (norm.includes("education") || norm.includes("certification") || norm.includes("header")) return false;
+        return (s.review_status === "improve" || (s.recommendations && s.recommendations.length > 0)) && s.review_status !== "reduce_emphasis";
+      });
+
+      const isHeaderExplicitOff = tailoringSectionToggles["header"] === false || tailoringSectionToggles["Target Job Title & Header"] === false;
+
+      const parseJobTitleFromJD = (jdText: string): string => {
+        if (!jdText) return "";
+        const lines = jdText.split("\n").map((l) => l.trim()).filter(Boolean);
+        for (const line of lines.slice(0, 15)) {
+          const match = line.match(/(?:job title|title|role|position)\s*[:–-]\s*([A-Za-z0-9\s\-\/\&]{3,60})/i);
+          if (match && match[1]) {
+            const val = match[1].trim();
+            if (val && !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(val)) return val;
+          }
+        }
+        const roleKeywords = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "administrator", "executive", "fullstack", "full stack", "backend", "frontend", "devops", "sre", "scientist", "director", "head", "vp", "associate", "intern", "product"];
+        for (const line of lines.slice(0, 15)) {
+          const clean = line.replace(/^#+\s*/, "").trim();
+          const lower = clean.toLowerCase();
+          if (clean.length >= 4 && clean.length <= 80 && !clean.includes("http") && !clean.includes("@") && !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(clean) && roleKeywords.some((r) => lower.includes(r))) return clean;
+        }
+        for (const line of lines.slice(0, 5)) {
+          const clean = line.replace(/^#+\s*/, "").trim();
+          if (clean.length >= 4 && clean.length <= 60 && !clean.includes("http") && !clean.includes("@") && !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(clean)) return clean;
+        }
+        return "";
+      };
+
+      const targetHeaderTitle = data.overall_summary?.job_title || parseJobTitleFromJD(jobDescription) || "Target Position";
+      if (!isHeaderExplicitOff && targetHeaderTitle && targetHeaderTitle !== "Target Position") {
+        setCustomTargetRole(targetHeaderTitle);
+      }
+
+      const batchItems: any[] = sectionsToTailor.map((sec: any) => {
+        let secContent: any = undefined;
+        let secType: any = sec.section_type;
+        if (masterResume && masterResume.sections) {
+          const matchedSec = masterResume.sections.find((ms: any) => {
+            const msTitle = (ms.section_title || "").toLowerCase();
+            const sTitle = sec.section_name.toLowerCase();
+            return msTitle === sTitle || msTitle.includes(sTitle) || sTitle.includes(msTitle) || (ms.section_type === "experience" && (sTitle.includes("experience") || sTitle.includes("work")));
+          });
+          if (matchedSec) {
+            secContent = matchedSec.content;
+            secType = matchedSec.section_type;
+          }
+        }
+        return {
+          section_name: sec.section_name,
+          section_type: secType,
+          section_content: secContent,
+          recommendations: sec.recommendations || [],
+        };
+      });
+
+      if (!isHeaderExplicitOff && targetHeaderTitle) {
+        batchItems.unshift({
+          section_name: "header",
+          section_type: "header",
+          section_content: targetHeaderTitle,
+          recommendations: [`Set target job title designation to "${targetHeaderTitle}"`],
+          user_instructions: targetHeaderTitle,
+        });
+      }
+
+      const { batchRewriteSections } = require("@/lib/api");
+      const batchRes = await batchRewriteSections({
+        document_id: documentId,
+        job_description_text: jobDescription,
+        sections: batchItems,
+      });
+
+      const newRewrites: Record<string, string> = {};
+      if (batchRes.rewrites && Object.keys(batchRes.rewrites).length > 0) {
+        const finalAppliedTitle = batchRes.rewrites["header"] || targetHeaderTitle;
+        if (finalAppliedTitle) {
+          newRewrites["header"] = finalAppliedTitle;
+          setCustomTargetRole(finalAppliedTitle);
+        }
+
+        setRewrittenSections((prev) => ({ ...prev, header: finalAppliedTitle, ...newRewrites, ...batchRes.rewrites }));
+        if (batchRes.download_id) setDownloadId(batchRes.download_id);
+        if (batchRes.download_url) {
+          setDownloadUrl(batchRes.download_url);
+          
+          // Trigger download immediately
+          const link = document.createElement('a');
+          link.href = batchRes.download_url;
+          link.setAttribute('download', 'Tailored_Resume.pdf');
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+        }
+        setIsPatchingApplied(true);
+        setSuccessNotification(`⚡ 1-Click Auto-Everything Complete: Tailored Resume Downloaded!`);
+        if (refreshMe) refreshMe();
+      }
+
+      setIsAutoTailoring(false);
+
+      // Async structured tailor (builder)
+      (async () => {
+        try {
+          const { tailorResume } = require("@/lib/structured_resume_api");
+          const tailoredRes = await tailorResume({ job_description: jobDescription, job_title: targetHeaderTitle });
+          setTailorResult(tailoredRes);
+        } catch (te) {}
+      })();
+
+      // Background cover letter
+      setIsGeneratingCoverLetter(true);
+      (async () => {
+        try {
+          const effectiveTargetRole = newRewrites["header"] || customTargetRole || data.overall_summary?.job_title || undefined;
+          const clRes = await generateCoverLetter({
+            document_id: documentId,
+            job_description_text: jobDescription,
+            target_role: effectiveTargetRole,
+            contact_info: undefined,
+            rewritten_sections: newRewrites,
+            confirmed_matched_skills: [], 
+          });
+          setCoverLetterText(clRes.cover_letter_text);
+          setCoverLetterDownloadId(clRes.download_id);
+          if (clRes.target_role) setCustomTargetRole(clRes.target_role);
+        } catch (err) {}
+        setIsGeneratingCoverLetter(false);
+      })();
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || "One-Click Auto-Everything failed.");
+      setIsAutoTailoring(false);
+    }
+  };
+
   // ── Open the keyword selection modal (⚡ Auto-Weave button) ────────────────
   const openKeywordWeaveModal = () => {
     if (!analysisResult) return;
@@ -3878,7 +4051,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           {/* Resume Builder — desktop only (mobile uses bottom nav bar) */}
           <Link
             href="/resume-builder"
-            className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
+            className="hidden lg:flex items-center justify-center gap-1.5 px-3.5 h-10 rounded-full text-xs font-bold bg-white hover:bg-teal-50 text-teal-700 border border-teal-200 hover:border-teal-400 shadow-sm transition-all cursor-pointer"
             title="Create & Edit Structured Resume with ATS Templates"
           >
             <Sparkles className="h-3.5 w-3.5 text-teal-500 shrink-0" />
@@ -3889,7 +4062,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           <button
             type="button"
             onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
-            className={`hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition-all cursor-pointer shadow-xs ${activeNavTab === "workspace"
+            className={`hidden lg:flex items-center justify-center gap-1.5 px-3.5 h-10 !rounded-full text-xs font-black transition-all cursor-pointer shadow-xs ${activeNavTab === "workspace"
                 ? "bg-[#E6F7F4] hover:bg-[#ccfbf1] text-teal-900 border border-[#99F6E4] ring-1 ring-teal-500/20"
                 : "btn-primary"
               }`}
@@ -3903,7 +4076,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             <button
               type="button"
               onClick={() => setIsHistoryModalOpen(true)}
-              className={`touch-target flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-105 select-none ${dailyGoal.goal_achieved
+              className={`touch-target flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 h-10 rounded-full border text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-105 select-none ${dailyGoal.goal_achieved
                   ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 ring-1 ring-emerald-500/20"
                   : "bg-white hover:bg-teal-50 text-slate-700 hover:text-teal-800 border-slate-200 hover:border-teal-300"
                 }`}
@@ -3940,7 +4113,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     setIsProfileMenuOpen(!isProfileMenuOpen);
                   }
                 }}
-                className="touch-target flex items-center gap-1.5 sm:gap-2 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs transition-all cursor-pointer select-none"
+                className="touch-target flex items-center justify-center gap-1.5 sm:gap-2 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 px-2.5 sm:px-3 h-10 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm text-xs transition-all cursor-pointer select-none"
               >
                 <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 shadow-sm">
                   {(user.name || user.email)[0].toUpperCase()}
@@ -5338,6 +5511,49 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                 )}
                 {/* Action Buttons */}
                 <div className={`flex flex-col gap-3 pt-2 transition-all ${onboardingStep === 3 ? 'scale-[1.02]' : ''} ${onboardingStep < 3 ? 'opacity-40 grayscale' : ''}`}>
+                  <button
+                    id="oneshot-tailor-btn"
+                    type="button"
+                    onClick={handleOneShotTailor}
+                    disabled={
+                      (!documentId && !(!token && file && guestResumeText) && !user?.base_resume_id) ||
+                      jobDescription.trim().length < 50 ||
+                      isAutoTailoring || isAnalyzing
+                    }
+                    className={`w-full py-3.5 px-4 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-between gap-2 shadow-lg ${
+                      (documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
+                      jobDescription.trim().length >= 50 &&
+                      !isAutoTailoring && !isAnalyzing
+                        ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 hover:from-emerald-600 hover:via-teal-600 hover:to-emerald-500 text-white shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer ring-2 ring-emerald-400/50"
+                        : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isAutoTailoring ? (
+                        <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <Zap className="h-4 w-4 text-amber-200 fill-amber-200" />
+                      )}
+                      <span>{isAutoTailoring ? "Tailoring & Downloading..." : "⚡ 1-Click Auto-Everything"}</span>
+                    </div>
+
+                    <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                      (documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
+                      jobDescription.trim().length >= 50 &&
+                      !isAutoTailoring && !isAnalyzing
+                        ? "bg-white/20 text-white border border-white/30"
+                        : "bg-slate-300 text-slate-500"
+                    }`}>
+                      {!token ? "Free" : "Magic"}
+                    </span>
+                  </button>
+
+                  <div className="relative flex py-1 items-center">
+                    <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                    <span className="flex-shrink-0 mx-4 text-slate-400 text-[10px] font-extrabold uppercase tracking-wider">OR STEP-BY-STEP</span>
+                    <div className="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                  </div>
+
                   <button
                     id="analyze-btn"
                     type="submit"
