@@ -5520,15 +5520,25 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       jobDescription.trim().length < 50 ||
                       isAutoTailoring || isAnalyzing
                     }
-                    className={`w-full py-3.5 px-4 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-between gap-2 shadow-lg ${
+                    className={`w-full py-3.5 px-4 flex items-center justify-between gap-2 ${
                       (documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
                       jobDescription.trim().length >= 50 &&
                       !isAutoTailoring && !isAnalyzing
-                        ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 hover:from-emerald-600 hover:via-teal-600 hover:to-emerald-500 text-white shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer ring-2 ring-emerald-400/50"
-                        : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                        ? "btn-magic cursor-pointer"
+                        : "bg-slate-200 text-slate-400 cursor-not-allowed rounded-xl font-black text-sm"
                     }`}
                   >
-                    <div className="flex items-center gap-2">
+                    {((documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
+                      jobDescription.trim().length >= 50 &&
+                      !isAutoTailoring && !isAnalyzing) && (
+                      <>
+                        <div className="sparkle"></div>
+                        <div className="sparkle"></div>
+                        <div className="sparkle"></div>
+                        <div className="sparkle"></div>
+                      </>
+                    )}
+                    <div className="flex items-center gap-2 relative z-10">
                       {isAutoTailoring ? (
                         <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                       ) : (
@@ -5537,11 +5547,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       <span>{isAutoTailoring ? "Tailoring & Downloading..." : "⚡ 1-Click Auto-Everything"}</span>
                     </div>
 
-                    <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    <span className={`relative z-10 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                       (documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
                       jobDescription.trim().length >= 50 &&
                       !isAutoTailoring && !isAnalyzing
-                        ? "bg-white/20 text-white border border-white/30"
+                        ? "bg-white/20 text-white border border-white/30 shadow-sm"
                         : "bg-slate-300 text-slate-500"
                     }`}>
                       {!token ? "Free" : "Magic"}
