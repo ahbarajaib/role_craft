@@ -1296,11 +1296,21 @@ function LoadingState() {
 
 function AutoTailoringProgressModal({
   targetRole,
+  controlledStepIndex,
+  controlledProgress,
+  isComplete,
 }: {
   targetRole: string;
+  controlledStepIndex?: number;
+  controlledProgress?: number;
+  isComplete?: boolean;
 }) {
-  const [stepIndex, setStepIndex] = useState(0);
-  const [progress, setProgress] = useState(14);
+  const [internalStepIndex, setInternalStepIndex] = useState(0);
+  const [internalProgress, setInternalProgress] = useState(14);
+
+  const isControlled = controlledStepIndex !== undefined;
+  const stepIndex = isControlled ? controlledStepIndex : internalStepIndex;
+  const progress = isControlled ? (controlledProgress || 0) : internalProgress;
 
   const TAILOR_STEPS = [
     {
@@ -1331,13 +1341,15 @@ function AutoTailoringProgressModal({
   ];
 
   useEffect(() => {
+    if (isControlled) return;
+
     // Total tailor time is ~4-6s
     const stepInterval = setInterval(() => {
-      setStepIndex((prev) => (prev < TAILOR_STEPS.length - 1 ? prev + 1 : prev));
+      setInternalStepIndex((prev) => (prev < TAILOR_STEPS.length - 1 ? prev + 1 : prev));
     }, 1100);
 
     const progressInterval = setInterval(() => {
-      setProgress((prev) => {
+      setInternalProgress((prev) => {
         if (prev >= 96) return 96;
         return prev + (prev < 75 ? 3 : 1);
       });
@@ -1347,7 +1359,7 @@ function AutoTailoringProgressModal({
       clearInterval(stepInterval);
       clearInterval(progressInterval);
     };
-  }, [TAILOR_STEPS.length]);
+  }, [TAILOR_STEPS.length, isControlled]);
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in">
@@ -1359,31 +1371,45 @@ function AutoTailoringProgressModal({
 
         {/* Top Engine Badge */}
         <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200/80 text-[11px] font-bold text-teal-700">
-            <Zap className="h-3.5 w-3.5 text-teal-600 fill-teal-600 animate-pulse" />
-            <span>AI Tailoring in Progress</span>
+          <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-bold ${
+            isComplete ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-teal-50 border-teal-200/80 text-teal-700"
+          }`}>
+            {isComplete ? (
+              <Check className="h-3.5 w-3.5 text-emerald-600" />
+            ) : (
+              <Zap className="h-3.5 w-3.5 text-teal-600 fill-teal-600 animate-pulse" />
+            )}
+            <span>{isComplete ? "AI Tailoring Complete" : "AI Tailoring in Progress"}</span>
           </div>
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-black text-emerald-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            LIVE TAILORING
+            <span className={`h-1.5 w-1.5 rounded-full bg-emerald-500 ${!isComplete ? "animate-pulse" : ""}`} />
+            {isComplete ? "READY" : "LIVE TAILORING"}
           </div>
         </div>
 
         {/* Center Animated Glowing Ring Graphic */}
         <div className="relative z-10 flex flex-col items-center text-center space-y-3">
           <div className="relative h-20 w-20 flex items-center justify-center">
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-teal-600 animate-spin blur-md opacity-60" style={{ animationDuration: "4s" }} />
+            <div className={`absolute inset-0 rounded-3xl blur-md opacity-60 ${
+              isComplete 
+                ? "bg-gradient-to-tr from-emerald-400 via-emerald-500 to-green-500" 
+                : "bg-gradient-to-tr from-emerald-500 via-teal-400 to-teal-600 animate-spin"
+            }`} style={{ animationDuration: "4s" }} />
             <div className="relative h-16 w-16 rounded-2xl bg-white flex items-center justify-center border border-slate-200 shadow-xl">
-              <Sparkles className="h-8 w-8 text-teal-600 animate-pulse" />
+              {isComplete ? (
+                <Check className="h-8 w-8 text-emerald-600" />
+              ) : (
+                <Sparkles className="h-8 w-8 text-teal-600 animate-pulse" />
+              )}
             </div>
           </div>
 
           <div className="space-y-1.5">
             <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">
-              Auto-Tailoring Resume
+              {isComplete ? "Resume Ready!" : "Auto-Tailoring Resume"}
             </h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-              Optimizing for{" "}
+              Optimized for{" "}
               <span className="font-extrabold text-teal-700 px-2 py-0.5 rounded-lg bg-teal-50 border border-teal-200">
                 {targetRole || "Target Position"}
               </span>
@@ -1402,10 +1428,12 @@ function AutoTailoringProgressModal({
           </div>
           <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-0.5">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-teal-600 rounded-full transition-all duration-200 relative overflow-hidden"
+              className={`h-full rounded-full transition-all duration-300 relative overflow-hidden ${
+                isComplete ? "bg-emerald-500" : "bg-gradient-to-r from-emerald-500 via-teal-400 to-teal-600"
+              }`}
               style={{ width: `${progress}%` }}
             >
-              <div className="absolute inset-0 bg-white/30 animate-pulse" />
+              {!isComplete && <div className="absolute inset-0 bg-white/30 animate-pulse" />}
             </div>
           </div>
         </div>
@@ -1888,6 +1916,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [baseResumeLoaded, setBaseResumeLoaded] = useState(false);
   const [isSavingBase, setIsSavingBase] = useState(false);
   const [isAutoTailoring, setIsAutoTailoring] = useState(false);
+  const [autoTailorStepIndex, setAutoTailorStepIndex] = useState<number | undefined>(undefined);
+  const [autoTailorProgress, setAutoTailorProgress] = useState<number | undefined>(undefined);
+  const [autoTailorComplete, setAutoTailorComplete] = useState<boolean>(false);
   const [tailoringSectionToggles, setTailoringSectionToggles] = useState<Record<string, boolean>>({});
   const isRestoredRef = useRef(false);
 
@@ -2884,6 +2915,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     }
 
     setIsAutoTailoring(true); // Triggers the Progress Modal
+    setAutoTailorStepIndex(0);
+    setAutoTailorProgress(10);
+    setAutoTailorComplete(false);
     
     try {
       // 1. Analyze
@@ -2896,6 +2930,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setExpandedSections(initialExpanded);
       setCustomTargetRole(data.overall_summary?.job_title || "");
       
+      setAutoTailorStepIndex(1);
+      setAutoTailorProgress(35);
+
       // 2. Queue Sections
       let baseSections = data.sections || [];
       const sectionsToTailor = baseSections.filter((s: any) => {
@@ -2970,12 +3007,18 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         });
       }
 
+      setAutoTailorStepIndex(2);
+      setAutoTailorProgress(55);
+
       const { batchRewriteSections } = require("@/lib/api");
       const batchRes = await batchRewriteSections({
         document_id: documentId,
         job_description_text: jobDescription,
         sections: batchItems,
       });
+
+      setAutoTailorStepIndex(3);
+      setAutoTailorProgress(75);
 
       const newRewrites: Record<string, string> = {};
       if (batchRes.rewrites && Object.keys(batchRes.rewrites).length > 0) {
@@ -3008,21 +3051,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         if (applyRes.download_id) setDownloadId(applyRes.download_id);
         if (applyRes.download_url) {
           setDownloadUrl(applyRes.download_url);
-          
-          // Trigger download immediately
-          const link = document.createElement('a');
-          link.href = applyRes.download_url;
-          link.setAttribute('download', 'Tailored_Resume.pdf');
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
         }
         setIsPatchingApplied(true);
-        setSuccessNotification(`⚡ 1-Click Auto-Everything Complete: Tailored Resume Downloaded!`);
+        setSuccessNotification(`⚡ 1-Click Auto-Everything Complete: Tailored Resume Ready!`);
         if (refreshMe) refreshMe();
       }
 
-      setIsAutoTailoring(false);
+      setAutoTailorStepIndex(4);
+      setAutoTailorProgress(95);
 
       // Async structured tailor (builder)
       (async () => {
@@ -3052,10 +3088,26 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         } catch (err) {}
         setIsGeneratingCoverLetter(false);
       })();
+
+      // Finish progress and show complete state
+      setAutoTailorProgress(100);
+      setAutoTailorComplete(true);
+
+      // Delay hiding the modal to show success state
+      setTimeout(() => {
+        setIsAutoTailoring(false);
+        setAutoTailorStepIndex(undefined);
+        setAutoTailorProgress(undefined);
+        setAutoTailorComplete(false);
+      }, 2500);
+
     } catch (err: any) {
       console.error(err);
       setError(err?.message || "One-Click Auto-Everything failed.");
       setIsAutoTailoring(false);
+      setAutoTailorStepIndex(undefined);
+      setAutoTailorProgress(undefined);
+      setAutoTailorComplete(false);
     }
   };
 
@@ -7196,6 +7248,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       {isAutoTailoring && (
         <AutoTailoringProgressModal
           targetRole={customTargetRole || analysisResult?.overall_summary?.job_title || "Target Role"}
+          controlledStepIndex={autoTailorStepIndex}
+          controlledProgress={autoTailorProgress}
+          isComplete={autoTailorComplete}
         />
       )}
 
