@@ -6189,7 +6189,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               <div className="flex flex-col items-center">
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Before</span>
                                 <div className="relative flex items-center justify-center grayscale opacity-60 scale-90">
-                                  <svg className="w-14 h-14 transform -rotate-90">
+                                  <svg className="w-14 h-14 transform -rotate-90" viewBox="0 0 56 56">
                                     <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-slate-200 dark:text-slate-800" />
                                     <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray={2 * Math.PI * 24} strokeDashoffset={2 * Math.PI * 24 * (1 - initialScore / 100)} className="text-slate-400" />
                                   </svg>
@@ -6204,7 +6204,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           <div className="flex flex-col items-center">
                             {currentScore > initialScore && <span className="text-[10px] font-black text-emerald-600 uppercase tracking-wider mb-1">Target Fit</span>}
                             <div className="relative flex items-center justify-center">
-                              <svg className="w-20 h-20 transform -rotate-90">
+                              <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 80 80">
                                 <circle cx="40" cy="40" r="34" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-200 dark:text-slate-800" />
                                 <circle cx="40" cy="40" r="34" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray={2 * Math.PI * 34} strokeDashoffset={2 * Math.PI * 34 * (1 - currentScore / 100)} className={`${currentScore > initialScore ? "text-emerald-500" : "text-teal-500"} transition-all duration-1000`} />
                               </svg>
