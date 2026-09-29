@@ -202,8 +202,12 @@
     const jobPanel = panel || findJobPanel();
     if (!jobPanel) return false;
 
-    const hasDesc = jobPanel.querySelector('#jobDescriptionText, [data-testid="jobDescriptionText"], .jobsearch-jobDescriptionText') !== null ||
-      document.getElementById('jobDescriptionText') !== null;
+    // Must be attached to DOM and have non-zero dimensions
+    if (!jobPanel.isConnected || (jobPanel.offsetWidth === 0 && jobPanel.offsetHeight === 0)) {
+      return false;
+    }
+
+    const hasDesc = jobPanel.querySelector('#jobDescriptionText, [data-testid="jobDescriptionText"], .jobsearch-jobDescriptionText') !== null;
     const hasApply = findApplyButton(jobPanel) !== null;
     const hasTitle = findTitleElement(jobPanel) !== null;
 
@@ -830,7 +834,8 @@
     const btn = createButton();
     const injected = injectIntoJob(panel, btn);
     if (!injected) {
-      log('Could not find suitable injection point inside job panel');
+      log('Could not find suitable injection point inside job panel — button will not be displayed');
+      removeButton();
       return;
     }
 

@@ -346,7 +346,7 @@ export default function SubscriptionModal({
                 </li>
                 <li className="flex items-center gap-2 text-teal-800 font-semibold">
                   <Sparkles className="h-4 w-4 text-teal-600 shrink-0" />
-                  <span>LinkedIn 1-Click Copier Chrome Extension</span>
+                  <span>LinkedIn, Indeed &amp; Naukri 1-Click Copiers</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />

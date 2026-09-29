@@ -1,0 +1,103 @@
+/* ============================================
+   RoleCraft — Naukri 1-Click Job Copier
+   Button Styles
+   ============================================ */
+
+/* Base button */
+#rc-naukri-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 16px;
+  margin: 4px 8px 4px 0;
+  height: 38px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  z-index: 100;
+  position: relative;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  vertical-align: middle;
+}
+
+/* ---- State: Ready — Naukri navy/blue ---- */
+#rc-naukri-copy-btn[data-state="ready"] {
+  background-color: #18558a;
+  color: #ffffff;
+  border-color: #18558a;
+  box-shadow: 0 1px 3px rgba(24, 85, 138, 0.25);
+}
+
+#rc-naukri-copy-btn[data-state="ready"]:hover {
+  background-color: #12436d;
+  border-color: #12436d;
+  box-shadow: 0 4px 12px rgba(24, 85, 138, 0.35);
+  transform: translateY(-1px);
+}
+
+#rc-naukri-copy-btn[data-state="ready"]:active {
+  background-color: #0c2f4e;
+  border-color: #0c2f4e;
+  transform: translateY(0);
+}
+
+/* ---- State: Extracting ---- */
+#rc-naukri-copy-btn[data-state="extracting"] {
+  background-color: #d97706;
+  border-color: #d97706;
+  color: #ffffff;
+  cursor: wait;
+  pointer-events: none;
+}
+
+@keyframes rc-naukri-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+#rc-naukri-copy-btn[data-state="extracting"] {
+  animation: rc-naukri-pulse 1.1s ease-in-out infinite;
+}
+
+/* ---- State: Success ---- */
+#rc-naukri-copy-btn[data-state="success"] {
+  background-color: #057642;
+  border-color: #057642;
+  color: #ffffff;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(5, 118, 66, 0.3);
+}
+
+/* ---- State: Error ---- */
+#rc-naukri-copy-btn[data-state="error"] {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+/* ---- Icon inside button ---- */
+.rc-naukri-icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.rc-naukri-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}

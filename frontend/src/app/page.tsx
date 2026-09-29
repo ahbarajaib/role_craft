@@ -4278,7 +4278,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               <span className="flex flex-col items-start gap-0.5">
                                 <span className="flex items-center gap-2"><Zap className="h-4 w-4 text-teal-600" /> Browser Extensions</span>
                                 <span className="text-[10px] font-semibold text-teal-600 pl-6">
-                                  {user?.plan_type === "elite" ? "LinkedIn + Indeed Copier" : "LinkedIn Job Copier"}
+                                  {user?.plan_type === "elite" ? "LinkedIn, Indeed & Naukri" : "LinkedIn Job Copier"}
                                 </span>
                               </span>
                               <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs shrink-0">{isProOrElite ? "Download" : "Pro"}</span>
@@ -4373,7 +4373,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           <span className="flex flex-col items-start gap-0.5">
                             <span className="flex items-center gap-2"><Zap className="h-3.5 w-3.5 text-teal-600" /> Browser Extensions</span>
                             <span className="text-[10px] font-semibold text-teal-500 pl-5">
-                              {user?.plan_type === "elite" ? "LinkedIn + Indeed Copier" : "LinkedIn Job Copier"}
+                              {user?.plan_type === "elite" ? "LinkedIn, Indeed & Naukri" : "LinkedIn Job Copier"}
                             </span>
                           </span>
                           <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs shrink-0">{isProOrElite ? "Download" : "Pro"}</span>
@@ -5076,7 +5076,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </li>
                     <li className="flex items-center gap-2 text-teal-950 font-bold bg-teal-50/90 -mx-2 px-2 py-1.5 rounded-lg border border-teal-200/80 shadow-2xs">
                       <Sparkles className="h-4 w-4 text-teal-600 shrink-0" />
-                      <span>✦ LinkedIn 1-Click Copier Extension</span>
+                      <span>✦ LinkedIn, Indeed &amp; Naukri Copier Extensions</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />

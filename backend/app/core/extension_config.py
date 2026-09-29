@@ -19,27 +19,29 @@ EXTENSION_FEATURE_GATES: dict[str, list[str]] = {
     # Indeed: Job title copy button on viewjob pages
     "indeed": ["elite"],
 
-    # Future example — uncomment and add folder when ready:
-    # "glassdoor": ["elite"],
-    # "naukri": ["elite"],
+    # Naukri: Full job details on job-listings pages
+    "naukri": ["elite"],
 }
 
 # Human-readable labels for each feature (used in API responses & frontend)
 EXTENSION_FEATURE_LABELS: dict[str, str] = {
     "linkedin": "LinkedIn 1-Click Job Copier",
     "indeed": "Indeed 1-Click Job Copier",
+    "naukri": "Naukri 1-Click Job Copier",
 }
 
 # Folder name inside the project root for each feature's extension source
 EXTENSION_FEATURE_DIRS: dict[str, str] = {
     "linkedin": "linkedin-job-copier",
     "indeed": "indeed-job-copier",
+    "naukri": "naukri-job-copier",
 }
 
 # Folder name used inside the downloaded ZIP for each feature
 EXTENSION_ZIP_FOLDER_NAMES: dict[str, str] = {
     "linkedin": "RoleCraft-LinkedIn-1-Click-Job-Copier",
     "indeed": "RoleCraft-Indeed-1-Click-Job-Copier",
+    "naukri": "RoleCraft-Naukri-1-Click-Job-Copier",
 }
 
 

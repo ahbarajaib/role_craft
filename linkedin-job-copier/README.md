@@ -177,11 +177,11 @@ content.js (single file, IIFE)
 
 | Problem | Solution |
 |---------|----------|
-| Button doesn't appear | Check chrome://extensions — is the extension enabled? Refresh the LinkedIn page. Check console for errors. |
+| Button doesn't appear | Check chrome://extensions — is the extension enabled? The button only appears inside an active job's action bar when a job posting is selected. |
 | "Extraction Failed" | Open DevTools console, look for `[LinkedIn Job Copier]` logs to see which field failed. LinkedIn may have changed its DOM. |
 | Wrong data extracted | The panel locator may be picking up the wrong section. Check the console to see which selector was used. |
 | Duplicate buttons | This shouldn't happen (there's a duplicate check), but if it does, refresh the page. |
-| Button in wrong position | The extension tries the action bar first, then falls back to a floating button. This is intentional. |
+| Button position | The extension injects directly into the job action bar alongside Apply and Save; it strictly never floats over the page. |
 
 ## Files
 

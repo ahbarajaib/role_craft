@@ -96,9 +96,16 @@ RoleCraft/
 │
 ├── indeed-job-copier/    Chrome Extension (Manifest V3) — Elite only
 │   ├── manifest.json   Extension manifest
-│   ├── content.js      Job title copy button on Indeed viewjob pages
+│   ├── content.js      Job details copy button on Indeed viewjob pages
 │   ├── styles.css      Button styling (Indeed blue theme)
-│   ├── icons/          Branded icons (16x16, 48x48, 128x128)
+│   ├── icons/          Branded icons (16x16, 32x32, 48x48, 128x128)
+│   └── README.md       Extension documentation
+│
+├── naukri-job-copier/    Chrome Extension (Manifest V3) — Elite only
+│   ├── manifest.json   Extension manifest
+│   ├── content.js      Job details copy button on Naukri job postings
+│   ├── styles.css      Button styling (Naukri navy theme)
+│   ├── icons/          Branded icons (16x16, 32x32, 48x48, 128x128)
 │   └── README.md       Extension documentation
 │
 ├── recordings/         Demo video recordings

@@ -815,21 +815,31 @@
       return;
     }
 
-    // Don't inject duplicates
-    if (document.getElementById(BUTTON_ID)) {
+    const panel = getJobDetailPanel();
+    if (!panel) {
+      removeButton();
       return;
     }
 
-    const button = createButton();
-    const injected = injectIntoActionBar(button);
-
-    if (!injected) {
-      log('Action bar not found, using floating button');
-      button.classList.add('ljc-floating');
-      document.body.appendChild(button);
+    // Clean up any button not inside the active panel or duplicates
+    const existing = document.getElementById(BUTTON_ID);
+    if (existing) {
+      if (panel.contains(existing)) {
+        return;
+      }
+      existing.remove();
     }
 
-    log('Button injected');
+    const button = createButton();
+    const injected = injectIntoActionBar(button, panel);
+
+    if (!injected) {
+      log('Appropriate place inside job action bar not found; button not displayed (no floating fallback)');
+      removeButton();
+      return;
+    }
+
+    log('Button injected at appropriate place');
   }
 
   function createButton() {
@@ -846,18 +856,24 @@
     return `<span class="ljc-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></span>`;
   }
 
-  function injectIntoActionBar(button) {
-    const applyBtn = document.querySelector(
+  function injectIntoActionBar(button, panel) {
+    const scope = panel || document;
+    const applyBtn = scope.querySelector(
       'a[aria-label*="Apply"], button[aria-label*="Apply"], [data-easy-apply-button]'
     );
-    const saveBtn = document.querySelector(
+    const saveBtn = scope.querySelector(
       'button[aria-label*="Save"], button[aria-label*="Unsave"]'
     );
 
-    // Strategy 1: Find the common parent row/container of Apply and Save buttons
+    // Prevent injecting inside left-hand search results list
+    if (applyBtn && applyBtn.closest('.jobs-search-results-list, .jobs-search-two-pane__wrapper > div:first-child')) {
+      return false;
+    }
+
+    // Strategy 1: Find the common parent row/container of Apply and Save buttons inside panel
     if (applyBtn && saveBtn) {
       let curr = applyBtn.parentElement;
-      while (curr && curr !== document.body) {
+      while (curr && curr !== document.body && curr !== panel) {
         if (curr.contains(saveBtn)) {
           // Found the action buttons container row
           // Append as a dedicated sibling element at the end of the row
@@ -871,7 +887,7 @@
 
     // Strategy 2: If only Save or Apply is found, find the button's outermost wrapper
     const anchorBtn = saveBtn || applyBtn;
-    if (anchorBtn) {
+    if (anchorBtn && (panel ? panel.contains(anchorBtn) : true)) {
       let buttonWrapper = anchorBtn;
       // Walk up until we find a multi-child container or reach 3 levels
       for (let i = 0; i < 3; i++) {
@@ -892,7 +908,7 @@
       }
     }
 
-    // Strategy 3: Legacy class-based selectors
+    // Strategy 3: Legacy class-based selectors within scope
     const legacySelectors = [
       '.jobs-unified-top-card__actions',
       '[class*="top-card__actions"]',
@@ -900,10 +916,34 @@
     ];
     for (const sel of legacySelectors) {
       try {
-        const container = document.querySelector(sel);
+        const container = scope.querySelector(sel);
         if (container) {
           container.appendChild(button);
           log('Button injected via legacy selector:', sel);
+          return true;
+        }
+      } catch (e) { /* skip */ }
+    }
+    
+    // Strategy 4: Fallback to the top card container if action buttons are missing (e.g. already applied)
+    const fallbackSelectors = [
+      '.job-details-jobs-unified-top-card__content--two-pane',
+      '.jobs-unified-top-card__content--two-pane'
+    ];
+    
+    for (const sel of fallbackSelectors) {
+      try {
+        const container = scope.querySelector(sel);
+        if (container) {
+          const wrapper = document.createElement('div');
+          wrapper.style.display = 'flex';
+          wrapper.style.flexWrap = 'wrap';
+          wrapper.style.gap = '8px';
+          wrapper.style.marginTop = '16px';
+          wrapper.style.marginBottom = '8px';
+          wrapper.appendChild(button);
+          container.appendChild(wrapper);
+          log('Button injected into top card fallback:', sel);
           return true;
         }
       } catch (e) { /* skip */ }
@@ -1027,13 +1067,28 @@
   function setupNavigationDetection() {
     let lastURL = window.location.href;
 
-    // Method 1: URL polling
+    // Method 1: URL polling & panel watchdog
     setInterval(() => {
       const currentURL = window.location.href;
       if (currentURL !== lastURL) {
         log('URL changed:', lastURL, '→', currentURL);
         lastURL = currentURL;
         onNavigationChange();
+        return;
+      }
+
+      if (isJobPage()) {
+        const panel = getJobDetailPanel();
+        const btn = document.getElementById(BUTTON_ID);
+        if (panel) {
+          if (!btn || !panel.contains(btn)) {
+            injectButton();
+          }
+        } else if (btn) {
+          removeButton();
+        }
+      } else {
+        removeButton();
       }
     }, NAV_CHECK_INTERVAL_MS);
 

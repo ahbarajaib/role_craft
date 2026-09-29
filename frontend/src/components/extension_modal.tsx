@@ -33,6 +33,7 @@ function getPlanFlags(planType: string, subscriptionStatus?: string | null) {
   return {
     isLinkedInEligible: ["pro", "elite"].includes(effectivePlan),
     isIndeedEligible: effectivePlan === "elite",
+    isNaukriEligible: effectivePlan === "elite",
     effectivePlan,
   };
 }
@@ -40,7 +41,7 @@ function getPlanFlags(planType: string, subscriptionStatus?: string | null) {
 // ── Extension Card ────────────────────────────────────────────────────────────
 
 interface ExtensionCardProps {
-  /** "linkedin" | "indeed" */
+  /** "linkedin" | "indeed" | "naukri" */
   feature: string;
   label: string;
   description: string;
@@ -70,6 +71,8 @@ function ExtensionCard({
   onOpenPreview,
 }: ExtensionCardProps) {
   const isLinkedIn = feature === "linkedin";
+  const isIndeed = feature === "indeed";
+  const isNaukri = feature === "naukri";
 
   return (
     <div
@@ -86,7 +89,9 @@ function ExtensionCard({
             className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 ${
               isLinkedIn
                 ? "bg-[#0a66c2]/10 text-[#0a66c2]"
-                : "bg-[#2557a7]/10 text-[#2557a7]"
+                : isIndeed
+                ? "bg-[#2557a7]/10 text-[#2557a7]"
+                : "bg-[#18558a]/10 text-[#18558a]"
             }`}
           >
             {isLinkedIn ? (
@@ -94,11 +99,14 @@ function ExtensionCard({
               <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
                 <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
               </svg>
-            ) : (
+            ) : isIndeed ? (
               /* Indeed "i" icon approximation */
               <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2V11h2v6zm0-8h-2V7h2v2z"/>
               </svg>
+            ) : (
+              /* Naukri bold "N" letter */
+              <span className="font-black text-xs tracking-tighter">N</span>
             )}
           </div>
           <div>
@@ -190,11 +198,11 @@ export default function ExtensionModal({
   if (!isOpen) return null;
 
   const planType = (user?.plan_type || "free").toLowerCase();
-  const { isLinkedInEligible, isIndeedEligible, effectivePlan } = getPlanFlags(
+  const { isLinkedInEligible, isIndeedEligible, isNaukriEligible, effectivePlan } = getPlanFlags(
     planType,
     user?.subscription_status
   );
-  const hasAnyAccess = isLinkedInEligible || isIndeedEligible;
+  const hasAnyAccess = isLinkedInEligible || isIndeedEligible || isNaukriEligible;
 
   const handleDownload = async (feature: string) => {
     if (!token) {
@@ -257,7 +265,7 @@ export default function ExtensionModal({
                 )}
               </div>
               <p className="text-xs sm:text-sm text-teal-100/80 mt-0.5">
-                1-Click job copying on LinkedIn &amp; Indeed
+                1-Click job copying on LinkedIn, Indeed &amp; Naukri
               </p>
             </div>
           </div>
@@ -299,6 +307,20 @@ export default function ExtensionModal({
               downloadSuccess={downloadSuccessFeature === "indeed"}
               zipFilename="RoleCraft-Indeed-1-Click-Job-Copier.zip"
               onDownload={() => handleDownload("indeed")}
+              onOpenSubscribe={onOpenSubscribe}
+              onClose={onClose}
+            />
+
+            <ExtensionCard
+              feature="naukri"
+              label="Naukri 1-Click Job Copier"
+              description="Copies full job description, title, company, experience & location in 1 click"
+              planRequired="Elite"
+              eligible={isNaukriEligible}
+              isDownloading={downloadingFeature === "naukri"}
+              downloadSuccess={downloadSuccessFeature === "naukri"}
+              zipFilename="RoleCraft-Naukri-1-Click-Job-Copier.zip"
+              onDownload={() => handleDownload("naukri")}
               onOpenSubscribe={onOpenSubscribe}
               onClose={onClose}
             />
@@ -373,7 +395,7 @@ export default function ExtensionModal({
                     LinkedIn Copier included with Pro &amp; Elite
                   </p>
                   <p className="text-xs text-teal-200 mt-0.5">
-                    Indeed Copier included with Elite
+                    Indeed &amp; Naukri Copiers included with Elite
                   </p>
                 </div>
                 <div className="text-right shrink-0">
