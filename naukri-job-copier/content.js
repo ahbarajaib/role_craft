@@ -7,12 +7,11 @@
 //  clean Job Description, and Canonical URL)
 // and copies them to the clipboard for RoleCraft ATS.
 //
-// DESIGN PRINCIPLE:
-// The copy button is strictly rendered in-flow inside
-// the active job's action bar or header. It NEVER floats
-// around the viewport (no position:fixed fallback).
-// If an appropriate place cannot be found or if no job
-// is currently active, the button is not displayed.
+// ROBUST INJECTION ARCHITECTURE:
+// 1. In-flow header / action bar placement is prioritized.
+// 2. Multi-tier fallbacks (action container -> apply button ->
+//    save button -> header card -> job title heading -> description).
+// 3. Guaranteed floating fallback if in-flow placement is blocked.
 // ============================================
 
 (function () {
@@ -30,7 +29,7 @@
 
   // UI boilerplate phrases to strip from description
   const BOILERPLATE_PATTERNS = [
-    /^apply\s*(on company site)?$/i,
+    /^apply\s*(on company site|on website|now)?$/i,
     /^save\s*(job)?$/i,
     /^share\s*(job)?$/i,
     /^report this job$/i,
@@ -68,54 +67,63 @@
   // ---- 2. Page & Panel Detection ----
 
   /**
-   * Checks if current URL or page structure represents a Naukri job page.
+   * Checks if current page is on Naukri.com.
+   * Content script is already scoped to naukri.com in manifest.json;
+   * actual job presence is verified via hasJobOnPage().
    */
   function isJobPage() {
-    const url = window.location.href;
-    return /naukri\.com\/(job-listings|job-detail|jobs-|[a-zA-Z0-9-]+-jobs)/i.test(url);
+    return window.location.hostname.includes('naukri.com');
   }
 
   /**
    * Locates the active job container on the page.
-   * Handles standalone job pages, quick-view panes, or modal views.
+   * Returns top-level wrapper enclosing both header and description.
    */
   function findJobPanel() {
-    // 1. Direct standalone job view containers
-    const standaloneSelectors = [
+    // 1. Direct standalone job view containers or wrappers
+    const containerSelectors = [
       'main.styles_main-container__content__content-wrapper',
       'main[class*="content-wrapper" i]',
-      'section[class*="jd-header" i]',
       'div[class*="styles_jdc__" i]',
+      'div[class*="jdc-container" i]',
+      'div[class*="job-details" i]',
+      'section[class*="job-details" i]',
       'div[class*="job-desc" i]',
       'section[class*="job-desc" i]',
-      'main',
       'article[class*="jobTuple" i]',
+      '.srp-jobtuple-wrapper[class*="active" i]',
+      '.cust-job-tuple[class*="active" i]',
+      'main',
       '#root',
     ];
 
-    for (const sel of standaloneSelectors) {
+    for (const sel of containerSelectors) {
       try {
         const el = document.querySelector(sel);
         if (el && el.isConnected && (el.offsetWidth > 0 || el.offsetHeight > 0)) {
-          const hasTitle = el.querySelector('h1, [class*="jd-header-title" i], [class*="title" i]');
-          const hasDesc = el.querySelector('[class*="dang-inner-html" i], [class*="job-desc" i], [itemprop="description"]');
-          if (hasTitle || hasDesc) {
+          const hasTitle = el.querySelector('h1, [class*="jd-header-title" i], [class*="job-title" i]');
+          if (hasTitle) {
             return el;
           }
         }
       } catch (e) {}
     }
 
-    // 2. Look for any visible container with an h1 heading and job description
+    // 2. Anchor from visible h1 heading
     const h1 = document.querySelector('h1');
-    if (h1 && h1.isConnected && h1.offsetWidth > 0) {
-      const container = h1.closest('main, article, section, [class*="wrapper" i], div');
+    if (h1 && h1.isConnected && (h1.offsetWidth > 0 || h1.offsetHeight > 0)) {
+      const container = h1.closest('main, article, section, [class*="wrapper" i], [class*="container" i], div');
       if (container && container !== document.body && (container.offsetWidth > 0 || container.offsetHeight > 0)) {
         return container;
       }
+      return h1.parentElement;
     }
 
-    // CRITICAL: NEVER return document.body! Return null if no active job panel.
+    // 3. Fallback to main or document.body if JobPosting schema or title exists
+    if (getJsonLdJobData() || document.querySelector('h1')) {
+      return document.querySelector('main') || document.body;
+    }
+
     return null;
   }
 
@@ -124,20 +132,23 @@
    */
   function hasJobOnPage(panel) {
     const jobPanel = panel || findJobPanel();
-    if (!jobPanel) return false;
+    if (!jobPanel || !jobPanel.isConnected) return false;
 
-    if (!jobPanel.isConnected || (jobPanel.offsetWidth === 0 && jobPanel.offsetHeight === 0)) {
-      return false;
-    }
+    // Check title element
+    const titleEl = findTitleElement(jobPanel) || findTitleElement(document);
+    if (!titleEl) return false;
 
-    const hasTitle = findTitleElement(jobPanel) !== null;
-    const hasDesc = findDescriptionElement(jobPanel) !== null;
-    const hasApply = findApplyButton(jobPanel) !== null;
+    const titleText = (titleEl.textContent || '').trim();
+    if (isGenericHeading(titleText)) return false;
 
-    // Check for JSON-LD JobPosting schema
+    // Must have at least one additional strong job indicator
+    const hasDesc = findDescriptionElement(jobPanel) !== null || findDescriptionElement(document) !== null;
+    const hasApply = findApplyButton(jobPanel) !== null || findApplyButton(document) !== null;
+    const hasComp = findCompanyElement(jobPanel) !== null || findCompanyElement(document) !== null;
+    const hasStats = extractExperience() !== '' || extractSalary() !== '';
     const hasSchema = getJsonLdJobData() !== null;
 
-    return (hasTitle && (hasDesc || hasApply)) || (hasSchema && (hasTitle || hasApply));
+    return hasDesc || hasApply || hasComp || hasStats || hasSchema;
   }
 
   /**
@@ -146,7 +157,7 @@
   function getJobSignature() {
     try {
       const url = window.location.href;
-      const match = url.match(/job-listings-([a-zA-Z0-9-]+)/i);
+      const match = url.match(/job-listings-([a-zA-Z0-9-]+)/i) || url.match(/\/([a-zA-Z0-9-]+-jobs[^\/\?]*)/i);
       if (match && match[1]) return match[1];
     } catch (e) {}
 
@@ -183,14 +194,19 @@
           if (match) return match;
         }
       }
-    } catch (e) {
-      // JSON parse error, ignore and fall back to DOM
-    }
+    } catch (e) {}
     return null;
   }
 
   function findTitleElement(scope) {
     const root = scope || findJobPanel() || document;
+    if (root && root.matches && root.matches('h1')) {
+      const txt = (root.textContent || '').trim();
+      if (txt.length > 2 && txt.length < 250 && !isGenericHeading(txt)) {
+        return root;
+      }
+    }
+
     const selectors = [
       'h1.styles_jd-header-title__vgzwS',
       'h1[class*="jd-header-title" i]',
@@ -199,22 +215,41 @@
       'h1[title]',
       'h1',
       '[class*="styles_jtitle" i]',
+      '[class*="jd-header-title" i]',
+      '[data-testid*="title" i]',
     ];
 
     for (const sel of selectors) {
-      const el = root.querySelector(sel);
-      if (el && el.isConnected) {
-        const txt = (el.textContent || '').trim();
-        if (txt.length > 2 && txt.length < 250 && !isGenericHeading(txt)) {
-          return el;
+      try {
+        const el = root.querySelector(sel);
+        if (el && el.isConnected) {
+          const txt = (el.textContent || '').trim();
+          if (txt.length > 2 && txt.length < 250 && !isGenericHeading(txt)) {
+            return el;
+          }
         }
+      } catch (e) {}
+    }
+
+    if (root !== document) {
+      for (const sel of selectors) {
+        try {
+          const el = document.querySelector(sel);
+          if (el && el.isConnected) {
+            const txt = (el.textContent || '').trim();
+            if (txt.length > 2 && txt.length < 250 && !isGenericHeading(txt)) {
+              return el;
+            }
+          }
+        } catch (e) {}
       }
     }
+
     return null;
   }
 
   function isGenericHeading(txt) {
-    return /^(jobs in|recommended jobs|similar jobs|popular searches|search results|browse jobs|naukri)$/i.test(txt);
+    return /^(jobs in|recommended jobs|similar jobs|popular searches|search results|browse jobs|naukri|all jobs|trending jobs)/i.test(txt);
   }
 
   function extractJobTitle() {
@@ -242,19 +277,41 @@
       'div[class*="comp-name" i]',
       'a[href*="/company-jobs/"]',
       'a[href*="/company/"]',
+      'a[href*="-reviews-"]',
       '[data-type="company-name"]',
       '[class*="companyName" i]',
+      '[class*="comp-info" i] a',
+      '[class*="company-info" i] a',
+      '[class*="company" i] a',
+      '[class*="company" i]',
     ];
 
     for (const sel of selectors) {
-      const el = root.querySelector(sel);
-      if (el && el.isConnected) {
-        const txt = (el.textContent || '').trim();
-        if (txt.length > 1 && txt.length < 120 && !txt.toLowerCase().includes('reviews')) {
-          return el;
+      try {
+        const el = root.querySelector(sel);
+        if (el && el.isConnected) {
+          const txt = (el.textContent || '').trim();
+          if (txt.length > 1 && txt.length < 120 && !txt.toLowerCase().includes('reviews')) {
+            return el;
+          }
         }
+      } catch (e) {}
+    }
+
+    if (root !== document) {
+      for (const sel of selectors) {
+        try {
+          const el = document.querySelector(sel);
+          if (el && el.isConnected) {
+            const txt = (el.textContent || '').trim();
+            if (txt.length > 1 && txt.length < 120 && !txt.toLowerCase().includes('reviews')) {
+              return el;
+            }
+          }
+        } catch (e) {}
       }
     }
+
     return null;
   }
 
@@ -298,16 +355,20 @@
       'span[class*="jhc__location" i]',
       'span[class*="location" i]',
       'div[class*="location" i]',
+      '[class*="loc" i]',
       'a[href*="-jobs-in-"]',
+      'a[href*="/jobs-in-"]',
       '[data-testid*="location" i]',
     ];
 
     for (const sel of selectors) {
-      const el = panel.querySelector(sel);
-      if (el) {
-        const txt = (el.textContent || '').trim();
-        if (txt.length > 1 && txt.length < 100) return txt;
-      }
+      try {
+        const el = panel.querySelector(sel);
+        if (el) {
+          const txt = (el.textContent || '').trim();
+          if (txt.length > 1 && txt.length < 100) return txt;
+        }
+      } catch (e) {}
     }
 
     return '';
@@ -329,14 +390,17 @@
       'span[class*="jhc__exp" i]',
       'span[class*="exp" i]',
       'div[class*="exp" i]',
+      '[class*="experience" i]',
     ];
 
     for (const sel of selectors) {
-      const el = panel.querySelector(sel);
-      if (el) {
-        const txt = (el.textContent || '').trim();
-        if (/\d+.*?(?:yr|year|exp)/i.test(txt)) return txt;
-      }
+      try {
+        const el = panel.querySelector(sel);
+        if (el) {
+          const txt = (el.textContent || '').trim();
+          if (/\d+.*?(?:yr|year|exp|fresher)/i.test(txt)) return txt;
+        }
+      } catch (e) {}
     }
 
     return '';
@@ -359,16 +423,19 @@
       'span[class*="jhc__salary" i]',
       'span[class*="salary" i]',
       'div[class*="salary" i]',
+      '[class*="sal" i]',
     ];
 
     for (const sel of selectors) {
-      const el = panel.querySelector(sel);
-      if (el) {
-        const txt = (el.textContent || '').trim();
-        if (txt.length > 1 && (txt.includes('₹') || /pa|lacs|lakh|disclosed/i.test(txt))) {
-          return txt;
+      try {
+        const el = panel.querySelector(sel);
+        if (el) {
+          const txt = (el.textContent || '').trim();
+          if (txt.length > 1 && (txt.includes('₹') || /(?:pa|p\.a\.|lacs|lakh|disclosed)/i.test(txt))) {
+            return txt;
+          }
         }
-      }
+      } catch (e) {}
     }
 
     return '';
@@ -377,7 +444,7 @@
   function extractSkills() {
     const panel = findJobPanel() || document;
     const skillEls = panel.querySelectorAll(
-      'div[class*="key-skill" i] a, div[class*="styles_key-skill" i] a, div[class*="chip" i], a[class*="chip" i]'
+      'div[class*="key-skill" i] a, [class*="styles_key-skill" i] a, [class*="chip" i], a[class*="chip" i], [class*="tag" i], [class*="skill" i]'
     );
     const skills = [];
     for (const el of skillEls) {
@@ -398,16 +465,45 @@
       'section[class*="job-desc" i]',
       'div[class*="job-desc" i]',
       'div[class*="job-description" i]',
+      'section[class*="job-description" i]',
+      'div[class*="jobDescription" i]',
       '[itemprop="description"]',
       '#job-desc',
+      '#jobDescription',
     ];
 
     for (const sel of selectors) {
-      const el = root.querySelector(sel);
-      if (el && el.textContent.trim().length > 40) {
-        return el;
+      try {
+        const el = root.querySelector(sel);
+        if (el && el.textContent.trim().length > 40) {
+          return el;
+        }
+      } catch (e) {}
+    }
+
+    // Section by heading text (e.g. "Job description", "Roles and Responsibilities")
+    const headings = root.querySelectorAll('h2, h3, h4, div[class*="title" i], span[class*="title" i]');
+    for (const h of headings) {
+      const hText = (h.textContent || '').trim();
+      if (/job\s*description|role\s*description|roles\s*&\s*responsibilities|about the job/i.test(hText)) {
+        const section = h.closest('section, article, div[class*="container" i], div');
+        if (section && section.textContent.trim().length > 60) {
+          return section;
+        }
       }
     }
+
+    if (root !== document) {
+      for (const sel of selectors) {
+        try {
+          const el = document.querySelector(sel);
+          if (el && el.textContent.trim().length > 40) {
+            return el;
+          }
+        } catch (e) {}
+      }
+    }
+
     return null;
   }
 
@@ -420,6 +516,34 @@
     const descEl = findDescriptionElement();
     if (descEl) {
       return cleanElementText(descEl);
+    }
+
+    // Fallback: Largest structured text block with job-relevant keywords
+    const panel = findJobPanel() || document.body;
+    const candidates = panel.querySelectorAll('div, section, article');
+    let bestBlock = null;
+    let highestScore = 0;
+
+    for (const block of candidates) {
+      if (block.querySelector('input, form, header, nav')) continue;
+      const txt = (block.textContent || '').trim();
+      if (txt.length < 80 || txt.length > 50000) continue;
+
+      const hasKeywords = /responsibilities|requirements|qualifications|skills|role|experience/i.test(txt);
+      if (!hasKeywords) continue;
+
+      const liCount = block.querySelectorAll('li').length;
+      const pCount = block.querySelectorAll('p').length;
+      let score = txt.length + liCount * 200 + pCount * 100;
+
+      if (score > highestScore) {
+        highestScore = score;
+        bestBlock = block;
+      }
+    }
+
+    if (bestBlock) {
+      return cleanElementText(bestBlock);
     }
 
     return '';
@@ -476,7 +600,7 @@
     try {
       const url = new URL(window.location.href);
       // Strip tracking parameters
-      const paramsToRemove = ['src', 'sid', 'xp', 'px', 'utm_source', 'utm_medium', 'utm_campaign', 'k'];
+      const paramsToRemove = ['src', 'sid', 'xp', 'px', 'utm_source', 'utm_medium', 'utm_campaign', 'k', 'l'];
       paramsToRemove.forEach((p) => url.searchParams.delete(p));
       return url.toString();
     } catch (e) {
@@ -626,7 +750,7 @@
     setTimeout(() => setButtonState('ready'), RESET_DELAY_MS);
   }
 
-  // ---- 6. Button Injection (Appropriate In-Flow Placement ONLY) ----
+  // ---- 6. Button Injection & Fallbacks ----
 
   function createButton() {
     const btn = document.createElement('button');
@@ -642,30 +766,72 @@
   function findApplyButton(scope) {
     const root = scope || findJobPanel() || document;
     const selectors = [
+      '#company-site-button',
+      'button[id*="company-site" i]',
+      'button[class*="company-site" i]',
       'button.styles_apply-button__L2Q_2',
       'button[id*="apply" i]',
       'button[class*="apply-button" i]',
+      'button[class*="apply-btn" i]',
       'button[class*="apply" i]',
       'a[id*="apply" i]',
+      'a[class*="apply-button" i]',
+      'a[class*="apply-btn" i]',
       'a[class*="apply" i]',
       '[data-testid*="apply" i]',
       'button[title*="apply" i]',
+      '[class*="apply-button-container" i] button',
+      '[class*="apply-button-container" i] a',
     ];
 
     for (const sel of selectors) {
-      const el = root.querySelector(sel);
-      if (el && el.isConnected && el.offsetWidth > 20 && el.offsetHeight > 15) {
-        return el;
-      }
+      try {
+        const el = root.querySelector(sel);
+        if (el && el.isConnected && (el.offsetWidth > 15 || el.offsetHeight > 15)) {
+          return el;
+        }
+      } catch (e) {}
     }
 
-    // Text matching
+    // Text matching across buttons and links
     const buttons = root.querySelectorAll('button, a');
     for (const b of buttons) {
       const txt = (b.textContent || '').trim();
-      if (/^apply\s*(on company site)?$/i.test(txt) || /^i am interested$/i.test(txt)) {
-        if (b.offsetWidth > 20 && b.offsetHeight > 15) {
+      if (
+        /apply\s*(on company site|on website|now)?$/i.test(txt) ||
+        /i am interested/i.test(txt) ||
+        /register to apply/i.test(txt) ||
+        /login to apply/i.test(txt) ||
+        /quick apply/i.test(txt)
+      ) {
+        if (b.offsetWidth > 15 || b.offsetHeight > 15) {
           return b;
+        }
+      }
+    }
+
+    if (root !== document) {
+      for (const sel of selectors) {
+        try {
+          const el = document.querySelector(sel);
+          if (el && el.isConnected && (el.offsetWidth > 15 || el.offsetHeight > 15)) {
+            return el;
+          }
+        } catch (e) {}
+      }
+      const allDocButtons = document.querySelectorAll('button, a');
+      for (const b of allDocButtons) {
+        const txt = (b.textContent || '').trim();
+        if (
+          /apply\s*(on company site|on website|now)?$/i.test(txt) ||
+          /i am interested/i.test(txt) ||
+          /register to apply/i.test(txt) ||
+          /login to apply/i.test(txt) ||
+          /quick apply/i.test(txt)
+        ) {
+          if (b.offsetWidth > 15 || b.offsetHeight > 15) {
+            return b;
+          }
         }
       }
     }
@@ -674,26 +840,39 @@
   }
 
   /**
-   * Strictly injects the button into the active job panel's action bar or header.
-   * Returns true if placed at an appropriate place; returns false otherwise.
-   * NEVER falls back to a floating or viewport-fixed button.
+   * Injects the button using a resilient multi-tier hierarchy:
+   *  1. Dedicated action / apply container
+   *  2. Adjacent to Apply button
+   *  3. Adjacent to Save / Share button
+   *  4. Inside Header card
+   *  5. Adjacent to Job Title (h1)
+   *  6. Before Job Description
+   *  7. Top of Job Panel
+   *  8. Floating fallback badge (guaranteed viewport visibility)
    */
   function injectIntoJob(panel, btn) {
+    btn.classList.remove('rc-naukri-floating');
+
     // Strategy 1: Dedicated apply / action button container in job header
-    const actionContainer = panel.querySelector(
-      'div.styles_apply-button-container__o_W_M, div[class*="apply-button-container" i], div[class*="jd-header-actions" i], div[class*="header-actions" i], div[class*="action-container" i]'
-    );
-    if (actionContainer && panel.contains(actionContainer)) {
+    const actionContainer =
+      panel.querySelector(
+        'div.styles_apply-button-container__o_W_M, div[class*="apply-button-container" i], div[class*="apply-container" i], div[class*="jd-header-actions" i], div[class*="header-actions" i], div[class*="action-container" i], div[class*="action-btn" i]'
+      ) ||
+      document.querySelector(
+        'div.styles_apply-button-container__o_W_M, div[class*="apply-button-container" i], div[class*="apply-container" i], div[class*="jd-header-actions" i], div[class*="header-actions" i], div[class*="action-container" i]'
+      );
+
+    if (actionContainer && actionContainer.isConnected) {
       actionContainer.appendChild(btn);
-      log('Button injected into header action container');
+      log('Button injected into action container');
       return true;
     }
 
     // Strategy 2: Place adjacent to primary Apply button or its immediate wrapper
-    const applyBtn = findApplyButton(panel);
-    if (applyBtn && panel.contains(applyBtn)) {
+    const applyBtn = findApplyButton(panel) || findApplyButton(document);
+    if (applyBtn && applyBtn.isConnected) {
       let target = applyBtn;
-      if (target.parentElement && target.parentElement !== panel && target.parentElement.children.length === 1) {
+      if (target.parentElement && target.parentElement !== document.body && target.parentElement.children.length === 1) {
         target = target.parentElement;
       }
       target.insertAdjacentElement('afterend', btn);
@@ -701,28 +880,61 @@
       return true;
     }
 
-    // Strategy 3: Place adjacent to Save/Interested button in job header
-    const saveBtn = panel.querySelector('button[class*="save" i], div[class*="save" i], button[title*="save" i]');
-    if (saveBtn && panel.contains(saveBtn)) {
+    // Strategy 3: Place adjacent to Save/Interested/Share button
+    const saveBtn = (panel || document).querySelector(
+      'button[class*="save" i], div[class*="save" i], button[title*="save" i], [class*="share" i]'
+    );
+    if (saveBtn && saveBtn.isConnected) {
       saveBtn.insertAdjacentElement('afterend', btn);
-      log('Button injected adjacent to save button');
+      log('Button injected adjacent to save/share button');
       return true;
     }
 
     // Strategy 4: Place directly inside header card after company / stats row
-    const headerCard = panel.querySelector('section[class*="jd-header" i], div[class*="jd-header" i], header[class*="jd-header" i]');
-    if (headerCard && panel.contains(headerCard)) {
+    const isHeaderSelf = panel.matches && panel.matches('section[class*="jd-header" i], div[class*="jd-header" i], header[class*="jd-header" i]');
+    const headerCard = isHeaderSelf
+      ? panel
+      : (panel || document).querySelector('section[class*="jd-header" i], div[class*="jd-header" i], header[class*="jd-header" i], [class*="job-header" i]');
+
+    if (headerCard && headerCard.isConnected) {
       const wrapper = document.createElement('div');
       wrapper.style.display = 'inline-flex';
       wrapper.style.marginTop = '8px';
+      wrapper.style.marginBottom = '4px';
       wrapper.appendChild(btn);
       headerCard.appendChild(wrapper);
       log('Button injected into header card');
       return true;
     }
 
-    // No appropriate in-flow position found — DO NOT INJECT!
-    return false;
+    // Strategy 5: Place adjacent to Job Title heading (h1)
+    const titleEl = findTitleElement(panel) || findTitleElement(document);
+    if (titleEl && titleEl.isConnected && titleEl.parentElement) {
+      titleEl.insertAdjacentElement('afterend', btn);
+      log('Button injected after job title');
+      return true;
+    }
+
+    // Strategy 6: Place before Job Description container
+    const descEl = findDescriptionElement(panel) || findDescriptionElement(document);
+    if (descEl && descEl.isConnected && descEl.parentElement) {
+      descEl.insertAdjacentElement('beforebegin', btn);
+      log('Button injected before job description');
+      return true;
+    }
+
+    // Strategy 7: Top of Job Panel
+    if (panel && panel.isConnected && panel !== document.body) {
+      panel.insertAdjacentElement('afterbegin', btn);
+      log('Button injected at top of job panel');
+      return true;
+    }
+
+    // Strategy 8 (Universal Fallback): Floating badge at viewport bottom-right
+    btn.classList.add('rc-naukri-floating');
+    document.body.appendChild(btn);
+    log('Button injected as fixed floating fallback (bottom-right)');
+    return true;
   }
 
   function injectButton() {
@@ -737,27 +949,21 @@
       return;
     }
 
-    // Clean up any button outside active panel or duplicates
-    const allButtons = document.querySelectorAll('#' + BUTTON_ID);
-    for (const b of allButtons) {
-      if (panel.contains(b) && b.offsetParent !== null) {
-        if (b === allButtons[0]) {
-          return;
-        }
-      }
-      b.remove();
+    // Check if an existing button is already in the DOM and visible
+    const existing = document.getElementById(BUTTON_ID);
+    if (existing && existing.isConnected && (existing.offsetWidth > 0 || existing.classList.contains('rc-naukri-floating'))) {
+      return; // Already present and visible
     }
+
+    // Remove any stale or hidden instances
+    removeButton();
 
     const btn = createButton();
     const injected = injectIntoJob(panel, btn);
-    if (!injected) {
-      log('Appropriate place inside job panel not found — button will NOT be displayed (no floating fallback)');
-      removeButton();
-      return;
+    if (injected) {
+      lastJobSignature = getJobSignature();
+      log('Button ready for job:', lastJobSignature || '(active)');
     }
-
-    lastJobSignature = getJobSignature();
-    log('Button successfully injected into Naukri job header');
   }
 
   function removeButton() {
@@ -787,9 +993,8 @@
     debounceTimer = setTimeout(() => {
       checkJobSwitch();
       if (hasJobOnPage()) {
-        const panel = findJobPanel();
         const btn = document.getElementById(BUTTON_ID);
-        if (!btn || !panel || !panel.contains(btn) || btn.offsetParent === null) {
+        if (!btn || (btn.offsetWidth === 0 && !btn.classList.contains('rc-naukri-floating'))) {
           injectButton();
         }
       } else {
@@ -799,19 +1004,6 @@
   }
 
   function setupNavigationDetection() {
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
-
-    history.pushState = function (...args) {
-      originalPushState.apply(this, args);
-      onNavigationChange();
-    };
-
-    history.replaceState = function (...args) {
-      originalReplaceState.apply(this, args);
-      onNavigationChange();
-    };
-
     window.addEventListener('popstate', onNavigationChange);
 
     const observer = new MutationObserver(() => {
@@ -819,15 +1011,14 @@
       debounceTimer = setTimeout(() => {
         checkJobSwitch();
         if (hasJobOnPage()) {
-          const panel = findJobPanel();
           const btn = document.getElementById(BUTTON_ID);
-          if (!btn || !panel || !panel.contains(btn) || btn.offsetParent === null) {
+          if (!btn || (btn.offsetWidth === 0 && !btn.classList.contains('rc-naukri-floating'))) {
             injectButton();
           }
         } else {
           removeButton();
         }
-      }, 200);
+      }, 250);
     });
 
     observer.observe(document.body, {
@@ -846,9 +1037,8 @@
       if (checkJobSwitch()) return;
 
       if (hasJobOnPage()) {
-        const panel = findJobPanel();
         const btn = document.getElementById(BUTTON_ID);
-        if (!btn || !panel || !panel.contains(btn) || btn.offsetParent === null) {
+        if (!btn || (btn.offsetWidth === 0 && !btn.classList.contains('rc-naukri-floating'))) {
           injectButton();
         }
       } else {
@@ -863,7 +1053,8 @@
 
   function init() {
     log('Initializing RoleCraft Naukri 1-Click Job Copier...');
-    setTimeout(injectButton, 400);
+    setTimeout(injectButton, 300);
+    setTimeout(injectButton, 1000);
     setupNavigationDetection();
   }
 
