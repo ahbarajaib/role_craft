@@ -27,7 +27,15 @@ from app.core.database import get_db
 from app.dependencies.common import get_settings
 from app.dependencies.resume_analysis import get_resume_analysis_workflow, get_rewrite_service, get_patch_service, get_cover_letter_service
 from app.schemas.resume_analysis import ResumeAnalysisRequest, ResumeAnalysisResult
-from app.schemas.rewrite import RewriteSectionRequest, RewriteSectionResponse, BatchRewriteRequest, BatchRewriteResponse
+from app.schemas.rewrite import (
+    RewriteSectionRequest,
+    RewriteSectionResponse,
+    BatchRewriteRequest,
+    BatchRewriteResponse,
+    AutoTailorRequest,
+    AutoTailorResponse,
+    BatchRewriteItemRequest,
+)
 from app.schemas.patch import ApplyRewriteItem
 from app.schemas.patch import ApplyRewriteRequest, ApplyRewriteResponse
 from app.schemas.cover_letter import CoverLetterRequest, CoverLetterResponse, UpdateCoverLetterRequest
@@ -303,6 +311,194 @@ def batch_rewrite_sections(
         download_id=download_id,
         download_url=download_url,
     )
+
+
+@router.post(
+    "/auto-tailor",
+    response_model=AutoTailorResponse,
+    summary="1-Click Auto Everything: Full resume analysis, targeted auto-tailoring, and PDF patch generation in one unified pipeline",
+    dependencies=[Depends(verify_analysis_permission)],
+)
+def auto_tailor_resume(
+    body: AutoTailorRequest,
+    workflow: Annotated[ResumeAnalysisWorkflow, Depends(get_resume_analysis_workflow)],
+    rewrite_service: Annotated[RewriteService, Depends(get_rewrite_service)],
+    patch_service: Annotated[PatchService, Depends(get_patch_service)],
+    user: Annotated[User, Depends(verify_analysis_permission)],
+    db: Annotated[Session, Depends(get_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> AutoTailorResponse:
+    """Unified 1-Click Auto Everything endpoint.
+
+    Executes the entire end-to-end pipeline in a single server-side workflow:
+    1. Runs full ATS match analysis (JSON-first or DOCX fallback)
+    2. Deducts 1 analysis credit and registers analysis history
+    3. Identifies sections needing improvement + target job title
+    4. Executes parallel batch rewriting across worker threads
+    5. Directly applies patches and generates downloadable tailored resume
+    """
+    import json as _json
+    from app.schemas.structured_resume import StructuredResume as _StructuredResume
+
+    doc_id = body.document_id or f"base/{user.id}"
+
+    # --- STEP 1: ANALYSIS ---
+    structured_record = db.query(StructuredResumeModel).filter(
+        StructuredResumeModel.user_id == user.id
+    ).first()
+
+    structured_resume_obj = None
+    if structured_record:
+        try:
+            structured_data = _json.loads(structured_record.resume_json)
+            structured_resume_obj = _StructuredResume.model_validate(structured_data)
+            analysis_result = workflow.run_from_structured(
+                resume=structured_resume_obj,
+                job_description_text=body.job_description_text,
+                document_id=body.document_id or f"structured:{user.id}",
+            )
+            logger.info("Auto-tailor analysis ran from structured JSON", user_id=user.id)
+        except Exception as exc:
+            logger.warning("Structured JSON analysis failed in auto-tailor, falling back to DOCX", error=str(exc))
+            analysis_result = workflow.run(
+                document_id=doc_id,
+                job_description_text=body.job_description_text,
+            )
+    else:
+        analysis_result = workflow.run(
+            document_id=doc_id,
+            job_description_text=body.job_description_text,
+        )
+
+    deduct_analysis_credit(db, user)
+
+    # Save to AnalysisHistory safely
+    try:
+        if body.document_id and body.document_id.startswith("base/") and getattr(user, "base_resume_filename", None):
+            filename = user.base_resume_filename
+        else:
+            try:
+                from app.services.section_service import SectionService
+                sec_service = SectionService(upload_dir=Path(settings.UPLOAD_DIR))
+                filename = sec_service._resolve_path(doc_id).name
+            except Exception:
+                filename = getattr(user, "base_resume_filename", "Resume.docx") or "Resume.docx"
+
+        target_role_str = body.target_role or (getattr(analysis_result.overall_summary, "job_title", "Target Role") if analysis_result.overall_summary else "Target Role")
+        target_company = getattr(analysis_result.overall_summary, "target_company", None) if analysis_result.overall_summary else None
+        sections_need_improvement = len([s for s in (analysis_result.sections or []) if getattr(s, "review_status", None) == "improve"])
+        total_sections = len(analysis_result.sections or [])
+        coverage_pct = getattr(analysis_result.overall_summary, "overall_coverage_percentage", 0.0) if analysis_result.overall_summary else 0.0
+        overall_score = int(round(coverage_pct))
+
+        history_entry = AnalysisHistory(
+            user_id=user.id,
+            document_id=doc_id,
+            filename=filename,
+            target_role=target_role_str,
+            target_company=target_company,
+            overall_score=overall_score,
+            sections_need_improvement=sections_need_improvement,
+            total_sections=total_sections,
+            analysis_result_json=analysis_result.model_dump_json(),
+            job_description_text=body.job_description_text,
+        )
+        db.add(history_entry)
+        db.commit()
+    except Exception as hist_err:
+        logger.warning(f"Could not record analysis history in auto-tailor: {hist_err}")
+
+    # --- STEP 2: SELECT SECTIONS TO TAILOR ---
+    target_header_title = body.target_role or (getattr(analysis_result.overall_summary, "job_title", None) if analysis_result.overall_summary else None)
+    section_toggles = body.section_toggles or {}
+    is_header_off = section_toggles.get("header") is False or section_toggles.get("Target Job Title & Header") is False
+
+    batch_items = []
+    if not is_header_off and target_header_title and target_header_title != "Target Position":
+        batch_items.append(BatchRewriteItemRequest(
+            section_name="header",
+            section_type="header",
+            section_content=target_header_title,
+            recommendations=[f'Set target job title designation to "{target_header_title}"'],
+        ))
+
+    for sec in (analysis_result.sections or []):
+        s_name = sec.section_name
+        s_norm = s_name.lower().strip()
+
+        if section_toggles.get(s_name) is False:
+            continue
+        if section_toggles.get(s_name) is not True:
+            if any(k in s_norm for k in ["education", "certification", "header"]):
+                continue
+            if sec.review_status != "improve" and not (sec.recommendations and len(sec.recommendations) > 0):
+                continue
+            if sec.review_status == "reduce_emphasis":
+                continue
+
+        sec_content = None
+        sec_type = sec.section_type
+        if structured_resume_obj and structured_resume_obj.sections:
+            for ms in structured_resume_obj.sections:
+                ms_title = (ms.section_title or "").lower()
+                if ms_title == s_norm or s_norm in ms_title or ms_title in s_norm or (ms.section_type == "experience" and ("experience" in s_norm or "work" in s_norm)):
+                    sec_content = ms.content.to_dict(ms.section_type, ms.section_title) if hasattr(ms.content, "to_dict") else ms.content
+                    sec_type = ms.section_type
+                    break
+
+        batch_items.append(BatchRewriteItemRequest(
+            section_name=s_name,
+            section_type=sec_type,
+            section_content=sec_content,
+            recommendations=sec.recommendations or [],
+        ))
+
+    # --- STEP 3: PARALLEL REWRITE & DIRECT PATCH ---
+    rewrites_map: dict[str, str] = {}
+    download_id = None
+    download_url = None
+
+    if batch_items:
+        rewrites_map = rewrite_service.batch_rewrite(
+            document_id=doc_id,
+            job_description_text=body.job_description_text,
+            sections=batch_items,
+            user_instructions=body.user_instructions,
+        )
+
+        if rewrites_map:
+            try:
+                seen_keys = set()
+                accepted_items = []
+                for sec_name, text in rewrites_map.items():
+                    norm_k = sec_name.lower().strip()
+                    if norm_k not in seen_keys and text and text.strip():
+                        seen_keys.add(norm_k)
+                        accepted_items.append(ApplyRewriteItem(section=sec_name, rewritten_text=text))
+
+                patch_res = patch_service.apply_rewrites(
+                    ApplyRewriteRequest(
+                        document_id=doc_id,
+                        accepted_rewrites=accepted_items,
+                    )
+                )
+                download_id = patch_res.download_id
+                download_url = patch_res.download_url
+                logger.info(
+                    f"⚡ [RoleCraft Audit] Auto-tailor generated patched file: download_id={download_id}, sections_updated={patch_res.sections_updated}"
+                )
+            except Exception as patch_err:
+                logger.error(f"Auto-tailor patch error: {patch_err}")
+
+    return AutoTailorResponse(
+        analysis=analysis_result,
+        rewrites=rewrites_map,
+        download_id=download_id,
+        download_url=download_url,
+        target_role=target_header_title or (getattr(analysis_result.overall_summary, "job_title", None) if analysis_result.overall_summary else None),
+        sections_tailored=len(rewrites_map),
+    )
+
 
 
 @router.post(

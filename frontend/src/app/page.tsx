@@ -1306,11 +1306,11 @@ function AutoTailoringProgressModal({
   isComplete?: boolean;
 }) {
   const [internalStepIndex, setInternalStepIndex] = useState(0);
-  const [internalProgress, setInternalProgress] = useState(14);
+  const [internalProgress, setInternalProgress] = useState(12);
 
-  const isControlled = controlledStepIndex !== undefined;
-  const stepIndex = isControlled ? controlledStepIndex : internalStepIndex;
-  const progress = isControlled ? (controlledProgress || 0) : internalProgress;
+  const isControlled = controlledStepIndex !== undefined || controlledProgress !== undefined;
+  const stepIndex = isComplete ? 5 : (isControlled ? (controlledStepIndex ?? 0) : internalStepIndex);
+  const progress = isComplete ? 100 : (isControlled ? (controlledProgress ?? 0) : Math.round(internalProgress));
 
   const TAILOR_STEPS = [
     {
@@ -1341,25 +1341,31 @@ function AutoTailoringProgressModal({
   ];
 
   useEffect(() => {
-    if (isControlled) return;
+    if (isControlled || isComplete) return;
 
-    // Total tailor time is ~4-6s
-    const stepInterval = setInterval(() => {
-      setInternalStepIndex((prev) => (prev < TAILOR_STEPS.length - 1 ? prev + 1 : prev));
-    }, 1100);
-
-    const progressInterval = setInterval(() => {
+    // Smooth continuous progress ticker across ~8-12 seconds
+    const timer = setInterval(() => {
       setInternalProgress((prev) => {
-        if (prev >= 96) return 96;
-        return prev + (prev < 75 ? 3 : 1);
+        if (prev >= 94) return 94; // Soft ceiling while awaiting server
+        const increment = prev < 35 ? 1.8 : prev < 70 ? 1.2 : 0.6;
+        const next = Math.min(94, Math.round((prev + increment) * 10) / 10);
+        return next;
       });
-    }, 75);
+    }, 100);
 
-    return () => {
-      clearInterval(stepInterval);
-      clearInterval(progressInterval);
-    };
-  }, [TAILOR_STEPS.length, isControlled]);
+    return () => clearInterval(timer);
+  }, [isControlled, isComplete]);
+
+  useEffect(() => {
+    if (isControlled || isComplete) return;
+
+    // Dynamically advance steps based on smooth progress
+    if (internalProgress < 25) setInternalStepIndex(0);
+    else if (internalProgress < 50) setInternalStepIndex(1);
+    else if (internalProgress < 70) setInternalStepIndex(2);
+    else if (internalProgress < 85) setInternalStepIndex(3);
+    else setInternalStepIndex(4);
+  }, [internalProgress, isControlled, isComplete]);
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in">
@@ -2915,156 +2921,57 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     }
 
     setIsAutoTailoring(true); // Triggers the Progress Modal
-    setAutoTailorStepIndex(0);
-    setAutoTailorProgress(10);
+    setAutoTailorStepIndex(undefined);
+    setAutoTailorProgress(undefined);
     setAutoTailorComplete(false);
     
     try {
-      // 1. Analyze
-      const data = await analyzeResume(jobDescription, documentId || undefined);
-      setAnalysisResult(data);
-      const initialExpanded: Record<string, boolean> = {};
-      (data.sections || []).forEach((sec: any) => {
-        if (sec.review_status === "improve") initialExpanded[sec.section_name] = true;
-      });
-      setExpandedSections(initialExpanded);
-      setCustomTargetRole(data.overall_summary?.job_title || "");
-      
-      setAutoTailorStepIndex(1);
-      setAutoTailorProgress(35);
-
-      // 2. Queue Sections
-      let baseSections = data.sections || [];
-      const sectionsToTailor = baseSections.filter((s: any) => {
-        const norm = (s.section_name || "").toLowerCase();
-        const isExplicitOff = tailoringSectionToggles[s.section_name] === false;
-        const isExplicitOn = tailoringSectionToggles[s.section_name] === true;
-        if (isExplicitOff) return false;
-        if (isExplicitOn) return true;
-        if (norm.includes("education") || norm.includes("certification") || norm.includes("header")) return false;
-        return (s.review_status === "improve" || (s.recommendations && s.recommendations.length > 0)) && s.review_status !== "reduce_emphasis";
-      });
-
-      const isHeaderExplicitOff = tailoringSectionToggles["header"] === false || tailoringSectionToggles["Target Job Title & Header"] === false;
-
-      const parseJobTitleFromJD = (jdText: string): string => {
-        if (!jdText) return "";
-        const lines = jdText.split("\n").map((l) => l.trim()).filter(Boolean);
-        for (const line of lines.slice(0, 15)) {
-          const match = line.match(/(?:job title|title|role|position)\s*[:–-]\s*([A-Za-z0-9\s\-\/\&]{3,60})/i);
-          if (match && match[1]) {
-            const val = match[1].trim();
-            if (val && !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(val)) return val;
-          }
-        }
-        const roleKeywords = ["developer", "engineer", "architect", "manager", "lead", "designer", "consultant", "analyst", "specialist", "administrator", "executive", "fullstack", "full stack", "backend", "frontend", "devops", "sre", "scientist", "director", "head", "vp", "associate", "intern", "product"];
-        for (const line of lines.slice(0, 15)) {
-          const clean = line.replace(/^#+\s*/, "").trim();
-          const lower = clean.toLowerCase();
-          if (clean.length >= 4 && clean.length <= 80 && !clean.includes("http") && !clean.includes("@") && !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(clean) && roleKeywords.some((r) => lower.includes(r))) return clean;
-        }
-        for (const line of lines.slice(0, 5)) {
-          const clean = line.replace(/^#+\s*/, "").trim();
-          if (clean.length >= 4 && clean.length <= 60 && !clean.includes("http") && !clean.includes("@") && !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(clean)) return clean;
-        }
-        return "";
-      };
-
-      const targetHeaderTitle = data.overall_summary?.job_title || parseJobTitleFromJD(jobDescription) || "Target Position";
-      if (!isHeaderExplicitOff && targetHeaderTitle && targetHeaderTitle !== "Target Position") {
-        setCustomTargetRole(targetHeaderTitle);
-      }
-
-      const batchItems: any[] = sectionsToTailor.map((sec: any) => {
-        let secContent: any = undefined;
-        let secType: any = sec.section_type;
-        if (masterResume && masterResume.sections) {
-          const matchedSec = masterResume.sections.find((ms: any) => {
-            const msTitle = (ms.section_title || "").toLowerCase();
-            const sTitle = sec.section_name.toLowerCase();
-            return msTitle === sTitle || msTitle.includes(sTitle) || sTitle.includes(msTitle) || (ms.section_type === "experience" && (sTitle.includes("experience") || sTitle.includes("work")));
-          });
-          if (matchedSec) {
-            secContent = matchedSec.content;
-            secType = matchedSec.section_type;
-          }
-        }
-        return {
-          section_name: sec.section_name,
-          section_type: secType,
-          section_content: secContent,
-          recommendations: sec.recommendations || [],
-        };
-      });
-
-      if (!isHeaderExplicitOff && targetHeaderTitle) {
-        batchItems.unshift({
-          section_name: "header",
-          section_type: "header",
-          section_content: targetHeaderTitle,
-          recommendations: [`Set target job title designation to "${targetHeaderTitle}"`],
-          user_instructions: targetHeaderTitle,
-        });
-      }
-
-      setAutoTailorStepIndex(2);
-      setAutoTailorProgress(55);
-
-      const { batchRewriteSections } = require("@/lib/api");
-      const batchRes = await batchRewriteSections({
+      const { autoTailorResume } = require("@/lib/api");
+      const result = await autoTailorResume({
         document_id: documentId,
         job_description_text: jobDescription,
-        sections: batchItems,
+        target_role: customTargetRole || undefined,
+        section_toggles: tailoringSectionToggles,
       });
 
-      setAutoTailorStepIndex(3);
-      setAutoTailorProgress(75);
+      // Atomically prepare all UI state together for a clean, unified reveal
+      const data = result.analysis;
+      setAnalysisResult(data);
 
-      const newRewrites: Record<string, string> = {};
-      if (batchRes.rewrites && Object.keys(batchRes.rewrites).length > 0) {
-        const finalAppliedTitle = batchRes.rewrites["header"] || targetHeaderTitle;
-        if (finalAppliedTitle) {
-          newRewrites["header"] = finalAppliedTitle;
-          setCustomTargetRole(finalAppliedTitle);
+      const initialExpanded: Record<string, boolean> = {};
+      (data.sections || []).forEach((sec: any) => {
+        if (sec.review_status === "improve" || (result.rewrites && result.rewrites[sec.section_name])) {
+          initialExpanded[sec.section_name] = true;
         }
+      });
+      setExpandedSections(initialExpanded);
 
-        const combinedRewrites = { ...newRewrites, ...batchRes.rewrites };
-        setRewrittenSections((prev) => ({ ...prev, header: finalAppliedTitle, ...combinedRewrites }));
-
-        // Build patch payload
-        const acceptedItems = Object.entries(combinedRewrites).map(([secKey, text]) => {
-          const origSec = (data.sections || []).find((s: any) => s.section_name.toLowerCase() === secKey.toLowerCase());
-          const excluded = excludedBullets[origSec?.section_name || secKey] || excludedBullets[secKey];
-          const filteredText = excluded && excluded.size > 0 ? filterBulletsByChecked(text as string, excluded) : text;
-          return {
-            section: origSec ? origSec.section_name : (secKey === "header" ? "header" : secKey),
-            rewritten_text: filteredText as string,
-          };
-        });
-
-        // Actually apply the rewrites to generate the PDF download URL
-        const applyRes = await applyMutation.mutateAsync({
-          document_id: documentId,
-          accepted_rewrites: acceptedItems,
-        });
-
-        if (applyRes.download_id) setDownloadId(applyRes.download_id);
-        if (applyRes.download_url) {
-          setDownloadUrl(applyRes.download_url);
-        }
-        setIsPatchingApplied(true);
-        setSuccessNotification(`⚡ 1-Click Auto-Everything Complete: Tailored Resume Ready!`);
-        if (refreshMe) refreshMe();
+      const effectiveRole = result.target_role || data.overall_summary?.job_title || "Target Position";
+      if (effectiveRole && effectiveRole !== "Target Position") {
+        setCustomTargetRole(effectiveRole);
       }
 
-      setAutoTailorStepIndex(4);
-      setAutoTailorProgress(95);
+      if (result.rewrites && Object.keys(result.rewrites).length > 0) {
+        setRewrittenSections(result.rewrites);
+        setIsPatchingApplied(true);
+      }
+
+      if (result.download_id) setDownloadId(result.download_id);
+      if (result.download_url) setDownloadUrl(result.download_url);
+
+      if (refreshMe) refreshMe();
+
+      // Signal completion to the progress modal
+      setAutoTailorComplete(true);
 
       // Async structured tailor (builder)
       (async () => {
         try {
           const { tailorResume } = require("@/lib/structured_resume_api");
-          const tailoredRes = await tailorResume({ job_description: jobDescription, job_title: targetHeaderTitle });
+          const tailoredRes = await tailorResume({
+            job_description: jobDescription,
+            job_title: effectiveRole,
+          });
           setTailorResult(tailoredRes);
         } catch (te) {}
       })();
@@ -3073,13 +2980,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setIsGeneratingCoverLetter(true);
       (async () => {
         try {
-          const effectiveTargetRole = newRewrites["header"] || customTargetRole || data.overall_summary?.job_title || undefined;
+          const effectiveTargetRole = result.rewrites?.["header"] || effectiveRole || customTargetRole || data.overall_summary?.job_title || undefined;
           const clRes = await generateCoverLetter({
             document_id: documentId,
             job_description_text: jobDescription,
             target_role: effectiveTargetRole,
             contact_info: undefined,
-            rewritten_sections: newRewrites,
+            rewritten_sections: result.rewrites || {},
             confirmed_matched_skills: [], 
           });
           setCoverLetterText(clRes.cover_letter_text);
@@ -3089,20 +2996,16 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         setIsGeneratingCoverLetter(false);
       })();
 
-      // Finish progress and show complete state
-      setAutoTailorProgress(100);
-      setAutoTailorComplete(true);
+      setSuccessNotification(`⚡ 1-Click Auto-Everything Complete: Tailored Resume Ready!`);
 
-      // Delay hiding the modal to show success state
+      // Delay hiding the modal to show success state smoothly, then reveal ready results
       setTimeout(() => {
         setIsAutoTailoring(false);
-        setAutoTailorStepIndex(undefined);
-        setAutoTailorProgress(undefined);
         setAutoTailorComplete(false);
-      }, 2500);
+      }, 1400);
 
     } catch (err: any) {
-      console.error(err);
+      console.error("1-Click Auto-Everything error:", err);
       setError(err?.message || "One-Click Auto-Everything failed.");
       setIsAutoTailoring(false);
       setAutoTailorStepIndex(undefined);

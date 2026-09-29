@@ -197,6 +197,40 @@ export async function batchRewriteSections(
   return response.json();
 }
 
+export interface AutoTailorRequest {
+  document_id?: string;
+  job_description_text: string;
+  target_role?: string;
+  user_instructions?: string;
+  section_toggles?: Record<string, boolean>;
+}
+
+export interface AutoTailorResponse {
+  analysis: ResumeAnalysisResult;
+  rewrites: Record<string, string>;
+  download_id?: string;
+  download_url?: string;
+  target_role?: string;
+  sections_tailored: number;
+}
+
+export async function autoTailorResume(
+  request: AutoTailorRequest
+): Promise<AutoTailorResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/resume/auto-tailor`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData?.error?.detail || errorData?.detail || "Failed to auto-tailor resume");
+  }
+
+  return response.json();
+}
+
 export interface ApplyRewriteItem {
   section: string;
   rewritten_text: string;

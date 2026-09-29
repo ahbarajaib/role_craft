@@ -137,3 +137,37 @@ class BatchRewriteResponse(BaseModel):
         default=None,
         description="Download URL for the patched DOCX file."
     )
+
+
+class AutoTailorRequest(BaseModel):
+    """Request body for unified 1-Click Auto Everything POST /resume/auto-tailor."""
+
+    document_id: Optional[str] = None
+    job_description_text: str
+    target_role: Optional[str] = None
+    user_instructions: Optional[str] = None
+    section_toggles: Optional[dict[str, bool]] = None
+
+
+class AutoTailorResponse(BaseModel):
+    """Unified response containing both analysis, rewrites, and download info."""
+
+    analysis: Any
+    rewrites: dict[str, str] = Field(
+        default_factory=dict,
+        description="Dictionary mapping section names to their rewritten text."
+    )
+    download_id: Optional[str] = Field(
+        default=None,
+        description="Generated DOCX download ID if patching was applied."
+    )
+    download_url: Optional[str] = Field(
+        default=None,
+        description="Download URL for the patched DOCX file."
+    )
+    target_role: Optional[str] = Field(
+        default=None,
+        description="Final targeted job title."
+    )
+    sections_tailored: int = 0
+
