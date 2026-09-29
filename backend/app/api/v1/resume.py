@@ -14,43 +14,56 @@ The handler's only responsibilities are:
 """
 
 from pathlib import Path
-from typing import Annotated, Optional
-from fastapi import APIRouter, Depends, BackgroundTasks
+from typing import Annotated
+
+from fastapi import APIRouter, BackgroundTasks, Depends
 from fastapi.responses import FileResponse
-
-from app.services.cleanup import cleanup_old_files
-
 from loguru import logger
+from sqlalchemy.orm import Session
+
 from app.core.config import Settings
-from app.core.exceptions import NotFoundError
 from app.core.database import get_db
+from app.core.exceptions import NotFoundError
+from app.dependencies.auth import get_current_user
 from app.dependencies.common import get_settings
-from app.dependencies.resume_analysis import get_resume_analysis_workflow, get_rewrite_service, get_patch_service, get_cover_letter_service
+from app.dependencies.limits import (
+    deduct_analysis_credit,
+    verify_analysis_permission,
+    verify_premium_permission,
+)
+from app.dependencies.resume_analysis import (
+    get_cover_letter_service,
+    get_patch_service,
+    get_resume_analysis_workflow,
+    get_rewrite_service,
+)
+from app.models import AnalysisHistory, StructuredResumeModel, User
+from app.schemas.cover_letter import (
+    CoverLetterRequest,
+    CoverLetterResponse,
+    UpdateCoverLetterRequest,
+)
+from app.schemas.patch import (
+    ApplyRewriteItem,
+    ApplyRewriteRequest,
+    ApplyRewriteResponse,
+)
 from app.schemas.resume_analysis import ResumeAnalysisRequest, ResumeAnalysisResult
 from app.schemas.rewrite import (
-    RewriteSectionRequest,
-    RewriteSectionResponse,
-    BatchRewriteRequest,
-    BatchRewriteResponse,
     AutoTailorRequest,
     AutoTailorResponse,
     BatchRewriteItemRequest,
+    BatchRewriteRequest,
+    BatchRewriteResponse,
+    RewriteSectionRequest,
+    RewriteSectionResponse,
 )
-from app.schemas.patch import ApplyRewriteItem
-from app.schemas.patch import ApplyRewriteRequest, ApplyRewriteResponse
-from app.schemas.cover_letter import CoverLetterRequest, CoverLetterResponse, UpdateCoverLetterRequest
+from app.schemas.structured_resume import StructuredResume as _StructuredResume
+from app.services.cleanup import cleanup_old_files
+from app.services.cover_letter_service import CoverLetterService
+from app.services.patch_service import PatchService
 from app.services.resume_analysis_workflow import ResumeAnalysisWorkflow
 from app.services.rewrite_service import RewriteService
-from app.services.patch_service import PatchService
-from app.services.cover_letter_service import CoverLetterService
-from sqlalchemy.orm import Session
-from app.models import User, AnalysisHistory, StructuredResumeModel
-from app.dependencies.limits import (
-    verify_analysis_permission,
-    verify_premium_permission,
-    deduct_analysis_credit,
-)
-from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/resume", tags=["resume"])
 
@@ -84,6 +97,7 @@ def analyze_resume(
     Falls back to legacy DOCX-based analysis if no structured resume exists.
     """
     import json as _json
+
     from app.schemas.structured_resume import StructuredResume as _StructuredResume
 
     # --- JSON-FIRST PATH ---
@@ -119,13 +133,13 @@ def analyze_resume(
 
     # Save to AnalysisHistory safely
     try:
-        if body.document_id.startswith("base/") and getattr(user, "base_resume_filename", None):
+        if body.document_id and body.document_id.startswith("base/") and getattr(user, "base_resume_filename", None):
             filename = user.base_resume_filename
         else:
             try:
                 from app.services.section_service import SectionService
                 sec_service = SectionService(upload_dir=Path(settings.UPLOAD_DIR))
-                filename = sec_service._resolve_path(body.document_id).name
+                filename = sec_service._resolve_path(body.document_id or f"base/{user.id}").name
             except Exception:
                 filename = "Resume.docx"
 
@@ -136,11 +150,11 @@ def analyze_resume(
 
         # Correct overall score calculation from overall_coverage_percentage
         coverage_pct = getattr(result.overall_summary, "overall_coverage_percentage", 0.0) if result.overall_summary else 0.0
-        overall_score = int(round(coverage_pct))
+        overall_score = round(coverage_pct)
 
         history_entry = AnalysisHistory(
             user_id=user.id,
-            document_id=body.document_id,
+            document_id=body.document_id or f"base/{user.id}",
             filename=filename,
             target_role=target_role,
             target_company=target_company,
@@ -166,9 +180,10 @@ def analyze_resume(
             try:
                 import json
                 current_tracker = {}
-                if getattr(user, "missing_skills_tracker", None):
+                tracker_val = getattr(user, "missing_skills_tracker", None)
+                if tracker_val and isinstance(tracker_val, str):
                     try:
-                        current_tracker = json.loads(user.missing_skills_tracker)
+                        current_tracker = json.loads(tracker_val)
                     except Exception:
                         current_tracker = {}
 
@@ -217,8 +232,13 @@ def rewrite_section(
         # If evidence_text not provided, try to build it from the user's structured resume
         if not evidence_text:
             import json as _json
-            from app.services.structured_resume_text_service import serialize_to_plain_text
-            from app.schemas.structured_resume import StructuredResume as _StructuredResume
+
+            from app.schemas.structured_resume import (
+                StructuredResume as _StructuredResume,
+            )
+            from app.services.structured_resume_text_service import (
+                serialize_to_plain_text,
+            )
 
             record = db.query(StructuredResumeModel).filter(
                 StructuredResumeModel.user_id == user.id
@@ -228,8 +248,8 @@ def rewrite_section(
                     data = _json.loads(record.resume_json)
                     resume = _StructuredResume.model_validate(data)
                     evidence_text = serialize_to_plain_text(resume)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.debug(f"Could not serialize structured resume for rewrite evidence: {exc}")
 
         res = service.rewrite_from_json(
             section_name=body.section_name,
@@ -338,6 +358,7 @@ def auto_tailor_resume(
     5. Directly applies patches and generates downloadable tailored resume
     """
     import json as _json
+
     from app.schemas.structured_resume import StructuredResume as _StructuredResume
 
     doc_id = body.document_id or f"base/{user.id}"
@@ -389,7 +410,7 @@ def auto_tailor_resume(
         sections_need_improvement = len([s for s in (analysis_result.sections or []) if getattr(s, "review_status", None) == "improve"])
         total_sections = len(analysis_result.sections or [])
         coverage_pct = getattr(analysis_result.overall_summary, "overall_coverage_percentage", 0.0) if analysis_result.overall_summary else 0.0
-        overall_score = int(round(coverage_pct))
+        overall_score = round(coverage_pct)
 
         history_entry = AnalysisHistory(
             user_id=user.id,
@@ -437,12 +458,12 @@ def auto_tailor_resume(
                 continue
 
         sec_content = None
-        sec_type = sec.section_type
+        sec_type = getattr(sec, "section_type", None)
         if structured_resume_obj and structured_resume_obj.sections:
             for ms in structured_resume_obj.sections:
                 ms_title = (ms.section_title or "").lower()
                 if ms_title == s_norm or s_norm in ms_title or ms_title in s_norm or (ms.section_type == "experience" and ("experience" in s_norm or "work" in s_norm)):
-                    sec_content = ms.content.to_dict(ms.section_type, ms.section_title) if hasattr(ms.content, "to_dict") else ms.content
+                    sec_content = ms.content
                     sec_type = ms.section_type
                     break
 
@@ -501,6 +522,45 @@ def auto_tailor_resume(
 
 
 
+def _update_structured_resume_from_rewrites(
+    resume: _StructuredResume,
+    accepted_rewrites: list[dict],
+) -> _StructuredResume:
+    """Merge accepted rewrite text into a copy of the structured resume for ATS template rendering."""
+    import copy
+    merged = copy.deepcopy(resume)
+    for rw in accepted_rewrites:
+        section_title = (rw.get("section") or "").strip().lower()
+        rewritten_text = (rw.get("rewritten_text") or "").strip()
+        if not section_title or not rewritten_text:
+            continue
+        for sec in merged.sections:
+            if (
+                sec.section_title.lower() == section_title
+                or sec.section_type.lower() == section_title
+            ):
+                if sec.section_type == "summary":
+                    sec.content["text"] = rewritten_text
+                elif sec.section_type == "skills":
+                    lines = [line.strip() for line in rewritten_text.split("\n") if line.strip()]
+                    categories = []
+                    for line in lines:
+                        if ":" in line:
+                            cat_name, skills_str = line.split(":", 1)
+                            skills = [s.strip() for s in skills_str.split(",") if s.strip()]
+                            categories.append({"category_name": cat_name.strip(), "skills": skills})
+                        else:
+                            categories.append({"category_name": "Skills", "skills": [line]})
+                    sec.content["categories"] = categories
+                elif sec.section_type == "experience":
+                    sec.content["_rewritten_text_override"] = rewritten_text
+                else:
+                    lines = [line.strip() for line in rewritten_text.split("\n") if line.strip()]
+                    sec.content["entries"] = lines
+                break
+    return merged
+
+
 @router.post(
     "/apply",
     response_model=ApplyRewriteResponse,
@@ -532,6 +592,7 @@ def apply_rewrites(
 
     import json as _json
     import uuid
+
     from app.schemas.structured_resume import StructuredResume as _StructuredResume
     from app.services.template_renderer import ATSTemplateRenderer
 
@@ -618,8 +679,8 @@ def apply_rewrites(
             hist.download_id = download_id
             db.add(hist)
             db.commit()
-    except Exception:
-        pass
+    except Exception as hist_err:
+        logger.warning(f"Could not link download_id to AnalysisHistory: {hist_err}")
 
     return res
 

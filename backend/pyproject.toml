@@ -30,3 +30,6 @@ dependencies = [
     "sentry-sdk[fastapi]>=2.0.0",
 ]
 
+[tool.ruff.lint]
+ignore = ["BLE001"]
+

@@ -5,7 +5,8 @@ for the individual section rewrite endpoint.
 """
 
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -32,22 +33,22 @@ class RewriteChangeItem(BaseModel):
 class RewriteSectionRequest(BaseModel):
     """Request body for POST /resume/rewrite."""
 
-    document_id: Optional[str] = Field(
+    document_id: str | None = Field(
         default=None,
         description="UUID of the uploaded resume document. If omitted, section_content must be provided (JSON-first mode)."
     )
     section_name: str = Field(
         description="Canonical or title name of the section to rewrite (e.g. 'summary')."
     )
-    section_type: Optional[str] = Field(
+    section_type: str | None = Field(
         default=None,
         description="Section type for JSON-first mode: 'summary' | 'skills' | 'experience' | 'education' | 'projects' | 'certifications' | 'custom'"
     )
-    section_content: Optional[dict[str, Any]] = Field(
+    section_content: dict[str, Any] | None = Field(
         default=None,
         description="Section content dict from StructuredResume JSON. Used in JSON-first mode when document_id is not provided."
     )
-    evidence_text: Optional[str] = Field(
+    evidence_text: str | None = Field(
         default=None,
         description="Plain-text representation of the full resume for evidence gating. Used in JSON-first mode."
     )
@@ -108,19 +109,19 @@ class BatchRewriteItemRequest(BaseModel):
     """Detail for a single section to rewrite in a batch payload."""
 
     section_name: str
-    section_type: Optional[str] = None
-    section_content: Optional[Any] = None
+    section_type: str | None = None
+    section_content: Any | None = None
     recommendations: list[str] = Field(default=[])
 
 
 class BatchRewriteRequest(BaseModel):
     """Request body for POST /resume/batch-rewrite."""
 
-    document_id: Optional[str] = None
+    document_id: str | None = None
     job_description_text: str
     sections: list[BatchRewriteItemRequest]
-    user_instructions: Optional[str] = None
-    metric_inputs: Optional[dict[str, str]] = None
+    user_instructions: str | None = None
+    metric_inputs: dict[str, str] | None = None
 
 
 class BatchRewriteResponse(BaseModel):
@@ -129,11 +130,11 @@ class BatchRewriteResponse(BaseModel):
     rewrites: dict[str, str] = Field(
         description="Dictionary mapping section names to their rewritten text."
     )
-    download_id: Optional[str] = Field(
+    download_id: str | None = Field(
         default=None,
         description="Generated DOCX download ID if patching was applied."
     )
-    download_url: Optional[str] = Field(
+    download_url: str | None = Field(
         default=None,
         description="Download URL for the patched DOCX file."
     )
@@ -142,11 +143,11 @@ class BatchRewriteResponse(BaseModel):
 class AutoTailorRequest(BaseModel):
     """Request body for unified 1-Click Auto Everything POST /resume/auto-tailor."""
 
-    document_id: Optional[str] = None
+    document_id: str | None = None
     job_description_text: str
-    target_role: Optional[str] = None
-    user_instructions: Optional[str] = None
-    section_toggles: Optional[dict[str, bool]] = None
+    target_role: str | None = None
+    user_instructions: str | None = None
+    section_toggles: dict[str, bool] | None = None
 
 
 class AutoTailorResponse(BaseModel):
@@ -157,15 +158,15 @@ class AutoTailorResponse(BaseModel):
         default_factory=dict,
         description="Dictionary mapping section names to their rewritten text."
     )
-    download_id: Optional[str] = Field(
+    download_id: str | None = Field(
         default=None,
         description="Generated DOCX download ID if patching was applied."
     )
-    download_url: Optional[str] = Field(
+    download_url: str | None = Field(
         default=None,
         description="Download URL for the patched DOCX file."
     )
-    target_role: Optional[str] = Field(
+    target_role: str | None = Field(
         default=None,
         description="Final targeted job title."
     )
