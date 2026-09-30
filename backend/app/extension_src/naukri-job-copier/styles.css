@@ -1,6 +1,6 @@
 /* ============================================
    RoleCraft — Naukri 1-Click Job Copier
-   Button Styles
+   Button Styles (Matches Naukri Native Action Buttons)
    ============================================ */
 
 /* Base button */
@@ -8,54 +8,58 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 8px 16px;
-  margin: 4px 8px 4px 0;
-  height: 38px;
+  align-self: center;
+  gap: 8px;
+  padding: 0 20px;
+  margin: 0 0 0 12px;
+  height: 40px;
+  min-height: 40px;
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.4;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 100px;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
   z-index: 100;
   position: relative;
   outline: none;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   vertical-align: middle;
 }
 
-/* ---- State: Ready — Naukri navy/blue ---- */
+/* ---- State: Ready — Naukri royal blue pill matching native Apply ---- */
 #rc-naukri-copy-btn[data-state="ready"] {
-  background-color: #18558a;
+  background-color: #275df5;
   color: #ffffff;
-  border-color: #18558a;
-  box-shadow: 0 1px 3px rgba(24, 85, 138, 0.25);
+  border-color: #275df5;
+  box-shadow: 0 1px 3px rgba(39, 93, 245, 0.25);
 }
 
 #rc-naukri-copy-btn[data-state="ready"]:hover {
-  background-color: #12436d;
-  border-color: #12436d;
-  box-shadow: 0 4px 12px rgba(24, 85, 138, 0.35);
+  background-color: #1e4fd9;
+  border-color: #1e4fd9;
+  box-shadow: 0 4px 12px rgba(39, 93, 245, 0.35);
   transform: translateY(-1px);
 }
 
 #rc-naukri-copy-btn[data-state="ready"]:active {
-  background-color: #0c2f4e;
-  border-color: #0c2f4e;
+  background-color: #1842be;
+  border-color: #1842be;
   transform: translateY(0);
 }
 
 /* ---- State: Extracting ---- */
 #rc-naukri-copy-btn[data-state="extracting"] {
-  background-color: #d97706;
-  border-color: #d97706;
+  background-color: #f59e0b;
+  border-color: #f59e0b;
   color: #ffffff;
   cursor: wait;
   pointer-events: none;
@@ -72,18 +76,18 @@
 
 /* ---- State: Success ---- */
 #rc-naukri-copy-btn[data-state="success"] {
-  background-color: #057642;
-  border-color: #057642;
+  background-color: #10b981;
+  border-color: #10b981;
   color: #ffffff;
   cursor: default;
   pointer-events: none;
-  box-shadow: 0 1px 4px rgba(5, 118, 66, 0.3);
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.3);
 }
 
 /* ---- State: Error ---- */
 #rc-naukri-copy-btn[data-state="error"] {
-  background-color: #dc2626;
-  border-color: #dc2626;
+  background-color: #ef4444;
+  border-color: #ef4444;
   color: #ffffff;
   cursor: pointer;
 }
@@ -91,6 +95,8 @@
 /* ---- Icon inside button ---- */
 .rc-naukri-icon {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 16px;
   height: 16px;
   flex-shrink: 0;
@@ -100,4 +106,9 @@
   width: 100%;
   height: 100%;
   fill: currentColor;
+}
+
+#rc-naukri-copy-btn span {
+  display: inline-block;
+  line-height: 1;
 }
