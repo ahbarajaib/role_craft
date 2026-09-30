@@ -8,12 +8,14 @@
 //  clean Job Description, Canonical URL)
 // and copies them to the clipboard for RoleCraft ATS.
 //
-// ARCHITECTURE & ROBUST EXTRACTION:
-// 1. Next.js Hydration data (__NEXT_DATA__) as primary full-data source.
+// ROBUST ARCHITECTURE:
+// 1. Next.js React Query Hydration (__NEXT_DATA__.props.pageProps.dehydratedState)
+//    provides pristine un-truncated server data: headline, company, skills,
+//    expRange, salaryRange, locations, sanitizedComment.
 // 2. Schema.org JSON-LD (JobPosting) as secondary rich source.
 // 3. Auto-expansion of collapsed sections ("Read more", "Show more").
-// 4. Granular semantic DOM extractors for dynamically rendered SPA elements.
-// 5. Appropriate placement inside job actions container (NO floating fallback).
+// 4. Granular DOM selectors filtering out hidden/offscreen sticky headers (.fHNavn).
+// 5. In-flow placement beside the primary "Apply to this job" button in the header card.
 // ============================================
 
 (function () {
@@ -31,7 +33,7 @@
 
   // Boilerplate phrases to strip from description text
   const BOILERPLATE_PATTERNS = [
-    /^apply\s*(now|via cutshort|on company site)?$/i,
+    /^apply\s*(now|via cutshort|on company site|to this job)?$/i,
     /^save\s*(job)?$/i,
     /^share\s*(job)?$/i,
     /^report\s*(job|this job)?$/i,
@@ -66,19 +68,28 @@
   // ---- 2. Page & Job Detection ----
 
   function isJobPage() {
-    const path = window.location.pathname;
+    const path = window.location.pathname.toLowerCase();
     if (
-      /^\/job\/[^\/]+/i.test(path) ||
-      /^\/company\/[^\/]+\/jobs\/[^\/]+/i.test(path) ||
-      /^\/jobs\/[^\/]+/i.test(path) ||
-      /^\/candidate\//i.test(path) ||
-      /^\/match/i.test(path)
+      path.startsWith('/job/') ||
+      path.startsWith('/jobs/') ||
+      path.includes('/jobs/') ||
+      path.startsWith('/candidate/') ||
+      path.startsWith('/match')
     ) {
       return true;
     }
 
     const canonical = document.querySelector('link[rel="canonical"]');
     if (canonical && canonical.href && /\/job\/[^\/]+/i.test(canonical.href)) {
+      return true;
+    }
+
+    const ogUrl = document.querySelector('meta[property="og:url"]');
+    if (ogUrl && ogUrl.content && /\/job\/[^\/]+/i.test(ogUrl.content)) {
+      return true;
+    }
+
+    if (document.querySelector('h1') && getJsonLdJobData()) {
       return true;
     }
 
@@ -91,18 +102,24 @@
 
   function hasJobOnPage() {
     const titleEl = findTitleElement();
-    if (!titleEl) return false;
-    const titleText = (titleEl.textContent || '').trim();
-    if (titleText.length < 3 || isGenericHeading(titleText)) return false;
+    if (titleEl) {
+      const titleText = (titleEl.textContent || '').trim();
+      if (titleText.length >= 3 && !isGenericHeading(titleText)) {
+        return true;
+      }
+    }
 
-    // At least one more supporting signal
-    const hasDesc = findDescriptionElement() !== null;
-    const hasApply = findApplyButton() !== null;
-    const hasCompany = extractCompany().length > 0;
-    const hasNext = getNextDataJob() !== null;
-    const hasSchema = getJsonLdJobData() !== null;
+    const nextJob = getNextDataJob();
+    if (nextJob && nextJob.title && nextJob.title.length >= 3) {
+      return true;
+    }
 
-    return hasDesc || hasApply || hasCompany || hasNext || hasSchema;
+    const jsonLd = getJsonLdJobData();
+    if (jsonLd && jsonLd.title && jsonLd.title.length >= 3) {
+      return true;
+    }
+
+    return false;
   }
 
   function getJobSignature() {
@@ -136,30 +153,55 @@
       const pageProps = json?.props?.pageProps;
       if (!pageProps) return null;
 
-      let found = null;
-      if (pageProps.job) found = pageProps.job;
-      else if (pageProps.jobDetails) found = pageProps.jobDetails;
-      else if (pageProps.jobData) found = pageProps.jobData;
-      else if (pageProps.post) found = pageProps.post;
-      else if (pageProps.data?.job) found = pageProps.data.job;
-      else {
-        for (const key of Object.keys(pageProps)) {
-          const val = pageProps[key];
-          if (val && typeof val === 'object' && !Array.isArray(val)) {
-            if ((val.title || val.jobTitle) && (val.description || val.jobDescription || val.jd)) {
-              found = val;
-              break;
+      // 1. Cutshort React Query dehydratedState structure
+      const queries = pageProps?.dehydratedState?.queries;
+      if (Array.isArray(queries)) {
+        for (const q of queries) {
+          const key = JSON.stringify(q?.queryKey || '');
+          if (key.includes('jobData')) {
+            const pageData = q?.state?.data?.data?.pageData || q?.state?.data?.pageData || q?.state?.data;
+            if (pageData && (pageData.headline || pageData.title)) {
+              const res = {
+                title: pageData.headline || pageData.title,
+                company: pageData.companyDetails?.name || pageData.companyName || (typeof pageData.company === 'string' ? pageData.company : ''),
+                location: typeof pageData.locations === 'string' ? pageData.locations : (Array.isArray(pageData.locations) ? pageData.locations.join(', ') : ''),
+                experience: pageData.expRange ? `${pageData.expRange.min}–${pageData.expRange.max} Years` : '',
+                salary: pageData.salaryRange || '',
+                workType: pageData.remoteType ? (pageData.remoteType === 'remote_only' ? 'Remote' : pageData.remoteType.replace(/_/g, ' ')) : '',
+                skills: Array.isArray(pageData.allSkills) ? pageData.allSkills.join(', ') : '',
+                description: pageData.sanitizedComment || pageData.description || '',
+                url: pageData.publicUrl ? `https://cutshort.io${pageData.publicUrl}` : '',
+              };
+              cachedNextUrl = currentUrl;
+              cachedNextJob = res;
+              return res;
             }
           }
         }
       }
 
-      cachedNextUrl = currentUrl;
-      cachedNextJob = found;
-      return found;
-    } catch (e) {
-      return null;
-    }
+      // 2. Direct pageProps object fallbacks
+      const candidates = [pageProps.job, pageProps.jobDetails, pageProps.jobData, pageProps.pageData, pageProps.post];
+      for (const cand of candidates) {
+        if (cand && (cand.headline || cand.title || cand.jobTitle)) {
+          const res = {
+            title: cand.headline || cand.title || cand.jobTitle,
+            company: cand.companyDetails?.name || cand.companyName || (typeof cand.company === 'string' ? cand.company : ''),
+            location: cand.locations || cand.location || '',
+            experience: cand.expRange ? `${cand.expRange.min}–${cand.expRange.max} Years` : (cand.experience || ''),
+            salary: cand.salaryRange || cand.salary || cand.ctc || '',
+            workType: cand.remoteType || cand.workType || '',
+            skills: Array.isArray(cand.allSkills) ? cand.allSkills.join(', ') : (cand.skills || ''),
+            description: cand.sanitizedComment || cand.description || cand.jobDescription || '',
+            url: cand.publicUrl ? `https://cutshort.io${cand.publicUrl}` : '',
+          };
+          cachedNextUrl = currentUrl;
+          cachedNextJob = res;
+          return res;
+        }
+      }
+    } catch (e) {}
+    return null;
   }
 
   function getJsonLdJobData() {
@@ -213,7 +255,7 @@
     const h1s = root.querySelectorAll('h1');
     for (const h of h1s) {
       const txt = (h.textContent || '').trim();
-      if (txt.length > 2 && txt.length < 200 && !isGenericHeading(txt) && h.offsetHeight > 0) {
+      if (txt.length > 2 && txt.length < 200 && !isGenericHeading(txt)) {
         return h;
       }
     }
@@ -222,8 +264,8 @@
 
   function extractJobTitle() {
     const nextJob = getNextDataJob();
-    if (nextJob && (nextJob.title || nextJob.jobTitle)) {
-      return String(nextJob.title || nextJob.jobTitle).trim();
+    if (nextJob && nextJob.title) {
+      return String(nextJob.title).trim();
     }
 
     const jsonLd = getJsonLdJobData();
@@ -246,10 +288,8 @@
 
   function extractCompany() {
     const nextJob = getNextDataJob();
-    if (nextJob) {
-      if (typeof nextJob.company === 'string') return nextJob.company.trim();
-      if (nextJob.company?.name) return String(nextJob.company.name).trim();
-      if (nextJob.companyName) return String(nextJob.companyName).trim();
+    if (nextJob && nextJob.company) {
+      return String(nextJob.company).trim();
     }
 
     const jsonLd = getJsonLdJobData();
@@ -295,13 +335,8 @@
 
   function extractLocation() {
     const nextJob = getNextDataJob();
-    if (nextJob) {
-      if (nextJob.locations && Array.isArray(nextJob.locations)) {
-        const locs = nextJob.locations.map((l) => (typeof l === 'string' ? l : l.name || l.city)).filter(Boolean);
-        if (locs.length > 0) return locs.join(', ');
-      }
-      if (typeof nextJob.location === 'string') return nextJob.location.trim();
-      if (nextJob.cities && Array.isArray(nextJob.cities)) return nextJob.cities.join(', ');
+    if (nextJob && nextJob.location) {
+      return String(nextJob.location).trim();
     }
 
     const jsonLd = getJsonLdJobData();
@@ -353,12 +388,8 @@
 
   function extractSalary() {
     const nextJob = getNextDataJob();
-    if (nextJob) {
-      if (nextJob.minSalary && nextJob.maxSalary) {
-        return `₹${nextJob.minSalary}–${nextJob.maxSalary} LPA`;
-      }
-      if (nextJob.salary) return String(nextJob.salary).trim();
-      if (nextJob.ctc) return String(nextJob.ctc).trim();
+    if (nextJob && nextJob.salary) {
+      return String(nextJob.salary).trim();
     }
 
     const jsonLd = getJsonLdJobData();
@@ -401,11 +432,6 @@
   }
 
   function extractEquity() {
-    const nextJob = getNextDataJob();
-    if (nextJob && (nextJob.equity || nextJob.esops)) {
-      return String(nextJob.equity || nextJob.esops).trim();
-    }
-
     const selectors = ['[class*="equity" i]', '[class*="esop" i]', '[data-testid*="equity" i]'];
     for (const sel of selectors) {
       try {
@@ -425,11 +451,6 @@
   }
 
   function extractNoticePeriod() {
-    const nextJob = getNextDataJob();
-    if (nextJob && (nextJob.noticePeriod || nextJob.notice_period)) {
-      return String(nextJob.noticePeriod || nextJob.notice_period).trim();
-    }
-
     const selectors = ['[class*="notice" i]', '[data-testid*="notice" i]'];
     for (const sel of selectors) {
       try {
@@ -450,11 +471,8 @@
 
   function extractExperience() {
     const nextJob = getNextDataJob();
-    if (nextJob) {
-      if (nextJob.minExp !== undefined && nextJob.maxExp !== undefined) {
-        return `${nextJob.minExp}–${nextJob.maxExp} Years`;
-      }
-      if (nextJob.experience) return String(nextJob.experience).trim();
+    if (nextJob && nextJob.experience) {
+      return String(nextJob.experience).trim();
     }
 
     const jsonLd = getJsonLdJobData();
@@ -490,8 +508,8 @@
 
   function extractWorkType() {
     const nextJob = getNextDataJob();
-    if (nextJob && (nextJob.workType || nextJob.remoteType || nextJob.employmentType)) {
-      return String(nextJob.workType || nextJob.remoteType || nextJob.employmentType).trim();
+    if (nextJob && nextJob.workType) {
+      return String(nextJob.workType).trim();
     }
 
     const jsonLd = getJsonLdJobData();
@@ -532,19 +550,23 @@
   function extractSkills() {
     const skills = [];
 
-    // Next.js job skills
+    // 1. Next.js dehydrated query skills (most comprehensive)
     const nextJob = getNextDataJob();
-    if (nextJob) {
-      const raw = nextJob.skills || nextJob.requiredSkills || nextJob.primarySkills || nextJob.skillList;
-      if (Array.isArray(raw)) {
-        raw.forEach((s) => {
+    if (nextJob && nextJob.skills) {
+      if (typeof nextJob.skills === 'string') {
+        nextJob.skills.split(',').forEach((s) => {
+          const tr = s.trim();
+          if (tr && !skills.includes(tr)) skills.push(tr);
+        });
+      } else if (Array.isArray(nextJob.skills)) {
+        nextJob.skills.forEach((s) => {
           const name = typeof s === 'string' ? s.trim() : (s?.name || s?.title || '').trim();
           if (name && !skills.includes(name)) skills.push(name);
         });
       }
     }
 
-    // JSON-LD
+    // 2. JSON-LD
     const jsonLd = getJsonLdJobData();
     if (jsonLd && jsonLd.skills) {
       if (typeof jsonLd.skills === 'string') {
@@ -560,7 +582,7 @@
       }
     }
 
-    // DOM chips/pills
+    // 3. DOM chips/pills
     const skillSelectors = [
       '[class*="skill" i] a',
       '[class*="skill" i] span',
@@ -608,7 +630,7 @@
     for (const sel of selectors) {
       try {
         const el = document.querySelector(sel);
-        if (el && el.textContent.trim().length > 80 && el.offsetHeight > 0) return el;
+        if (el && el.textContent.trim().length > 80) return el;
       } catch (e) {}
     }
 
@@ -643,14 +665,12 @@
   }
 
   function extractDescription() {
-    // 1. Next.js props (pristine un-truncated source)
+    // 1. Next.js dehydrated query (pristine un-truncated server source)
     const nextJob = getNextDataJob();
     let nextDesc = '';
-    if (nextJob) {
-      const d = nextJob.description || nextJob.jobDescription || nextJob.jd;
-      if (typeof d === 'string' && d.length > 80) {
-        nextDesc = d.includes('<') ? cleanHtmlText(d) : d.trim();
-      }
+    if (nextJob && nextJob.description && nextJob.description.length > 80) {
+      const d = nextJob.description;
+      nextDesc = d.includes('<') ? cleanHtmlText(d) : d.trim();
     }
 
     // 2. JSON-LD JobPosting schema
@@ -674,7 +694,6 @@
       return candidates[0];
     }
 
-    // Fallback: OG description
     const ogDesc = document.querySelector('meta[name="description"], meta[property="og:description"]');
     if (ogDesc && ogDesc.content && ogDesc.content.length > 30) {
       return ogDesc.content.trim();
@@ -893,7 +912,6 @@
       if (!success) throw new Error('Clipboard write failed');
 
       log('Cutshort job details copied! Length:', formatted.length);
-      log('Fields:', { title, company, location, experience, salary, equity, workType, noticePeriod });
       setButtonState('success');
     } catch (err) {
       logError('Error copying job details:', err.message);
@@ -903,7 +921,7 @@
     setTimeout(() => setButtonState('ready'), RESET_DELAY_MS);
   }
 
-  // ---- 11. Button Creation & Appropriate Placement ----
+  // ---- 11. Button Creation & Targeted Placement ----
 
   function createButton() {
     const btn = document.createElement('button');
@@ -916,82 +934,127 @@
     return btn;
   }
 
+  /**
+   * Returns true if an element is inside Cutshort's hidden/offscreen sticky header.
+   * Cutshort uses `.fHNavn` (with transform: translateY(-500px); opacity: 0; position: absolute;).
+   * Injecting into that header makes the button completely invisible on initial load.
+   */
+  function isInsideHiddenSticky(el) {
+    if (!el || !el.isConnected) return true;
+    if (el.closest('.fHNavn, [class*="fHNavn"], [style*="-500px"], [style*="-1000px"]')) {
+      return true;
+    }
+    try {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < -50) {
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  /**
+   * Finds the primary visible Apply button on the main job card.
+   */
   function findApplyButton() {
+    const titleEl = findTitleElement();
+
+    // 1. Highest Priority: Look inside the main job header container around h1
+    if (titleEl) {
+      let card = titleEl.closest('[class*="sc-c52be3c1-0"], [class*="dYciUX"], header, section, article') || titleEl.parentElement;
+      for (let depth = 0; depth < 5 && card && card !== document.body; depth++) {
+        const btns = card.querySelectorAll('button, a[role="button"], a');
+        for (const b of btns) {
+          const txt = (b.textContent || '').trim();
+          if (/^apply\b/i.test(txt) && !isInsideHiddenSticky(b)) {
+            return b;
+          }
+        }
+        card = card.parentElement;
+      }
+    }
+
+    // 2. Document-wide search excluding hidden sticky headers
     const allButtons = document.querySelectorAll('button, a[href], [role="button"]');
     for (const btn of allButtons) {
       const txt = (btn.textContent || '').trim();
-      if (/^apply\b/i.test(txt) && btn.offsetWidth > 10 && btn.offsetHeight > 10) {
+      if (/^apply\b/i.test(txt) && !isInsideHiddenSticky(btn)) {
         return btn;
       }
     }
 
-    const byAria = document.querySelector('[aria-label*="apply" i]');
-    if (byAria && byAria.offsetWidth > 10) return byAria;
+    // 3. Fallback by aria/label
+    const byLabels = document.querySelectorAll('[aria-label*="apply" i], [label*="apply" i]');
+    for (const b of byLabels) {
+      if (!isInsideHiddenSticky(b)) return b;
+    }
 
     return null;
   }
 
   /**
-   * Multi-strategy in-flow placement inside the active job view:
-   * 1. Alongside the Apply button (same action row container)
-   * 2. After the apply button element itself
-   * 3. Alongside Share / Refer / Save action buttons
-   * 4. Inside the job header card (below title / company)
-   * 5. Adjacent to Job Title (h1)
-   * 6. Before the description section
-   * NO FLOATING FALLBACK — if no appropriate place in job view, returns false.
+   * In-flow placement:
+   * 1. Beside the primary visible Apply button in the main card.
+   * 2. Beside/below Job Title (h1) / Company row.
+   * 3. Before Job Description.
+   * NO FLOATING FALLBACK.
    */
   function injectIntoJob(btn) {
-    // Strategy 1: Inject into the apply button's container row
+    // Strategy 1: Place beside the visible Apply button in the main header
     const applyBtn = findApplyButton();
     if (applyBtn && applyBtn.isConnected) {
       const parent = applyBtn.parentElement;
       if (parent && parent !== document.body && parent.isConnected) {
-        const style = window.getComputedStyle(parent);
-        if (style.display === 'flex' || style.display === 'inline-flex' || parent.children.length <= 5) {
-          parent.appendChild(btn);
-          log('Button injected into apply button container');
-          return true;
-        }
+        try {
+          const style = window.getComputedStyle(parent);
+          if (style.display !== 'flex' && style.display !== 'inline-flex') {
+            parent.style.display = 'inline-flex';
+            parent.style.alignItems = 'center';
+            parent.style.gap = '8px';
+            parent.style.flexWrap = 'wrap';
+          }
+        } catch (e) {}
       }
+
       applyBtn.insertAdjacentElement('afterend', btn);
-      log('Button injected after apply button');
+      log('Button injected adjacent to primary visible Apply button');
       return true;
     }
 
-    // Strategy 2: Place adjacent to Share / Save / Refer action buttons
-    const actionBtn = document.querySelector(
-      'button[aria-label*="share" i], button[aria-label*="save" i], button[title*="share" i], button[title*="save" i], [data-testid*="share" i], [data-testid*="action" i]'
-    );
-    if (actionBtn && actionBtn.isConnected) {
-      actionBtn.insertAdjacentElement('afterend', btn);
-      log('Button injected adjacent to share/action button');
-      return true;
-    }
-
-    // Strategy 3: Inside job header card after title
+    // Strategy 2: Place inside job header card next to title / company
     const titleEl = findTitleElement();
-    if (titleEl && titleEl.isConnected && titleEl.parentElement) {
-      titleEl.insertAdjacentElement('afterend', btn);
-      log('Button injected after job title heading');
-      return true;
+    if (titleEl && titleEl.isConnected) {
+      const companyOrTitle = titleEl.parentElement?.querySelector('h2, a[href*="/company/"]') || titleEl;
+      if (companyOrTitle && companyOrTitle.parentElement) {
+        const row = document.createElement('div');
+        row.className = 'rc-cutshort-btn-wrapper';
+        row.style.margin = '10px 0 4px 0';
+        row.style.display = 'inline-block';
+        row.appendChild(btn);
+        companyOrTitle.insertAdjacentElement('afterend', row);
+        log('Button injected after title/company row');
+        return true;
+      }
     }
 
-    // Strategy 4: Before the description section
+    // Strategy 3: Place before description section
     const descEl = findDescriptionElement();
     if (descEl && descEl.isConnected && descEl.parentElement) {
-      descEl.insertAdjacentElement('beforebegin', btn);
-      log('Button injected before job description');
+      const row = document.createElement('div');
+      row.className = 'rc-cutshort-btn-wrapper';
+      row.style.margin = '16px 0';
+      row.appendChild(btn);
+      descEl.insertAdjacentElement('beforebegin', row);
+      log('Button injected before job description container');
       return true;
     }
 
-    // Appropriate place inside job panel/card not found — no floating fallback
     log('Could not find suitable injection point inside job view — button will not be displayed (no floating fallback)');
     return false;
   }
 
   function injectButton() {
-    if (!isJobPage() && !hasJobOnPage()) {
+    if (!isJobPage()) {
       removeButton();
       return;
     }
@@ -1001,10 +1064,16 @@
       return;
     }
 
-    // Already present and visible?
+    // Check if an existing button is already in the DOM
     const existing = document.getElementById(BUTTON_ID);
-    if (existing && existing.isConnected && existing.offsetWidth > 0) {
-      return;
+    if (existing && existing.isConnected) {
+      // If it was placed inside an offscreen hidden sticky header, remove it and re-inject
+      if (isInsideHiddenSticky(existing)) {
+        log('Existing button was inside hidden sticky header, moving to main card...');
+        existing.remove();
+      } else {
+        return; // Already present in visible main card
+      }
     }
 
     removeButton();
@@ -1013,7 +1082,7 @@
     const injected = injectIntoJob(btn);
     if (injected) {
       lastJobSignature = getJobSignature();
-      log('Button ready for job:', lastJobSignature || '(active)');
+      log('Button successfully injected on job:', lastJobSignature || '(active)');
     } else {
       removeButton();
     }
@@ -1027,7 +1096,7 @@
     }
   }
 
-  // ---- 12. SPA Navigation Watchers ----
+  // ---- 12. SPA Navigation & Mutation Watchers ----
 
   function checkJobSwitch() {
     const currentSig = getJobSignature();
@@ -1035,7 +1104,7 @@
       log('Job/page change detected:', lastJobSignature, '→', currentSig);
       lastJobSignature = currentSig;
       removeButton();
-      setTimeout(injectButton, 300);
+      setTimeout(injectButton, 200);
       return true;
     }
     return false;
@@ -1047,13 +1116,13 @@
       checkJobSwitch();
       if (hasJobOnPage()) {
         const btn = document.getElementById(BUTTON_ID);
-        if (!btn || btn.offsetWidth === 0) {
+        if (!btn || isInsideHiddenSticky(btn)) {
           injectButton();
         }
       } else {
         removeButton();
       }
-    }, 200);
+    }, 150);
   }
 
   function setupNavigationDetection() {
@@ -1065,13 +1134,13 @@
         checkJobSwitch();
         if (hasJobOnPage()) {
           const btn = document.getElementById(BUTTON_ID);
-          if (!btn || btn.offsetWidth === 0) {
+          if (!btn || isInsideHiddenSticky(btn)) {
             injectButton();
           }
         } else {
           removeButton();
         }
-      }, 250);
+      }, 150);
     });
 
     observer.observe(document.body, {
@@ -1091,7 +1160,7 @@
 
       if (hasJobOnPage()) {
         const btn = document.getElementById(BUTTON_ID);
-        if (!btn || btn.offsetWidth === 0) {
+        if (!btn || isInsideHiddenSticky(btn)) {
           injectButton();
         }
       } else {
@@ -1106,8 +1175,11 @@
 
   function init() {
     log('Initializing RoleCraft Cutshort 1-Click Job Copier...');
-    setTimeout(injectButton, 300);
+    injectButton();
+    setTimeout(injectButton, 200);
+    setTimeout(injectButton, 600);
     setTimeout(injectButton, 1200);
+    setTimeout(injectButton, 2500);
     setupNavigationDetection();
   }
 
