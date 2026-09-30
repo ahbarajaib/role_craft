@@ -229,11 +229,14 @@
         'button, a, span[role="button"], div[role="button"], [class*="read-more" i], [class*="show-more" i], [class*="view-more" i], [class*="see-more" i]'
       );
       for (const el of candidates) {
+        if (el.tagName.toLowerCase() === 'a' || el.closest('a') || el.hasAttribute('href') || el.getAttribute('role') === 'link') {
+          continue;
+        }
         const txt = (el.textContent || '').trim().toLowerCase();
         const aria = (el.getAttribute('aria-label') || '').toLowerCase();
         if (/apply|save|share|refer|login|sign|follow/i.test(txt) || /apply|save|share/i.test(aria)) continue;
         if (
-          /^(read\s*more|show\s*more|view\s*more|see\s*more|\.\.\.\s*more|\+ more|\+\d+\s*more)$/i.test(txt) ||
+          /^(read\s*more|show\s*more|view\s*more|see\s*more|\.\.\.\s*more)$/i.test(txt) ||
           aria.includes('read more') ||
           aria.includes('show more') ||
           aria.includes('view more')

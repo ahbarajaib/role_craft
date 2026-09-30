@@ -449,7 +449,13 @@
     const skills = [];
     for (const el of skillEls) {
       const txt = (el.textContent || '').trim();
-      if (txt.length > 1 && txt.length < 40 && !skills.includes(txt)) {
+      if (
+        txt.length > 1 &&
+        txt.length < 40 &&
+        !/^\+\d+\s*more$/i.test(txt) &&
+        !/^(\+\s*more|more)$/i.test(txt) &&
+        !skills.includes(txt)
+      ) {
         skills.push(txt);
       }
     }
@@ -708,35 +714,24 @@
   }
 
   async function expandShowMore(panel) {
-    const root = panel || findJobPanel() || document;
-    try {
-      const candidates = root.querySelectorAll('button, a, span[role="button"], div[role="button"], [class*="read-more" i], [class*="show-more" i], [class*="view-more" i]');
-      for (const el of candidates) {
-        const txt = (el.textContent || '').trim().toLowerCase();
-        const aria = (el.getAttribute('aria-label') || '').toLowerCase();
-        if (/apply|save|share|login|sign|register|report/i.test(txt) || /apply|save|share/i.test(aria)) continue;
-        if (/^(read\s*more|view\s*more|show\s*more|see\s*more|\.\.\.\s*more|\+ more|\+\d+\s*more)$/i.test(txt) || aria.includes('read more') || aria.includes('show more')) {
-          log('Expanding collapsed section:', txt);
-          el.click();
-        }
-      }
-      await new Promise((r) => setTimeout(r, 150));
-    } catch (e) {
-      warn('Could not auto-expand section:', e.message);
-    }
+    // Naukri provides complete, unclipped job details in the DOM
+    // (.styles_jdc__dang-inner-html) and in the Schema.org JSON-LD payload.
+    // Intentionally do NOT trigger synthetic clicks on Naukri: elements with text like
+    // "view more" or "+ more" are external navigation links (skill search, company reviews,
+    // similar jobs) that open new tabs.
   }
 
   async function handleCopyClick(event) {
-    event.preventDefault();
-    event.stopPropagation();
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
 
     log('Copy Job Details clicked');
     setButtonState('extracting');
 
     try {
-      const panel = findJobPanel();
-      await expandShowMore(panel);
-
       const title = extractJobTitle();
       const company = extractCompany();
       const location = extractLocation();
@@ -781,7 +776,20 @@
     btn.setAttribute('data-state', 'ready');
     btn.title = 'Copy complete job details to clipboard for RoleCraft ATS optimization';
     btn.innerHTML = getCopyIcon() + ' <span>Copy Job Details</span>';
-    btn.addEventListener('click', handleCopyClick);
+
+    // Prevent pointer & mouse events from bubbling to parent links or containers
+    const stopPropagationOnly = (e) => {
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+    };
+    btn.addEventListener('pointerdown', stopPropagationOnly, true);
+    btn.addEventListener('mousedown', stopPropagationOnly, true);
+    btn.addEventListener('pointerup', stopPropagationOnly, true);
+    btn.addEventListener('mouseup', stopPropagationOnly, true);
+
+    // Capture and handle clicks before any parent or document handlers
+    btn.addEventListener('click', handleCopyClick, true);
+    btn.addEventListener('click', handleCopyClick, false);
     return btn;
   }
 
@@ -877,6 +885,15 @@
    *  7. Top of Job Panel
    *  NO FLOATING FALLBACK — if not found at appropriate place, returns false.
    */
+  function ensureOutsideLink(btn) {
+    if (!btn || !btn.isConnected) return;
+    const link = btn.closest('a');
+    if (link && link.parentElement) {
+      log('Button was inside anchor tag, relocating outside anchor');
+      link.insertAdjacentElement('afterend', btn);
+    }
+  }
+
   function injectIntoJob(panel, btn) {
     // Strategy 1: Dedicated apply / action button container in job header
     const actionContainer =
@@ -889,6 +906,7 @@
 
     if (actionContainer && actionContainer.isConnected) {
       actionContainer.appendChild(btn);
+      ensureOutsideLink(btn);
       log('Button injected into action container');
       return true;
     }
@@ -897,10 +915,14 @@
     const applyBtn = findApplyButton(panel) || findApplyButton(document);
     if (applyBtn && applyBtn.isConnected) {
       let target = applyBtn;
-      if (target.parentElement && target.parentElement !== document.body && target.parentElement.children.length === 1) {
+      const enclosingLink = target.closest('a');
+      if (enclosingLink) {
+        target = enclosingLink;
+      } else if (target.parentElement && target.parentElement !== document.body && target.parentElement.children.length === 1) {
         target = target.parentElement;
       }
       target.insertAdjacentElement('afterend', btn);
+      ensureOutsideLink(btn);
       log('Button injected adjacent to apply button wrapper');
       return true;
     }
@@ -910,7 +932,13 @@
       'button[class*="save" i], div[class*="save" i], button[title*="save" i], [class*="share" i]'
     );
     if (saveBtn && saveBtn.isConnected) {
-      saveBtn.insertAdjacentElement('afterend', btn);
+      let target = saveBtn;
+      const enclosingLink = target.closest('a');
+      if (enclosingLink) {
+        target = enclosingLink;
+      }
+      target.insertAdjacentElement('afterend', btn);
+      ensureOutsideLink(btn);
       log('Button injected adjacent to save/share button');
       return true;
     }
