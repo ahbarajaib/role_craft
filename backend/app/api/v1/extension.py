@@ -162,7 +162,7 @@ def get_extension_status(user: User | None = Depends(get_optional_current_user))
 
 @router.get("/download")
 def download_extension(
-    feature: str | None = Query(None, description="Specific extension feature to download ('linkedin', 'indeed', or 'naukri')"),
+    feature: str | None = Query(None, description="Specific extension feature to download ('linkedin', 'indeed', 'naukri', or 'cutshort')"),
     user: User = Depends(get_current_user),
 ):
     """
@@ -179,6 +179,10 @@ def download_extension(
     If ?feature=naukri:
         - Checks access to 'naukri' (Elite)
         - Returns RoleCraft-Naukri-1-Click-Job-Copier.zip containing only Naukri extension files
+
+    If ?feature=cutshort:
+        - Checks access to 'cutshort' (Elite)
+        - Returns RoleCraft-Cutshort-1-Click-Job-Copier.zip containing only Cutshort extension files
 
     If no feature query parameter is provided:
         - Downloads all features the user's plan unlocks (single ZIP if 1, combined if multiple)

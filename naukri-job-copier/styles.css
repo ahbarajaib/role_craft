@@ -101,18 +101,3 @@
   height: 100%;
   fill: currentColor;
 }
-
-/* ---- Floating Fallback ---- */
-#rc-naukri-copy-btn.rc-naukri-floating {
-  position: fixed !important;
-  bottom: 24px !important;
-  right: 24px !important;
-  z-index: 999999 !important;
-  box-shadow: 0 4px 16px rgba(24, 85, 138, 0.45) !important;
-  margin: 0 !important;
-}
-
-#rc-naukri-copy-btn.rc-naukri-floating:hover {
-  box-shadow: 0 6px 20px rgba(24, 85, 138, 0.6) !important;
-}
-

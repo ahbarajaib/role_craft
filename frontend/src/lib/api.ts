@@ -631,6 +631,8 @@ export async function downloadExtensionZip(
       ? "RoleCraft-Indeed-1-Click-Job-Copier.zip"
       : feature === "naukri"
       ? "RoleCraft-Naukri-1-Click-Job-Copier.zip"
+      : feature === "cutshort"
+      ? "RoleCraft-Cutshort-1-Click-Job-Copier.zip"
       : "RoleCraft-LinkedIn-1-Click-Job-Copier.zip"
     : "RoleCraft-Browser-Extensions.zip";
   const filename = match?.[1] ?? defaultFilename;

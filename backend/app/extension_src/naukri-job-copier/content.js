@@ -707,6 +707,25 @@
     }
   }
 
+  async function expandShowMore(panel) {
+    const root = panel || findJobPanel() || document;
+    try {
+      const candidates = root.querySelectorAll('button, a, span[role="button"], div[role="button"], [class*="read-more" i], [class*="show-more" i], [class*="view-more" i]');
+      for (const el of candidates) {
+        const txt = (el.textContent || '').trim().toLowerCase();
+        const aria = (el.getAttribute('aria-label') || '').toLowerCase();
+        if (/apply|save|share|login|sign|register|report/i.test(txt) || /apply|save|share/i.test(aria)) continue;
+        if (/^(read\s*more|view\s*more|show\s*more|see\s*more|\.\.\.\s*more|\+ more|\+\d+\s*more)$/i.test(txt) || aria.includes('read more') || aria.includes('show more')) {
+          log('Expanding collapsed section:', txt);
+          el.click();
+        }
+      }
+      await new Promise((r) => setTimeout(r, 150));
+    } catch (e) {
+      warn('Could not auto-expand section:', e.message);
+    }
+  }
+
   async function handleCopyClick(event) {
     event.preventDefault();
     event.stopPropagation();
@@ -715,6 +734,9 @@
     setButtonState('extracting');
 
     try {
+      const panel = findJobPanel();
+      await expandShowMore(panel);
+
       const title = extractJobTitle();
       const company = extractCompany();
       const location = extractLocation();
@@ -750,7 +772,7 @@
     setTimeout(() => setButtonState('ready'), RESET_DELAY_MS);
   }
 
-  // ---- 6. Button Injection & Fallbacks ----
+  // ---- 6. Button Injection & Appropriate Placement ----
 
   function createButton() {
     const btn = document.createElement('button');
@@ -845,14 +867,17 @@
    *  2. Adjacent to Apply button
    *  3. Adjacent to Save / Share button
    *  4. Inside Header card
+   * Placement strategies inside the job panel/card:
+   *  1. Dedicated apply / action button container in job header
+   *  2. Adjacent to Apply button
+   *  3. Adjacent to Save / Share button
+   *  4. Inside Header card
    *  5. Adjacent to Job Title (h1)
    *  6. Before Job Description
    *  7. Top of Job Panel
-   *  8. Floating fallback badge (guaranteed viewport visibility)
+   *  NO FLOATING FALLBACK — if not found at appropriate place, returns false.
    */
   function injectIntoJob(panel, btn) {
-    btn.classList.remove('rc-naukri-floating');
-
     // Strategy 1: Dedicated apply / action button container in job header
     const actionContainer =
       panel.querySelector(
@@ -930,11 +955,9 @@
       return true;
     }
 
-    // Strategy 8 (Universal Fallback): Floating badge at viewport bottom-right
-    btn.classList.add('rc-naukri-floating');
-    document.body.appendChild(btn);
-    log('Button injected as fixed floating fallback (bottom-right)');
-    return true;
+    // Appropriate place inside job panel/card not found — no floating fallback
+    log('Could not find suitable injection point inside job panel — button will not be displayed (no floating fallback)');
+    return false;
   }
 
   function injectButton() {
@@ -951,7 +974,7 @@
 
     // Check if an existing button is already in the DOM and visible
     const existing = document.getElementById(BUTTON_ID);
-    if (existing && existing.isConnected && (existing.offsetWidth > 0 || existing.classList.contains('rc-naukri-floating'))) {
+    if (existing && existing.isConnected && existing.offsetWidth > 0) {
       return; // Already present and visible
     }
 
@@ -963,6 +986,8 @@
     if (injected) {
       lastJobSignature = getJobSignature();
       log('Button ready for job:', lastJobSignature || '(active)');
+    } else {
+      removeButton();
     }
   }
 
@@ -994,7 +1019,7 @@
       checkJobSwitch();
       if (hasJobOnPage()) {
         const btn = document.getElementById(BUTTON_ID);
-        if (!btn || (btn.offsetWidth === 0 && !btn.classList.contains('rc-naukri-floating'))) {
+        if (!btn || btn.offsetWidth === 0) {
           injectButton();
         }
       } else {
@@ -1012,7 +1037,7 @@
         checkJobSwitch();
         if (hasJobOnPage()) {
           const btn = document.getElementById(BUTTON_ID);
-          if (!btn || (btn.offsetWidth === 0 && !btn.classList.contains('rc-naukri-floating'))) {
+          if (!btn || btn.offsetWidth === 0) {
             injectButton();
           }
         } else {
@@ -1038,7 +1063,7 @@
 
       if (hasJobOnPage()) {
         const btn = document.getElementById(BUTTON_ID);
-        if (!btn || (btn.offsetWidth === 0 && !btn.classList.contains('rc-naukri-floating'))) {
+        if (!btn || btn.offsetWidth === 0) {
           injectButton();
         }
       } else {

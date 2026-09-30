@@ -34,6 +34,7 @@ function getPlanFlags(planType: string, subscriptionStatus?: string | null) {
     isLinkedInEligible: ["pro", "elite"].includes(effectivePlan),
     isIndeedEligible: effectivePlan === "elite",
     isNaukriEligible: effectivePlan === "elite",
+    isCutshortEligible: effectivePlan === "elite",
     effectivePlan,
   };
 }
@@ -41,7 +42,7 @@ function getPlanFlags(planType: string, subscriptionStatus?: string | null) {
 // ── Extension Card ────────────────────────────────────────────────────────────
 
 interface ExtensionCardProps {
-  /** "linkedin" | "indeed" | "naukri" */
+  /** "linkedin" | "indeed" | "naukri" | "cutshort" */
   feature: string;
   label: string;
   description: string;
@@ -73,6 +74,7 @@ function ExtensionCard({
   const isLinkedIn = feature === "linkedin";
   const isIndeed = feature === "indeed";
   const isNaukri = feature === "naukri";
+  const isCutshort = feature === "cutshort";
 
   return (
     <div
@@ -91,7 +93,9 @@ function ExtensionCard({
                 ? "bg-[#0a66c2]/10 text-[#0a66c2]"
                 : isIndeed
                 ? "bg-[#2557a7]/10 text-[#2557a7]"
-                : "bg-[#18558a]/10 text-[#18558a]"
+                : isNaukri
+                ? "bg-[#18558a]/10 text-[#18558a]"
+                : "bg-[#5851d3]/10 text-[#5851d3]"
             }`}
           >
             {isLinkedIn ? (
@@ -104,9 +108,12 @@ function ExtensionCard({
               <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2V11h2v6zm0-8h-2V7h2v2z"/>
               </svg>
-            ) : (
+            ) : isNaukri ? (
               /* Naukri bold "N" letter */
               <span className="font-black text-xs tracking-tighter">N</span>
+            ) : (
+              /* Cutshort bold "C" letter */
+              <span className="font-black text-xs tracking-tighter">C</span>
             )}
           </div>
           <div>
@@ -198,11 +205,11 @@ export default function ExtensionModal({
   if (!isOpen) return null;
 
   const planType = (user?.plan_type || "free").toLowerCase();
-  const { isLinkedInEligible, isIndeedEligible, isNaukriEligible, effectivePlan } = getPlanFlags(
+  const { isLinkedInEligible, isIndeedEligible, isNaukriEligible, isCutshortEligible, effectivePlan } = getPlanFlags(
     planType,
     user?.subscription_status
   );
-  const hasAnyAccess = isLinkedInEligible || isIndeedEligible || isNaukriEligible;
+  const hasAnyAccess = isLinkedInEligible || isIndeedEligible || isNaukriEligible || isCutshortEligible;
 
   const handleDownload = async (feature: string) => {
     if (!token) {
@@ -265,7 +272,7 @@ export default function ExtensionModal({
                 )}
               </div>
               <p className="text-xs sm:text-sm text-teal-100/80 mt-0.5">
-                1-Click job copying on LinkedIn, Indeed &amp; Naukri
+                1-Click job copying on LinkedIn, Indeed, Naukri &amp; Cutshort
               </p>
             </div>
           </div>
@@ -321,6 +328,20 @@ export default function ExtensionModal({
               downloadSuccess={downloadSuccessFeature === "naukri"}
               zipFilename="RoleCraft-Naukri-1-Click-Job-Copier.zip"
               onDownload={() => handleDownload("naukri")}
+              onOpenSubscribe={onOpenSubscribe}
+              onClose={onClose}
+            />
+
+            <ExtensionCard
+              feature="cutshort"
+              label="Cutshort 1-Click Job Copier"
+              description="Copies full job details, skills, CTC, experience & description in 1 click"
+              planRequired="Elite"
+              eligible={isCutshortEligible}
+              isDownloading={downloadingFeature === "cutshort"}
+              downloadSuccess={downloadSuccessFeature === "cutshort"}
+              zipFilename="RoleCraft-Cutshort-1-Click-Job-Copier.zip"
+              onDownload={() => handleDownload("cutshort")}
               onOpenSubscribe={onOpenSubscribe}
               onClose={onClose}
             />
@@ -395,7 +416,7 @@ export default function ExtensionModal({
                     LinkedIn Copier included with Pro &amp; Elite
                   </p>
                   <p className="text-xs text-teal-200 mt-0.5">
-                    Indeed &amp; Naukri Copiers included with Elite
+                    Indeed, Naukri &amp; Cutshort Copiers included with Elite
                   </p>
                 </div>
                 <div className="text-right shrink-0">
