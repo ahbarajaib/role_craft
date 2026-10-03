@@ -753,8 +753,8 @@ function SectionCard({
               </span>
             ) : rewrittenText ? (
               <span className={`inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border shrink-0 ${isPatchingApplied
-                  ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/90 border-emerald-300"
-                  : "text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/90 border-amber-300"
+                ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/90 border-emerald-300"
+                : "text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/90 border-amber-300"
                 }`}>
                 {isPatchingApplied ? (
                   <>
@@ -781,8 +781,8 @@ function SectionCard({
                 onToggleTailoring(section.section_name);
               }}
               className={`px-2 py-1 rounded-lg text-[10px] font-extrabold transition-all flex items-center gap-1 cursor-pointer select-none ${isTailoringEnabled
-                  ? "bg-teal-600 hover:bg-teal-700 text-white shadow-2xs"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 border border-slate-200 dark:border-slate-700"
+                ? "bg-teal-600 hover:bg-teal-700 text-white shadow-2xs"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 border border-slate-200 dark:border-slate-700"
                 }`}
               title={isTailoringEnabled ? "AI Tailoring ENABLED for this section. Click to DISABLE." : "AI Tailoring DISABLED for this section. Click to ENABLE."}
             >
@@ -1202,10 +1202,10 @@ function LoadingState() {
               <div
                 key={idx}
                 className={`relative flex items-start gap-3.5 px-4 py-3 rounded-xl transition-all duration-500 ${isCurrent
-                    ? "bg-teal-50 border border-teal-200 shadow-sm"
-                    : isDone
-                      ? "bg-emerald-50/50 border border-emerald-100"
-                      : "border border-transparent"
+                  ? "bg-teal-50 border border-teal-200 shadow-sm"
+                  : isDone
+                    ? "bg-emerald-50/50 border border-emerald-100"
+                    : "border border-transparent"
                   }`}
               >
                 {/* Left timeline line */}
@@ -1215,10 +1215,10 @@ function LoadingState() {
 
                 {/* Step circle */}
                 <div className={`relative shrink-0 h-7 w-7 rounded-full flex items-center justify-center mt-0.5 z-10 transition-all duration-500 ${isDone
-                    ? "bg-emerald-500 shadow-md shadow-emerald-500/30"
-                    : isCurrent
-                      ? "bg-white border-2 border-teal-500 shadow-md shadow-teal-500/20"
-                      : "bg-white border-2 border-slate-200"
+                  ? "bg-emerald-500 shadow-md shadow-emerald-500/30"
+                  : isCurrent
+                    ? "bg-white border-2 border-teal-500 shadow-md shadow-teal-500/20"
+                    : "bg-white border-2 border-slate-200"
                   }`}>
                   {isDone ? (
                     <CheckCircle className="h-3.5 w-3.5 text-white" />
@@ -1377,9 +1377,8 @@ function AutoTailoringProgressModal({
 
         {/* Top Engine Badge */}
         <div className="relative z-10 flex items-center justify-between">
-          <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-bold ${
-            isComplete ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-teal-50 border-teal-200/80 text-teal-700"
-          }`}>
+          <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-bold ${isComplete ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-teal-50 border-teal-200/80 text-teal-700"
+            }`}>
             {isComplete ? (
               <Check className="h-3.5 w-3.5 text-emerald-600" />
             ) : (
@@ -1396,11 +1395,10 @@ function AutoTailoringProgressModal({
         {/* Center Animated Glowing Ring Graphic */}
         <div className="relative z-10 flex flex-col items-center text-center space-y-3">
           <div className="relative h-20 w-20 flex items-center justify-center">
-            <div className={`absolute inset-0 rounded-3xl blur-md opacity-60 ${
-              isComplete 
-                ? "bg-gradient-to-tr from-emerald-400 via-emerald-500 to-green-500" 
+            <div className={`absolute inset-0 rounded-3xl blur-md opacity-60 ${isComplete
+                ? "bg-gradient-to-tr from-emerald-400 via-emerald-500 to-green-500"
                 : "bg-gradient-to-tr from-emerald-500 via-teal-400 to-teal-600 animate-spin"
-            }`} style={{ animationDuration: "4s" }} />
+              }`} style={{ animationDuration: "4s" }} />
             <div className="relative h-16 w-16 rounded-2xl bg-white flex items-center justify-center border border-slate-200 shadow-xl">
               {isComplete ? (
                 <Check className="h-8 w-8 text-emerald-600" />
@@ -1434,9 +1432,8 @@ function AutoTailoringProgressModal({
           </div>
           <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-0.5">
             <div
-              className={`h-full rounded-full transition-all duration-300 relative overflow-hidden ${
-                isComplete ? "bg-emerald-500" : "bg-gradient-to-r from-emerald-500 via-teal-400 to-teal-600"
-              }`}
+              className={`h-full rounded-full transition-all duration-300 relative overflow-hidden ${isComplete ? "bg-emerald-500" : "bg-gradient-to-r from-emerald-500 via-teal-400 to-teal-600"
+                }`}
               style={{ width: `${progress}%` }}
             >
               {!isComplete && <div className="absolute inset-0 bg-white/30 animate-pulse" />}
@@ -1455,19 +1452,19 @@ function AutoTailoringProgressModal({
               <div
                 key={idx}
                 className={`p-3 rounded-xl border transition-all duration-300 flex items-center justify-between gap-3 ${isCurrent
-                    ? "bg-teal-50/90 border-teal-300 text-[#0F172A] shadow-xs"
-                    : isDone
-                      ? "bg-emerald-50/70 border-emerald-200 text-emerald-900"
-                      : "bg-slate-50 border-slate-200/80 text-slate-400"
+                  ? "bg-teal-50/90 border-teal-300 text-[#0F172A] shadow-xs"
+                  : isDone
+                    ? "bg-emerald-50/70 border-emerald-200 text-emerald-900"
+                    : "bg-slate-50 border-slate-200/80 text-slate-400"
                   }`}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div
                     className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 border ${isDone
-                        ? "bg-emerald-100 border-emerald-200 text-emerald-700"
-                        : isCurrent
-                          ? "bg-[#E6F7F4] border-teal-200 text-teal-700"
-                          : "bg-white border-slate-200 text-slate-400"
+                      ? "bg-emerald-100 border-emerald-200 text-emerald-700"
+                      : isCurrent
+                        ? "bg-[#E6F7F4] border-teal-200 text-teal-700"
+                        : "bg-white border-slate-200 text-slate-400"
                       }`}
                   >
                     {isDone ? (
@@ -1481,10 +1478,10 @@ function AutoTailoringProgressModal({
                   <div className="min-w-0 flex-1">
                     <p
                       className={`text-xs font-bold truncate ${isDone
-                          ? "text-emerald-900"
-                          : isCurrent
-                            ? "text-[#0F172A] font-extrabold"
-                            : "text-slate-500"
+                        ? "text-emerald-900"
+                        : isCurrent
+                          ? "text-[#0F172A] font-extrabold"
+                          : "text-slate-500"
                         }`}
                     >
                       {step.title}
@@ -1866,7 +1863,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const isResumeUploaded = !!file;
   const isJDPopulated = jobDescription.trim().length > 20;
   const isAnalyzed = !!analysisResult;
-  
+
   let onboardingStep = 1;
   if (isResumeUploaded) onboardingStep = 2;
   if (isResumeUploaded && isJDPopulated) onboardingStep = 3;
@@ -1875,10 +1872,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const loadSampleData = () => {
     // 1. Set a dummy file name so the UI thinks a resume is uploaded
     setFile(new File([""], "John_Doe_Software_Engineer.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }));
-    
+
     // 2. Load a sample JD
     setJobDescription("We are looking for a Senior Backend Engineer with deep expertise in Python, FastAPI, and PostgreSQL. You will architect event-driven microservices using Apache Kafka and deploy them on AWS/Kubernetes. The ideal candidate has experience reducing system latency and scaling APIs for high throughput (100k+ daily requests).");
-    
+
     // Smooth scroll to the analyze button
     setTimeout(() => {
       document.getElementById("analyze-btn")?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2924,7 +2921,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     setAutoTailorStepIndex(undefined);
     setAutoTailorProgress(undefined);
     setAutoTailorComplete(false);
-    
+
     try {
       const { autoTailorResume } = require("@/lib/api");
       const result = await autoTailorResume({
@@ -2960,6 +2957,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       if (result.download_url) setDownloadUrl(result.download_url);
 
       if (refreshMe) refreshMe();
+      fetchDailyGoal().catch(() => { });
+
 
       // Signal completion to the progress modal
       setAutoTailorComplete(true);
@@ -2973,7 +2972,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             job_title: effectiveRole,
           });
           setTailorResult(tailoredRes);
-        } catch (te) {}
+        } catch (te) { }
       })();
 
       // Background cover letter
@@ -2987,12 +2986,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             target_role: effectiveTargetRole,
             contact_info: undefined,
             rewritten_sections: result.rewrites || {},
-            confirmed_matched_skills: [], 
+            confirmed_matched_skills: [],
           });
           setCoverLetterText(clRes.cover_letter_text);
           setCoverLetterDownloadId(clRes.download_id);
           if (clRes.target_role) setCustomTargetRole(clRes.target_role);
-        } catch (err) {}
+        } catch (err) { }
         setIsGeneratingCoverLetter(false);
       })();
 
@@ -4037,8 +4036,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             type="button"
             onClick={() => switchNavTab(activeNavTab === "workspace" ? "landing" : "workspace")}
             className={`hidden lg:flex items-center justify-center gap-1.5 px-3.5 h-10 !rounded-full text-xs font-black transition-all cursor-pointer shadow-xs ${activeNavTab === "workspace"
-                ? "bg-[#E6F7F4] hover:bg-[#ccfbf1] text-teal-900 border border-[#99F6E4] ring-1 ring-teal-500/20"
-                : "btn-primary"
+              ? "bg-[#E6F7F4] hover:bg-[#ccfbf1] text-teal-900 border border-[#99F6E4] ring-1 ring-teal-500/20"
+              : "btn-primary"
               }`}
           >
             <Sparkles className="h-3.5 w-3.5 text-[#FF6B4A] shrink-0" />
@@ -4051,8 +4050,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               type="button"
               onClick={() => setIsHistoryModalOpen(true)}
               className={`touch-target flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 h-10 rounded-full border text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-105 select-none ${dailyGoal.goal_achieved
-                  ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 ring-1 ring-emerald-500/20"
-                  : "bg-white hover:bg-teal-50 text-slate-700 hover:text-teal-800 border-slate-200 hover:border-teal-300"
+                ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 ring-1 ring-emerald-500/20"
+                : "bg-white hover:bg-teal-50 text-slate-700 hover:text-teal-800 border-slate-200 hover:border-teal-300"
                 }`}
               title={`Daily Target: ${dailyGoal.today_completed}/${dailyGoal.daily_target} tailored (${dailyGoal.progress_percentage}%). Click to view full analytics.`}
             >
@@ -5317,8 +5316,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             type="button"
                             onClick={() => handleToggleSectionTailoring(sec.section_title)}
                             className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border select-none ${isEnabled
-                                ? "bg-teal-600 text-white border-teal-500 shadow-xs hover:bg-teal-500"
-                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                              ? "bg-teal-600 text-white border-teal-500 shadow-xs hover:bg-teal-500"
+                              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
                               }`}
                             title={isEnabled ? `AI Tailoring ENABLED for ${sec.section_title}. Click to Lock/Disable.` : `AI Tailoring DISABLED for ${sec.section_title}. Click to Enable.`}
                           >
@@ -5392,10 +5391,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                       <div
                         className={`h-full transition-all duration-300 rounded-full ${jobDescription.length < 50
-                            ? "bg-amber-400"
-                            : jobDescription.length < 250
-                              ? "bg-teal-500"
-                              : "bg-emerald-500"
+                          ? "bg-amber-400"
+                          : jobDescription.length < 250
+                            ? "bg-teal-500"
+                            : "bg-emerald-500"
                           }`}
                         style={{ width: `${Math.min(100, Math.round((jobDescription.length / 350) * 100))}%` }}
                       />
@@ -5494,24 +5493,23 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       jobDescription.trim().length < 50 ||
                       isAutoTailoring || isAnalyzing
                     }
-                    className={`w-full py-3.5 px-4 flex items-center justify-between gap-2 ${
-                      (documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
-                      jobDescription.trim().length >= 50 &&
-                      !isAutoTailoring && !isAnalyzing
+                    className={`w-full py-3.5 px-4 flex items-center justify-between gap-2 ${(documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
+                        jobDescription.trim().length >= 50 &&
+                        !isAutoTailoring && !isAnalyzing
                         ? "btn-magic cursor-pointer"
                         : "bg-slate-200 text-slate-400 cursor-not-allowed rounded-xl font-black text-sm"
-                    }`}
+                      }`}
                   >
                     {((documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
                       jobDescription.trim().length >= 50 &&
                       !isAutoTailoring && !isAnalyzing) && (
-                      <>
-                        <div className="sparkle"></div>
-                        <div className="sparkle"></div>
-                        <div className="sparkle"></div>
-                        <div className="sparkle"></div>
-                      </>
-                    )}
+                        <>
+                          <div className="sparkle"></div>
+                          <div className="sparkle"></div>
+                          <div className="sparkle"></div>
+                          <div className="sparkle"></div>
+                        </>
+                      )}
                     <div className="flex items-center gap-2 relative z-10">
                       {isAutoTailoring ? (
                         <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -5521,13 +5519,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       <span>{isAutoTailoring ? "Tailoring & Downloading..." : "⚡ 1-Click Auto-Everything"}</span>
                     </div>
 
-                    <span className={`relative z-10 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                      (documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
-                      jobDescription.trim().length >= 50 &&
-                      !isAutoTailoring && !isAnalyzing
+                    <span className={`relative z-10 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${(documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
+                        jobDescription.trim().length >= 50 &&
+                        !isAutoTailoring && !isAnalyzing
                         ? "bg-white/20 text-white border border-white/30 shadow-sm"
                         : "bg-slate-300 text-slate-500"
-                    }`}>
+                      }`}>
                       {!token ? "Free" : "Magic"}
                     </span>
                   </button>
@@ -5546,13 +5543,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       jobDescription.trim().length < 50 ||
                       isAnalyzing
                     }
-                    className={`w-full py-3.5 px-4 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-between gap-2 shadow-lg ${
-                      (documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
-                      jobDescription.trim().length >= 50 &&
-                      !isAnalyzing
+                    className={`w-full py-3.5 px-4 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-between gap-2 shadow-lg ${(documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
+                        jobDescription.trim().length >= 50 &&
+                        !isAnalyzing
                         ? "bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:via-teal-700 hover:to-teal-500 text-white shadow-teal-500/20 hover:scale-[1.01] active:scale-[0.99] cursor-pointer ring-2 ring-teal-400/30"
                         : "bg-slate-200 text-slate-400 cursor-not-allowed"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       {isAnalyzing ? (
@@ -5563,13 +5559,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       <span>{isAnalyzing ? "Running Recruiter AI Analysis..." : "Analyze Gaps & Fit"}</span>
                     </div>
 
-                    <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                      (documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
-                      jobDescription.trim().length >= 50 &&
-                      !isAnalyzing
+                    <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${(documentId || (!token && file && guestResumeText) || user?.base_resume_id) &&
+                        jobDescription.trim().length >= 50 &&
+                        !isAnalyzing
                         ? "bg-white/20 text-white border border-white/30"
                         : "bg-slate-300 text-slate-500"
-                    }`}>
+                      }`}>
                       {!token ? "Free" : user?.plan_type === "free" ? "1 Credit" : "AI Audit"}
                     </span>
                   </button>
@@ -5611,9 +5606,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         </div>
                         <span className="text-xs font-extrabold text-teal-800">AI Engine Ready</span>
                       </div>
-                      
+
                       {/* Demo Button for new users */}
-                      <button 
+                      <button
                         type="button"
                         onClick={(e) => {
                           e.preventDefault();
@@ -5726,12 +5721,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       {/* Step 1 */}
                       <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${documentId || file
-                          ? "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs"
-                          : "bg-white/80 border-slate-200 text-slate-700"
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs"
+                        : "bg-white/80 border-slate-200 text-slate-700"
                         }`}>
                         <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${documentId || file
-                            ? "bg-emerald-600 text-white"
-                            : "bg-slate-200 text-slate-600"
+                          ? "bg-emerald-600 text-white"
+                          : "bg-slate-200 text-slate-600"
                           }`}>
                           {documentId || file ? "✓" : "1"}
                         </div>
@@ -5747,12 +5742,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
                       {/* Step 2 */}
                       <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${jobDescription.trim().length >= 50
-                          ? "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs"
-                          : "bg-white/80 border-slate-200 text-slate-700"
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs"
+                        : "bg-white/80 border-slate-200 text-slate-700"
                         }`}>
                         <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${jobDescription.trim().length >= 50
-                            ? "bg-emerald-600 text-white"
-                            : "bg-slate-200 text-slate-600"
+                          ? "bg-emerald-600 text-white"
+                          : "bg-slate-200 text-slate-600"
                           }`}>
                           {jobDescription.trim().length >= 50 ? "✓" : "2"}
                         </div>
@@ -5770,12 +5765,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
                       {/* Step 3 */}
                       <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all ${(documentId || file) && jobDescription.trim().length >= 50
-                          ? "bg-teal-600 text-white border-teal-500 shadow-md shadow-teal-600/20 animate-pulse"
-                          : "bg-white/80 border-slate-200 text-slate-700"
+                        ? "bg-teal-600 text-white border-teal-500 shadow-md shadow-teal-600/20 animate-pulse"
+                        : "bg-white/80 border-slate-200 text-slate-700"
                         }`}>
                         <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${(documentId || file) && jobDescription.trim().length >= 50
-                            ? "bg-white text-teal-800 font-extrabold"
-                            : "bg-slate-200 text-slate-600"
+                          ? "bg-white text-teal-800 font-extrabold"
+                          : "bg-slate-200 text-slate-600"
                           }`}>
                           3
                         </div>
@@ -5786,8 +5781,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               : "Run Audit"}
                           </p>
                           <p className={`text-[10px] truncate ${(documentId || file) && jobDescription.trim().length >= 50
-                              ? "text-teal-100"
-                              : "text-slate-500"
+                            ? "text-teal-100"
+                            : "text-slate-500"
                             }`}>
                             {(documentId || file) && jobDescription.trim().length >= 50
                               ? "Click Analyze Gaps & Fit"
@@ -5814,8 +5809,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           type="button"
                           onClick={() => setMobileResultsTab(tab.id as any)}
                           className={`flex-1 py-2 px-1 text-center rounded-lg text-xs font-black transition-all cursor-pointer select-none ${mobileResultsTab === tab.id
-                              ? "bg-white dark:bg-slate-700 text-teal-700 dark:text-teal-300 shadow-xs ring-1 ring-teal-500/20"
-                              : "text-slate-500 hover:text-slate-900 dark:text-slate-400"
+                            ? "bg-white dark:bg-slate-700 text-teal-700 dark:text-teal-300 shadow-xs ring-1 ring-teal-500/20"
+                            : "text-slate-500 hover:text-slate-900 dark:text-slate-400"
                             }`}
                         >
                           {tab.label}
@@ -5839,8 +5834,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
                           <div className="flex items-center gap-4">
                             <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg shrink-0 ring-1 ring-white/50 transition-all ${hasAutoTailored
-                                ? "bg-gradient-to-br from-emerald-800 via-teal-700 to-teal-500 text-white shadow-emerald-500/20"
-                                : "bg-gradient-to-br from-[#0F172A] via-[#0F766E] to-[#14B8A6] text-white shadow-teal-500/20"
+                              ? "bg-gradient-to-br from-emerald-800 via-teal-700 to-teal-500 text-white shadow-emerald-500/20"
+                              : "bg-gradient-to-br from-[#0F172A] via-[#0F766E] to-[#14B8A6] text-white shadow-teal-500/20"
                               }`}>
                               {hasAutoTailored ? (
                                 <CheckCircle2 className="h-6 w-6 text-emerald-300 animate-pulse" />
@@ -5873,10 +5868,10 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               onClick={handleAutoTailor}
                               disabled={isAutoTailoring}
                               className={`px-6 py-3.5 rounded-xl font-extrabold text-xs text-white shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 border border-white/20 ${isAutoTailoring
-                                  ? "bg-slate-700 opacity-90 cursor-wait"
-                                  : hasAutoTailored
-                                    ? "bg-gradient-to-r from-emerald-700 via-teal-700 to-teal-600 hover:from-emerald-600 hover:to-teal-500 shadow-emerald-600/25 hover:shadow-emerald-600/40 ring-2 ring-emerald-400/30"
-                                    : "bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:to-teal-500 shadow-teal-600/20 hover:shadow-teal-600/35"
+                                ? "bg-slate-700 opacity-90 cursor-wait"
+                                : hasAutoTailored
+                                  ? "bg-gradient-to-r from-emerald-700 via-teal-700 to-teal-600 hover:from-emerald-600 hover:to-teal-500 shadow-emerald-600/25 hover:shadow-emerald-600/40 ring-2 ring-emerald-400/30"
+                                  : "bg-gradient-to-r from-[#0F172A] via-[#0F766E] to-[#14B8A6] hover:from-slate-800 hover:to-teal-500 shadow-teal-600/20 hover:shadow-teal-600/35"
                                 }`}
                             >
                               {isAutoTailoring ? (
@@ -6044,13 +6039,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                         type="button"
                                         onClick={() => handleApplyTargetTitle(activeTitle)}
                                         disabled={isApplyingTitle || applyMutation.isPending}
-                                        className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${
-                                          isTitlePending
+                                        className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none shadow-md ${isTitlePending
                                             ? "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-white border-amber-400/40 shadow-amber-500/25 hover:scale-105"
                                             : isTitleApplied
-                                            ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
-                                            : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white border-emerald-500/30 shadow-emerald-500/20 hover:scale-105"
-                                        }`}
+                                              ? "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-slate-900/10"
+                                              : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white border-emerald-500/30 shadow-emerald-500/20 hover:scale-105"
+                                          }`}
                                         title={isTitlePending ? "Save this new title to your resume header" : "Apply this title to resume"}
                                       >
                                         {isApplyingTitle ? (
@@ -6117,7 +6111,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex flex-col gap-1 ml-1">
                           <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             {currentScore > initialScore ? "Resume Improved!" : "Overall Fit"}
@@ -6225,8 +6219,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               onClick={openKeywordWeaveModal}
                               disabled={isWeavingKeywords}
                               className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md border ${isKeywordsWoven
-                                  ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500/40 shadow-emerald-600/20"
-                                  : "bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white border-white/20 shadow-teal-600/20 hover:scale-[1.02] active:scale-[0.98]"
+                                ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500/40 shadow-emerald-600/20"
+                                : "bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white border-white/20 shadow-teal-600/20 hover:scale-[1.02] active:scale-[0.98]"
                                 }`}
                             >
                               {isWeavingKeywords ? (
@@ -6278,8 +6272,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               type="button"
                               onClick={() => setKeywordFilterTab('all')}
                               className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${keywordFilterTab === 'all'
-                                  ? "bg-white text-slate-900 shadow-2xs"
-                                  : "text-slate-500 hover:text-slate-800"
+                                ? "bg-white text-slate-900 shadow-2xs"
+                                : "text-slate-500 hover:text-slate-800"
                                 }`}
                             >
                               All ({totalKeywords})
@@ -6288,8 +6282,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               type="button"
                               onClick={() => setKeywordFilterTab('matched')}
                               className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${keywordFilterTab === 'matched'
-                                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs"
-                                  : "text-slate-500 hover:text-emerald-700"
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs"
+                                : "text-slate-500 hover:text-emerald-700"
                                 }`}
                             >
                               <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -6299,8 +6293,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               type="button"
                               onClick={() => setKeywordFilterTab('supported')}
                               className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${keywordFilterTab === 'supported'
-                                  ? "bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs"
-                                  : "text-slate-500 hover:text-amber-700"
+                                ? "bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs"
+                                : "text-slate-500 hover:text-amber-700"
                                 }`}
                             >
                               <span className="h-2 w-2 rounded-full bg-amber-400" />
@@ -6310,8 +6304,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               type="button"
                               onClick={() => setKeywordFilterTab('missing')}
                               className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${keywordFilterTab === 'missing'
-                                  ? "bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs"
-                                  : "text-slate-500 hover:text-rose-700"
+                                ? "bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs"
+                                : "text-slate-500 hover:text-rose-700"
                                 }`}
                             >
                               <span className="h-2 w-2 rounded-full bg-rose-400" />
@@ -6550,8 +6544,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                       type="button"
                                       onClick={() => handleToggleSectionTailoring(sec.section_name)}
                                       className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none shrink-0 border ${isEnabled
-                                          ? "bg-teal-600 text-white border-teal-500 shadow-2xs hover:bg-teal-700"
-                                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                                        ? "bg-teal-600 text-white border-teal-500 shadow-2xs hover:bg-teal-700"
+                                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
                                         }`}
                                     >
                                       {isEnabled ? (
@@ -6743,8 +6737,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             }
                           }}
                           className={`w-full py-4 px-5 rounded-2xl font-black text-sm text-white shadow-xl flex items-center justify-between transition-all active:scale-95 ${downloadUrl || downloadId
-                              ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-teal-500 shadow-emerald-600/25"
-                              : "btn-primary shadow-teal-600/25"
+                            ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-teal-500 shadow-emerald-600/25"
+                            : "btn-primary shadow-teal-600/25"
                             }`}
                         >
                           <div className="flex items-center gap-3">
@@ -8153,16 +8147,16 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                       type="button"
                       onClick={() => handleToggleSectionTailoring(sec.id, sec.defaultOn)}
                       className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between gap-4 cursor-pointer select-none group ${isEnabled
-                          ? "bg-teal-50/70 hover:bg-teal-50 border-teal-200/90 shadow-2xs"
-                          : "bg-slate-50/70 hover:bg-slate-100/70 border-slate-200/80 opacity-75 hover:opacity-100"
+                        ? "bg-teal-50/70 hover:bg-teal-50 border-teal-200/90 shadow-2xs"
+                        : "bg-slate-50/70 hover:bg-slate-100/70 border-slate-200/80 opacity-75 hover:opacity-100"
                         }`}
                     >
                       {/* Left icon & text */}
                       <div className="flex items-center gap-3.5 min-w-0 flex-1">
                         <div
                           className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 border transition-all ${isEnabled
-                              ? "bg-[#E6F7F4] border-teal-200 text-teal-700 shadow-2xs"
-                              : "bg-white border-slate-200 text-slate-400"
+                            ? "bg-[#E6F7F4] border-teal-200 text-teal-700 shadow-2xs"
+                            : "bg-white border-slate-200 text-slate-400"
                             }`}
                         >
                           <SecIcon className="h-5 w-5" />
