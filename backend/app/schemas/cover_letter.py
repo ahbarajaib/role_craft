@@ -17,6 +17,10 @@ class CoverLetterRequest(BaseModel):
     confirmed_matched_skills: list[str] | None = Field(
         default=None, description="Strict list of confirmed matched skills present in applied resume"
     )
+    forbidden_claims: list[str] | None = Field(
+        default=None,
+        description="Terms absent from candidate resume that must not appear as candidate skills in the cover letter."
+    )
 
 
 class CoverLetterResponse(BaseModel):

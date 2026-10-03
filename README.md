@@ -273,6 +273,78 @@ See [`docs/architecture.md`](docs/architecture.md) for the full system design.
 
 ---
 
+## Evidence-Grounded Tailoring (Milestone 23)
+
+RoleCraft uses a two-stage, hallucination-resistant tailoring pipeline that ensures every claim in a tailored resume or cover letter is traceable to the candidate's original resume.
+
+### Stage 1 — Deterministic Evidence Extraction (no LLM)
+
+Before any AI prompt is sent, `EvidenceService` scans the candidate's `StructuredResume` and extracts a `CandidateEvidenceSet`:
+- **LEVEL_1_DIRECT**: skills explicitly listed in the Skills section; technologies named in the summary.
+- **LEVEL_2_CONTEXTUAL**: technologies found in experience bullets and project descriptions.
+- **Years of experience**: parsed verbatim from the summary via regex (never inflated).
+
+`RequirementMatcher` then matches the evidence set against the parsed `JobDescription` to produce a `TailoringPlan`:
+- `safe_skills`: technologies the candidate demonstrably has — safe to use in any section.
+- `forbidden_claims`: JD terms absent from the candidate's resume — must not appear as candidate qualifications.
+- `years_of_experience`: verbatim string from the source resume.
+
+A built-in false-inference deny list prevents common hallucination shortcuts:
+
+| If JD requires | Candidate has | Inference blocked |
+|---------------|--------------|-------------------|
+| RAG / embeddings | OpenAI API | ✗ LLM API ≠ RAG |
+| AWS | Docker | ✗ Container ≠ cloud provider |
+| AWS CI/CD | GitHub Actions | ✗ CI tool ≠ AWS CI/CD |
+| Django | FastAPI | ✗ Different frameworks |
+| pgvector / vector DB | PostgreSQL | ✗ Relational DB ≠ vector DB |
+| BM25 / hybrid search | Elasticsearch | ✗ Search infra ≠ ranking models |
+
+### Stage 2 — Evidence-Bounded LLM Rewrite
+
+Every AI prompt now receives:
+- `=== CANDIDATE VERIFIED SKILLS ===` — the `safe_skills` list
+- `=== FORBIDDEN CLAIMS ===` — the `forbidden_claims` list
+- `=== CANDIDATE YEARS OF EXPERIENCE ===` — the verbatim YoE string
+
+All system prompts enforce:
+- **No new technologies** — only reframe what is already in the candidate's text
+- **No metric fabrication** — preserve existing metrics verbatim; never add new ones
+- **No YoE inflation** — use the candidate's stated years exactly
+
+### Python Safety Net
+
+After every LLM rewrite, `sanitize_unsupported_skills_from_text()` performs a word-boundary scan against `forbidden_claims` and strips any JD technology that slipped through despite the prompt constraints.
+
+### Key Files
+
+| File | Role |
+|------|------|
+| `app/schemas/evidence.py` | Data model for evidence items, evidence levels, TailoringPlan |
+| `app/services/evidence_service.py` | Deterministic evidence extractor (no LLM) |
+| `app/services/requirement_matcher.py` | Deterministic JD-vs-evidence matcher with deny list |
+| `app/services/rewrite_service.py` | AI rewriter (prompts fixed; sanitizer re-enabled) |
+| `app/services/tailor_orchestration_service.py` | Full-resume tailor (prompts fixed; TailoringPlan injected) |
+| `app/ai/cover_letter_prompts.py` | Cover letter prompts (FORBIDDEN CLAIMS block added) |
+| `app/ai/review_prompts.py` | Review prompts (gap analysis renamed; evidence guard added) |
+| `tests/test_evidence_grounding.py` | 18 deterministic unit tests (no LLM calls) |
+
+### What Changed in v2 (Milestone 23)
+
+- **`sanitize_unsupported_skills_from_text()`** — re-enabled (was deliberately disabled; now active safety net)
+- **`REWRITE_SYSTEM_PROMPT`** — removed "mandatory JD keyword integration" and "metric fabrication" rules
+- **`SKILLS_REWRITE_SYSTEM_PROMPT`** — removed "weave missing JD keywords" rule; replaced with "evidence-only skills"
+- **`SUMMARY_REWRITE_SYSTEM_PROMPT`** — added rules: no new technologies, preserve YoE verbatim
+- **`TAILOR_EXPERIENCE_SYSTEM`** — replaced mandatory JD weaving with evidence-grounded rewriting
+- **`TAILOR_SKILLS_SYSTEM`** — replaced "weave JD skills" with "RESUME-ONLY SKILLS"
+- **`TAILOR_PROJECTS_SYSTEM`** — replaced mandatory JD weaving with evidence-grounded rewriting
+- **`TAILOR_SUMMARY_SYSTEM`** — added evidence constraints: no new tech, no YoE inflation
+- **`cover_letter_prompts.py`** — added FORBIDDEN CLAIMS block; added cloud platform clause
+- **`cover_letter_service.py`** — original DOCX summary is now primary grounding (not AI-rewritten version); added post-generation sanitizer
+- **`review_prompts.py`** — renamed "DETECTOR GAP ANALYSIS" to "MATCH ANALYSIS (FOR CONTEXT ONLY)"; added note that missing items are JD requirements, not candidate claims
+
+---
+
 ## Tech Stack
 
 See [`docs/tech-stack.md`](docs/tech-stack.md) for the full technology list.

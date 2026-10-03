@@ -60,19 +60,23 @@ class CoverLetterService:
         summary_text = ""
         evidence_parts = []
 
+        # Always use original summary from parsed DOCX as ground truth
+        for sec in doc_sections.sections:
+            if "summary" in sec.title.lower() or "profile" in sec.title.lower():
+                summary_text = "\n".join([p.text for p in sec.paragraphs if p.text.strip()])
+                break
+
+        # Rewritten sections go only into evidence_parts (context, not ground truth)
         if request.rewritten_sections:
             for sec_key, text in request.rewritten_sections.items():
-                if "summary" in sec_key.lower() or "profile" in sec_key.lower():
-                    summary_text = text
-                else:
-                    evidence_parts.append(f"[{sec_key.title()}]\n{text}")
-        
+                evidence_parts.append(f"[{sec_key.title()} — Tailored]\n{text}")
+
         if not summary_text:
             for sec in doc_sections.sections:
-                if "summary" in sec.title.lower() or "profile" in sec.title.lower():
-                    summary_text = "\n".join([p.text for p in sec.paragraphs if p.text.strip()])
-                    break
-                evidence_parts.append(f"[{sec.title}]\n" + "\n".join([p.text for p in sec.paragraphs if p.text.strip()]))
+                if sec.normalized_name != "header":
+                    evidence_parts.append(
+                        f"[{sec.title}]\n" + "\n".join([p.text for p in sec.paragraphs if p.text.strip()])
+                    )
 
         evidence_context = "\n\n".join(evidence_parts[:4])
 
@@ -98,6 +102,7 @@ class CoverLetterService:
             job_description_text=request.job_description_text[:3000],
             evidence_context=evidence_context[:3000],
             confirmed_matched_skills=request.confirmed_matched_skills,
+            forbidden_claims=request.forbidden_claims,
         )
 
         logger.info("Generating AI cover letter for document", document_id=request.document_id, candidate=candidate_name)
@@ -109,6 +114,17 @@ class CoverLetterService:
         )
 
         cover_letter_text = cover_letter_raw.strip()
+
+        # Post-generation safety: strip any terms not in candidate's evidence
+        if hasattr(request, 'forbidden_claims') and request.forbidden_claims:
+            cover_letter_text, stripped = self._validate_cover_letter_claims(
+                cover_letter_text, request.forbidden_claims
+            )
+            if stripped:
+                logger.warning(
+                    "🛡️ [RoleCraft Shield] Stripped forbidden claims from cover letter",
+                    stripped=stripped,
+                )
 
         # 4. Generate UUID download_id and save text file cache & DOCX
         download_id = f"cl_{uuid.uuid4().hex[:12]}"
@@ -169,6 +185,17 @@ class CoverLetterService:
             target_role=target_role,
             contact_info=contact_info,
         )
+
+    def _validate_cover_letter_claims(
+        self, cover_letter_text: str, forbidden_terms: list[str]
+    ) -> tuple[str, list[str]]:
+        """Strip any forbidden technology/skill terms from cover letter text.
+
+        Uses the same word-boundary regex logic as sanitize_unsupported_skills_from_text.
+        Returns (cleaned_text, list_of_stripped_terms).
+        """
+        from app.services.rewrite_service import sanitize_unsupported_skills_from_text
+        return sanitize_unsupported_skills_from_text(cover_letter_text, set(forbidden_terms))
 
     def _clean_target_role(self, raw_role: str) -> str:
         """Clean target role string removing junk like 'Company logo for,' or markdown."""

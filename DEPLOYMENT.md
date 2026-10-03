@@ -54,6 +54,15 @@ sudo apt install nginx certbot python3-certbot-nginx -y
    ```
    The SQLite database will be persistently stored at `./data/rolecraft.db` on your host machine.
 
+### Environment Note: Evidence-Grounded Tailoring
+
+The evidence-grounded tailoring pipeline (Milestone 23) is fully CPU-bound and requires no additional environment variables or external services. No vector DB, embedding service, or additional API keys are needed. The `EvidenceService` and `RequirementMatcher` run deterministically in-process. Ensure `backend/app/schemas/evidence.py`, `backend/app/services/evidence_service.py`, and `backend/app/services/requirement_matcher.py` are present in the deployed container — they are included in the standard `uv sync` install.
+
+To verify the pipeline is active after deployment:
+```bash
+docker exec <container> python -c "from app.services.evidence_service import EvidenceService; print('Evidence pipeline OK')"
+```
+
 ---
 
 ## 3. Host Nginx Reverse Proxy Config

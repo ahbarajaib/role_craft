@@ -4,8 +4,6 @@ Constructs system prompt and user input for generating tailored cover letters
 using OpenAI.
 """
 
-from app.schemas.job_description import JobDescription
-
 COVER_LETTER_SYSTEM_PROMPT = """\
 You are an expert career coach and master cover letter writer.
 Your task is to write a highly personal, authentic, engaging, and compelling 2-paragraph cover letter for a candidate applying to a specific role.
@@ -20,6 +18,9 @@ CRITICAL COVER LETTER RULES:
 3. **Strict Grounding on Applied Resume & Confirmed Matched Skills ONLY**:
    - Base all technical claims, tools, and experience ONLY on the candidate's active applied resume sections and explicitly provided "CONFIRMED MATCHED SKILLS".
    - DO NOT invent missing skills, unconfirmed gaps, or technologies not present in the candidate's confirmed list/applied text.
+   - If a === FORBIDDEN CLAIMS === block is provided in the user prompt, you MUST NOT mention any term listed there as a skill or technology the candidate possesses. These terms are absent from the candidate's resume.
+   - NEVER claim experience with AWS, GCP, Azure, or any cloud platform unless it explicitly appears in the candidate's verified evidence section.
+   - Use the candidate's exact years-of-experience value. Do not increase it.
 4. **No Placeholders**: Do NOT include bracketed placeholders like [Company Name] or [Hiring Manager]. Use generic professional addresses ("Dear Hiring Team,") if no contact name is provided.
 5. **Output Bounds**: Output ONLY the cover letter content (Salutation, EXACTLY 2 body paragraphs, Closing, and Candidate Signature line). Do not include conversational preambles, notes, or explanations.
 """
@@ -32,6 +33,7 @@ def build_cover_letter_input(
     job_description_text: str,
     evidence_context: str = "",
     confirmed_matched_skills: list[str] | None = None,
+    forbidden_claims: list[str] | None = None,
 ) -> str:
     """Build user prompt for cover letter generation."""
     parts = [
@@ -53,6 +55,14 @@ def build_cover_letter_input(
             "",
             "=== CONFIRMED MATCHED SKILLS (STRICTLY USE ONLY THESE SKILLS) ===",
             ", ".join(confirmed_matched_skills),
+        ])
+
+    if forbidden_claims:
+        parts.extend([
+            "",
+            "=== FORBIDDEN CLAIMS (DO NOT ATTRIBUTE THESE TO THE CANDIDATE) ===",
+            "The following terms are NOT supported by the candidate's resume. Do NOT claim the candidate has these skills or technologies:",
+            ", ".join(forbidden_claims),
         ])
 
     if evidence_context:

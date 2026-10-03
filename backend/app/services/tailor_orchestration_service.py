@@ -14,12 +14,18 @@ from loguru import logger
 
 from app.ai.provider import OpenAIProvider
 from app.schemas.structured_resume import StructuredResume
+from app.schemas.evidence import TailoringPlan
 
 
 TAILOR_SUMMARY_SYSTEM = (
-    "You are an executive resume strategist. Rewrite the professional summary to directly align "
-    "with the target job title and job description. Frame the narrative around the target role's core "
-    "competencies while preserving authentic experience. NEVER fabricate fake companies or degree titles. "
+    "You are an executive resume strategist. Rewrite the professional summary to align with the target job title and job description. "
+    "EVIDENCE CONSTRAINTS: (1) Only reference technologies and skills that appear in the candidate's original resume text provided below. "
+    "(2) Do NOT introduce any technology, tool, or skill from the JD that is absent from the candidate's resume. "
+    "(3) Preserve the candidate's years of experience VERBATIM — never adjust the number upward or downward to match the JD requirement. "
+    "(4) NEVER fabricate fake companies, degrees, or metrics. "
+    "Use ONLY technologies and skills already present in the candidate's verified evidence (see VERIFIED CANDIDATE SKILLS in prompt). "
+    "NEVER add technologies simply because the JD requires them. Use the candidate's exact years-of-experience value from the resume — "
+    "do NOT increase it to match JD requirements. If FORBIDDEN TERMS are listed in the prompt, never use them as candidate qualifications. "
     "Output ONLY the polished summary paragraph (3-4 sentences max) — no headers or preamble."
 )
 
@@ -27,26 +33,30 @@ TAILOR_EXPERIENCE_SYSTEM = (
     "You are a master resume editor and ATS optimizer.\n"
     "Rewrite work experience bullet points using the Google XYZ formula ('Accomplished [X] as measured by [Y], by doing [Z]').\n"
     "RULES:\n"
-    "1. MANDATORY: Every single bullet point MUST be updated to seamlessly weave in relevant keywords, tools, methodologies, and competencies from the target Job Description (matching the candidate's profession: Tech, Finance, Accounting, Sales, HR, Healthcare, Logistics, Operations, etc.) wherever applicable.\n"
+    "1. EVIDENCE-GROUNDED ONLY: Rewrite bullets using the candidate's actual experience. Use JD terminology only where the candidate already has the underlying capability (refer to VERIFIED CANDIDATE SKILLS in the prompt). Do NOT introduce any technology or tool from the JD that is absent from the candidate's resume evidence.\n"
     "2. STRICTLY LOCK & PRESERVE REAL FACTS: Never change company names, job titles, start/end dates, employment years, or locations.\n"
-    "3. Output EXACTLY the same number of bullets as input, one line per bullet.\n"
-    "4. Do NOT include bullet symbols or preamble — plain text only."
+    "3. PRESERVE METRICS VERBATIM: If the original bullet contains a number or percentage, keep it exactly. Do NOT add new metrics.\n"
+    "4. Output EXACTLY the same number of bullets as input, one line per bullet.\n"
+    "5. NEVER modify, inflate, or remove existing metrics. If the original bullet says '25% reduction', the rewritten bullet must say '25% reduction'. Do not add new metrics where none exist.\n"
+    "6. Do NOT include bullet symbols or preamble — plain text only."
 )
 
 TAILOR_SKILLS_SYSTEM = (
     "You are an ATS resume skills optimizer. Categorize and refine the skills section to maximize keyword match against the target job description.\n"
     "RULES:\n"
-    "1. Intelligently weave target ATS skills, tools, and domain proficiencies from the job description into appropriate categories.\n"
-    "2. Preserve all core existing skills from the original candidate profile.\n"
+    "1. RESUME-ONLY SKILLS: Use ONLY skills already present in the candidate's VERIFIED CANDIDATE SKILLS list provided in the prompt. You may reorder categories and skills to prioritise JD relevance, but NEVER add a new skill, tool, framework, or technology that does not appear in the VERIFIED CANDIDATE SKILLS list. The JD is a prioritisation guide only — not a source of candidate qualifications.\n"
+    "2. Preserve all core existing skills from the original candidate profile. You may reorder categories to prioritise JD-relevant ones.\n"
     "3. Output format must be strictly one line per category: 'CategoryName: Skill1, Skill2, Skill3...'"
 )
 
 TAILOR_PROJECTS_SYSTEM = (
-    "You are a master resume project strategist. Rewrite project descriptions and bullet points to highlight target methodologies, tools, and quantifiable impact.\n"
+    "You are a master resume project strategist. Rewrite project descriptions and bullet points to highlight relevant methodologies, tools, and quantifiable impact.\n"
     "RULES:\n"
-    "1. MANDATORY: Seamlessly weave matching keywords, tools, and standards from the target Job Description into every project bullet point.\n"
+    "1. EVIDENCE-GROUNDED ONLY: Rewrite bullets using the candidate's actual project experience. Use JD terminology only where the candidate already used those technologies in this project (listed in the project technologies line). Do NOT add technologies from the JD that are not in the project's original technology stack or the VERIFIED CANDIDATE SKILLS list.\n"
     "2. STRICTLY LOCK & PRESERVE REAL FACTS: Never alter project names, company names, repository links, or dates.\n"
-    "3. Output EXACTLY the same number of bullets as input, one line per bullet, plain text only."
+    "3. PRESERVE METRICS VERBATIM: Do NOT add new quantitative metrics. Only keep metrics already stated in the original project bullet.\n"
+    "4. Preserve all existing metrics exactly. Do not add new metrics.\n"
+    "5. Output EXACTLY the same number of bullets as input, one line per bullet, plain text only."
 )
 
 
@@ -61,6 +71,7 @@ class TailorOrchestrationService:
         master_resume: StructuredResume,
         job_description: str,
         job_title: str,
+        tailoring_plan: Optional[TailoringPlan] = None,
     ) -> tuple:
         """Tailor a full StructuredResume for a job description.
 
@@ -73,6 +84,27 @@ class TailorOrchestrationService:
 
         logger.info("Starting full resume tailor", job_title=job_title)
 
+        # Build constraint blocks from tailoring plan
+        forbidden_block = ""
+        safe_skills_block = ""
+        years_block = ""
+        if tailoring_plan:
+            if tailoring_plan.forbidden_claims:
+                forbidden_block = (
+                    "\n=== FORBIDDEN: DO NOT CLAIM CANDIDATE HAS THESE (absent from resume) ===\n"
+                    + ", ".join(tailoring_plan.forbidden_claims)
+                )
+            if tailoring_plan.safe_skills:
+                safe_skills_block = (
+                    "\n=== CANDIDATE VERIFIED SKILLS (use these freely) ===\n"
+                    + ", ".join(tailoring_plan.safe_skills[:50])
+                )
+            if tailoring_plan.years_of_experience:
+                years_block = (
+                    f"\n=== CANDIDATE YEARS OF EXPERIENCE (use verbatim) ===\n"
+                    f"{tailoring_plan.years_of_experience}"
+                )
+
         for i, section in enumerate(tailored.sections):
             if not section.visible:
                 continue
@@ -82,7 +114,12 @@ class TailorOrchestrationService:
             if sec_type == "summary":
                 original_text = section.content.get("text", "")
                 if original_text and original_text.strip():
-                    rewritten = self._rewrite_summary(original_text, job_description, job_title)
+                    rewritten = self._rewrite_summary(
+                        original_text, job_description, job_title,
+                        forbidden_block=forbidden_block,
+                        safe_block=safe_skills_block,
+                        years_block=years_block,
+                    )
                     if rewritten and rewritten.strip() != original_text.strip():
                         diff[f"sections[{i}].summary"] = {
                             "original": original_text,
@@ -99,7 +136,9 @@ class TailorOrchestrationService:
                     role_title = entry.get("job_title", "")
                     company = entry.get("company", "")
                     rewritten_bullets = self._rewrite_experience_bullets(
-                        bullets, job_description, job_title, role_title=role_title, company=company
+                        bullets, job_description, job_title,
+                        role_title=role_title, company=company,
+                        forbidden_block=forbidden_block, safe_block=safe_skills_block,
                     )
                     if rewritten_bullets and rewritten_bullets != bullets:
                         diff[f"sections[{i}].experience[{j}].bullets"] = {
@@ -118,7 +157,8 @@ class TailorOrchestrationService:
                         for c in categories
                     )
                     rewritten_text = self._rewrite_skills(
-                        original_skills_text, job_description, job_title
+                        original_skills_text, job_description, job_title,
+                        forbidden_block=forbidden_block, safe_block=safe_skills_block,
                     )
                     if rewritten_text and rewritten_text.strip() != original_skills_text.strip():
                         new_categories = self._parse_skills_text(rewritten_text, categories)
@@ -136,7 +176,9 @@ class TailorOrchestrationService:
                         continue
                     proj_name = entry.get("name", "")
                     rewritten_bullets = self._rewrite_project_bullets(
-                        bullets, job_description, job_title, project_name=proj_name
+                        bullets, job_description, job_title,
+                        project_name=proj_name,
+                        forbidden_block=forbidden_block, safe_block=safe_skills_block,
                     )
                     if rewritten_bullets and rewritten_bullets != bullets:
                         diff[f"sections[{i}].projects[{j}].bullets"] = {
@@ -154,12 +196,16 @@ class TailorOrchestrationService:
     # Private helpers
     # ------------------------------------------------------------------
 
-    def _rewrite_summary(self, original: str, jd: str, job_title: str) -> str:
+    def _rewrite_summary(
+        self, original: str, jd: str, job_title: str,
+        forbidden_block: str = "", safe_block: str = "", years_block: str = ""
+    ) -> str:
         user_prompt = (
             f"Target Role: {job_title}\n\n"
             f"Job Description:\n{jd[:3000]}\n\n"
             f"Original Summary:\n{original}\n\n"
-            f"Rewrite the summary:"
+            + safe_block + years_block + forbidden_block +
+            "\n\nRewrite the summary:"
         )
         try:
             return self._ai.generate_text(TAILOR_SUMMARY_SYSTEM, user_prompt).strip()
@@ -168,7 +214,9 @@ class TailorOrchestrationService:
             return original
 
     def _rewrite_experience_bullets(
-        self, bullets: list, jd: str, job_title: str, role_title: str = "", company: str = ""
+        self, bullets: list, jd: str, job_title: str,
+        role_title: str = "", company: str = "",
+        forbidden_block: str = "", safe_block: str = "",
     ) -> list:
         if not bullets:
             return bullets
@@ -177,10 +225,10 @@ class TailorOrchestrationService:
         user_prompt = (
             f"Candidate Specific Role: {role_ctx}\n"
             f"Target Applied Role: {job_title}\n\n"
-            f"Target Job Description:\n{jd[:2500]}\n\n"
-            f"Original Bullets for {role_ctx} ({len(bullets)} bullets):\n{bullets_text}\n\n"
-            f"Rewrite these {len(bullets)} bullets specifically for the candidate's experience as {role_ctx}, "
-            f"seamlessly weaving in matching technical keywords, action verbs, and impact metrics from the target Job Description. "
+            f"Target Job Description (for reference only — do NOT add skills absent from candidate's resume):\n{jd[:2500]}\n\n"
+            + safe_block + forbidden_block +
+            f"\n\nOriginal Bullets for {role_ctx} ({len(bullets)} bullets):\n{bullets_text}\n\n"
+            f"Rewrite these {len(bullets)} bullets using the candidate's actual experience from the bullets above. "
             f"Output EXACTLY {len(bullets)} bullets (one per line, no bullet symbols):"
         )
         try:
@@ -198,7 +246,9 @@ class TailorOrchestrationService:
             return bullets
 
     def _rewrite_project_bullets(
-        self, bullets: list, jd: str, job_title: str, project_name: str = ""
+        self, bullets: list, jd: str, job_title: str,
+        project_name: str = "",
+        forbidden_block: str = "", safe_block: str = "",
     ) -> list:
         if not bullets:
             return bullets
@@ -207,10 +257,10 @@ class TailorOrchestrationService:
         user_prompt = (
             f"Candidate Specific {proj_ctx}\n"
             f"Target Role: {job_title}\n\n"
-            f"Target Job Description:\n{jd[:2500]}\n\n"
-            f"Original Project Bullets ({len(bullets)} bullets):\n{bullets_text}\n\n"
-            f"Rewrite these {len(bullets)} project bullets specifically for {proj_ctx}, "
-            f"seamlessly weaving in matching technical keywords, action verbs, and quantifiable engineering metrics from the target Job Description. "
+            f"Target Job Description (for reference only — do NOT add skills absent from candidate's project):\n{jd[:2500]}\n\n"
+            + safe_block + forbidden_block +
+            f"\n\nOriginal Project Bullets ({len(bullets)} bullets):\n{bullets_text}\n\n"
+            f"Rewrite these {len(bullets)} project bullets using the candidate's actual project experience. "
             f"Output EXACTLY {len(bullets)} bullets (one per line, no bullet symbols):"
         )
         try:
@@ -227,12 +277,16 @@ class TailorOrchestrationService:
             logger.warning("Project bullets rewrite failed", error=str(e))
             return bullets
 
-    def _rewrite_skills(self, original_skills_text: str, jd: str, job_title: str) -> str:
+    def _rewrite_skills(
+        self, original_skills_text: str, jd: str, job_title: str,
+        forbidden_block: str = "", safe_block: str = "",
+    ) -> str:
         user_prompt = (
             f"Target Role: {job_title}\n\n"
-            f"Job Description:\n{jd[:2000]}\n\n"
-            f"Original Skills:\n{original_skills_text}\n\n"
-            f"Reorder skills to prioritize JD-relevant ones:"
+            f"Job Description (for prioritisation reference only):\n{jd[:2000]}\n"
+            + safe_block + forbidden_block +
+            f"\n\nOriginal Candidate Skills:\n{original_skills_text}\n\n"
+            f"Reorder and reorganise the candidate skills to prioritise JD-relevant ones. Do not add new skills:"
         )
         try:
             return self._ai.generate_text(TAILOR_SKILLS_SYSTEM, user_prompt, temperature=0.2).strip()

@@ -13,6 +13,7 @@ import json
 from typing import Optional
 
 from fastapi import APIRouter, Depends
+from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -24,6 +25,9 @@ from app.core.exceptions import BadRequestError, NotFoundError
 from app.models import User, StructuredResumeModel, TailoredResumeModel
 from app.schemas.structured_resume import StructuredResume
 from app.services.tailor_orchestration_service import TailorOrchestrationService
+from app.services.evidence_service import EvidenceService
+from app.services.requirement_matcher import RequirementMatcher
+from app.parsers.job_description_parser import parse_job_description
 
 from app.dependencies.limits import verify_auth_only
 
@@ -87,12 +91,26 @@ def tailor_resume(
     master_data = json.loads(record.resume_json)
     master_resume = StructuredResume.model_validate(master_data)
 
+    # Build evidence-grounded TailoringPlan before passing to LLM
+    evidence_service = EvidenceService()
+    matcher = RequirementMatcher()
+    parsed_jd = parse_job_description(request.job_description)
+    evidence_set = evidence_service.extract(master_resume)
+    tailoring_plan = matcher.match(evidence_set, parsed_jd)
+
+    logger.info(
+        "TailoringPlan built",
+        safe_skills=len(tailoring_plan.safe_skills),
+        forbidden_claims=len(tailoring_plan.forbidden_claims),
+    )
+
     # Run tailor orchestration
     tailor_service = TailorOrchestrationService(ai_provider=ai_provider)
     tailored_resume, diff = tailor_service.tailor_full_resume(
         master_resume=master_resume,
         job_description=request.job_description,
         job_title=request.job_title,
+        tailoring_plan=tailoring_plan,
     )
 
     # Update master resume JSON record in DB with tailored content

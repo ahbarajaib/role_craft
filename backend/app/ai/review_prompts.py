@@ -30,6 +30,7 @@ Strict Principles:
 6. **Exact Section Name Matching**: Each `section_name` in your output MUST exactly match one of the section headers provided under === CANDIDATE RESUME === in square brackets. Do not duplicate recommendations across multiple roles.
 7. **Strict Evidence-Gated Recommendations**: NEVER recommend adding, highlighting, or introducing a skill, language, framework, or technology in any section recommendation if that skill does NOT exist anywhere in the candidate's resume under === CANDIDATE RESUME ===. Recommend ONLY keywords/skills supported by candidate resume evidence.
 8. **Concise Rationale**: Keep all explanations, reasons, and impact strings concise (1-2 sentences max per item).
+9. **Missing Items Are JD Requirements, Not Candidate Evidence**: The "Missing Skills" and "Missing Technologies" listed under === MATCH ANALYSIS === are JD requirements absent from the candidate's resume. They are provided for context only. NEVER recommend adding, highlighting, or introducing any missing skill or technology as a candidate qualification UNLESS you can directly cite supporting text from === CANDIDATE RESUME ===. Absence from the resume means the candidate does not have it.
 """
 
 
@@ -42,10 +43,13 @@ def build_review_input(
     parts = [
         _format_job_context(job_description),
         "",
-        "=== DETECTOR GAP ANALYSIS ===",
+        "=== MATCH ANALYSIS (FOR CONTEXT ONLY — NOT CANDIDATE RESUME CONTENT) ===",
+        "NOTE: The items below are JD requirements not found in the candidate's resume text. They are gaps, NOT candidate claims.",
+        "Do NOT recommend adding these unless the candidate's resume under === CANDIDATE RESUME === contains direct supporting evidence.",
         f"Overall Match Coverage: {comparison.overall_coverage_percentage}%",
-        f"Missing Skills: {', '.join(comparison.missing_skills)}",
-        f"Missing Technologies: {', '.join(comparison.missing_technologies)}",
+        f"JD Required Skills Not Yet In Resume: {', '.join(comparison.missing_skills)}",
+        f"JD Required Technologies Not Yet In Resume: {', '.join(comparison.missing_technologies)}",
+        f"NOTE: These are job description requirements — NOT evidence of what the candidate has. Do NOT recommend adding these unless you find direct supporting evidence in the === CANDIDATE RESUME === section.",
         "",
         "=== CANDIDATE RESUME ===",
     ]
