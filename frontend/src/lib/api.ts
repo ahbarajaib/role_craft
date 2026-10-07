@@ -184,12 +184,14 @@ export interface BatchRewriteResponse {
 }
 
 export async function batchRewriteSections(
-  request: BatchRewriteRequest
+  request: BatchRewriteRequest,
+  signal?: AbortSignal
 ): Promise<BatchRewriteResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/resume/batch-rewrite`, {
     method: "POST",
     headers: getHeaders(),
     body: JSON.stringify(request),
+    signal,
   });
 
   if (!response.ok) {
@@ -218,12 +220,14 @@ export interface AutoTailorResponse {
 }
 
 export async function autoTailorResume(
-  request: AutoTailorRequest
+  request: AutoTailorRequest,
+  signal?: AbortSignal
 ): Promise<AutoTailorResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/resume/auto-tailor`, {
     method: "POST",
     headers: getHeaders(),
     body: JSON.stringify(request),
+    signal,
   });
 
   if (!response.ok) {
