@@ -70,11 +70,8 @@ Tech Corp India
 LOCATION:
 Bengaluru, Karnataka
 
-JOB DETAILS:
-Experience: 3-6 Yrs | Salary: ₹15-25 Lacs PA | Key Skills: React, Node.js, TypeScript
-
-JOB URL:
-https://www.naukri.com/job-listings-senior-software-engineer-123456
+JOB TYPE:
+Hybrid
 
 JOB DESCRIPTION:
 [Cleaned job description without boilerplate UI lines]

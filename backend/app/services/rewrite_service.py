@@ -128,14 +128,100 @@ You are a senior hiring manager, executive recruiter, and master resume writer.
 You are rewriting the PROFESSIONAL SUMMARY / PROFILE section of a resume to align with the target Job Description.
 
 CRITICAL PROFESSIONAL SUMMARY RULES:
-1. **Compelling 1-Paragraph Executive Summary**: Write a powerful 3-5 sentence professional summary tailored specifically to the target job title and core domain background.
+1. **Compelling 1-Paragraph Executive Summary**: Write a powerful 2-4 sentence professional summary tailored specifically to the target job title and core domain background (around 50-85 words).
 2. **Target Role Alignment**: Frame the candidate's skills and major achievements directly around the target role.
 3. **No Fluff or Invented Claims**: Keep all years of experience, core technical stack, and factual background grounded strictly in the candidate's actual resume evidence.
-4. **Active & High-Impact Tone**: Use confident, professional wording emphasizing problem-solving impact, production delivery, and domain expertise.
+4. **Anti-AI Authentic Engineering Voice (Strictly Forbidden Clichés)**: Strictly avoid cliché AI resume buzzwords. Do NOT use words such as: "results-driven", "passionate", "proven track record", "seasoned", "spearheaded", "leveraged", "dynamic professional", "adept at", "testament to", "orchestrating", "synergistic", "transformative impact". Write with direct, confident, human clarity that hiring managers respect.
 5. **Output Bounds**: Output ONLY the polished summary paragraph text. Do not include preambles or section title headers.
 6. **Resume-Only Technologies & Skills**: Only reference technologies and skills that explicitly appear in the candidate's resume. Do NOT introduce any technology, framework, tool, or skill from the Job Description that is absent from the candidate's text.
 7. **Preserve Years of Experience Verbatim**: Use the candidate's stated years of experience exactly as written in their original summary (e.g. '7+ years'). NEVER adjust or inflate years of experience to match the job description's requirement.
+8. **Third-Person Professional Stance**: Write in standard professional third-person perspective (omitting pronouns like 'I' or 'he/she', e.g., 'Senior Full Stack Developer with 7+ years of experience... Brings technical ownership...').
 """
+
+BANNED_AI_SUMMARY_PHRASES = [
+    r"\bresults-driven\b",
+    r"\bproven track record\b",
+    r"\bseasoned professional\b",
+    r"\bseasoned\b",
+    r"\bdynamic professional\b",
+    r"\bdynamic\b",
+    r"\bpassionate (engineer|developer|professional|architect)\b",
+    r"\bpassionate\b",
+    r"\bspearhead(ed|ing|s)?\b",
+    r"\badept at\b",
+    r"\bsynerg(y|ies|istic|ize|ized|izing)\b",
+    r"\borchestrating excellence\b",
+    r"\btestament to\b",
+    r"\bdriving digital transformation\b",
+    r"\bleveraged\b",
+]
+
+
+def sanitize_anti_ai_summary(text: str) -> str:
+    """Strip cliché AI buzzwords if any slip through into summary rewrites."""
+    cleaned = text
+    for pat in BANNED_AI_SUMMARY_PHRASES:
+        cleaned = re.sub(pat, "", cleaned, flags=re.IGNORECASE)
+    # Clean up broken articles/prepositions like "with a of" or "a and"
+    cleaned = re.sub(r"\bwith\s+a\s+of\b", "with", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\ba\s+and\b", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s+([,\.])", r"\1", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned
+
+
+def build_summary_positioning_instructions(
+    positioning_mode: str | None = None,
+    user_instructions: str | None = None,
+) -> str | None:
+    """Build guidance for leadership / role positioning presets in professional summaries."""
+    pos_mode = (positioning_mode or "").lower().strip()
+    if not pos_mode and user_instructions:
+        u_lower = user_instructions.lower()
+        if any(k in u_lower for k in ["team lead", "lead developer", "stepping up", "leadership", "lead role"]):
+            pos_mode = "team_lead_transition"
+        elif any(k in u_lower for k in ["tech lead", "hands-on lead", "hands on lead"]):
+            pos_mode = "hands_on_tech_lead"
+        elif any(k in u_lower for k in ["individual contributor", "senior ic"]):
+            pos_mode = "senior_ic"
+
+    preset_guidance = None
+    if pos_mode in ("team_lead", "team_lead_transition", "lead"):
+        preset_guidance = (
+            "=== ROLE POSITIONING: STEPPING UP / TRANSITIONING TO TEAM LEAD ===\n"
+            "The candidate is positioning for a Team Lead / Lead Software Developer role in their domain.\n"
+            "1. Ground the summary in their verified senior engineering foundation from evidence.\n"
+            "2. Highlight demonstrated readiness for technical ownership: architecture, code reviews, mentoring, and technical ownership, with reliable sprint delivery.\n"
+            "3. TRUTHFUL & AUTHENTIC POSITIONING: Never claim a formal Team Lead job title if absent from the resume. Instead, honestly bridge their real senior engineering depth to lead responsibilities (e.g., 'Senior Full Stack Developer positioning for Lead Full Stack roles; driving technical architecture, code reviews, developer mentorship, and reliable sprint delivery.')."
+        )
+    elif pos_mode in ("hands_on_tech_lead", "tech_lead"):
+        preset_guidance = (
+            "=== ROLE POSITIONING: HANDS-ON TECHNICAL LEAD ===\n"
+            "The candidate is positioning as a Hands-on Tech Lead.\n"
+            "Emphasize the dual-track credibility: deep hands-on coding and technical craftsmanship paired with technical direction, system architecture, engineering standards, and team delivery execution."
+        )
+    elif pos_mode in ("senior_ic", "individual_contributor"):
+        preset_guidance = (
+            "=== ROLE POSITIONING: SENIOR INDIVIDUAL CONTRIBUTOR ===\n"
+            "The candidate is positioning as a senior technical specialist.\n"
+            "Emphasize deep technical mastery, resilient architecture design, and core software engineering craftsmanship without team management or people leadership emphasis."
+        )
+    elif pos_mode in ("default", "target_match"):
+        preset_guidance = (
+            "=== ROLE POSITIONING: TARGET JOB POSITIONING ===\n"
+            "Align professional focus directly with the target job title and domain requirements."
+        )
+
+    parts = []
+    if preset_guidance:
+        parts.append(preset_guidance)
+    if user_instructions and user_instructions.strip():
+        parts.append(f"USER REFINEMENT INSTRUCTIONS: {user_instructions.strip()}")
+
+    if parts:
+        return "\n\n".join(parts)
+    return None
+
 
 
 class RewriteService:
@@ -156,6 +242,7 @@ class RewriteService:
         user_instructions: str | None = None,
         metric_inputs: dict[str, str] | None = None,
         preloaded_sections: list | None = None,
+        positioning_mode: str | None = None,
     ) -> RewriteSectionResponse:
         """Rewrite a single section of the resume using OpenAI structured outputs."""
         logger.info(
@@ -164,6 +251,7 @@ class RewriteService:
             section=section_name,
             has_user_instructions=user_instructions is not None,
             has_metric_inputs=metric_inputs is not None,
+            positioning_mode=positioning_mode,
         )
 
         # 1. Load document sections (use preloaded if available to save disk I/O & XML parsing)
@@ -392,6 +480,11 @@ class RewriteService:
                 f"=== CANDIDATE INSTRUCTIONS FOR REFINEMENT (PRIORITISE THESE) ===\n{user_instructions.strip()}"
             )
 
+        if is_summary_section:
+            pos_inst = build_summary_positioning_instructions(positioning_mode, user_instructions)
+            if pos_inst:
+                input_parts.append(pos_inst)
+
         input_parts.extend([
             f"=== EVIDENCE CONTEXT (FROM REST OF RESUME) ===\n{evidence_context.strip()}",
             f"=== ORIGINAL SECTION CONTENT TO REWRITE ===\n{original_text.strip()}"
@@ -475,6 +568,9 @@ class RewriteService:
             changes_made=len(result.changes),
         )
 
+        if is_summary_section:
+            result.rewritten_text = sanitize_anti_ai_summary(result.rewritten_text)
+
         return result
 
     def rewrite_from_json(
@@ -487,6 +583,7 @@ class RewriteService:
         recommendations: list[str],
         user_instructions: str | None = None,
         metric_inputs: dict[str, str] | None = None,
+        positioning_mode: str | None = None,
     ) -> "RewriteSectionResponse":
         """Rewrite a single section using JSON content instead of a DOCX file."""
 
@@ -683,6 +780,7 @@ class RewriteService:
             metric_inputs=metric_inputs,
             is_skills_section=section_type == "skills",
             is_summary_section=section_type == "summary",
+            positioning_mode=positioning_mode,
         )
 
     def _rewrite_section_text(
@@ -696,6 +794,7 @@ class RewriteService:
         metric_inputs: dict[str, str] | None,
         is_skills_section: bool,
         is_summary_section: bool,
+        positioning_mode: str | None = None,
     ) -> "RewriteSectionResponse":
         """Core AI rewrite logic extracted for reuse between DOCX and JSON modes."""
         import re as _re
@@ -761,6 +860,14 @@ class RewriteService:
             metric_str = "\n".join(f"- {k}: {v}" for k, v in metric_inputs.items())
             input_parts.append(f"=== CANDIDATE-SUPPLIED METRICS & DATA POINTS ===\n{metric_str}")
 
+        if user_instructions:
+            input_parts.append(f"=== CANDIDATE INSTRUCTIONS FOR REFINEMENT ===\n{user_instructions.strip()}")
+
+        if is_summary_section:
+            pos_inst = build_summary_positioning_instructions(positioning_mode, user_instructions)
+            if pos_inst:
+                input_parts.append(pos_inst)
+
         input_parts.append(f"=== EVIDENCE CONTEXT (FROM REST OF RESUME) ===\n{evidence_context}")
         input_parts.append(f"=== ORIGINAL SECTION TEXT TO REWRITE ===\n{original_text}")
 
@@ -777,6 +884,8 @@ class RewriteService:
             raise BadRequestError(f"AI rewrite failed: {str(exc)}")
 
         rewritten_text, _ = sanitize_unsupported_skills_from_text(result.rewritten_text, effective_unsupported_techs)
+        if is_summary_section:
+            rewritten_text = sanitize_anti_ai_summary(rewritten_text)
         result.rewritten_text = rewritten_text
         result.original_text = original_text
         result.section = section_name
@@ -789,6 +898,7 @@ class RewriteService:
         sections: list,
         user_instructions: str | None = None,
         metric_inputs: dict[str, str] | None = None,
+        positioning_mode: str | None = None,
     ) -> dict[str, str]:
         """Execute parallel batch AI tailoring across multiple sections concurrently."""
         results_map: dict[str, str] = {}
@@ -806,6 +916,7 @@ class RewriteService:
             sec_type = item.section_type
             sec_content = item.section_content
             recs = item.recommendations or []
+            item_pos_mode = getattr(item, "positioning_mode", None) or positioning_mode
 
             try:
                 # Direct header pass-through: target job title designation does not require LLM call
@@ -838,6 +949,7 @@ class RewriteService:
                         recommendations=recs,
                         user_instructions=user_instructions,
                         metric_inputs=metric_inputs,
+                        positioning_mode=item_pos_mode,
                     )
                 elif document_id:
                     res = self.rewrite(
@@ -848,6 +960,7 @@ class RewriteService:
                         user_instructions=user_instructions,
                         metric_inputs=metric_inputs,
                         preloaded_sections=cached_sections,
+                        positioning_mode=item_pos_mode,
                     )
                 else:
                     return sec_name, ""

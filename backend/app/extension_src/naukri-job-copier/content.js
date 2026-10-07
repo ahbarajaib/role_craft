@@ -462,6 +462,98 @@
     return skills.join(', ');
   }
 
+  function normalizeJobType(raw) {
+    if (!raw || typeof raw !== 'string') return '';
+    const s = raw.trim();
+    const lower = s.toLowerCase();
+
+    // Workplace mode first
+    if (lower.includes('hybrid')) return 'Hybrid';
+    if (lower.includes('remote') || lower.includes('telecommute') || lower.includes('work from home') || lower.includes('wfh')) return 'Remote';
+    if (lower.includes('on-site') || lower.includes('onsite') || lower.includes('in-office') || lower.includes('in office') || lower.includes('in-person') || lower.includes('in person')) return 'On-site';
+
+    // Employment type
+    if (lower.includes('full-time') || lower.includes('full time') || lower.includes('full_time') || lower.includes('permanent')) return 'Full-time';
+    if (lower.includes('part-time') || lower.includes('part time') || lower.includes('part_time')) return 'Part-time';
+    if (lower.includes('contract') || lower.includes('temporary') || lower.includes('contractual') || lower.includes('freelance')) return 'Contract';
+    if (lower.includes('internship') || lower.includes('intern')) return 'Internship';
+
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function cleanLocationAndExtractJobType(locationStr, existingJobType) {
+    if (!locationStr) return { location: '', jobType: existingJobType || '' };
+    let loc = locationStr.trim();
+    let jobType = existingJobType || '';
+
+    if (!jobType) {
+      const match = loc.match(/\b(hybrid|remote|on-site|onsite|in-person|in-office|wfh|work from home)\b/i);
+      if (match) {
+        jobType = normalizeJobType(match[1]);
+      }
+    }
+
+    // Strip workplace markers from location string
+    loc = loc
+      .replace(/[\s·•\-]+\b(hybrid|remote|on-site|onsite|in-person|in-office|wfh|work from home)\b.*$/i, '')
+      .replace(/^[\s·•\-]*\b(hybrid|remote|on-site|onsite|in-person|in-office|wfh|work from home)\b[\s·•\:\-]+/i, '')
+      .replace(/\((?:hybrid|remote|on-site|onsite|in-person|in-office|wfh|work from home)\)/gi, '')
+      .replace(/\[(?:hybrid|remote|on-site|onsite|in-person|in-office|wfh|work from home)\]/gi, '')
+      .replace(/^[·•,\-\s]+|[·•,\-\s]+$/g, '')
+      .trim();
+
+    return { location: loc, jobType: normalizeJobType(jobType) };
+  }
+
+  function extractJobType(locationText) {
+    const panel = findJobPanel() || document;
+
+    // Strategy 1: Check Naukri DOM selectors for work mode / employment type
+    const selectors = [
+      '[class*="workmode" i]',
+      '[class*="work-mode" i]',
+      '[class*="wfh" i]',
+      '[class*="workplace" i]',
+      '[class*="employmentType" i]',
+      '[class*="employment-type" i]',
+      '[class*="job-type" i]',
+      '[class*="jobType" i]',
+      '.styles_details__J4zp- [class*="details" i]',
+    ];
+
+    for (const sel of selectors) {
+      try {
+        const el = panel.querySelector(sel);
+        if (el) {
+          const txt = (el.innerText || el.textContent || '').trim();
+          if (/\b(hybrid|remote|on-site|onsite|wfh|work from home)\b/i.test(txt)) {
+            const m = txt.match(/\b(hybrid|remote|on-site|onsite|wfh|work from home)\b/i);
+            if (m) return normalizeJobType(m[1]);
+          }
+          if (/\b(full-time|full time|part-time|part time|contract|internship|permanent)\b/i.test(txt)) {
+            const m = txt.match(/\b(full-time|full time|part-time|part time|contract|internship|permanent)\b/i);
+            if (m) return normalizeJobType(m[1]);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Strategy 2: Check JSON-LD schema
+    const jsonLd = getJsonLdJobData();
+    if (jsonLd) {
+      if (jsonLd.jobLocationType === 'TELECOMMUTE') return 'Remote';
+      if (jsonLd.employmentType) return normalizeJobType(String(jsonLd.employmentType));
+    }
+
+    // Strategy 3: Check location text
+    if (locationText) {
+      const m = locationText.match(/\b(hybrid|remote|on-site|onsite|wfh|work from home)\b/i);
+      if (m) return normalizeJobType(m[1]);
+    }
+
+    return '';
+  }
+
   function findDescriptionElement(scope) {
     const root = scope || findJobPanel() || document;
     const selectors = [
@@ -627,17 +719,8 @@
       output += `LOCATION:\n${details.location}\n\n`;
     }
 
-    const metaParts = [];
-    if (details.experience) metaParts.push(`Experience: ${details.experience}`);
-    if (details.salary) metaParts.push(`Salary: ${details.salary}`);
-    if (details.skills) metaParts.push(`Key Skills: ${details.skills}`);
-
-    if (metaParts.length > 0) {
-      output += `JOB DETAILS:\n${metaParts.join(' | ')}\n\n`;
-    }
-
-    if (details.url) {
-      output += `JOB URL:\n${details.url}\n\n`;
+    if (details.jobType) {
+      output += `JOB TYPE:\n${details.jobType}\n\n`;
     }
 
     output += `JOB DESCRIPTION:\n${details.description || details.title || ''}`;
@@ -734,21 +817,17 @@
     try {
       const title = extractJobTitle();
       const company = extractCompany();
-      const location = extractLocation();
-      const experience = extractExperience();
-      const salary = extractSalary();
-      const skills = extractSkills();
+      const rawLocation = extractLocation();
+      const rawJobType = extractJobType(rawLocation);
+      const locAndType = cleanLocationAndExtractJobType(rawLocation, rawJobType);
       const url = extractURL();
       const description = extractDescription();
 
       const formatted = formatForClipboard({
         title,
         company,
-        location,
-        experience,
-        salary,
-        skills,
-        url,
+        location: locAndType.location,
+        jobType: locAndType.jobType,
         description,
       });
 

@@ -70,11 +70,8 @@ Infosys
 LOCATION:
 Bengaluru, Karnataka
 
-JOB DETAILS:
-Full-time · ₹18,00,000 - ₹24,00,000 a year
-
-JOB URL:
-https://in.indeed.com/viewjob?jk=abcdef1234567890
+JOB TYPE:
+Hybrid
 
 JOB DESCRIPTION:
 About the Role:

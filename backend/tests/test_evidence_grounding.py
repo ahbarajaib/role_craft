@@ -14,6 +14,9 @@ from app.services.evidence_service import EvidenceService
 from app.services.requirement_matcher import RequirementMatcher
 from app.services.rewrite_service import (
     sanitize_unsupported_skills_from_text,
+    sanitize_anti_ai_summary,
+    build_summary_positioning_instructions,
+    BANNED_AI_SUMMARY_PHRASES,
     REWRITE_SYSTEM_PROMPT,
     SKILLS_REWRITE_SYSTEM_PROMPT,
     SUMMARY_REWRITE_SYSTEM_PROMPT,
@@ -376,3 +379,43 @@ def test_tailor_skills_system_no_jd_injection():
 def test_summary_prompt_preserves_years_of_experience():
     assert "Preserve Years of Experience Verbatim" in SUMMARY_REWRITE_SYSTEM_PROMPT
     assert "Resume-Only Technologies" in SUMMARY_REWRITE_SYSTEM_PROMPT
+    assert "Strictly Forbidden Clichés" in SUMMARY_REWRITE_SYSTEM_PROMPT
+
+
+def test_build_summary_positioning_instructions_presets():
+    # Team Lead Transition
+    tl_instr = build_summary_positioning_instructions("team_lead_transition", "Focus on React and Node")
+    assert "STEPPING UP / TRANSITIONING TO TEAM LEAD" in tl_instr
+    assert "architecture, code reviews, mentoring, and technical ownership" in tl_instr
+    assert "Focus on React and Node" in tl_instr
+    assert "Never claim a formal Team Lead job title" in tl_instr
+
+    # Hands-on Tech Lead
+    lead_instr = build_summary_positioning_instructions("hands_on_tech_lead")
+    assert "HANDS-ON TECHNICAL LEAD" in lead_instr
+    assert "dual-track credibility" in lead_instr.lower()
+
+    # Senior IC
+    ic_instr = build_summary_positioning_instructions("senior_ic")
+    assert "SENIOR INDIVIDUAL CONTRIBUTOR" in ic_instr
+
+    # Default
+    default_instr = build_summary_positioning_instructions("default")
+    assert "TARGET JOB POSITIONING" in default_instr
+
+
+def test_sanitize_anti_ai_summary_cleans_banned_cliches():
+    ai_cliche_text = (
+        "Results-driven Senior Developer with a proven track record of spearheading scalable solutions. "
+        "A passionate and dynamic professional who leverages cutting-edge technology to orchestrate synergies."
+    )
+    cleaned = sanitize_anti_ai_summary(ai_cliche_text)
+    
+    # Banned clichés should be removed
+    lower_cleaned = cleaned.lower()
+    assert "results-driven" not in lower_cleaned
+    assert "proven track record" not in lower_cleaned
+    assert "spearheading" not in lower_cleaned
+    assert "passionate" not in lower_cleaned
+    assert "dynamic professional" not in lower_cleaned
+    assert "synergies" not in lower_cleaned

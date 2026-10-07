@@ -67,6 +67,10 @@ class RewriteSectionRequest(BaseModel):
         default=None,
         description="Optional candidate-provided metrics to format into Google XYZ bullets."
     )
+    positioning_mode: str | None = Field(
+        default=None,
+        description="Optional role positioning mode for professional summary: 'team_lead_transition' | 'hands_on_tech_lead' | 'senior_ic' | 'default'."
+    )
 
     @field_validator("section_name")
     @classmethod
@@ -112,6 +116,7 @@ class BatchRewriteItemRequest(BaseModel):
     section_type: str | None = None
     section_content: Any | None = None
     recommendations: list[str] = Field(default=[])
+    positioning_mode: str | None = None
 
 
 class BatchRewriteRequest(BaseModel):
@@ -122,6 +127,7 @@ class BatchRewriteRequest(BaseModel):
     sections: list[BatchRewriteItemRequest]
     user_instructions: str | None = None
     metric_inputs: dict[str, str] | None = None
+    positioning_mode: str | None = None
 
 
 class BatchRewriteResponse(BaseModel):

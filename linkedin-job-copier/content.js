@@ -469,6 +469,112 @@
     return null;
   }
 
+  // ---- 6b. Job Type & Workplace Extraction ----
+
+  function normalizeJobType(raw) {
+    if (!raw || typeof raw !== 'string') return '';
+    const s = raw.trim();
+    const lower = s.toLowerCase();
+
+    // Check workplace mode first (Hybrid / Remote / On-site)
+    if (lower.includes('hybrid')) return 'Hybrid';
+    if (lower.includes('remote') || lower.includes('telecommute') || lower.includes('work from home') || lower.includes('wfh')) return 'Remote';
+    if (lower.includes('on-site') || lower.includes('onsite') || lower.includes('in-office') || lower.includes('in office') || lower.includes('work from office') || lower.includes('in-person') || lower.includes('in person')) return 'On-site';
+
+    // Check employment type
+    if (lower.includes('full-time') || lower.includes('full time') || lower.includes('full_time') || lower.includes('permanent')) return 'Full-time';
+    if (lower.includes('part-time') || lower.includes('part time') || lower.includes('part_time')) return 'Part-time';
+    if (lower.includes('contract') || lower.includes('temporary') || lower.includes('contractual') || lower.includes('freelance')) return 'Contract';
+    if (lower.includes('internship') || lower.includes('intern')) return 'Internship';
+
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function cleanLocationAndExtractJobType(locationStr, existingJobType) {
+    if (!locationStr) return { location: '', jobType: existingJobType || '' };
+    let loc = locationStr.trim();
+    let jobType = existingJobType || '';
+
+    if (!jobType) {
+      const match = loc.match(/\b(hybrid|remote|on-site|onsite|work from office|in-office|wfh)\b/i);
+      if (match) {
+        jobType = normalizeJobType(match[1]);
+      }
+    }
+
+    // Strip workplace markers from location string
+    loc = loc
+      .replace(/[\s·•\-]+\b(hybrid|remote|on-site|onsite|work from office|in-office|wfh)\b.*$/i, '')
+      .replace(/^[\s·•\-]*\b(hybrid|remote|on-site|onsite|work from office|in-office|wfh)\b[\s·•\:\-]+/i, '')
+      .replace(/\((?:hybrid|remote|on-site|onsite|work from office|in-office|wfh)\)/gi, '')
+      .replace(/\[(?:hybrid|remote|on-site|onsite|work from office|in-office|wfh)\]/gi, '')
+      .replace(/^[·•,\-\s]+|[·•,\-\s]+$/g, '')
+      .trim();
+
+    return { location: loc, jobType: normalizeJobType(jobType) };
+  }
+
+  function extractJobType(panel, locationText) {
+    if (!panel) return '';
+
+    // Strategy 1: Check workplace-type and job-insight badges on modern LinkedIn
+    const insightSelectors = [
+      '.job-details-jobs-unified-top-card__job-insight',
+      '.jobs-unified-top-card__job-insight',
+      'li.job-details-jobs-unified-top-card__job-insight',
+      'li.jobs-unified-top-card__job-insight',
+      '[class*="workplace-type" i]',
+      '[class*="job-insight" i]',
+      'span[class*="workplace" i]',
+    ];
+
+    for (const sel of insightSelectors) {
+      try {
+        const els = panel.querySelectorAll(sel);
+        for (const el of els) {
+          const txt = (el.textContent || '').trim();
+          if (/\b(hybrid|remote|on-site|onsite)\b/i.test(txt)) {
+            const m = txt.match(/\b(hybrid|remote|on-site|onsite)\b/i);
+            if (m) return normalizeJobType(m[1]);
+          }
+          if (/\b(full-time|part-time|contract|internship)\b/i.test(txt)) {
+            const m = txt.match(/\b(full-time|part-time|contract|internship)\b/i);
+            if (m) return normalizeJobType(m[1]);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Strategy 2: Check JSON-LD
+    try {
+      const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+      for (const s of scripts) {
+        const data = JSON.parse(s.textContent || '{}');
+        if (data['@type'] === 'JobPosting') {
+          if (data.jobLocationType === 'TELECOMMUTE') return 'Remote';
+          if (data.employmentType) return normalizeJobType(String(data.employmentType));
+        }
+      }
+    } catch (e) {}
+
+    // Strategy 3: Check location text for workplace indicators
+    if (locationText) {
+      const m = locationText.match(/\b(hybrid|remote|on-site|onsite)\b/i);
+      if (m) return normalizeJobType(m[1]);
+    }
+
+    // Strategy 4: Top card text scan for explicit workplace pill
+    const topCard = panel.querySelector('.jobs-unified-top-card, .job-details-jobs-unified-top-card') || panel;
+    const topText = (topCard.textContent || '').slice(0, 800);
+    const topMatch = topText.match(/\b(hybrid|remote|on-site|onsite)\b/i);
+    if (topMatch) return normalizeJobType(topMatch[1]);
+
+    const empMatch = topText.match(/\b(full-time|part-time|contract|internship)\b/i);
+    if (empMatch) return normalizeJobType(empMatch[1]);
+
+    return '';
+  }
+
   // ---- 7. Show More Expansion ----
 
   /**
@@ -758,15 +864,21 @@
   function formatForClipboard(details) {
     let output = '';
 
-    output += `JOB TITLE:\n${details.title}\n\n`;
-    output += `COMPANY:\n${details.company}\n\n`;
+    output += `JOB TITLE:\n${details.title || 'Unknown Title'}\n\n`;
+
+    if (details.company) {
+      output += `COMPANY:\n${details.company}\n\n`;
+    }
 
     if (details.location) {
       output += `LOCATION:\n${details.location}\n\n`;
     }
 
-    output += `JOB URL:\n${details.url}\n\n`;
-    output += `JOB DESCRIPTION:\n${details.description}`;
+    if (details.jobType) {
+      output += `JOB TYPE:\n${details.jobType}\n\n`;
+    }
+
+    output += `JOB DESCRIPTION:\n${details.description || details.title || ''}`;
 
     return output.trim();
   }
@@ -1012,10 +1124,17 @@
       await expandShowMore(panel);
 
       // Step 3: Extract all job details
+      const rawTitle = extractTitle(panel);
+      const rawCompany = extractCompany(panel);
+      const rawLocation = extractLocation(panel);
+      const rawJobType = extractJobType(panel, rawLocation);
+      const locAndType = cleanLocationAndExtractJobType(rawLocation, rawJobType);
+
       const details = {
-        title: extractTitle(panel),
-        company: extractCompany(panel),
-        location: extractLocation(panel),
+        title: rawTitle,
+        company: rawCompany,
+        location: locAndType.location,
+        jobType: locAndType.jobType,
         description: extractDescription(panel),
         url: extractURL(),
       };
@@ -1024,6 +1143,7 @@
         title: details.title,
         company: details.company,
         location: details.location,
+        jobType: details.jobType,
         descriptionLength: details.description
           ? details.description.length
           : 0,

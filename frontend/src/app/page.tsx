@@ -633,6 +633,69 @@ function filterBulletsByChecked(text: string, excludedIndexes: Set<number>): str
   return lines.filter((_, i) => !excludedIndexes.has(i)).join("\n");
 }
 
+// ─── Summary Leadership & Role Positioning Presets ───────────────────────────
+export interface SummaryPositioningPreset {
+  id: string;
+  label: string;
+  badge: string;
+  shortLabel: string;
+  icon: string;
+  desc: string;
+  instruction: string;
+}
+
+export const SUMMARY_POSITIONING_PRESETS: SummaryPositioningPreset[] = [
+  {
+    id: "team_lead_transition",
+    label: "Step Up to Team Lead",
+    badge: "🚀 Team Lead Transition",
+    shortLabel: "Team Lead",
+    icon: "🚀",
+    desc: "Position senior engineering depth for lead ownership: architecture, code reviews, mentoring, and sprint delivery without claiming false past titles.",
+    instruction: "Position the candidate as a senior developer transitioning to Team Lead; emphasize architecture, code reviews, developer mentorship, and reliable delivery without claiming a formal Team Lead title."
+  },
+  {
+    id: "hands_on_tech_lead",
+    label: "Hands-on Tech Lead",
+    badge: "👑 Hands-on Tech Lead",
+    shortLabel: "Tech Lead",
+    icon: "👑",
+    desc: "Dual-track credibility: deep coding craftsmanship paired with technical direction, system architecture, and engineering standards.",
+    instruction: "Position as a Hands-on Tech Lead with dual-track excellence in core coding, system architecture, standards, and technical direction."
+  },
+  {
+    id: "senior_ic",
+    label: "Senior IC (Specialist)",
+    badge: "💻 Senior IC",
+    shortLabel: "Senior IC",
+    icon: "💻",
+    desc: "Pure deep technical execution, resilient architecture, and specialized engineering problem solving.",
+    instruction: "Position as a deep technical Senior Individual Contributor; emphasize technical mastery, resilient architecture design, and complex implementation."
+  },
+  {
+    id: "default",
+    label: "Target Job Match",
+    badge: "🎯 Job Match",
+    shortLabel: "Job Match",
+    icon: "🎯",
+    desc: "Direct alignment matching the target job description title and core technical requirements.",
+    instruction: "Align professional summary directly with the target job title and core technical requirements."
+  }
+];
+
+export function isSummarySection(sectionName?: string | null): boolean {
+  if (!sectionName) return false;
+  const lower = sectionName.toLowerCase().trim();
+  return (
+    lower.includes("summary") ||
+    lower.includes("profile") ||
+    lower.includes("about") ||
+    lower.includes("objective") ||
+    lower === "executive summary" ||
+    lower === "professional summary"
+  );
+}
+
 // ─── SectionCard React Component (replaces renderSectionCard function) ────────
 interface SectionCardProps {
   section: ReviewedSection;
@@ -643,9 +706,9 @@ interface SectionCardProps {
   previousRewrittenText: string | undefined;
   onRevert: (name: string) => void;
   onUndoLastRewrite: (name: string) => void;
-  onImproveClick: (name: string, recs: string[]) => void;
+  onImproveClick: (name: string, recs: string[], positioningMode?: string) => void;
   inlineLoadingSections?: Record<string, boolean>;
-  triggerInlineRewrite?: (name: string, recs: string[]) => void;
+  triggerInlineRewrite?: (name: string, recs: string[], positioningMode?: string) => void;
   onBulletExclusionChange?: (sectionName: string, excludedIndexes: Set<number>) => void;
   isPatchingApplied?: boolean;
   masterResume?: StructuredResume | null;
@@ -671,6 +734,10 @@ function SectionCard({
   isTailoringEnabled = true,
   onToggleTailoring,
 }: SectionCardProps) {
+  // Check if this card represents a professional summary/profile section
+  const isSummary = isSummarySection(section.section_name);
+  const [selectedPositioning, setSelectedPositioning] = useState<string>("team_lead_transition");
+
   // Per-bullet checkbox state: set of line indexes that are UNCHECKED (excluded)
   const [uncheckedBullets, setUncheckedBullets] = useState<Set<number>>(new Set());
 
@@ -767,6 +834,11 @@ function SectionCard({
                     Pending
                   </>
                 )}
+                {isSummary && rewrittenText && (
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-extrabold px-2 py-0.5 rounded-full border bg-teal-50 dark:bg-slate-900/90 text-teal-800 dark:text-teal-300 border-teal-300 shrink-0">
+                    {SUMMARY_POSITIONING_PRESETS.find(p => p.id === selectedPositioning)?.badge || "🚀 Team Lead"}
+                  </span>
+                )}
               </span>
             ) : null}
           </h3>
@@ -826,11 +898,11 @@ function SectionCard({
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-teal-600 dark:text-teal-400 animate-spin" />
                   <span className="text-xs font-black text-[#0F172A] dark:text-teal-200 uppercase tracking-wider">
-                    AI Tailoring {section.section_name}...
+                    {isSummary ? `AI Positioning Summary for ${SUMMARY_POSITIONING_PRESETS.find(p => p.id === selectedPositioning)?.shortLabel || "Leadership"}...` : `AI Tailoring ${section.section_name}...`}
                   </span>
                 </div>
                 <span className="text-[10px] font-extrabold text-teal-700 dark:text-teal-300 bg-[#E6F7F4] dark:bg-slate-900/60 px-2 py-0.5 rounded-md border border-teal-200">
-                  Google XYZ Action-Impact Formula
+                  {isSummary ? "🛡️ Anti-AI Authentic Voice" : "Google XYZ Action-Impact Formula"}
                 </span>
               </div>
               <div className="space-y-2 pt-1">
@@ -853,6 +925,11 @@ function SectionCard({
                   {hasBullets && (
                     <span className="text-[9px] font-semibold text-teal-600 dark:text-teal-400 bg-[#E6F7F4] dark:bg-slate-900/60 border border-teal-200 dark:border-slate-800 px-1.5 py-0.5 rounded-md">
                       ✓ Uncheck bullets to exclude
+                    </span>
+                  )}
+                  {isSummary && (
+                    <span className="text-[9px] font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                      🛡️ Authentic Anti-AI
                     </span>
                   )}
                 </div>
@@ -883,9 +960,17 @@ function SectionCard({
                     onClick={(e) => {
                       e.stopPropagation();
                       if (triggerInlineRewrite) {
-                        triggerInlineRewrite(section.section_name, section.recommendations);
+                        triggerInlineRewrite(
+                          section.section_name,
+                          section.recommendations,
+                          isSummary ? selectedPositioning : undefined
+                        );
                       } else {
-                        onImproveClick(section.section_name, section.recommendations);
+                        onImproveClick(
+                          section.section_name,
+                          section.recommendations,
+                          isSummary ? selectedPositioning : undefined
+                        );
                       }
                     }}
                     className="flex items-center gap-1 text-[10px] text-teal-700 dark:text-teal-300 font-extrabold px-2.5 py-1 border border-teal-300 dark:border-teal-700 rounded-lg bg-[#E6F7F4] dark:bg-slate-900/80 hover:bg-indigo-200 transition-all duration-300 select-none cursor-pointer"
@@ -896,7 +981,11 @@ function SectionCard({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onImproveClick(section.section_name, section.recommendations);
+                      onImproveClick(
+                        section.section_name,
+                        section.recommendations,
+                        isSummary ? selectedPositioning : undefined
+                      );
                     }}
                     className="flex items-center gap-1 text-[10px] text-slate-800 dark:text-slate-200 font-extrabold px-2.5 py-1 border border-slate-300 dark:border-slate-700 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 transition-all duration-300 select-none cursor-pointer"
                   >
@@ -905,6 +994,47 @@ function SectionCard({
                   </button>
                 </div>
               </div>
+
+              {/* Quick Positioning Switcher for Summary */}
+              {isSummary && (
+                <div className="bg-gradient-to-r from-teal-50/70 via-purple-50/50 to-slate-50 dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-slate-900/40 p-2.5 rounded-xl border border-teal-200/80 dark:border-teal-500/20 flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                      <span>🎯 Role:</span>
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {SUMMARY_POSITIONING_PRESETS.map((preset) => {
+                        const isSelected = selectedPositioning === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedPositioning(preset.id);
+                              if (triggerInlineRewrite) {
+                                triggerInlineRewrite(section.section_name, section.recommendations, preset.id);
+                              }
+                            }}
+                            className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                              isSelected
+                                ? "bg-teal-600 text-white shadow-xs ring-1 ring-teal-500"
+                                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 border border-slate-200 dark:border-slate-800"
+                            }`}
+                            title={`Switch positioning to ${preset.label} and re-tailor`}
+                          >
+                            <span>{preset.icon}</span>
+                            <span>{preset.shortLabel}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <span className="text-[9px] text-teal-800 dark:text-teal-300 font-medium italic">
+                    Click any role above to switch & re-tailor instantly
+                  </span>
+                </div>
+              )}
 
               {/* Side-by-side Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -942,6 +1072,103 @@ function SectionCard({
                       variant="emerald"
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Dedicated Professional Summary Positioning Control Box */}
+          {isSummary && (
+            <div className="p-4 bg-gradient-to-r from-teal-50/70 via-purple-50/50 to-slate-50 dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-slate-900/40 rounded-xl border border-teal-200/90 dark:border-teal-500/30 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="h-4 w-4 text-teal-600 dark:text-teal-400 animate-pulse" />
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                    Summary Role & Leadership Positioning
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700 flex items-center gap-1">
+                    🛡️ Anti-AI Authentic Voice (Zero Clichés)
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                Applying for a Team Lead or Senior role? Position your senior engineering background for technical ownership (architecture, code reviews, mentoring, delivery) with grounded human phrasing — without fabricating false past titles or using robotic buzzwords.
+              </p>
+
+              {/* Preset Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
+                {SUMMARY_POSITIONING_PRESETS.map((preset) => {
+                  const isSelected = selectedPositioning === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPositioning(preset.id);
+                      }}
+                      className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-teal-600 text-white border-teal-700 shadow-sm ring-2 ring-teal-500/20"
+                          : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-teal-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[11px] font-bold flex items-center gap-1">
+                          <span>{preset.icon}</span>
+                          <span className="truncate">{preset.shortLabel}</span>
+                        </span>
+                        {isSelected && (
+                          <span className="text-[8px] bg-white/20 text-white font-extrabold px-1.5 py-0.2 rounded-full uppercase">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <div className={`text-[10px] mt-1 line-clamp-2 leading-tight ${isSelected ? "text-indigo-100" : "text-slate-500 dark:text-slate-400"}`}>
+                        {preset.desc}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Action Buttons inside Positioning Box */}
+              <div className="pt-1 flex items-center justify-between flex-wrap gap-2 border-t border-slate-200/80 dark:border-slate-800/60 pt-2.5">
+                <span className="text-[10px] text-slate-600 dark:text-slate-400 font-medium">
+                  Mode: <strong className="text-teal-700 dark:text-teal-300 font-bold">{SUMMARY_POSITIONING_PRESETS.find(p => p.id === selectedPositioning)?.label}</strong>
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={!!inlineLoadingSections[section.section_name]}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (triggerInlineRewrite) {
+                        triggerInlineRewrite(section.section_name, section.recommendations, selectedPositioning);
+                      } else {
+                        onImproveClick(section.section_name, section.recommendations, selectedPositioning);
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Tailor Summary ({SUMMARY_POSITIONING_PRESETS.find(p => p.id === selectedPositioning)?.shortLabel})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onImproveClick(section.section_name, section.recommendations, selectedPositioning);
+                    }}
+                    className="px-2.5 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-100 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                    title="Open Side-by-Side Rewrite Modal with this positioning"
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                    <span>Side-by-Side Modal</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1005,9 +1232,17 @@ function SectionCard({
               onClick={(e) => {
                 e.stopPropagation();
                 if (triggerInlineRewrite) {
-                  triggerInlineRewrite(section.section_name, section.recommendations);
+                  triggerInlineRewrite(
+                    section.section_name,
+                    section.recommendations,
+                    isSummary ? selectedPositioning : undefined
+                  );
                 } else {
-                  onImproveClick(section.section_name, section.recommendations);
+                  onImproveClick(
+                    section.section_name,
+                    section.recommendations,
+                    isSummary ? selectedPositioning : undefined
+                  );
                 }
               }}
               className={`mt-2 w-full py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2.5 shadow-md transition-all duration-200 select-none ${inlineLoadingSections[section.section_name]
@@ -1020,12 +1255,20 @@ function SectionCard({
               {inlineLoadingSections[section.section_name] ? (
                 <>
                   <RefreshCw className="h-4 w-4 animate-spin text-cyan-400 shrink-0" />
-                  <span className="text-white text-xs font-black tracking-wide">Generating AI Rewrite...</span>
+                  <span className="text-white text-xs font-black tracking-wide">
+                    {isSummary ? `Generating AI Summary for ${SUMMARY_POSITIONING_PRESETS.find(p => p.id === selectedPositioning)?.shortLabel}...` : "Generating AI Rewrite..."}
+                  </span>
                 </>
               ) : (
                 <>
                   <Sparkles className="h-3.5 w-3.5 animate-pulse text-amber-300" />
-                  <span>{section.review_status === "improve" ? "Improve with AI" : "Tailor Section with AI"}</span>
+                  <span>
+                    {isSummary
+                      ? `Tailor Summary for ${SUMMARY_POSITIONING_PRESETS.find(p => p.id === selectedPositioning)?.shortLabel || "Team Lead"} with AI`
+                      : section.review_status === "improve"
+                        ? "Improve with AI"
+                        : "Tailor Section with AI"}
+                  </span>
                 </>
               )}
             </button>
@@ -1046,9 +1289,9 @@ function renderSectionCard(
   previousRewrittenText: string | undefined,
   onRevert: (name: string) => void,
   onUndoLastRewrite: (name: string) => void,
-  onImproveClick: (name: string, recs: string[]) => void,
+  onImproveClick: (name: string, recs: string[], positioningMode?: string) => void,
   inlineLoadingSections: Record<string, boolean> = {},
-  triggerInlineRewrite?: (name: string, recs: string[]) => void,
+  triggerInlineRewrite?: (name: string, recs: string[], positioningMode?: string) => void,
   onBulletExclusionChange?: (sectionName: string, excludedIndexes: Set<number>) => void,
   isPatchingApplied?: boolean
 ) {
@@ -1909,6 +2152,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [isPatchingApplied, setIsPatchingApplied] = useState(false);
   const [userInstructions, setUserInstructions] = useState("");
+  const [modalPositioningMode, setModalPositioningMode] = useState<string>("team_lead_transition");
   const [diffModeActive, setDiffModeActive] = useState(false);
   const [successNotification, setSuccessNotification] = useState<string | null>(null);
   const [showDetailedInsights, setShowDetailedInsights] = useState(false);
@@ -2507,14 +2751,18 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     }
   });
 
-  const triggerInlineRewrite = async (sectionName: string, recommendations: string[]) => {
+  const triggerInlineRewrite = async (
+    sectionName: string,
+    recommendations: string[],
+    positioningMode?: string
+  ) => {
     console.log(
       "%c 🤖 [RoleCraft Audit] Trigger Inline Rewrite Clicked ",
       "background: #059669; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
-      { sectionName, recommendations, documentId }
+      { sectionName, recommendations, positioningMode, documentId }
     );
     if (!token) {
-      showGuestUpgradeModal("improve_section", () => triggerInlineRewrite(sectionName, recommendations));
+      showGuestUpgradeModal("improve_section", () => triggerInlineRewrite(sectionName, recommendations, positioningMode));
       return;
     }
     if (!documentId) return;
@@ -2544,7 +2792,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         section_type: secType,
         section_content: secContent,
         job_description_text: jobDescription,
-        recommendations: recommendations
+        recommendations: recommendations,
+        positioning_mode: positioningMode,
       });
       const duration = ((performance.now() - startTime) / 1000).toFixed(2);
       const lines = data.rewritten_text.split("\n").filter((l: string) => l.trim());
@@ -2693,8 +2942,15 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         if (!jdText) return "";
         const lines = jdText.split("\n").map((l) => l.trim()).filter(Boolean);
 
-        // 1. Explicit label "Job Title: <Role>" or "Role: <Role>"
-        for (const line of lines.slice(0, 15)) {
+        // 1. Explicit label "Job Title: <Role>" or multi-line "JOB TITLE:\n<Role>"
+        for (let i = 0; i < Math.min(lines.length, 15); i++) {
+          const line = lines[i];
+          if (/^(?:job title|title|role|position)\s*[:–-]?$/i.test(line) && lines[i + 1]) {
+            const nextVal = lines[i + 1].trim();
+            if (nextVal && !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(nextVal)) {
+              return nextVal;
+            }
+          }
           const match = line.match(/(?:job title|title|role|position)\s*[:–-]\s*([A-Za-z0-9\s\-\/\&]{3,60})/i);
           if (match && match[1]) {
             const val = match[1].trim();
@@ -3160,21 +3416,31 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     }
   };
 
-  const handleImproveClick = (sectionName: string, recommendations: string[]) => {
+  const handleImproveClick = (
+    sectionName: string,
+    recommendations: string[],
+    positioningMode?: string
+  ) => {
     console.log(
       "%c ✏️ [RoleCraft Audit] 'Improve with AI' (Modal) Clicked ",
       "background: #4f46e5; color: #fff; font-weight: bold; border-radius: 4px; padding: 2px 6px;",
-      { sectionName, recommendations, documentId }
+      { sectionName, recommendations, positioningMode, documentId }
     );
     if (!token) {
-      showGuestUpgradeModal("improve_modal", () => handleImproveClick(sectionName, recommendations));
+      showGuestUpgradeModal("improve_modal", () => handleImproveClick(sectionName, recommendations, positioningMode));
       return;
     }
     if (!documentId) return;
     setActiveRewriteSection(sectionName);
+    const isSumm = isSummarySection(sectionName);
+    const mode = positioningMode || (isSumm ? "team_lead_transition" : "default");
+    setModalPositioningMode(mode);
     setRewriteData(null);
     setDraftRewrittenText("");
-    setUserInstructions("");
+    const defaultInstruction = isSumm && mode !== "default"
+      ? (SUMMARY_POSITIONING_PRESETS.find(p => p.id === mode)?.instruction || "")
+      : "";
+    setUserInstructions(defaultInstruction);
     setMetricPercentage("");
     setMetricScale("");
     setDiffModeActive(false);
@@ -3183,7 +3449,9 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       document_id: documentId,
       section_name: sectionName,
       job_description_text: jobDescription,
-      recommendations: recommendations
+      recommendations: recommendations,
+      positioning_mode: isSumm && mode !== "default" ? mode : undefined,
+      user_instructions: defaultInstruction || undefined,
     });
   };
 
@@ -7400,7 +7668,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         job_description_text: jobDescription,
                         recommendations: recommendations,
                         user_instructions: userInstructions,
-                        metric_inputs: (metricPercentage.trim() || metricScale.trim()) ? {
+                        positioning_mode: isSummarySection(activeRewriteSection) ? (modalPositioningMode !== "default" ? modalPositioningMode : undefined) : undefined,
+                        metric_inputs: !isSummarySection(activeRewriteSection) && (metricPercentage.trim() || metricScale.trim()) ? {
                           metric_or_percentage: metricPercentage.trim(),
                           scale_or_volume: metricScale.trim()
                         } : undefined
@@ -7516,89 +7785,148 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </div>
                   </div>
 
-                  {/* Google XYZ Formula & Metric Synthesizer Card */}
-                  <div className="bg-gradient-to-r from-indigo-50/80 via-purple-50/60 to-slate-100 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-slate-950 p-4 rounded-xl border border-teal-200 dark:border-teal-500/20 space-y-3">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-md bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/30">
-                          <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                  {/* Summary Leadership Positioning Presets OR Google XYZ Formula & Metric Synthesizer Card */}
+                  {isSummarySection(activeRewriteSection) ? (
+                    <div className="bg-gradient-to-r from-teal-50/80 via-purple-50/60 to-slate-100 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-slate-950 p-4 rounded-xl border border-teal-200 dark:border-teal-500/20 space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-md bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/30">
+                            <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                          </div>
+                          <span className="text-xs font-bold text-[#0F172A] dark:text-teal-200">
+                            Role & Leadership Positioning Presets
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-[#0F172A] dark:text-teal-200">
-                          Google XYZ Formula & Metric Synthesizer
+                        <span className="text-[10px] bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 font-extrabold flex items-center gap-1">
+                          🛡️ Anti-AI Authentic Voice (Zero Clichés)
                         </span>
                       </div>
-                      <span className="text-[10px] bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-500/20 font-mono">
-                        Accomplished [X] as measured by [Y], by doing [Z]
-                      </span>
+
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Position your senior engineering background for leadership (architecture, code reviews, mentoring, delivery) with grounded human phrasing — without fabricating false past titles or using robotic buzzwords.
+                      </p>
+
+                      {/* Preset Cards Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                        {SUMMARY_POSITIONING_PRESETS.map((preset) => {
+                          const isSelected = modalPositioningMode === preset.id;
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => {
+                                setModalPositioningMode(preset.id);
+                                setUserInstructions(preset.instruction);
+                              }}
+                              className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-teal-50/90 dark:bg-teal-950/40 border-teal-500 ring-2 ring-teal-500/20 shadow-xs"
+                                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-teal-300 hover:bg-slate-50 dark:hover:bg-slate-850"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                  <span>{preset.icon}</span>
+                                  <span>{preset.label}</span>
+                                </span>
+                                {isSelected && (
+                                  <span className="text-[9px] bg-teal-600 text-white font-extrabold px-1.5 py-0.5 rounded-full">
+                                    Selected
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
+                                {preset.desc}
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-
-                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                      Quantify your impact using Google's formula. Enter real numbers or scale metrics below so AI can seamlessly weave them into your achievement bullets.
-                    </p>
-
-                    {/* Metric Input Fields */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                          Metric / % Improvement [Y]
-                        </label>
-                        <input
-                          type="text"
-                          value={metricPercentage}
-                          onChange={(e) => setMetricPercentage(e.target.value)}
-                          placeholder="e.g. '35% latency reduction', '$120k revenue growth'"
-                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-teal-500 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
-                          disabled={rewriteMutation.isPending}
-                        />
+                  ) : (
+                    <div className="bg-gradient-to-r from-indigo-50/80 via-purple-50/60 to-slate-100 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-slate-950 p-4 rounded-xl border border-teal-200 dark:border-teal-500/20 space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-md bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/30">
+                            <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                          </div>
+                          <span className="text-xs font-bold text-[#0F172A] dark:text-teal-200">
+                            Google XYZ Formula & Metric Synthesizer
+                          </span>
+                        </div>
+                        <span className="text-[10px] bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-500/20 font-mono">
+                          Accomplished [X] as measured by [Y], by doing [Z]
+                        </span>
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                          Scale / Scope / Volume [Y]
-                        </label>
-                        <input
-                          type="text"
-                          value={metricScale}
-                          onChange={(e) => setMetricScale(e.target.value)}
-                          placeholder="e.g. 'across 15 microservices', '100k daily users'"
-                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-teal-500 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
-                          disabled={rewriteMutation.isPending}
-                        />
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Quantify your impact using Google's formula. Enter real numbers or scale metrics below so AI can seamlessly weave them into your achievement bullets.
+                      </p>
+
+                      {/* Metric Input Fields */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                            Metric / % Improvement [Y]
+                          </label>
+                          <input
+                            type="text"
+                            value={metricPercentage}
+                            onChange={(e) => setMetricPercentage(e.target.value)}
+                            placeholder="e.g. '35% latency reduction', '$120k revenue growth'"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-teal-500 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
+                            disabled={rewriteMutation.isPending}
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                            Scale / Scope / Volume [Y]
+                          </label>
+                          <input
+                            type="text"
+                            value={metricScale}
+                            onChange={(e) => setMetricScale(e.target.value)}
+                            placeholder="e.g. 'across 15 microservices', '100k daily users'"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-teal-500 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
+                            disabled={rewriteMutation.isPending}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Quick Preset Prompt Chips */}
+                      <div className="pt-2 border-t border-slate-200 dark:border-slate-800/60 flex flex-wrap gap-2 items-center">
+                        <span className="text-[10px] text-slate-500 font-semibold uppercase">Presets:</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserInstructions("Format all bullets strictly using Google's XYZ formula (Accomplished X as measured by Y, by doing Z)");
+                          }}
+                          className="text-[10px] bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-teal-700 dark:text-teal-300 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
+                        >
+                          ⚡ Google XYZ Bullets
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserInstructions("Use high-impact active verbs and emphasize quantifiable metrics");
+                          }}
+                          className="text-[10px] bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
+                        >
+                          📊 Action Verbs + Metrics
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserInstructions("Make bullet points concise, impactful, and tailored for senior engineering leadership");
+                          }}
+                          className="text-[10px] bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
+                        >
+                          🎯 Concise Pitch
+                        </button>
                       </div>
                     </div>
-
-                    {/* Quick Preset Prompt Chips */}
-                    <div className="pt-2 border-t border-slate-200 dark:border-slate-800/60 flex flex-wrap gap-2 items-center">
-                      <span className="text-[10px] text-slate-500 font-semibold uppercase">Presets:</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUserInstructions("Format all bullets strictly using Google's XYZ formula (Accomplished X as measured by Y, by doing Z)");
-                        }}
-                        className="text-[10px] bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-teal-700 dark:text-teal-300 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
-                      >
-                        ⚡ Google XYZ Bullets
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUserInstructions("Use high-impact active verbs and emphasize quantifiable metrics");
-                        }}
-                        className="text-[10px] bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
-                      >
-                        📊 Action Verbs + Metrics
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUserInstructions("Make bullet points concise, impactful, and tailored for senior engineering leadership");
-                        }}
-                        className="text-[10px] bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
-                      >
-                        🎯 Concise Pitch
-                      </button>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Refinement User Instructions Bar */}
                   <div className="bg-slate-50/50 dark:bg-slate-950/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2.5">
@@ -7610,7 +7938,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         type="text"
                         value={userInstructions}
                         onChange={(e) => setUserInstructions(e.target.value)}
-                        placeholder="e.g. 'make it shorter', 'use stronger action verbs', 'emphasize leadership'"
+                        placeholder={
+                          isSummarySection(activeRewriteSection)
+                            ? "e.g. 'Emphasize architectural decision making and mentoring junior engineers', 'Keep under 70 words'"
+                            : "e.g. 'make it shorter', 'use stronger action verbs', 'emphasize leadership'"
+                        }
                         className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 focus:border-teal-500 rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors"
                         disabled={rewriteMutation.isPending}
                       />
@@ -7624,7 +7956,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                             job_description_text: jobDescription,
                             recommendations: rewriteData?.recommendations || [],
                             user_instructions: userInstructions,
-                            metric_inputs: (metricPercentage.trim() || metricScale.trim()) ? {
+                            positioning_mode: isSummarySection(activeRewriteSection) ? (modalPositioningMode !== "default" ? modalPositioningMode : undefined) : undefined,
+                            metric_inputs: !isSummarySection(activeRewriteSection) && (metricPercentage.trim() || metricScale.trim()) ? {
                               metric_or_percentage: metricPercentage.trim(),
                               scale_or_volume: metricScale.trim()
                             } : undefined

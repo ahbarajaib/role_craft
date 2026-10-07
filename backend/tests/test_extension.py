@@ -81,6 +81,7 @@ def test_build_extension_zip_all_3():
         "RoleCraft-LinkedIn-1-Click-Job-Copier",
         "RoleCraft-Indeed-1-Click-Job-Copier",
         "RoleCraft-Naukri-1-Click-Job-Copier",
+        "RoleCraft-Cutshort-1-Click-Job-Copier",
     }
 
 

@@ -550,6 +550,49 @@
     return '';
   }
 
+  function normalizeJobType(raw) {
+    if (!raw || typeof raw !== 'string') return '';
+    const s = raw.trim();
+    const lower = s.toLowerCase();
+
+    // Workplace mode first
+    if (lower.includes('hybrid')) return 'Hybrid';
+    if (lower.includes('remote') || lower.includes('telecommute') || lower.includes('work from home') || lower.includes('wfh')) return 'Remote';
+    if (lower.includes('on-site') || lower.includes('onsite') || lower.includes('in-office') || lower.includes('in office') || lower.includes('in-person') || lower.includes('in person')) return 'On-site';
+
+    // Employment type
+    if (lower.includes('full-time') || lower.includes('full time') || lower.includes('full_time') || lower.includes('permanent')) return 'Full-time';
+    if (lower.includes('part-time') || lower.includes('part time') || lower.includes('part_time')) return 'Part-time';
+    if (lower.includes('contract') || lower.includes('temporary') || lower.includes('contractual') || lower.includes('freelance')) return 'Contract';
+    if (lower.includes('internship') || lower.includes('intern')) return 'Internship';
+
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function cleanLocationAndExtractJobType(locationStr, existingJobType) {
+    if (!locationStr) return { location: '', jobType: existingJobType || '' };
+    let loc = locationStr.trim();
+    let jobType = existingJobType || '';
+
+    if (!jobType) {
+      const match = loc.match(/\b(hybrid|remote|on-site|onsite|in-person|in-office|wfh|work from home)\b/i);
+      if (match) {
+        jobType = normalizeJobType(match[1]);
+      }
+    }
+
+    // Strip workplace markers from location string
+    loc = loc
+      .replace(/[\s·•\-]+\b(hybrid|remote|on-site|onsite|in-person|in-office|wfh|work from home)\b.*$/i, '')
+      .replace(/^[\s·•\-]*\b(hybrid|remote|on-site|onsite|in-person|in-office|wfh|work from home)\b[\s·•\:\-]+/i, '')
+      .replace(/\((?:hybrid|remote|on-site|onsite|in-person|in-office|wfh|work from home)\)/gi, '')
+      .replace(/\[(?:hybrid|remote|on-site|onsite|in-person|in-office|wfh|work from home)\]/gi, '')
+      .replace(/^[·•,\-\s]+|[·•,\-\s]+$/g, '')
+      .trim();
+
+    return { location: loc, jobType: normalizeJobType(jobType) };
+  }
+
   function extractSkills() {
     const skills = [];
 
@@ -784,20 +827,8 @@
       output += `LOCATION:\n${details.location}\n\n`;
     }
 
-    const metaParts = [];
-    if (details.experience) metaParts.push(`Experience: ${details.experience}`);
-    if (details.salary) metaParts.push(`Salary/CTC: ${details.salary}`);
-    if (details.equity) metaParts.push(`Equity: ${details.equity}`);
-    if (details.workType) metaParts.push(`Work Type: ${details.workType}`);
-    if (details.noticePeriod) metaParts.push(`Notice Period: ${details.noticePeriod}`);
-    if (details.skills) metaParts.push(`Skills: ${details.skills}`);
-
-    if (metaParts.length > 0) {
-      output += `JOB DETAILS:\n${metaParts.join(' | ')}\n\n`;
-    }
-
-    if (details.url) {
-      output += `JOB URL:\n${details.url}\n\n`;
+    if (details.jobType) {
+      output += `JOB TYPE:\n${details.jobType}\n\n`;
     }
 
     output += `JOB DESCRIPTION:\n${details.description || details.title || ''}`;
@@ -887,27 +918,18 @@
 
       const title = extractJobTitle();
       const company = extractCompany();
-      const location = extractLocation();
-      const experience = extractExperience();
-      const salary = extractSalary();
-      const equity = extractEquity();
-      const workType = extractWorkType();
-      const noticePeriod = extractNoticePeriod();
-      const skills = extractSkills();
+      const rawLocation = extractLocation();
+      const rawWorkType = extractWorkType();
+      const rawJobType = normalizeJobType(rawWorkType);
+      const locAndType = cleanLocationAndExtractJobType(rawLocation, rawJobType);
       const url = extractURL();
       const description = extractDescription();
 
       const formatted = formatForClipboard({
         title,
         company,
-        location,
-        experience,
-        salary,
-        equity,
-        workType,
-        noticePeriod,
-        skills,
-        url,
+        location: locAndType.location,
+        jobType: locAndType.jobType,
         description,
       });
 

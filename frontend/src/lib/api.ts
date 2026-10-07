@@ -138,6 +138,7 @@ export interface RewriteSectionRequest {
   recommendations: string[];
   user_instructions?: string;
   metric_inputs?: Record<string, string>;
+  positioning_mode?: string;     // 'team_lead_transition' | 'hands_on_tech_lead' | 'senior_ic' | 'default'
 }
 
 export async function rewriteSection(
@@ -160,10 +161,11 @@ export async function rewriteSection(
 export interface BatchRewriteItem {
   section_name: string;
   section_type?: string;
-  section_content?: any;
+  section_content?: Record<string, unknown>;
   recommendations?: string[];
   user_instructions?: string;
   metric_inputs?: Record<string, string>;
+  positioning_mode?: string;
 }
 
 export interface BatchRewriteRequest {
@@ -172,6 +174,7 @@ export interface BatchRewriteRequest {
   sections: BatchRewriteItem[];
   user_instructions?: string;
   metric_inputs?: Record<string, string>;
+  positioning_mode?: string;
 }
 
 export interface BatchRewriteResponse {

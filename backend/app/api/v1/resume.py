@@ -260,6 +260,7 @@ def rewrite_section(
             recommendations=body.recommendations,
             user_instructions=body.user_instructions,
             metric_inputs=body.metric_inputs,
+            positioning_mode=body.positioning_mode,
         )
         return res
 
@@ -271,6 +272,7 @@ def rewrite_section(
         recommendations=body.recommendations,
         user_instructions=body.user_instructions,
         metric_inputs=body.metric_inputs,
+        positioning_mode=body.positioning_mode,
     )
     return res
 
@@ -300,6 +302,7 @@ def batch_rewrite_sections(
         sections=body.sections,
         user_instructions=body.user_instructions,
         metric_inputs=body.metric_inputs,
+        positioning_mode=body.positioning_mode,
     )
 
     download_id = None

@@ -60,3 +60,38 @@ def test_parse_linkedin_furtherai():
     assert "Python" in jd.technologies
     assert len(jd.responsibilities) > 0
     assert len(jd.required_skills) > 0
+
+
+def test_parse_standardized_multiline_job_details():
+    text = """JOB TITLE:
+Software Engineer – AI Product Engineering
+
+COMPANY:
+CirrusLabs
+
+LOCATION:
+Bengaluru, Karnataka
+
+JOB TYPE:
+Hybrid
+
+JOB DESCRIPTION:
+Job Title : Software Engineer – AI Product Engineering
+
+Experience : 3 years
+
+Job Location : Bangalore
+
+Key Responsibilities
+
+Design, develop, and maintain scalable web applications using the MERN stack.
+
+Build and integrate AI/LLM-powered features and products.
+"""
+    jd = parse_job_description(text)
+    assert jd.title == "Software Engineer – AI Product Engineering"
+    assert jd.company == "CirrusLabs"
+    assert jd.location == "Bengaluru, Karnataka"
+    assert jd.employment_type == "Hybrid"
+    assert len(jd.responsibilities) == 2
+

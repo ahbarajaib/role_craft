@@ -50,20 +50,20 @@ Clone or download this folder (`linkedin-job-copier/`) to your computer.
 
 ```
 JOB TITLE:
-Backend Engineer (Node.js / AWS / AI Systems)
+Software Engineer – AI Product Engineering
 
 COMPANY:
-Prismforce
+CirrusLabs
 
 LOCATION:
 Bengaluru, Karnataka, India
 
-JOB URL:
-https://www.linkedin.com/jobs/view/...
+JOB TYPE:
+Hybrid
 
 JOB DESCRIPTION:
-Position: Backend Engineer (SDE-1 / Emerging SDE-2)
-Experience: ~3 Years
+Job Title : Software Engineer – AI Product Engineering
+Experience : 3 years
 ...
 ```
 

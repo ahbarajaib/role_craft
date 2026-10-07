@@ -318,12 +318,17 @@ def _extract_title(preamble: list[str], lines: list[str] | None = None) -> str:
 
     all_lines = preamble + (lines or [])
 
-    # 1. Look for explicit label "Job Title: <Role>" or "Role: <Role>"
-    for line in all_lines:
+    # 1. Look for explicit label "Job Title: <Role>" or "Role: <Role>" (single-line or multi-line)
+    for i, line in enumerate(all_lines[:20]):
         t = line.strip()
         lower = t.lower().rstrip(":").strip()
         if not t or noise_regex.search(lower):
             continue
+        if lower in {"title", "job title", "role", "position"}:
+            if i + 1 < len(all_lines):
+                val = all_lines[i + 1].strip()
+                if val and val.lower() not in generic_headers and not noise_regex.search(val):
+                    return val
         if lower.startswith("title:") or lower.startswith("job title:") or lower.startswith("role:"):
             colon_idx = t.find(":")
             val = t[colon_idx + 1:].strip()
@@ -417,6 +422,12 @@ def _extract_location(preamble: list[str], text: str) -> str:
 
 def _extract_employment_type(text: str) -> str:
     """Return the employment type if stated."""
+    type_match = re.search(r"^\s*job\s+type\s*[:–-]\s*\n*([^\n]+)", text, re.IGNORECASE | re.MULTILINE)
+    if type_match:
+        val = type_match.group(1).strip()
+        if val:
+            return val
+
     for pattern, label in _EMPLOYMENT_TYPE_PATTERNS:
         if re.search(pattern, text, re.IGNORECASE):
             return label

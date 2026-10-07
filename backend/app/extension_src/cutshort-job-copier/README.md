@@ -58,11 +58,8 @@ Acme Corp
 LOCATION:
 Bangalore, India
 
-JOB DETAILS:
-Experience: 3–6 Years | Salary/CTC: ₹18–28 LPA | Work Type: Full Time | Skills: Python, FastAPI, PostgreSQL, AWS
-
-JOB URL:
-https://cutshort.io/job/senior-software-engineer-at-acme-corp-XXXXXXXX
+JOB TYPE:
+Full-time
 
 JOB DESCRIPTION:
 About the role:
