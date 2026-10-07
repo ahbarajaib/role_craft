@@ -89,6 +89,20 @@ class ResumeAnalysisWorkflow:
         document_id: str,
         job_description_text: str,
     ) -> ResumeAnalysisResult:
+        def _is_valid_role_title(t: str | None) -> bool:
+            if not t:
+                return False
+            clean = t.lower().strip()
+            return clean not in [
+                "target role", "target position", "full job description",
+                "job description", "overview", "role details", "details",
+                "about the job", "position description", "careers", "about the role"
+            ] and len(clean) >= 3
+
+        # Step 2 – Parse job description
+        job_description = self._jd.parse(job_description_text)
+        logger.debug("Job description parsed", title=job_description.title)
+
         # Build cache key from full resume content + JD
         full_resume_text = "\n".join(
             " ".join(p.text for p in s.paragraphs) for s in sections
@@ -97,18 +111,17 @@ class ResumeAnalysisWorkflow:
         cached_result = global_analysis_cache.get(cache_key)
         if cached_result:
             logger.info("⚡ Returning instant cached analysis result in ~5ms")
-            # Maintain document_id for caller
+            # If the parser extracted a valid job title from the JD, ensure it's reflected in the cached summary
+            cached_summary = cached_result.overall_summary
+            if _is_valid_role_title(job_description.title) and cached_summary and cached_summary.job_title != job_description.title:
+                cached_summary = cached_summary.model_copy(update={"job_title": job_description.title})
             return ResumeAnalysisResult(
                 document_id=document_id,
-                overall_summary=cached_result.overall_summary,
+                overall_summary=cached_summary,
                 sections=cached_result.sections,
                 top_strengths=cached_result.top_strengths,
                 top_improvements=cached_result.top_improvements,
             )
-
-        # Step 2 – Parse job description
-        job_description = self._jd.parse(job_description_text)
-        logger.debug("Job description parsed", title=job_description.title)
 
         # Step 3 – Compare
         comparison = self._comparison.compare(sections, job_description)
@@ -357,11 +370,11 @@ class ResumeAnalysisWorkflow:
             reduce_secs[:5]
         )
 
-        resolved_job_title = (
-            unified_result.target_job_title
-            if (unified_result.target_job_title and unified_result.target_job_title.lower().strip() not in ["target role", "full job description", "job description", "overview"])
-            else (job_description.title if (job_description.title and job_description.title.lower().strip() not in ["full job description", "job description", "target role", "overview"]) else "Target Role")
-        )
+        resolved_job_title = "Target Role"
+        if _is_valid_role_title(job_description.title):
+            resolved_job_title = job_description.title
+        elif _is_valid_role_title(unified_result.target_job_title):
+            resolved_job_title = unified_result.target_job_title
 
         # Step 6 – Merge and return
         result = _build_result(

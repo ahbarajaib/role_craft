@@ -64,7 +64,7 @@ class UnifiedReviewResult(BaseModel):
 
     target_job_title: str = Field(
         default="Target Role",
-        description="Concise 2-4 word professional job title derived from the target job description (e.g. 'AI Application Engineer' or 'Full Stack Developer')."
+        description="Exact professional job title extracted directly from the target job description."
     )
     sections: list[SectionReviewItem] = Field(
         description="Recruiter reviews of each section."

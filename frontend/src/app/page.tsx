@@ -1949,6 +1949,91 @@ function isActualATSKeyword(kw: string): boolean {
   return true;
 }
 
+// Robust target job title extraction directly from JD text
+function extractJobTitleFromJD(jdText: string): string {
+  if (!jdText) return "";
+  const lines = jdText.split("\n").map((l) => l.trim()).filter(Boolean);
+
+  const genericHeaders = new Set([
+    "full job description", "job description", "about the role", "overview",
+    "job summary", "description", "about us", "position overview", "role summary",
+    "job title", "details", "role details", "careers", "position description", "about the position",
+    "about the job", "company", "location", "job type", "experience", "key responsibilities"
+  ]);
+
+  // 1. Explicit label "Job Title: <Role>" or multi-line "JOB TITLE:\n<Role>"
+  for (let i = 0; i < Math.min(lines.length, 25); i++) {
+    const line = lines[i];
+
+    // Multi-line: "JOB TITLE:" or "ROLE:" followed by next line containing the title
+    if (/^(?:job\s*title|title|role|position)\s*[:–-]?$/i.test(line) && lines[i + 1]) {
+      const nextVal = lines[i + 1].trim();
+      if (
+        nextVal &&
+        !genericHeaders.has(nextVal.toLowerCase()) &&
+        !/^(about|description|requirements|responsibilities|summary|company|location|overview|job type)/i.test(nextVal)
+      ) {
+        return nextVal;
+      }
+    }
+
+    // Single-line: "Job Title : <Role>" or "Job Title: <Role>" or "Role: <Role>"
+    const match = line.match(/^(?:job\s*title|title|role|position)\s*[:–-]\s*(.+)$/i);
+    if (match && match[1]) {
+      const val = match[1].trim();
+      if (
+        val &&
+        !genericHeaders.has(val.toLowerCase()) &&
+        !/^(about|description|requirements|responsibilities|summary|company|location|overview|job type)/i.test(val)
+      ) {
+        return val;
+      }
+    }
+  }
+
+  // 2. Line containing a known role title keyword
+  const roleKeywords = [
+    "developer", "engineer", "architect", "manager", "lead", "designer",
+    "consultant", "analyst", "specialist", "administrator", "executive",
+    "fullstack", "full stack", "backend", "frontend", "devops", "sre", "scientist",
+    "director", "head", "vp", "associate", "intern", "product"
+  ];
+
+  for (const line of lines.slice(0, 15)) {
+    const clean = line.replace(/^#+\s*/, "").trim();
+    const lower = clean.toLowerCase();
+    if (
+      clean.length >= 4 &&
+      clean.length <= 80 &&
+      !clean.includes("http") &&
+      !clean.includes("@") &&
+      !genericHeaders.has(lower) &&
+      !/^(about|description|requirements|responsibilities|summary|company|location|overview|job type)/i.test(clean) &&
+      roleKeywords.some((r) => lower.includes(r))
+    ) {
+      return clean;
+    }
+  }
+
+  // 3. Preamble line fallback
+  for (const line of lines.slice(0, 5)) {
+    const clean = line.replace(/^#+\s*/, "").trim();
+    const lower = clean.toLowerCase();
+    if (
+      clean.length >= 4 &&
+      clean.length <= 60 &&
+      !clean.includes("http") &&
+      !clean.includes("@") &&
+      !genericHeaders.has(lower) &&
+      !/^(about|description|requirements|responsibilities|summary|company|location|overview|job type)/i.test(clean)
+    ) {
+      return clean;
+    }
+  }
+
+  return "";
+}
+
 function getSkillCategory(skillName: string): { label: string; badgeColor: string } {
   const s = skillName.toLowerCase();
 
@@ -2667,7 +2752,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.readText) {
         const text = await navigator.clipboard.readText();
         if (text && text.trim()) {
-          setJobDescription(text.trim());
+          const trimmed = text.trim();
+          setJobDescription(trimmed);
+          const detectedTitle = extractJobTitleFromJD(trimmed);
+          if (detectedTitle) {
+            setCustomTargetRole(detectedTitle);
+          }
           setSuccessNotification("📋 Target Job Description pasted from clipboard!");
           return;
         }
@@ -3050,75 +3140,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setInlineLoadingSections((prev) => ({ ...prev, ...loadingMap }));
       setExpandedSections(expandedMap);
 
-      const parseJobTitleFromJD = (jdText: string): string => {
-        if (!jdText) return "";
-        const lines = jdText.split("\n").map((l) => l.trim()).filter(Boolean);
-
-        // 1. Explicit label "Job Title: <Role>" or multi-line "JOB TITLE:\n<Role>"
-        for (let i = 0; i < Math.min(lines.length, 15); i++) {
-          const line = lines[i];
-          if (/^(?:job title|title|role|position)\s*[:–-]?$/i.test(line) && lines[i + 1]) {
-            const nextVal = lines[i + 1].trim();
-            if (nextVal && !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(nextVal)) {
-              return nextVal;
-            }
-          }
-          const match = line.match(/(?:job title|title|role|position)\s*[:–-]\s*([A-Za-z0-9\s\-\/\&]{3,60})/i);
-          if (match && match[1]) {
-            const val = match[1].trim();
-            if (val && !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(val)) {
-              return val;
-            }
-          }
-        }
-
-        // 2. Line containing a role title keyword
-        const roleKeywords = [
-          "developer", "engineer", "architect", "manager", "lead", "designer",
-          "consultant", "analyst", "specialist", "administrator", "executive",
-          "fullstack", "full stack", "backend", "frontend", "devops", "sre", "scientist",
-          "director", "head", "vp", "associate", "intern", "product"
-        ];
-
-        for (const line of lines.slice(0, 15)) {
-          const clean = line.replace(/^#+\s*/, "").trim();
-          const lower = clean.toLowerCase();
-          if (
-            clean.length >= 4 &&
-            clean.length <= 80 &&
-            !clean.includes("http") &&
-            !clean.includes("@") &&
-            !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(clean) &&
-            roleKeywords.some((r) => lower.includes(r))
-          ) {
-            return clean;
-          }
-        }
-
-        // 3. Preamble line
-        for (const line of lines.slice(0, 5)) {
-          const clean = line.replace(/^#+\s*/, "").trim();
-          if (
-            clean.length >= 4 &&
-            clean.length <= 60 &&
-            !clean.includes("http") &&
-            !clean.includes("@") &&
-            !/^(about|description|requirements|responsibilities|summary|company|location|overview)/i.test(clean)
-          ) {
-            return clean;
-          }
-        }
-
-        return "";
-      };
-
       const newRewrites: Record<string, string> = {};
 
       // 1. Apply Target Job Title to Header (if enabled)
+      const detectedJDTitle = extractJobTitleFromJD(jobDescription);
       const targetHeaderTitle =
         customTargetRole.trim() ||
+        detectedJDTitle ||
         result?.overall_summary?.job_title ||
-        parseJobTitleFromJD(jobDescription) ||
         "Target Position";
 
       if (!isHeaderExplicitOff && targetHeaderTitle && targetHeaderTitle !== "Target Position") {
@@ -3317,7 +3346,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         });
 
         const isHeaderExplicitOff = tailoringSectionToggles["header"] === false || tailoringSectionToggles["Target Job Title & Header"] === false;
-        const targetHeaderTitle = customTargetRole.trim() || data.overall_summary?.job_title || "Target Position";
+        const detectedJDTitle = extractJobTitleFromJD(jobDescription);
+        const targetHeaderTitle = customTargetRole.trim() || detectedJDTitle || data.overall_summary?.job_title || "Target Position";
 
         const batchItems: any[] = sectionsToTailor.map((sec: any) => {
           let secContent: any = undefined;
@@ -3367,11 +3397,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         }
       } else {
         // Complete end-to-end path: analysis + parallel batch tailoring + patch generation in one unified workflow
+        const detectedJDTitle = extractJobTitleFromJD(jobDescription);
         const { autoTailorResume } = require("@/lib/api");
         const result = await autoTailorResume({
           document_id: documentId,
           job_description_text: jobDescription,
-          target_role: customTargetRole || undefined,
+          target_role: customTargetRole || detectedJDTitle || undefined,
           section_toggles: tailoringSectionToggles,
         }, abortController.signal);
 
@@ -3380,7 +3411,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         newRewrites = result.rewrites || {};
         downloadIdResult = result.download_id;
         downloadUrlResult = result.download_url;
-        effectiveRole = result.target_role || data?.overall_summary?.job_title || "Target Position";
+        effectiveRole = customTargetRole || detectedJDTitle || result.target_role || data?.overall_summary?.job_title || "Target Position";
       }
 
       // Atomically prepare all UI state together for a clean, unified reveal
@@ -4032,7 +4063,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setIsEditingCoverLetter(false);
       setAppliedWovenKeywords([]);
       setIsKeywordsWoven(false);
-      setCustomTargetRole(data.overall_summary?.job_title || "");
+      const detectedOnAnalysis = extractJobTitleFromJD(jobDescription);
+      setCustomTargetRole(detectedOnAnalysis || data.overall_summary?.job_title || "");
 
       // Refresh credits balance and daily goal in header
       refreshMe().catch(() => { });
@@ -4319,7 +4351,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
             setIsEditingCoverLetter(false);
             setAppliedWovenKeywords([]);
             setIsKeywordsWoven(false);
-            setCustomTargetRole(data.overall_summary?.job_title || "");
+            const detectedGuest = extractJobTitleFromJD(jobDescription);
+            setCustomTargetRole(detectedGuest || data.overall_summary?.job_title || "");
             const initialExpanded: Record<string, boolean> = {};
             (data.sections || []).forEach((sec: any) => {
               if (sec.review_status === "improve") {
@@ -5847,7 +5880,14 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   <div className="relative">
                     <textarea
                       value={jobDescription}
-                      onChange={(e) => setJobDescription(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setJobDescription(val);
+                        const detected = extractJobTitleFromJD(val);
+                        if (detected && (!customTargetRole || customTargetRole === "Target Position" || customTargetRole === "Target Role")) {
+                          setCustomTargetRole(detected);
+                        }
+                      }}
                       placeholder="Paste the target job description or requirement spec here (minimum 50 characters)..."
                       rows={7}
                       maxLength={8000}

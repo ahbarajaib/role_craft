@@ -319,19 +319,23 @@ def _extract_title(preamble: list[str], lines: list[str] | None = None) -> str:
     all_lines = preamble + (lines or [])
 
     # 1. Look for explicit label "Job Title: <Role>" or "Role: <Role>" (single-line or multi-line)
-    for i, line in enumerate(all_lines[:20]):
+    for i, line in enumerate(all_lines[:25]):
         t = line.strip()
         lower = t.lower().rstrip(":").strip()
         if not t or noise_regex.search(lower):
             continue
-        if lower in {"title", "job title", "role", "position"}:
+
+        # Multi-line match: "JOB TITLE:\n<Role>" or "ROLE:\n<Role>"
+        if re.match(r"^(?:job\s*title|title|role|position)$", lower):
             if i + 1 < len(all_lines):
                 val = all_lines[i + 1].strip()
                 if val and val.lower() not in generic_headers and not noise_regex.search(val):
                     return val
-        if lower.startswith("title:") or lower.startswith("job title:") or lower.startswith("role:"):
-            colon_idx = t.find(":")
-            val = t[colon_idx + 1:].strip()
+
+        # Single-line match: "Job Title : <Role>" or "Job Title: <Role>" or "Role: <Role>"
+        m = re.match(r"^(?:job\s*title|title|role|position)\s*[:–-]\s*(.+)$", t, re.IGNORECASE)
+        if m:
+            val = m.group(1).strip()
             if val and val.lower() not in generic_headers and not noise_regex.search(val):
                 return val
 
