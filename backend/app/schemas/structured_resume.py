@@ -5,57 +5,58 @@ experience, skills, education, projects, certifications, custom sections,
 parse confidence flags, and template metadata.
 """
 
-from typing import Any, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
 class ContactInfo(BaseModel):
-    full_name: Optional[str] = Field(None, description="Candidate full name")
-    job_title: Optional[str] = Field(None, description="Professional headline or target job title")
-    email: Optional[str] = Field(None, description="Email address")
-    phone: Optional[str] = Field(None, description="Phone number")
-    location: Optional[str] = Field(None, description="City, Country / Location")
-    linkedin_url: Optional[str] = Field(None, description="LinkedIn profile URL")
-    portfolio_url: Optional[str] = Field(None, description="Personal website or portfolio URL")
-    github_url: Optional[str] = Field(None, description="GitHub profile URL")
+    full_name: str | None = Field(None, description="Candidate full name")
+    job_title: str | None = Field(None, description="Professional headline or target job title")
+    email: str | None = Field(None, description="Email address")
+    phone: str | None = Field(None, description="Phone number")
+    location: str | None = Field(None, description="City, Country / Location")
+    linkedin_url: str | None = Field(None, description="LinkedIn profile URL")
+    portfolio_url: str | None = Field(None, description="Personal website or portfolio URL")
+    github_url: str | None = Field(None, description="GitHub profile URL")
 
 
 class SkillCategory(BaseModel):
-    category_name: Optional[str] = Field(None, description="Category header, e.g., Languages, Frameworks")
+    category_name: str | None = Field(None, description="Category header, e.g., Languages, Frameworks")
     skills: list[str] = Field(default_factory=list, description="List of skill names in this category")
 
 
 class ExperienceEntry(BaseModel):
-    job_title: Optional[str] = Field(None, description="Job title / role")
-    company: Optional[str] = Field(None, description="Company or organization name")
-    location: Optional[str] = Field(None, description="Job location")
-    start_date: Optional[str] = Field(None, description="Start date (e.g. Jan 2022)")
-    end_date: Optional[str] = Field(None, description="End date or Present")
+    job_title: str | None = Field(None, description="Job title / role")
+    company: str | None = Field(None, description="Company or organization name")
+    location: str | None = Field(None, description="Job location")
+    start_date: str | None = Field(None, description="Start date (e.g. Jan 2022)")
+    end_date: str | None = Field(None, description="End date or Present")
     bullets: list[str] = Field(default_factory=list, description="Bullet points describing achievements")
 
 
 class EducationEntry(BaseModel):
-    degree: Optional[str] = Field(None, description="Degree or qualification name")
-    institution: Optional[str] = Field(None, description="University or school name")
-    location: Optional[str] = Field(None, description="Institution location")
-    graduation_date: Optional[str] = Field(None, description="Graduation date or year")
-    gpa: Optional[str] = Field(None, description="GPA or honors if specified")
+    degree: str | None = Field(None, description="Degree or qualification name")
+    institution: str | None = Field(None, description="University or school name")
+    location: str | None = Field(None, description="Institution location")
+    graduation_date: str | None = Field(None, description="Graduation date or year")
+    gpa: str | None = Field(None, description="GPA or honors if specified")
     details: list[str] = Field(default_factory=list, description="Additional course details or honors")
 
 
 class ProjectEntry(BaseModel):
-    name: Optional[str] = Field(None, description="Project name")
-    description: Optional[str] = Field(None, description="Brief description")
+    name: str | None = Field(None, description="Project name")
+    description: str | None = Field(None, description="Brief description")
     technologies: list[str] = Field(default_factory=list, description="Technologies used")
     bullets: list[str] = Field(default_factory=list, description="Bullet points detailing achievements")
-    url: Optional[str] = Field(None, description="Project link or repo URL")
+    url: str | None = Field(None, description="Project link or repo URL")
 
 
 class CertificationEntry(BaseModel):
-    name: Optional[str] = Field(None, description="Certification or license title")
-    issuer: Optional[str] = Field(None, description="Issuing organization")
-    date: Optional[str] = Field(None, description="Issue date or expiration")
-    credential_id: Optional[str] = Field(None, description="Credential ID or verification link")
+    name: str | None = Field(None, description="Certification or license title")
+    issuer: str | None = Field(None, description="Issuing organization")
+    date: str | None = Field(None, description="Issue date or expiration")
+    credential_id: str | None = Field(None, description="Credential ID or verification link")
 
 
 class CustomSection(BaseModel):
@@ -84,7 +85,7 @@ def normalize_section_type(sec_type: str, sec_title: str = "") -> str:
 
 
 class SectionContent(BaseModel):
-    text: Optional[str] = Field(None, description="Text content for summary or text sections")
+    text: str | None = Field(None, description="Text content for summary or text sections")
     categories: list[SkillCategory] = Field(default_factory=list, description="Skill categories for skills section")
     experience_entries: list[ExperienceEntry] = Field(default_factory=list, description="Work experience job entries")
     education_entries: list[EducationEntry] = Field(default_factory=list, description="Education degree/qualification entries")
@@ -203,12 +204,12 @@ class StructuredResumeParseModel(BaseModel):
     """Schema passed to OpenAI's response_format API to strictly conform to OpenAI Structured Outputs constraints."""
 
     contact_info: ContactInfo = Field(default_factory=ContactInfo)
-    summary: Optional[str] = Field(None, description="Professional summary text")
-    profile_photo_url: Optional[str] = Field(None, description="Relative URL to uploaded profile photo if any")
+    summary: str | None = Field(None, description="Professional summary text")
+    profile_photo_url: str | None = Field(None, description="Relative URL to uploaded profile photo if any")
     sections: list[ResumeSectionParseModel] = Field(default_factory=list, description="Ordered resume sections")
     parse_confidence: ParseConfidence = Field(default_factory=ParseConfidence)
-    source_format: Optional[str] = Field(None, description="Source format: 'docx' | 'pdf' | 'manual'")
-    preferred_template: Optional[str] = Field(
+    source_format: str | None = Field(None, description="Source format: 'docx' | 'pdf' | 'manual'")
+    preferred_template: str | None = Field(
         None,
         description="Selected ATS template: 'clean_classic' | 'modern_professional' | 'executive_profile'",
     )
@@ -216,12 +217,12 @@ class StructuredResumeParseModel(BaseModel):
 
 class StructuredResume(BaseModel):
     contact_info: ContactInfo = Field(default_factory=ContactInfo)
-    summary: Optional[str] = Field(None, description="Professional summary text")
-    profile_photo_url: Optional[str] = Field(None, description="Relative URL to uploaded profile photo if any")
+    summary: str | None = Field(None, description="Professional summary text")
+    profile_photo_url: str | None = Field(None, description="Relative URL to uploaded profile photo if any")
     sections: list[ResumeSection] = Field(default_factory=list, description="Ordered resume sections")
     parse_confidence: ParseConfidence = Field(default_factory=ParseConfidence)
-    source_format: Optional[str] = Field(None, description="Source format: 'docx' | 'pdf' | 'manual'")
-    preferred_template: Optional[str] = Field(
+    source_format: str | None = Field(None, description="Source format: 'docx' | 'pdf' | 'manual'")
+    preferred_template: str | None = Field(
         None,
         description="Selected ATS template: 'clean_classic' | 'modern_professional' | 'executive_profile'",
     )
@@ -239,26 +240,22 @@ def is_section_non_empty(sec: ResumeSection) -> bool:
     # Check categories
     cats = content.get("categories") or []
     for cat in cats:
-        if isinstance(cat, dict) and cat.get("skills"):
-            if any(str(s).strip() for s in cat["skills"]):
-                return True
+        if isinstance(cat, dict) and cat.get("skills") and any(str(s).strip() for s in cat["skills"]):
+            return True
 
     # Check entries
     entries = content.get("entries") or []
     for e in entries:
-        if isinstance(e, str) and e.strip():
+        if isinstance(e, str) and e.strip() or isinstance(e, dict) and any(str(v).strip() for v in e.values() if v is not None and str(v).strip() and str(v) != "[]"):
             return True
-        elif isinstance(e, dict):
-            if any(str(v).strip() for v in e.values() if v is not None and str(v).strip() and str(v) != "[]"):
-                return True
 
     return False
 
 
 def convert_parsed_to_structured(parsed: StructuredResumeParseModel) -> StructuredResume:
     """Convert AI-parsed StructuredResumeParseModel into normalized StructuredResume.
-    
-    Auto-extracts any experience, project, education, or certification entries that AI 
+
+    Auto-extracts any experience, project, education, or certification entries that AI
     might have nested inside another section object so no content is ever lost.
     """
     sections: list[ResumeSection] = []

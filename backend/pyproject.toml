@@ -30,8 +30,35 @@ dependencies = [
     "sentry-sdk[fastapi]>=2.0.0",
 ]
 
+[tool.ruff]
+line-length = 120
+
 [tool.ruff.lint]
-ignore = ["BLE001"]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "UP",
+    "SIM",
+]
+ignore = [
+    "E501",
+    "B008",
+    "BLE001",
+    "UP045",
+    "E741",
+    "B904",
+]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::Warning:starlette.*",
+    "ignore:.*starlette.*:Warning",
+    "ignore:.*httpx.*:Warning",
+]
 
 [dependency-groups]
 dev = [

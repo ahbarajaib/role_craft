@@ -6,10 +6,13 @@ Supports Greenhouse, Lever, Ashby, Workday, Indeed (India/Global), LinkedIn, Gla
 
 import re
 import urllib.parse
+
 from bs4 import BeautifulSoup
 from curl_cffi.requests import AsyncSession
-from app.core.logging import logger
+
 from app.core.exceptions import BadRequestError
+from app.core.logging import logger
+
 
 class JobUrlService:
     def __init__(self):
@@ -84,7 +87,7 @@ class JobUrlService:
                     except Exception:
                         pass
         except Exception as e:
-            logger.error(f"[JobUrlService] Error fetching URL {target_fetch_url}: {str(e)}")
+            logger.error(f"[JobUrlService] Error fetching URL {target_fetch_url}: {e!s}")
             # Fallback to standard httpx if curl_cffi hits an edge case
             try:
                 import httpx
@@ -92,7 +95,7 @@ class JobUrlService:
                     resp = await client.get(target_fetch_url, headers=self.headers)
                     status_code = resp.status_code
                     html_content = resp.text
-            except Exception as ex:
+            except Exception:
                 raise BadRequestError(
                     f"Unable to connect to ({domain}). Please verify the link or paste the text directly."
                 )
@@ -197,8 +200,8 @@ class JobUrlService:
         # Indeed Specific Title
         if "indeed" in domain:
             indeed_title = (
-                soup.find("h1", class_=re.compile(r"jobsearch-JobInfoHeader-title|jobTitle", re.I))
-                or soup.find("h2", class_=re.compile(r"jobsearch-JobInfoHeader-title|jobTitle", re.I))
+                soup.find("h1", class_=re.compile(r"jobsearch-JobInfoHeader-title|jobTitle", re.IGNORECASE))
+                or soup.find("h2", class_=re.compile(r"jobsearch-JobInfoHeader-title|jobTitle", re.IGNORECASE))
             )
             if indeed_title:
                 return self._clean_title_string(indeed_title.get_text())
@@ -206,9 +209,9 @@ class JobUrlService:
         # LinkedIn Title
         if "linkedin" in domain:
             li_title = (
-                soup.find("h1", class_=re.compile(r"top-card-layout__title|topcard__title", re.I))
-                or soup.find("h2", class_=re.compile(r"top-card-layout__title|topcard__title", re.I))
-                or soup.find("a", class_=re.compile(r"topcard__link", re.I))
+                soup.find("h1", class_=re.compile(r"top-card-layout__title|topcard__title", re.IGNORECASE))
+                or soup.find("h2", class_=re.compile(r"top-card-layout__title|topcard__title", re.IGNORECASE))
+                or soup.find("a", class_=re.compile(r"topcard__link", re.IGNORECASE))
             )
             if li_title:
                 return self._clean_title_string(li_title.get_text())
@@ -235,10 +238,10 @@ class JobUrlService:
         parts = re.split(r"\s+[\|\-\–\—\:]\s+", clean)
         if parts:
             clean = parts[0].strip()
-            clean = re.sub(r"^Job Application for\s+", "", clean, flags=re.I)
-            clean = re.sub(r"\s+at\s+.*$", "", clean, flags=re.I)
-            clean = re.sub(r"\s+-\s+Indeed.*$", "", clean, flags=re.I)
-            clean = re.sub(r"\s+-\s+LinkedIn.*$", "", clean, flags=re.I)
+            clean = re.sub(r"^Job Application for\s+", "", clean, flags=re.IGNORECASE)
+            clean = re.sub(r"\s+at\s+.*$", "", clean, flags=re.IGNORECASE)
+            clean = re.sub(r"\s+-\s+Indeed.*$", "", clean, flags=re.IGNORECASE)
+            clean = re.sub(r"\s+-\s+LinkedIn.*$", "", clean, flags=re.IGNORECASE)
             if len(clean) > 3 and len(clean) < 100:
                 return clean
         return raw_title.strip()[:100]
@@ -249,9 +252,9 @@ class JobUrlService:
         if "indeed" in domain:
             indeed_comp = (
                 soup.find("div", attrs={"data-company-name": "true"})
-                or soup.find("a", class_=re.compile(r"companyName|jobsearch-CompanyReview", re.I))
-                or soup.find("div", class_=re.compile(r"companyName|jobsearch-InlineCompanyRating", re.I))
-                or soup.find("span", class_=re.compile(r"companyName", re.I))
+                or soup.find("a", class_=re.compile(r"companyName|jobsearch-CompanyReview", re.IGNORECASE))
+                or soup.find("div", class_=re.compile(r"companyName|jobsearch-InlineCompanyRating", re.IGNORECASE))
+                or soup.find("span", class_=re.compile(r"companyName", re.IGNORECASE))
             )
             if indeed_comp:
                 clean_comp = indeed_comp.get_text().strip()
@@ -261,9 +264,9 @@ class JobUrlService:
         # 2. LinkedIn Company Selectors
         if "linkedin" in domain:
             li_comp = (
-                soup.find("a", class_=re.compile(r"topcard__org-name-link|topcard__flavor--black-link", re.I))
-                or soup.find("a", class_=re.compile(r"topcard__flavor", re.I))
-                or soup.find("span", class_=re.compile(r"topcard__flavor", re.I))
+                soup.find("a", class_=re.compile(r"topcard__org-name-link|topcard__flavor--black-link", re.IGNORECASE))
+                or soup.find("a", class_=re.compile(r"topcard__flavor", re.IGNORECASE))
+                or soup.find("span", class_=re.compile(r"topcard__flavor", re.IGNORECASE))
             )
             if li_comp:
                 clean_comp = li_comp.get_text().strip()
@@ -303,35 +306,35 @@ class JobUrlService:
         if "indeed" in domain:
             container = (
                 soup.find("div", id="jobDescriptionText")
-                or soup.find("div", class_=re.compile(r"jobsearch-jobDescriptionText|jobsearch-JobComponent-description", re.I))
+                or soup.find("div", class_=re.compile(r"jobsearch-jobDescriptionText|jobsearch-JobComponent-description", re.IGNORECASE))
             )
 
         # LinkedIn Selectors
         if not container and "linkedin" in domain:
-            container = soup.find("div", class_=re.compile(r"description__text|show-more-less-html__markup", re.I))
+            container = soup.find("div", class_=re.compile(r"description__text|show-more-less-html__markup", re.IGNORECASE))
 
         # Greenhouse
         if not container and "greenhouse" in domain:
-            container = soup.find("id", "main") or soup.find("div", id="content") or soup.find("div", class_=re.compile(r"job|post", re.I))
+            container = soup.find("id", "main") or soup.find("div", id="content") or soup.find("div", class_=re.compile(r"job|post", re.IGNORECASE))
 
         # Lever
         if not container and "lever" in domain:
-            container = soup.find("div", class_=re.compile(r"content|posting", re.I))
+            container = soup.find("div", class_=re.compile(r"content|posting", re.IGNORECASE))
 
         # Ashby
         if not container and "ashby" in domain:
-            container = soup.find("div", class_=re.compile(r"job|posting", re.I))
+            container = soup.find("div", class_=re.compile(r"job|posting", re.IGNORECASE))
 
         # Workday
         if not container and "workday" in domain:
-            container = soup.find("div", attrs={"data-automation-id": re.compile(r"jobPostingDescription", re.I)})
+            container = soup.find("div", attrs={"data-automation-id": re.compile(r"jobPostingDescription", re.IGNORECASE)})
 
         if not container:
             container = (
                 soup.find("main")
                 or soup.find("article")
-                or soup.find("div", id=re.compile(r"job|description|details", re.I))
-                or soup.find("div", class_=re.compile(r"job-description|description|posting-content", re.I))
+                or soup.find("div", id=re.compile(r"job|description|details", re.IGNORECASE))
+                or soup.find("div", class_=re.compile(r"job-description|description|posting-content", re.IGNORECASE))
                 or soup.body
             )
 
@@ -383,7 +386,7 @@ class JobUrlService:
                 await browser.close()
                 return content
         except Exception as e:
-            logger.error(f"[JobUrlService] Playwright fetch failed: {str(e)}")
+            logger.error(f"[JobUrlService] Playwright fetch failed: {e!s}")
             return ""
 
 job_url_service = JobUrlService()

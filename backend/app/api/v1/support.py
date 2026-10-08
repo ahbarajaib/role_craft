@@ -1,13 +1,13 @@
 import json
 from datetime import datetime
-from typing import Optional
+
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 from loguru import logger
+from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.dependencies.auth import get_optional_current_user
-from app.models import User, IssueReport
+from app.models import IssueReport, User
 from app.schemas.support import IssueReportRequest, IssueReportResponse
 
 router = APIRouter(prefix="/support", tags=["Support & Issues"])
@@ -16,10 +16,10 @@ router = APIRouter(prefix="/support", tags=["Support & Issues"])
 def report_issue(
     payload: IssueReportRequest,
     db: Session = Depends(get_db),
-    optional_user: Optional[User] = Depends(get_optional_current_user),
+    optional_user: User | None = Depends(get_optional_current_user),
 ) -> IssueReportResponse:
     """Submit a bug report, formatting error, AI quality feedback, or general inquiry.
-    
+
     Saves to the database for administrative triage in the Admin Dashboard.
     """
     user_id = optional_user.id if optional_user else None

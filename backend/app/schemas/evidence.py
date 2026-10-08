@@ -15,15 +15,13 @@ Design principles
   job needs, and whether the candidate can honestly support it.
 """
 
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-
 # ── Evidence strength levels ──────────────────────────────────────────────────
 
-class EvidenceLevel(str, Enum):
+class EvidenceLevel(StrEnum):
     """How strongly the candidate's resume supports a claim.
 
     LEVEL_1_DIRECT: The candidate explicitly states the skill/technology.
@@ -46,7 +44,7 @@ class EvidenceLevel(str, Enum):
     LEVEL_4_NONE = "none"
 
 
-class EvidenceCategory(str, Enum):
+class EvidenceCategory(StrEnum):
     """Broad category of the evidence item."""
     TECHNOLOGY = "technology"
     FRAMEWORK = "framework"
@@ -67,7 +65,7 @@ class EvidenceCategory(str, Enum):
     OTHER = "other"
 
 
-class EvidenceSourceType(str, Enum):
+class EvidenceSourceType(StrEnum):
     """What kind of resume context the evidence comes from."""
     PROFESSIONAL_EXPERIENCE = "professional_experience"
     PROJECT_EXPERIENCE = "project_experience"
@@ -112,7 +110,7 @@ class EvidenceItem(BaseModel):
         ...,
         description="How strongly this claim can be presented in the output resume.",
     )
-    notes: Optional[str] = Field(
+    notes: str | None = Field(
         None,
         description="Human-readable note about any nuance (e.g. 'API usage only, not model training').",
     )
@@ -131,10 +129,10 @@ class CandidateEvidenceSet(BaseModel):
     LEVEL_3_ADJACENT}.
     """
 
-    candidate_name: Optional[str] = Field(
+    candidate_name: str | None = Field(
         None, description="Full name of the candidate."
     )
-    years_of_experience: Optional[str] = Field(
+    years_of_experience: str | None = Field(
         None,
         description=(
             "Verbatim years-of-experience string from the source resume "
@@ -197,7 +195,7 @@ class CandidateEvidenceSet(BaseModel):
 
 # ── Job requirement classification ───────────────────────────────────────────
 
-class RequirementType(str, Enum):
+class RequirementType(StrEnum):
     REQUIRED = "required"
     PREFERRED = "preferred"
     RESPONSIBILITY = "responsibility"
@@ -205,7 +203,7 @@ class RequirementType(str, Enum):
     QUALIFICATION = "qualification"
 
 
-class EvidenceStatus(str, Enum):
+class EvidenceStatus(StrEnum):
     """Whether candidate evidence supports a specific job requirement."""
     SUPPORTED = "SUPPORTED"
     PARTIALLY_SUPPORTED = "PARTIALLY_SUPPORTED"
@@ -236,7 +234,7 @@ class RequirementMatch(BaseModel):
         default_factory=list,
         description="Adjacent evidence items (LEVEL_3) — related but not equivalent.",
     )
-    allowed_claim: Optional[str] = Field(
+    allowed_claim: str | None = Field(
         None,
         description=(
             "The strongest truthful claim that can be made for this requirement. "
@@ -282,7 +280,7 @@ class TailoringPlan(BaseModel):
             "Safe to use in any section of the tailored resume."
         ),
     )
-    years_of_experience: Optional[str] = Field(
+    years_of_experience: str | None = Field(
         None,
         description=(
             "Verbatim years-of-experience from source resume. "
@@ -292,14 +290,14 @@ class TailoringPlan(BaseModel):
 
 
 __all__ = [
-    "EvidenceLevel",
-    "EvidenceCategory",
-    "EvidenceSourceType",
-    "EvidenceItem",
     "CandidateEvidenceSet",
-    "RequirementType",
+    "EvidenceCategory",
+    "EvidenceItem",
+    "EvidenceLevel",
+    "EvidenceSourceType",
     "EvidenceStatus",
     "JobRequirement",
     "RequirementMatch",
+    "RequirementType",
     "TailoringPlan",
 ]

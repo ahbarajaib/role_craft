@@ -1,0 +1,156 @@
+/* ============================================
+   RoleCraft — Bayt 1-Click Job Copier
+   Button Styles
+   ============================================ */
+
+/* Base button (In-flow button) */
+#rc-bayt-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 16px;
+  margin: 6px 8px 6px 0;
+  height: 38px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  z-index: 100;
+  position: relative;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  vertical-align: middle;
+  text-decoration: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ---- State: Ready — Bayt brand blue ---- */
+#rc-bayt-copy-btn[data-state="ready"] {
+  background-color: #0060aa;
+  color: #ffffff;
+  border-color: #0060aa;
+  box-shadow: 0 2px 6px rgba(0, 96, 170, 0.35);
+}
+
+#rc-bayt-copy-btn[data-state="ready"]:hover {
+  background-color: #004d88;
+  border-color: #004d88;
+  box-shadow: 0 4px 14px rgba(0, 96, 170, 0.45);
+  transform: translateY(-1px);
+}
+
+#rc-bayt-copy-btn[data-state="ready"]:active {
+  background-color: #003c6b;
+  border-color: #003c6b;
+  transform: translateY(0);
+}
+
+/* ---- State: Extracting ---- */
+#rc-bayt-copy-btn[data-state="extracting"] {
+  background-color: #d97706;
+  border-color: #d97706;
+  color: #ffffff;
+  cursor: wait;
+  pointer-events: none;
+}
+
+@keyframes rc-bayt-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+#rc-bayt-copy-btn[data-state="extracting"] {
+  animation: rc-bayt-pulse 1.1s ease-in-out infinite;
+}
+
+/* ---- State: Success ---- */
+#rc-bayt-copy-btn[data-state="success"] {
+  background-color: #057642;
+  border-color: #057642;
+  color: #ffffff;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(5, 118, 66, 0.35);
+}
+
+/* ---- State: Error ---- */
+#rc-bayt-copy-btn[data-state="error"] {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+/* ---- Icon inside button ---- */
+.rc-bayt-icon {
+  display: inline-flex;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.rc-bayt-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+/* ---- Floating Fallback Button ---- */
+#rc-bayt-floating-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483647;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  height: 44px;
+  border-radius: 9999px;
+  background-color: #0060aa;
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 96, 170, 0.5), 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#rc-bayt-floating-btn:hover {
+  background-color: #004d88;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 96, 170, 0.6);
+}
+
+#rc-bayt-floating-btn[data-state="extracting"] {
+  background-color: #d97706;
+  cursor: wait;
+  pointer-events: none;
+  animation: rc-bayt-pulse 1.1s ease-in-out infinite;
+}
+
+#rc-bayt-floating-btn[data-state="success"] {
+  background-color: #057642;
+  cursor: default;
+  pointer-events: none;
+}
+
+#rc-bayt-floating-btn[data-state="error"] {
+  background-color: #dc2626;
+  cursor: pointer;
+}

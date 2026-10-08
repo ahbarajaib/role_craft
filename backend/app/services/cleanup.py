@@ -5,6 +5,7 @@ Scans upload directories and automatically removes old uploads and generated fil
 
 import time
 from pathlib import Path
+
 from loguru import logger
 
 
@@ -14,7 +15,7 @@ def cleanup_old_files(upload_dir: Path, max_age_hours: int) -> None:
     try:
         now = time.time()
         max_age_seconds = max_age_hours * 3600
-        
+
         # Cleanup uploaded files (.docx files in upload_dir)
         if upload_dir.exists():
             for f in upload_dir.iterdir():
@@ -30,7 +31,7 @@ def cleanup_old_files(upload_dir: Path, max_age_hours: int) -> None:
                             )
                         except Exception as unlink_err:
                             logger.warning("Could not delete file", path=str(f), error=str(unlink_err))
-                            
+
         # Cleanup generated patched files (.docx files in upload_dir/generated)
         generated_dir = upload_dir / "generated"
         if generated_dir.exists():

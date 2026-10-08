@@ -1,23 +1,25 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.schemas.auth import (
-    UserSignupRequest,
-    UserLoginRequest,
-    GoogleLoginRequest,
-    ProfileUpdateRequest,
-    ForgotPasswordRequest,
-    AuthResponse,
-    UserResponse,
-    MessageResponse,
-)
-from app.models import User
-from app.core.security import hash_password, verify_password, create_access_token
-from app.core.exceptions import BadRequestError, UnauthorizedError, NotFoundError
-from app.core.config import get_settings
-from app.dependencies.auth import get_current_user
-from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
+from loguru import logger
+from sqlalchemy.orm import Session
+
+from app.core.config import get_settings
+from app.core.database import get_db
+from app.core.exceptions import BadRequestError
+from app.core.security import create_access_token, hash_password, verify_password
+from app.dependencies.auth import get_current_user
+from app.models import User
+from app.schemas.auth import (
+    AuthResponse,
+    ForgotPasswordRequest,
+    GoogleLoginRequest,
+    MessageResponse,
+    ProfileUpdateRequest,
+    UserLoginRequest,
+    UserResponse,
+    UserSignupRequest,
+)
 
 settings = get_settings()
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -31,7 +33,7 @@ def serialize_user_response(user: User) -> UserResponse:
             tracker_dict = json.loads(user.missing_skills_tracker)
         except Exception:
             tracker_dict = {}
-    
+
     # Sort dictionary by frequency count descending
     sorted_tracker = dict(sorted(tracker_dict.items(), key=lambda item: item[1], reverse=True))
 
@@ -62,11 +64,11 @@ def signup(req: UserSignupRequest, db: Session = Depends(get_db)):
     """Register or link password credentials for an email address."""
     email_clean = req.email.strip().lower()
     existing_user = db.query(User).filter(User.email == email_clean).first()
-    
+
     if existing_user:
         if existing_user.password_hash is not None:
             raise BadRequestError("Email address is already registered. Please sign in.")
-        
+
         # Link password to existing Google-created user account
         existing_user.password_hash = hash_password(req.password)
         existing_user.provider = "both"
@@ -144,7 +146,7 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
             except Exception:
                 email = None
             if not email:
-                return AuthResponse(error_message=f"Google authentication failed: {str(e)}")
+                return AuthResponse(error_message=f"Google authentication failed: {e!s}")
 
     email_clean = email.strip().lower()
     user = db.query(User).filter(User.email == email_clean).first()
@@ -248,7 +250,7 @@ def reload_credits(
     user: User = Depends(get_current_user)
 ):
     """Reload credits to VIP amount for VIP emails, or to FREE_TIER_CREDITS for regular users.
-    
+
     VIP users can call this any time their credits run low to top back up to VIP_CREDITS.
     Regular users get refilled to FREE_TIER_CREDITS (useful for manual top-ups by admin).
     """

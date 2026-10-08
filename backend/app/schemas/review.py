@@ -4,15 +4,13 @@ Defines the request body and the structured output model for the
 unified recruiter-centric review.
 """
 
-from enum import Enum
 from pydantic import BaseModel, Field
 
 from app.schemas.analysis import Priority
 from app.schemas.comparison import SectionComparison
 from app.schemas.job_description import JobDescription
+from app.schemas.resume_analysis import ImprovementItem, ReviewStatus, StrengthItem
 from app.schemas.section import SectionItem
-from app.schemas.resume_analysis import ReviewStatus, StrengthItem, ImprovementItem
-
 
 # ── Request (For Standalone Endpoint compatibility) ─────────────────────────
 

@@ -7,19 +7,24 @@ are invented unless explicitly supported by evidence elsewhere in the document.
 
 import re
 from concurrent.futures import ThreadPoolExecutor
+
 from loguru import logger
 
 from app.ai.provider import OpenAIProvider
 from app.constants.resume_keywords import (
-    UNIVERSAL_ROLE_TITLES,
+    EXPERIENCE_SECTION_KEYWORDS,
     PRESERVE_VERBATIM_SECTIONS,
     SKILLS_SECTION_KEYWORDS,
     SUMMARY_SECTION_KEYWORDS,
-    EXPERIENCE_SECTION_KEYWORDS,
+    UNIVERSAL_ROLE_TITLES,
 )
 from app.core.exceptions import BadRequestError
 from app.parsers.job_description_parser import _KNOWN_TECHNOLOGIES
-from app.schemas.rewrite import RewriteSectionResponse, RewriteChangeItem, RewriteChangeType
+from app.schemas.rewrite import (
+    RewriteChangeItem,
+    RewriteChangeType,
+    RewriteSectionResponse,
+)
 from app.services.section_service import SectionService
 
 
@@ -39,9 +44,8 @@ def get_unsupported_jd_technologies(
         else:
             pattern = r"\b" + re.escape(tech_lower) + r"\b"
 
-        if re.search(pattern, jd_lower, re.IGNORECASE):
-            if not re.search(pattern, evidence_lower, re.IGNORECASE):
-                unsupported.add(tech)
+        if re.search(pattern, jd_lower, re.IGNORECASE) and not re.search(pattern, evidence_lower, re.IGNORECASE):
+            unsupported.add(tech)
 
     return unsupported
 
@@ -62,7 +66,7 @@ def sanitize_unsupported_skills_from_text(
     lines = rewritten_text.split("\n")
     cleaned_lines: list[str] = []
 
-    sorted_techs = sorted(list(unsupported_techs), key=lambda x: len(x), reverse=True)
+    sorted_techs = sorted(unsupported_techs, key=len, reverse=True)
 
     for line in lines:
         line_clean = line
@@ -276,9 +280,7 @@ class RewriteService:
                 return True
             is_exp1 = any(kw in n1 for kw in ["experience", "work", "employment", "career"])
             is_exp2 = any(kw in n2 for kw in ["experience", "work", "employment", "career"])
-            if is_exp1 and is_exp2:
-                return True
-            return False
+            return bool(is_exp1 and is_exp2)
 
         # 2. Find target section with fuzzy matching
         target_sec = next(
@@ -387,12 +389,11 @@ class RewriteService:
         # Allow explicitly requested manual single keyword weaves (e.g. user clicked a Red badge manually)
         manually_requested_kws: set[str] = set()
         for r_item in recommendations + ([user_instructions] if user_instructions else []):
-            if r_item and "weave" in r_item.lower():
-                if ":" in r_item:
-                    kw_part = r_item.split(":", 1)[1].strip()
-                    for item in kw_part.split(","):
-                        if item.strip():
-                            manually_requested_kws.add(item.strip().lower())
+            if r_item and "weave" in r_item.lower() and ":" in r_item:
+                kw_part = r_item.split(":", 1)[1].strip()
+                for item in kw_part.split(","):
+                    if item.strip():
+                        manually_requested_kws.add(item.strip().lower())
 
         effective_unsupported_techs = {
             t for t in unsupported_jd_techs
@@ -420,18 +421,22 @@ class RewriteService:
         # 5. Formulate instructions and input
         input_parts = [
             f"=== TARGET JOB DESCRIPTION ===\n{job_description_text.strip()}",
-            f"=== RECRUITER RECOMMENDATIONS FOR THIS SECTION ===\n"
-            f"{' / '.join(sanitized_recs) if sanitized_recs else 'Improve overall impact using Google XYZ formula.'}",
+            (
+                f"=== RECRUITER RECOMMENDATIONS FOR THIS SECTION ===\n"
+                f"{' / '.join(sanitized_recs) if sanitized_recs else 'Improve overall impact using Google XYZ formula.'}"
+            ),
         ]
         if not is_skills_section:
-            from app.services.patch_service import _is_metadata_line, _is_bullet_paragraph, _is_overview_paragraph
-            import docx as _docx_mod
+
+            from app.services.patch_service import (
+                _is_metadata_line,
+            )
 
             # Count non-metadata non-empty content lines from the original section text
             non_meta_lines = [l for l in orig_lines if not _is_metadata_line(l)]
 
             # Try to detect if there is a non-bullet overview paragraph at the top of each role
-            import re as _re
+
             from app.services.patch_service import ACTION_VERBS as _AV
             _action_starts = tuple(_AV)
             overview_lines = [
@@ -584,7 +589,7 @@ class RewriteService:
         user_instructions: str | None = None,
         metric_inputs: dict[str, str] | None = None,
         positioning_mode: str | None = None,
-    ) -> "RewriteSectionResponse":
+    ) -> RewriteSectionResponse:
         """Rewrite a single section using JSON content instead of a DOCX file."""
 
         if section_type == "experience":
@@ -795,7 +800,7 @@ class RewriteService:
         is_skills_section: bool,
         is_summary_section: bool,
         positioning_mode: str | None = None,
-    ) -> "RewriteSectionResponse":
+    ) -> RewriteSectionResponse:
         """Core AI rewrite logic extracted for reuse between DOCX and JSON modes."""
         import re as _re
 
@@ -842,8 +847,10 @@ class RewriteService:
 
         input_parts = [
             f"=== TARGET JOB DESCRIPTION ===\n{job_description_text.strip()}",
-            f"=== RECRUITER RECOMMENDATIONS FOR THIS SECTION ===\n"
-            f"{' / '.join(sanitized_recs) if sanitized_recs else 'Improve overall impact using Google XYZ formula.'}",
+            (
+                f"=== RECRUITER RECOMMENDATIONS FOR THIS SECTION ===\n"
+                f"{' / '.join(sanitized_recs) if sanitized_recs else 'Improve overall impact using Google XYZ formula.'}"
+            ),
         ]
 
         if not is_skills_section:
@@ -881,7 +888,7 @@ class RewriteService:
                 max_output_tokens=700,
             )
         except Exception as exc:
-            raise BadRequestError(f"AI rewrite failed: {str(exc)}")
+            raise BadRequestError(f"AI rewrite failed: {exc!s}")
 
         rewritten_text, _ = sanitize_unsupported_skills_from_text(result.rewritten_text, effective_unsupported_techs)
         if is_summary_section:

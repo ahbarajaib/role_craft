@@ -91,7 +91,6 @@ export default function HistoryModal({
     setCurrentPage(1);
   }, [searchQuery, timeframeFilter, sortBy, dayOffset, weekOffset]);
 
-  if (!isOpen) return null;
 
   const handleTargetChange = async (newTarget: number) => {
     if (!historyData) return;
@@ -333,6 +332,8 @@ export default function HistoryModal({
   }, [historyData?.items]);
 
   const daily = historyData?.summary?.daily_summary;
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-md p-3 sm:p-5 animate-in fade-in duration-200">

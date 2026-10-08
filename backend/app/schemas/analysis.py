@@ -6,13 +6,12 @@ layer's internal types so that the route stays thin and the AI layer
 stays independent from FastAPI.
 """
 
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 from app.schemas.job_description import JobDescription
 from app.schemas.section import SectionItem
-
 
 # ── Request ───────────────────────────────────────────────────────────────────
 
@@ -36,7 +35,7 @@ class AnalysisRequest(BaseModel):
 # ── Response ──────────────────────────────────────────────────────────────────
 
 
-class Priority(str, Enum):
+class Priority(StrEnum):
     """Urgency of the recommended change for this section."""
 
     HIGH = "high"

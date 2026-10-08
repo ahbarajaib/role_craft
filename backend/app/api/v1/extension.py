@@ -1,20 +1,21 @@
 import io
-import os
 import logging
+import os
 import zipfile
 from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
-from app.dependencies.auth import get_current_user, get_optional_current_user
-from app.models import User
+
 from app.core.extension_config import (
-    EXTENSION_FEATURE_GATES,
     EXTENSION_FEATURE_DIRS,
+    EXTENSION_FEATURE_GATES,
     EXTENSION_FEATURE_LABELS,
     EXTENSION_ZIP_FOLDER_NAMES,
     get_accessible_features,
-    has_any_feature_access,
 )
+from app.dependencies.auth import get_current_user, get_optional_current_user
+from app.models import User
 
 router = APIRouter(prefix="/extension", tags=["extension"])
 

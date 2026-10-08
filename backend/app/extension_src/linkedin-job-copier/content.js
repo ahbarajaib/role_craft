@@ -179,65 +179,125 @@
     return null;
   }
 
+  // ---- 3b. Job Title Validation ----
+
+  function isInvalidJobTitle(text) {
+    if (!text || typeof text !== "string") return true;
+    const s = text.trim();
+    if (s.length < 3 || s.length > 250) return true;
+    const lower = s.toLowerCase();
+
+    // Workplace modes are NEVER titles
+    if (/^(hybrid|remote|on-site|onsite|work from home|wfh|in-office|in office|telecommute)$/i.test(lower)) return true;
+
+    // Employment types are NEVER titles
+    if (/^(full-time|part-time|contract|temporary|internship|volunteer|permanent|freelance)$/i.test(lower)) return true;
+
+    // Seniority levels are NEVER titles
+    if (/^(entry level|associate|mid-senior level|mid senior level|director|executive|internship)$/i.test(lower)) return true;
+
+    // Common LinkedIn status, action, and badge labels
+    if (/^(promoted|reposted|actively recruiting|responses within \d+ hours?|view verification|matches your job preferences|easy apply|apply|save|saved|share|report|about the company|about the job|company overview)$/i.test(lower)) return true;
+
+    // Applicant counts or timestamps
+    if (/^(\d+\s+applicants?|over\s+\d+\s+applicants?|be among the first\s+\d+\s+applicants?|\d+\s+(minute|hour|day|week|month|year)s?\s+ago)$/i.test(lower)) return true;
+
+    // Benefits labels
+    if (/^(benefits found in job post|medical insurance|dental insurance|vision insurance|401\(k\)|benefits)$/i.test(lower)) return true;
+
+    if (isUIText(s)) return true;
+
+    return false;
+  }
+
   // ---- 4. Title Extraction ----
 
   function extractTitle(panel) {
     if (!panel) return null;
 
     const strategies = [
-      // Strategy 1: Link that points to a job view URL (most reliable)
+      // Strategy 1: Explicit h1 title selectors on LinkedIn (Most direct and authoritative)
+      () => {
+        const h1Selectors = [
+          'h1.t-24',
+          'h1[class*="job-title" i]',
+          '.job-details-jobs-unified-top-card__job-title h1',
+          '.jobs-unified-top-card__job-title h1',
+          '.job-details-jobs-unified-top-card__job-title',
+          '.jobs-unified-top-card__job-title',
+          '.jobs-search__job-details--container h1',
+          'h1.topcard__title',
+          'h1',
+        ];
+        for (const sel of h1Selectors) {
+          const h1 = panel.querySelector(sel);
+          if (h1) {
+            const link = h1.querySelector('a');
+            const text = (link ? link.textContent : h1.textContent).trim();
+            if (!isInvalidJobTitle(text)) {
+              return text;
+            }
+          }
+        }
+        return null;
+      },
+
+      // Strategy 2: Targeted job-title class or data attribute
+      () => {
+        const titleEls = panel.querySelectorAll('[data-job-title], [class*="job-title" i], .topcard__title');
+        for (const el of titleEls) {
+          const text = el.textContent.trim();
+          if (!isInvalidJobTitle(text)) {
+            return text;
+          }
+        }
+        return null;
+      },
+
+      // Strategy 3: Link that points to a job view URL in the top header card
       () => {
         const links = panel.querySelectorAll('a[href*="/jobs/view/"]');
         for (const link of links) {
           const text = link.textContent.trim();
-          // Job titles are usually substantial text in an anchor
-          if (text.length > 3 && text.length < 200 && !isUIText(text)) {
-            return text;
+          if (!isInvalidJobTitle(text) && text.length > 3) {
+            if (link.closest('h1, h2, [class*="top-card" i], [class*="header" i]')) {
+              return text;
+            }
           }
         }
         return null;
       },
 
-      // Strategy 2: h1 inside the panel
-      () => {
-        const h1 = panel.querySelector('h1');
-        if (h1) {
-          const text = h1.textContent.trim();
-          if (text.length > 2 && !isUIText(text)) return text;
-        }
-        return null;
-      },
-
-      // Strategy 3: h2 heading inside the panel
-      () => {
-        const headings = panel.querySelectorAll('h2, h3');
-        for (const h of headings) {
-          const text = h.textContent.trim();
-          if (text.length > 3 && text.length < 200 && !isUIText(text)) {
-            return text;
-          }
-        }
-        return null;
-      },
-
-      // Strategy 4: The job title link matching current URL's job ID
+      // Strategy 4: The job title link matching current URL job ID
       () => {
         const jobId = extractJobIdFromURL();
         if (!jobId) return null;
         const link = document.querySelector(`a[href*="/jobs/view/${jobId}"]`);
         if (link) {
           const text = link.textContent.trim();
-          if (text.length > 3) return text;
+          if (!isInvalidJobTitle(text)) return text;
         }
         return null;
       },
 
-      // Strategy 5: Global h1 (direct job URL pages)
+      // Strategy 5: Global h1 on document
       () => {
-        const h1 = document.querySelector('h1');
-        if (h1) {
-          const text = h1.textContent.trim();
-          if (text.length > 2 && !isUIText(text)) return text;
+        const docH1 = document.querySelector('.jobs-unified-top-card h1, .job-details-jobs-unified-top-card h1, h1.t-24, h1');
+        if (docH1) {
+          const text = docH1.textContent.trim();
+          if (!isInvalidJobTitle(text)) return text;
+        }
+        return null;
+      },
+
+      // Strategy 6: h2, h3 inside the top card
+      () => {
+        const headings = panel.querySelectorAll('h2, h3');
+        for (const h of headings) {
+          const text = h.textContent.trim();
+          if (!isInvalidJobTitle(text) && text.length > 5) {
+            return text;
+          }
         }
         return null;
       },
@@ -336,72 +396,50 @@
 
   // ---- 6. Location Extraction ----
 
-  function extractLocation(panel) {
+  function extractLocation(panel, currentTitle) {
     if (!panel) return null;
 
     const strategies = [
-      // Strategy 1: Look for location text near the company link.
-      // On LinkedIn's current layout, the pattern is:
-      //   Title (link) → Company (link) → Location (text) → Workplace type
-      // The location is typically a text node near the company link
-      // that contains a comma (City, State, Country).
+      // Strategy 1: Targeted LinkedIn location selectors in top card
       () => {
-        const companyLink = panel.querySelector('a[href*="/company/"]');
-        if (!companyLink) return null;
-
-        // Walk up a few levels and scan all text-bearing elements
-        let container = companyLink.parentElement;
-        for (let i = 0; i < 5 && container; i++) {
-          container = container.parentElement;
-        }
-        if (!container) return null;
-
-        // Get all leaf text elements
-        const walker = document.createTreeWalker(
-          container,
-          NodeFilter.SHOW_ELEMENT,
-          {
-            acceptNode: (node) => {
-              // Only consider elements with direct text (not containers)
-              if (node.children.length > 3) return NodeFilter.FILTER_SKIP;
-              const text = node.textContent.trim();
-              if (text.length > 3 && text.length < 100 && looksLikeLocation(text)) {
-                return NodeFilter.FILTER_ACCEPT;
-              }
-              return NodeFilter.FILTER_SKIP;
-            },
-          }
-        );
-
-        let node;
-        while ((node = walker.nextNode())) {
-          const text = node.textContent.trim();
-          if (looksLikeLocation(text) && !isUIText(text)) {
-            return text;
+        const targetSelectors = [
+          '.job-details-jobs-unified-top-card__primary-description-container span',
+          '.jobs-unified-top-card__subtitle-primary-grouping span',
+          '.job-details-jobs-unified-top-card__bullet',
+          '.jobs-unified-top-card__bullet',
+          '.topcard__flavor--bullet',
+          '.sub-nav-cta__meta-text',
+          '.top-card-layout__first-subline .topcard__flavor:not(.topcard__flavor--link)',
+          '.topcard__flavor:not(.topcard__flavor--link)',
+          '.jobs-unified-top-card__subtitle-secondary-grouping span',
+          '[class*="primary-description" i] span',
+        ];
+        for (const sel of targetSelectors) {
+          const els = panel.querySelectorAll(sel);
+          for (const el of els) {
+            const text = el.textContent.trim();
+            if (looksLikeLocation(text, currentTitle)) {
+              return text;
+            }
           }
         }
         return null;
       },
 
-      // Strategy 2: Scan the top portion of the panel for location-like text
+      // Strategy 2: Near company link within the primary metadata line
       () => {
-        // The job header section is usually in the first ~30% of the panel
-        const allElements = panel.querySelectorAll('span, div, li, p');
-        for (const el of allElements) {
-          // Skip description area
-          if (isInDescriptionArea(el)) continue;
+        const companyLink = panel.querySelector('a[href*="/company/"]');
+        if (!companyLink) return null;
 
-          const text = el.textContent.trim();
-          if (
-            text.length > 3 &&
-            text.length < 100 &&
-            looksLikeLocation(text) &&
-            !isUIText(text) &&
-            el.children.length < 3
-          ) {
-            // Verify this isn't a large container (should be a leaf-ish element)
-            const parentText = el.parentElement?.textContent?.trim() || '';
-            if (text.length > parentText.length * 0.3) {
+        const lineContainer = companyLink.closest(
+          '.job-details-jobs-unified-top-card__primary-description-container, .jobs-unified-top-card__subtitle-primary-grouping, .top-card-layout__first-subline, div, p'
+        );
+        if (lineContainer) {
+          const items = lineContainer.querySelectorAll('span, a');
+          for (const item of items) {
+            if (item.contains(companyLink) || companyLink.contains(item)) continue;
+            const text = item.textContent.trim();
+            if (looksLikeLocation(text, currentTitle)) {
               return text;
             }
           }
@@ -412,43 +450,25 @@
       // Strategy 3: Check for elements with location-related aria-labels
       () => {
         const els = panel.querySelectorAll(
-          '[aria-label*="location"], [aria-label*="Location"]'
+          '[aria-label*="location" i]'
         );
         for (const el of els) {
           const text = el.textContent.trim();
-          if (text.length > 2 && text.length < 100) return text;
+          if (looksLikeLocation(text, currentTitle)) return text;
         }
         return null;
       },
 
-      // Strategy 4: Text between company and "About the job" section
+      // Strategy 4: Leaf text elements in top-card header
       () => {
-        const companyLink = panel.querySelector('a[href*="/company/"]');
-        const aboutEl = findElementByText('About the job', panel);
-        if (!companyLink || !aboutEl) return null;
-
-        // Get the text content between company and About section
-        // by scanning elements in document order
-        const allEls = panel.querySelectorAll('*');
-        let afterCompany = false;
-        for (const el of allEls) {
-          if (el.contains(companyLink) || companyLink.contains(el)) {
-            afterCompany = true;
-            continue;
-          }
-          if (el.contains(aboutEl) || aboutEl.contains(el)) {
-            break;
-          }
-          if (afterCompany) {
-            const text = el.textContent.trim();
-            if (
-              text.length > 3 &&
-              text.length < 100 &&
-              looksLikeLocation(text) &&
-              el.children.length < 3
-            ) {
-              return text;
-            }
+        const topCard = panel.querySelector('.jobs-unified-top-card, .job-details-jobs-unified-top-card') || panel;
+        const allSpans = topCard.querySelectorAll('span');
+        for (const span of allSpans) {
+          if (isInDescriptionArea(span)) continue;
+          if (span.closest('h1, h2')) continue; // Never pick from title headings!
+          const text = span.textContent.trim();
+          if (looksLikeLocation(text, currentTitle)) {
+            return text;
           }
         }
         return null;
@@ -1124,11 +1144,35 @@
       await expandShowMore(panel);
 
       // Step 3: Extract all job details
-      const rawTitle = extractTitle(panel);
+      let rawTitle = extractTitle(panel);
       const rawCompany = extractCompany(panel);
-      const rawLocation = extractLocation(panel);
+      let rawLocation = extractLocation(panel, rawTitle);
       const rawJobType = extractJobType(panel, rawLocation);
       const locAndType = cleanLocationAndExtractJobType(rawLocation, rawJobType);
+
+      // SANITY VALIDATION & CROSS-CORRECTION:
+      // If title was erroneously extracted as a workplace type ("Hybrid", "Remote", "On-site")
+      if (isInvalidJobTitle(rawTitle)) {
+        warn(`Extracted title "${rawTitle}" is invalid. Running fallback title extraction...`);
+        if (rawLocation && !isInvalidJobTitle(rawLocation) && /\b(developer|engineer|manager|architect|lead|analyst|designer|specialist|consultant|programmer|scientist|officer|associate|director)\b/i.test(rawLocation)) {
+          rawTitle = rawLocation;
+          rawLocation = "";
+          locAndType.location = extractLocation(panel, rawTitle) || "";
+        } else {
+          const anyH1 = panel.querySelector("h1") || document.querySelector("h1");
+          if (anyH1 && !isInvalidJobTitle(anyH1.textContent.trim())) {
+            rawTitle = anyH1.textContent.trim();
+          }
+        }
+      }
+
+      // If location was erroneously assigned to the job title or tech stack
+      if (locAndType.location && /\b(developer|engineer|manager|architect|lead|analyst|designer|specialist|consultant|programmer|scientist|python|react|fastapi)\b/i.test(locAndType.location)) {
+        if (!rawTitle || isInvalidJobTitle(rawTitle)) {
+          rawTitle = locAndType.location;
+        }
+        locAndType.location = extractLocation(panel, rawTitle) || "";
+      }
 
       const details = {
         title: rawTitle,
@@ -1317,19 +1361,54 @@
     return UI_TEXT_PATTERNS.some((pattern) => pattern.test(normalized));
   }
 
-  function looksLikeLocation(text) {
-    if (!text || text.length < 3 || text.length > 100) return false;
+  function isInvalidLocation(text, currentTitle) {
+    if (!text || typeof text !== "string") return true;
+    const s = text.trim();
+    if (s.length < 2 || s.length > 120) return true;
+    const lower = s.toLowerCase();
 
-    const locationIndicators = [
-      /,/, // Contains comma (City, State)
-      /\b(india|usa|uk|canada|australia|germany|france|remote|hybrid|on-site|onsite)\b/i,
-      /\b[A-Z]{2}\b/, // State abbreviations
-      /\b(new york|san francisco|london|bangalore|bengaluru|mumbai|delhi|pune|hyderabad|chennai|kolkata|toronto|sydney|berlin|paris|tokyo|singapore|dubai|noida|gurgaon|gurugram)\b/i,
-      /greater\s+.+\s+area/i,
-      /\bremote\b/i,
-    ];
+    // Location CANNOT be or contain the job title
+    if (currentTitle && currentTitle.length > 3) {
+      const titleLower = currentTitle.toLowerCase().trim();
+      if (lower === titleLower || lower.includes(titleLower) || titleLower.includes(lower)) {
+        return true;
+      }
+    }
 
-    return locationIndicators.some((pattern) => pattern.test(text));
+    // Location CANNOT be a job title or technical stack description
+    if (/\b(developer|engineer|manager|architect|lead|analyst|designer|specialist|consultant|programmer|scientist|intern|executive|director|technician|officer|associate|python|react|fastapi|java|javascript|golang|c\+\+|node\.js|angular|vue|aws|azure|devops|full stack|frontend|backend)\b/i.test(lower)) {
+      return true;
+    }
+
+    // Workplace modes alone are not locations
+    if (/^(hybrid|remote|on-site|onsite|wfh|in-office)$/i.test(lower)) return true;
+
+    // Common UI noise
+    if (/^(reposted|promoted|actively recruiting|easy apply|apply|save|saved|share|report|over \d+ applicants|\d+ applicants|\d+ (day|week|month|hour)s? ago)$/i.test(lower)) return true;
+
+    if (isUIText(s)) return true;
+
+    return false;
+  }
+
+  function looksLikeLocation(text, currentTitle) {
+    if (isInvalidLocation(text, currentTitle)) return false;
+    const lower = text.toLowerCase().trim();
+
+    // Known geographic indicators
+    const geoKeywords = /\b(india|usa|united states|uk|united kingdom|uae|united arab emirates|saudi arabia|oman|muscat|dubai|abu dhabi|qatar|kuwait|canada|australia|germany|france|singapore|bangalore|bengaluru|mumbai|delhi|pune|hyderabad|chennai|kolkata|noida|gurgaon|gurugram|ahmedabad|london|toronto|sydney|berlin|paris|tokyo|new york|san francisco|chicago|seattle|austin|boston)\b/i;
+    if (geoKeywords.test(lower)) return true;
+
+    // "Greater ... Area" format
+    if (/greater\s+[a-z\s.-]+\s+area/i.test(lower)) return true;
+
+    // Standard "City, State/Country" pattern: alphabetic and standard punctuation only
+    if (/^[a-z\s.-]+,\s*[a-z\s.-]+(,\s*[a-z\s.-]+)?(\s*\([a-z\s-]+\))?$/i.test(lower)) return true;
+
+    // Location containing workplace tag (e.g. "Pune, Maharashtra, India (Hybrid)")
+    if (/\b(hybrid|remote|on-site|onsite)\b/i.test(lower) && lower.length > 8) return true;
+
+    return false;
   }
 
   /**

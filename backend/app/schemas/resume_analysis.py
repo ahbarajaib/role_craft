@@ -8,14 +8,14 @@ It merges results from the comparison engine (deterministic) and the AI
 reviewer into one flat, easy-to-render structure.
 """
 
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
+
 from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.analysis import Priority
 
 
-class ReviewStatus(str, Enum):
+class ReviewStatus(StrEnum):
     """Classification of the review action needed for a section."""
 
     IMPROVE = "improve"
@@ -33,7 +33,7 @@ class ResumeAnalysisRequest(BaseModel):
     JSON from the database (JSON-first path). This means no uploaded file is needed.
     """
 
-    document_id: Optional[str] = Field(
+    document_id: str | None = Field(
         default=None,
         description="UUID returned by POST /documents/upload. Omit to use the structured resume JSON master.",
     )

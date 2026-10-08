@@ -1,10 +1,12 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 import json
-from typing import Optional, Dict, Any
+import smtplib
 from datetime import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from typing import Any
+
 from loguru import logger
+
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -12,12 +14,12 @@ settings = get_settings()
 def send_support_issue_email(
     report_id: int,
     issue_type: str,
-    subject: Optional[str],
+    subject: str | None,
     description: str,
-    user_email: Optional[str],
-    user_id: Optional[int],
-    context_data: Optional[Dict[str, Any]] = None,
-    created_at: Optional[datetime] = None,
+    user_email: str | None,
+    user_id: int | None,
+    context_data: dict[str, Any] | None = None,
+    created_at: datetime | None = None,
 ) -> bool:
     """Send an immediate HTML + text notification to the admin regarding a user-reported issue."""
     target_email = settings.SUPPORT_NOTIFICATION_EMAIL or "ahbarajaib@gmail.com"
@@ -58,7 +60,7 @@ def send_support_issue_email(
     <head><meta charset="utf-8"></head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.5;color:#0f172a;background-color:#f1f5f9;padding:24px;">
       <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:16px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.05);">
-        
+
         <!-- Header -->
         <div style="background:linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);padding:20px 24px;color:#ffffff;">
           <h2 style="margin:0 0 4px 0;font-size:18px;font-weight:800;letter-spacing:-0.02em;">RoleCraft Issue Alert</h2>

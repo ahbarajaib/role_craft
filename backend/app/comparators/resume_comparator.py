@@ -256,7 +256,7 @@ def _content_words(phrase: str) -> list[str]:
     words like "with", "deep", "strong" do not dilute the match ratio.
     Only technical nouns (languages, tools, frameworks) contribute.
     """
-    words = re.findall(r"[a-z0-9+#.-]{%d,}" % _MIN_WORD_LENGTH, phrase.lower())
+    words = re.findall(rf"[a-z0-9+#.-]{{{_MIN_WORD_LENGTH},}}", phrase.lower())
     return [w for w in words if w not in _SKILL_STOP_WORDS]
 
 

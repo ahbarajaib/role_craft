@@ -90,7 +90,6 @@ SECTION_NAME_MAP: dict[str, str] = {
     "areas of expertise": "skills",
     "expertise": "skills",
     "competencies": "skills",
-    "qualifications": "skills",
     "key qualifications": "skills",
     "technical expertise": "skills",
     "professional skills": "skills",
@@ -106,17 +105,6 @@ SECTION_NAME_MAP: dict[str, str] = {
     "frameworks": "skills",
     "platforms": "skills",
     "databases": "skills",
-    "technical skills & software": "skills",
-    "technical skills and software": "skills",
-    "skills & software": "skills",
-    "skills and software": "skills",
-    "core competencies & tools": "skills",
-    "key competencies": "skills",
-    "additional information": "additional",
-    "additional details": "additional",
-    "other information": "additional",
-    "personal details": "additional",
-    "declarations": "additional",
     # ─── Experience ──────────────────────────────────────────────────────────
     "experience": "experience",
     "experiences": "experience",
@@ -241,10 +229,7 @@ SECTION_NAME_MAP: dict[str, str] = {
     "declaration": "additional",
     # ─── Key Achievements / Accomplishments ───────────────────────────────────
     "key achievements": "awards",
-    "achievements": "awards",
-    "accomplishments": "awards",
     "career highlights": "awards",
-    "key highlights": "awards",
     "notable achievements": "awards",
     # ─── Skills (extra variants) ──────────────────────────────────────────────
     "technical skills & software": "skills",
@@ -254,13 +239,10 @@ SECTION_NAME_MAP: dict[str, str] = {
     "core competencies & tools": "skills",
     "core competencies and tools": "skills",
     "key competencies": "skills",
-    "areas of expertise": "skills",
-    "technical expertise": "skills",
     "capabilities": "skills",
     "it skills": "skills",
     "computer skills": "skills",
     # ─── Summary (extra variants) ─────────────────────────────────────────────
-    "personal statement": "summary",
     "professional background": "summary",
     "candidate profile": "summary",
     "executive profile": "summary",
@@ -272,8 +254,6 @@ SECTION_NAME_MAP: dict[str, str] = {
     "work record": "experience",
     "employment record": "experience",
     # ─── Projects (extra variants) ───────────────────────────────────────────
-    "key projects": "projects",
-    "notable projects": "projects",
     "project highlights": "projects",
     "major projects": "projects",
     # ─── Certifications (extra variants) ─────────────────────────────────────
@@ -282,10 +262,7 @@ SECTION_NAME_MAP: dict[str, str] = {
     "training and development": "certifications",
     "short courses": "certifications",
     # ─── Education (extra variants) ──────────────────────────────────────────
-    "academic qualifications": "education",
     "educational qualifications": "education",
-    "educational background": "education",
-    "academic credentials": "education",
     "degrees & diplomas": "education",
 }
 
@@ -457,14 +434,12 @@ def _is_heading(para: ParsedParagraph, raw_para=None) -> bool:
 
     # Signal 5: Job entry / position sub-heading (contains role title keyword or date pattern)
     import re as _re
+
     from app.constants.resume_keywords import UNIVERSAL_ROLE_TITLES
     t_lower = t.lower()
     has_role = any(_re.search(r"\b" + _re.escape(r) + r"\b", t_lower) for r in UNIVERSAL_ROLE_TITLES)
     has_date = bool(_re.search(r"\b(19|20)\d{2}\b", t_lower)) or "present" in t_lower
-    if (has_role or has_date) and len(t) <= 95 and not t.endswith((".", ";")):
-        return True
-
-    return False
+    return bool((has_role or has_date) and len(t) <= 95 and not t.endswith((".", ";")))
 
 
 def _has_heading_style(style_name: str) -> bool:
@@ -473,9 +448,7 @@ def _has_heading_style(style_name: str) -> bool:
     return (
         "heading" in lower
         or "title" in lower
-        or lower.startswith("h1")
-        or lower.startswith("h2")
-        or lower.startswith("h3")
+        or lower.startswith(("h1", "h2", "h3"))
     )
 
 

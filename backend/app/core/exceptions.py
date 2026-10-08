@@ -14,7 +14,6 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from starlette import status
 
-
 # ── Base exception ────────────────────────────────────────────────────────────
 
 
@@ -129,7 +128,7 @@ async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSON
     return _error_response(
         request,
         status.HTTP_500_INTERNAL_SERVER_ERROR,
-        f"An internal server error occurred: {str(exc)}",
+        f"An internal server error occurred: {exc!s}",
     )
 
 

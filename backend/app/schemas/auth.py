@@ -1,11 +1,12 @@
 from datetime import datetime
-from pydantic import BaseModel
-from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
+
 
 class UserSignupRequest(BaseModel):
     email: str
     password: str
-    name: Optional[str] = None
+    name: str | None = None
 
 class UserLoginRequest(BaseModel):
     email: str
@@ -15,38 +16,37 @@ class GoogleLoginRequest(BaseModel):
     credential: str
 
 class ProfileUpdateRequest(BaseModel):
-    name: Optional[str] = None
-    phone_number: Optional[str] = None
-    address: Optional[str] = None
-    linkedin_url: Optional[str] = None
+    name: str | None = None
+    phone_number: str | None = None
+    address: str | None = None
+    linkedin_url: str | None = None
 
 class UserResponse(BaseModel):
     id: int
     email: str
-    name: Optional[str] = None
+    name: str | None = None
     provider: str
     credits: int
     plan_type: str
     subscription_status: str
-    base_resume_id: Optional[str] = None
-    base_resume_filename: Optional[str] = None
-    base_cover_letter_id: Optional[str] = None
-    base_cover_letter_filename: Optional[str] = None
-    phone_number: Optional[str] = None
-    address: Optional[str] = None
-    linkedin_url: Optional[str] = None
-    missing_skills_tracker: Optional[dict[str, int]] = None
+    base_resume_id: str | None = None
+    base_resume_filename: str | None = None
+    base_cover_letter_id: str | None = None
+    base_cover_letter_filename: str | None = None
+    phone_number: str | None = None
+    address: str | None = None
+    linkedin_url: str | None = None
+    missing_skills_tracker: dict[str, int] | None = None
     is_admin: bool = False
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AuthResponse(BaseModel):
-    access_token: Optional[str] = None
+    access_token: str | None = None
     token_type: str = "bearer"
-    user: Optional[UserResponse] = None
-    error_message: Optional[str] = None
+    user: UserResponse | None = None
+    error_message: str | None = None
 
 class ForgotPasswordRequest(BaseModel):
     email: str

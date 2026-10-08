@@ -2,33 +2,33 @@
 Evidence-grounded tailoring tests.
 All tests are pure unit tests — no HTTP, no DB, no filesystem.
 """
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import pytest
-from app.schemas.structured_resume import StructuredResume, ResumeSection, ContactInfo, ParseConfidence
+from app.ai.cover_letter_prompts import build_cover_letter_input
+from app.schemas.evidence import EvidenceStatus
 from app.schemas.job_description import JobDescription
-from app.schemas.evidence import EvidenceLevel, EvidenceStatus, TailoringPlan
+from app.schemas.structured_resume import (
+    ContactInfo,
+    ParseConfidence,
+    ResumeSection,
+    StructuredResume,
+)
 from app.services.evidence_service import EvidenceService
 from app.services.requirement_matcher import RequirementMatcher
 from app.services.rewrite_service import (
-    sanitize_unsupported_skills_from_text,
-    sanitize_anti_ai_summary,
-    build_summary_positioning_instructions,
-    BANNED_AI_SUMMARY_PHRASES,
     REWRITE_SYSTEM_PROMPT,
     SKILLS_REWRITE_SYSTEM_PROMPT,
     SUMMARY_REWRITE_SYSTEM_PROMPT,
+    build_summary_positioning_instructions,
+    sanitize_anti_ai_summary,
+    sanitize_unsupported_skills_from_text,
 )
 from app.services.tailor_orchestration_service import (
-    TAILOR_EXPERIENCE_SYSTEM,
     TAILOR_SKILLS_SYSTEM,
-    TAILOR_PROJECTS_SYSTEM,
-    TAILOR_SUMMARY_SYSTEM,
 )
-from app.ai.cover_letter_prompts import build_cover_letter_input
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -87,19 +87,19 @@ def _make_resume(
 
 
 def _make_jd(**kwargs):
-    defaults = dict(
-        title="Software Engineer",
-        company="TestCo",
-        location="Remote",
-        employment_type="Full-time",
-        experience_required="5+ years",
-        responsibilities=[],
-        required_skills=[],
-        preferred_skills=[],
-        technologies=[],
-        keywords=[],
-        raw_text="",
-    )
+    defaults = {
+        "title": "Software Engineer",
+        "company": "TestCo",
+        "location": "Remote",
+        "employment_type": "Full-time",
+        "experience_required": "5+ years",
+        "responsibilities": [],
+        "required_skills": [],
+        "preferred_skills": [],
+        "technologies": [],
+        "keywords": [],
+        "raw_text": "",
+    }
     defaults.update(kwargs)
     return JobDescription(**defaults)
 
@@ -410,7 +410,7 @@ def test_sanitize_anti_ai_summary_cleans_banned_cliches():
         "A passionate and dynamic professional who leverages cutting-edge technology to orchestrate synergies."
     )
     cleaned = sanitize_anti_ai_summary(ai_cliche_text)
-    
+
     # Banned clichés should be removed
     lower_cleaned = cleaned.lower()
     assert "results-driven" not in lower_cleaned

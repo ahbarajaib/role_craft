@@ -49,7 +49,7 @@ def build_review_input(
         f"Overall Match Coverage: {comparison.overall_coverage_percentage}%",
         f"JD Required Skills Not Yet In Resume: {', '.join(comparison.missing_skills)}",
         f"JD Required Technologies Not Yet In Resume: {', '.join(comparison.missing_technologies)}",
-        f"NOTE: These are job description requirements — NOT evidence of what the candidate has. Do NOT recommend adding these unless you find direct supporting evidence in the === CANDIDATE RESUME === section.",
+        "NOTE: These are job description requirements — NOT evidence of what the candidate has. Do NOT recommend adding these unless you find direct supporting evidence in the === CANDIDATE RESUME === section.",
         "",
         "=== CANDIDATE RESUME ===",
     ]

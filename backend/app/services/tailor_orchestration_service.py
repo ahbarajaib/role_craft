@@ -8,14 +8,12 @@ The master StructuredResume is NEVER modified.
 """
 
 import copy
-from typing import Optional
 
 from loguru import logger
 
 from app.ai.provider import OpenAIProvider
-from app.schemas.structured_resume import StructuredResume
 from app.schemas.evidence import TailoringPlan
-
+from app.schemas.structured_resume import StructuredResume
 
 TAILOR_SUMMARY_SYSTEM = (
     "You are an executive resume strategist. Rewrite the professional summary to align with the target job title and job description. "
@@ -71,7 +69,7 @@ class TailorOrchestrationService:
         master_resume: StructuredResume,
         job_description: str,
         job_title: str,
-        tailoring_plan: Optional[TailoringPlan] = None,
+        tailoring_plan: TailoringPlan | None = None,
     ) -> tuple:
         """Tailor a full StructuredResume for a job description.
 

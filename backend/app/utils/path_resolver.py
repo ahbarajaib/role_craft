@@ -5,7 +5,9 @@ with automatic fallback handling so missing base files do not crash requests.
 """
 
 from pathlib import Path
+
 from loguru import logger
+
 from app.core.exceptions import NotFoundError
 
 

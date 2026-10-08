@@ -22,8 +22,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator
 
 from app.dependencies.resume_analysis import get_resume_analysis_workflow
-from app.schemas.section import SectionItem, SectionParagraph
 from app.schemas.resume_analysis import ResumeAnalysisResult
+from app.schemas.section import SectionItem, SectionParagraph
 from app.services.resume_analysis_workflow import ResumeAnalysisWorkflow
 
 router = APIRouter(prefix="/resume", tags=["resume"])

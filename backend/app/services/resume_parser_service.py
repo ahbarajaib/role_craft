@@ -1,9 +1,9 @@
 import re
 from pathlib import Path
-from typing import Optional
-from loguru import logger
+
 import docx
 import pymupdf as fitz  # PyMuPDF
+from loguru import logger
 
 from app.ai.provider import OpenAIProvider
 from app.ai.resume_parser_prompts import (
@@ -13,8 +13,8 @@ from app.ai.resume_parser_prompts import (
 from app.core.exceptions import BadRequestError
 from app.schemas.structured_resume import (
     ContactInfo,
-    ResumeSection,
     ParseConfidence,
+    ResumeSection,
     StructuredResume,
     StructuredResumeParseModel,
     convert_parsed_to_structured,
@@ -88,7 +88,7 @@ class ResumeParserService:
             return "\n".join(lines)
         except Exception as exc:
             logger.error("Failed to parse DOCX text", error=str(exc), path=str(file_path))
-            raise BadRequestError(f"Failed to read Word document: {str(exc)}")
+            raise BadRequestError(f"Failed to read Word document: {exc!s}")
 
     def _extract_pdf_text(self, file_path: Path) -> str:
         """Extract text from PDF pages using PyMuPDF, including link annotations."""
@@ -114,9 +114,9 @@ class ResumeParserService:
             return "\n\n".join(lines)
         except Exception as exc:
             logger.error("Failed to parse PDF text", error=str(exc), path=str(file_path))
-            raise BadRequestError(f"Failed to read PDF document: {str(exc)}")
+            raise BadRequestError(f"Failed to read PDF document: {exc!s}")
 
-    def detect_docx_template_match(self, file_path: Path) -> Optional[str]:
+    def detect_docx_template_match(self, file_path: Path) -> str | None:
         """Check if uploaded DOCX font/style matches one of our 3 ATS templates."""
         if file_path.suffix.lower() != ".docx":
             return None
@@ -147,7 +147,7 @@ class ResumeParserService:
         filename: str,
         format_type: str,
         file_path: Path,
-    ) -> Optional[StructuredResume]:
+    ) -> StructuredResume | None:
         """Fast 1ms deterministic parser for resumes with standard headers.
 
         Bypasses OpenAI network I/O if resume has standard section headings and contact info.
@@ -365,7 +365,7 @@ class ResumeParserService:
             parsed = convert_parsed_to_structured(parsed_raw)
         except Exception as exc:
             logger.error("AI parse failed, building fallback structured resume", error=str(exc))
-            raise BadRequestError(f"Failed to parse resume content with AI: {str(exc)}")
+            raise BadRequestError(f"Failed to parse resume content with AI: {exc!s}")
 
         parsed.source_format = format_type
         if format_type == "docx":

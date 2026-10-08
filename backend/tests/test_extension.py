@@ -1,24 +1,24 @@
-import io
 import zipfile
+
+from app.api.v1.extension import build_extension_zip, get_extension_dir
 from app.core.extension_config import (
+    EXTENSION_FEATURE_DIRS,
     EXTENSION_FEATURE_GATES,
     EXTENSION_FEATURE_LABELS,
-    EXTENSION_FEATURE_DIRS,
     EXTENSION_ZIP_FOLDER_NAMES,
     get_accessible_features,
     has_any_feature_access,
 )
-from app.api.v1.extension import build_extension_zip, get_extension_dir
 
 
 def test_extension_feature_config():
     # Verify all 3 platforms are registered
     assert "linkedin" in EXTENSION_FEATURE_GATES
-    assert "indeed" in EXTENSION_FEATURE_GATES
+    assert "bayt" in EXTENSION_FEATURE_GATES
     assert "naukri" in EXTENSION_FEATURE_GATES
 
     assert EXTENSION_FEATURE_GATES["linkedin"] == ["pro", "elite"]
-    assert EXTENSION_FEATURE_GATES["indeed"] == ["elite"]
+    assert EXTENSION_FEATURE_GATES["bayt"] == ["elite"]
     assert EXTENSION_FEATURE_GATES["naukri"] == ["elite"]
 
     assert EXTENSION_FEATURE_LABELS["naukri"] == "Naukri 1-Click Job Copier"
@@ -29,25 +29,25 @@ def test_extension_feature_config():
 def test_plan_access_gates():
     free = get_accessible_features("free")
     assert free["linkedin"] is False
-    assert free["indeed"] is False
+    assert free["bayt"] is False
     assert free["naukri"] is False
     assert has_any_feature_access("free") is False
 
     pro = get_accessible_features("pro")
     assert pro["linkedin"] is True
-    assert pro["indeed"] is False
+    assert pro["bayt"] is False
     assert pro["naukri"] is False
     assert has_any_feature_access("pro") is True
 
     elite = get_accessible_features("elite")
     assert elite["linkedin"] is True
-    assert elite["indeed"] is True
+    assert elite["bayt"] is True
     assert elite["naukri"] is True
     assert has_any_feature_access("elite") is True
 
 
 def test_extension_dirs_exist():
-    for feature in ["linkedin", "indeed", "naukri"]:
+    for feature in ["linkedin", "bayt", "naukri"]:
         d = get_extension_dir(feature)
         assert d.exists(), f"Dir missing for {feature}: {d}"
         manifest = d / "manifest.json"
@@ -76,10 +76,10 @@ def test_build_extension_zip_all_3():
     buf = build_extension_zip(elite_features)
     zf = zipfile.ZipFile(buf)
     names = zf.namelist()
-    top_folders = set(n.split("/")[0] for n in names)
+    top_folders = {n.split("/")[0] for n in names}
     assert top_folders == {
         "RoleCraft-LinkedIn-1-Click-Job-Copier",
-        "RoleCraft-Indeed-1-Click-Job-Copier",
+        "RoleCraft-Bayt-1-Click-Job-Copier",
         "RoleCraft-Naukri-1-Click-Job-Copier",
         "RoleCraft-Cutshort-1-Click-Job-Copier",
     }

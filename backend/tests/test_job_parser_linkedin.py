@@ -26,7 +26,7 @@ BETA • Is this information helpful?
 People you can reach out to
 Meet the hiring team
 
-Divya Kaushik 
+Divya Kaushik
 
 Message
 About the job
@@ -40,15 +40,15 @@ At FurtherAI, we’re building the next generation of AI agents for the insuranc
 
 What You’ll Do
 
-Build and scale the core product, ensuring performance, reliability, and continuous improvement. 
-Own significant portions of the backend stack in Python. 
-Collaborate directly with founders to set the technical direction. 
+Build and scale the core product, ensuring performance, reliability, and continuous improvement.
+Own significant portions of the backend stack in Python.
+Collaborate directly with founders to set the technical direction.
 
 What We’re Looking For
 
-5+ years building products. 
-Strong experience with backend systems (Python preferred). 
-Clear communicator - both in person and in writing. 
+5+ years building products.
+Strong experience with backend systems (Python preferred).
+Clear communicator - both in person and in writing.
 
 Compensation Range: ₹50 - ₹100
 """

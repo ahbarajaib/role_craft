@@ -22,12 +22,13 @@ from app.ai.provider import OpenAIProvider
 from app.core.config import Settings
 from app.dependencies.common import get_settings
 from app.services.comparison_service import ComparisonService
+from app.services.cover_letter_service import CoverLetterService
 from app.services.job_description_service import JobDescriptionService
+from app.services.patch_service import PatchService
 from app.services.resume_analysis_workflow import ResumeAnalysisWorkflow
 from app.services.review_service import ReviewService
-from app.services.section_service import SectionService
 from app.services.rewrite_service import RewriteService
-from app.services.patch_service import PatchService
+from app.services.section_service import SectionService
 
 
 def get_patch_service(
@@ -59,8 +60,6 @@ def get_cover_letter_service(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> CoverLetterService:
     """Construct a ``CoverLetterService`` wired to current settings."""
-    from app.services.cover_letter_service import CoverLetterService
-
     provider = OpenAIProvider(
         api_key=settings.OPENAI_API_KEY,
         model=settings.OPENAI_MODEL,

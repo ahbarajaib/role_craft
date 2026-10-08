@@ -27,11 +27,12 @@ respective service classes.  The handlers' only responsibilities are:
 3. Return the structured response.
 """
 
+import contextlib
 import shutil
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, UploadFile, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -43,7 +44,7 @@ from app.dependencies.common import get_settings
 from app.dependencies.document import get_document_service
 from app.dependencies.parser import get_parser_service
 from app.dependencies.section import get_section_service
-from app.models import User, StructuredResumeModel
+from app.models import StructuredResumeModel, User
 from app.schemas.document import DocumentUploadResponse
 from app.schemas.parser import DocumentParseResponse
 from app.schemas.section import DocumentSectionsResponse
@@ -61,8 +62,8 @@ class SetBaseResumeRequest(BaseModel):
 
 
 class BaseResumeResponse(BaseModel):
-    document_id: Optional[str] = None
-    filename: Optional[str] = None
+    document_id: str | None = None
+    filename: str | None = None
 
 
 @router.post(
@@ -211,10 +212,8 @@ def delete_base_cover_letter(
     upload_dir = Path(settings.UPLOAD_DIR)
     dest_path = upload_dir / "base" / f"{user.id}_cover_letter.docx"
     if dest_path.exists():
-        try:
+        with contextlib.suppress(Exception):
             dest_path.unlink()
-        except Exception:
-            pass
 
     user.base_cover_letter_id = None
     user.base_cover_letter_filename = None
@@ -236,9 +235,9 @@ def _parse_and_save_structured_resume(
     Runs in a background thread so it does not block the API response.
     """
     from loguru import logger
+
     from app.ai.provider import OpenAIProvider
     from app.core.database import SessionLocal
-    from app.models import StructuredResumeModel
     from app.services.resume_parser_service import ResumeParserService
 
     logger.info("Background AI resume parse started", user_id=user_id, file=str(file_path))

@@ -1,54 +1,61 @@
+import contextlib
 import json
 import math
-from datetime import datetime, timedelta
-from typing import Optional, List, Any, Dict
-from fastapi import APIRouter, Depends, Query, HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy import func, or_, desc, asc
-from loguru import logger
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
-from app.core.database import get_db
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from loguru import logger
+from sqlalchemy import asc, desc, func, or_
+from sqlalchemy.orm import Session
+
 from app.core.config import get_settings
-from app.core.exceptions import UnauthorizedError, NotFoundError, BadRequestError, ForbiddenError
-from app.dependencies.auth import get_current_user
+from app.core.database import get_db
+from app.core.exceptions import (
+    BadRequestError,
+    ForbiddenError,
+    NotFoundError,
+    UnauthorizedError,
+)
 from app.dependencies.admin import (
-    get_admin_user,
+    ADMIN_SESSION_TTL_MINUTES,
     check_pin_rate_limit,
+    create_admin_session,
+    get_admin_user,
     record_pin_failure,
     reset_pin_attempts,
-    create_admin_session,
-    ADMIN_SESSION_TTL_MINUTES,
 )
+from app.dependencies.auth import get_current_user
 from app.models import (
-    User,
+    AdminActivityLog,
     AnalysisHistory,
+    IssueReport,
+    SiteConfig,
     StructuredResumeModel,
     TailoredResumeModel,
-    IssueReport,
-    AdminActivityLog,
-    SiteConfig,
+    User,
 )
 from app.schemas.admin import (
-    AdminPinVerifyRequest,
-    AdminPinVerifyResponse,
-    AdminOverviewStats,
-    AdminSignupStat,
-    AdminUsageStat,
-    AdminUserItem,
-    AdminUserListResponse,
-    AdminUserDetail,
-    AdminUserCreditsUpdateRequest,
-    AdminUserPlanUpdateRequest,
-    AdminUserAdminToggleRequest,
-    AdminSupportTicketItem,
-    AdminSupportListResponse,
-    AdminSupportStatusUpdateRequest,
-    AdminConfigResponse,
-    AdminConfigUpdateRequest,
-    AdminBillingResponse,
-    AdminSubscriptionItem,
     AdminActivityLogItem,
     AdminActivityLogResponse,
+    AdminBillingResponse,
+    AdminConfigResponse,
+    AdminConfigUpdateRequest,
+    AdminOverviewStats,
+    AdminPinVerifyRequest,
+    AdminPinVerifyResponse,
+    AdminSignupStat,
+    AdminSubscriptionItem,
+    AdminSupportListResponse,
+    AdminSupportStatusUpdateRequest,
+    AdminSupportTicketItem,
+    AdminUsageStat,
+    AdminUserAdminToggleRequest,
+    AdminUserCreditsUpdateRequest,
+    AdminUserDetail,
+    AdminUserItem,
+    AdminUserListResponse,
+    AdminUserPlanUpdateRequest,
 )
 
 router = APIRouter(prefix="/admin", tags=["Admin Dashboard"])
@@ -59,8 +66,8 @@ def log_admin_action(
     db: Session,
     admin_email: str,
     action: str,
-    target_user_id: Optional[int] = None,
-    payload: Optional[Dict[str, Any]] = None,
+    target_user_id: int | None = None,
+    payload: dict[str, Any] | None = None,
 ) -> None:
     """Helper to record immutable admin activity."""
     log_entry = AdminActivityLog(
@@ -68,7 +75,7 @@ def log_admin_action(
         action=action,
         target_user_id=target_user_id,
         payload_json=json.dumps(payload) if payload else None,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
     )
     db.add(log_entry)
     db.commit()
@@ -137,7 +144,7 @@ def get_overview_stats(
     pro_users = db.query(func.count(User.id)).filter(User.plan_type == "pro").scalar() or 0
     elite_users = db.query(func.count(User.id)).filter(User.plan_type == "elite").scalar() or 0
     free_users = db.query(func.count(User.id)).filter(User.plan_type == "free").scalar() or 0
-    admin_users = db.query(func.count(User.id)).filter(User.is_admin == True).scalar() or 0
+    admin_users = db.query(func.count(User.id)).filter(User.is_admin).scalar() or 0
 
     # Pricing: Pro = ₹399/mo, Elite = ₹599/mo
     estimated_mrr = (pro_users * 399.0) + (elite_users * 599.0)
@@ -159,15 +166,15 @@ def get_overview_stats(
     )
 
 
-@router.get("/stats/signups", response_model=List[AdminSignupStat])
+@router.get("/stats/signups", response_model=list[AdminSignupStat])
 def get_signup_stats(
     days: int = Query(30, ge=7, le=90),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
-) -> List[AdminSignupStat]:
+) -> list[AdminSignupStat]:
     """Get daily new user signups for the last N days."""
-    cutoff_date = datetime.utcnow() - timedelta(days=days)
-    
+    cutoff_date = datetime.now(UTC) - timedelta(days=days)
+
     # Query grouped by date(created_at)
     date_func = func.date(User.created_at)
     results = (
@@ -181,7 +188,7 @@ def get_signup_stats(
     counts_by_date = {row.signup_date: row.count for row in results}
 
     # Fill missing dates with 0
-    stat_list: List[AdminSignupStat] = []
+    stat_list: list[AdminSignupStat] = []
     for i in range(days):
         current_day = (cutoff_date + timedelta(days=i + 1)).strftime("%Y-%m-%d")
         stat_list.append(
@@ -194,15 +201,15 @@ def get_signup_stats(
     return stat_list
 
 
-@router.get("/stats/usage", response_model=List[AdminUsageStat])
+@router.get("/stats/usage", response_model=list[AdminUsageStat])
 def get_usage_stats(
     days: int = Query(30, ge=7, le=90),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
-) -> List[AdminUsageStat]:
+) -> list[AdminUsageStat]:
     """Get daily resume analyses and tailoring usage for the last N days."""
-    cutoff_date = datetime.utcnow() - timedelta(days=days)
-    
+    cutoff_date = datetime.now(UTC) - timedelta(days=days)
+
     date_func_ah = func.date(AnalysisHistory.created_at)
     analyses_results = (
         db.query(date_func_ah.label("usage_date"), func.count(AnalysisHistory.id).label("count"))
@@ -221,7 +228,7 @@ def get_usage_stats(
     )
     tailored_map = {row.usage_date: row.count for row in tailored_results}
 
-    stat_list: List[AdminUsageStat] = []
+    stat_list: list[AdminUsageStat] = []
     for i in range(days):
         current_day = (cutoff_date + timedelta(days=i + 1)).strftime("%Y-%m-%d")
         stat_list.append(
@@ -242,9 +249,9 @@ def get_usage_stats(
 def get_users(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
-    search: Optional[str] = Query(None),
-    plan_type: Optional[str] = Query(None),
-    is_admin: Optional[bool] = Query(None),
+    search: str | None = Query(None),
+    plan_type: str | None = Query(None),
+    is_admin: bool | None = Query(None),
     sort_by: str = Query("created_at"),
     sort_order: str = Query("desc"),
     admin_user: User = Depends(get_admin_user),
@@ -268,17 +275,14 @@ def get_users(
 
     # Sorting
     sort_column = getattr(User, sort_by, User.created_at)
-    if sort_order.lower() == "asc":
-        query = query.order_by(asc(sort_column))
-    else:
-        query = query.order_by(desc(sort_column))
+    query = query.order_by(asc(sort_column)) if sort_order.lower() == "asc" else query.order_by(desc(sort_column))
 
     users = query.offset((page - 1) * limit).limit(limit).all()
 
     # Pre-fetch counts for current page user ids
     user_ids = [u.id for u in users]
-    analyses_counts: Dict[int, int] = {}
-    tailored_counts: Dict[int, int] = {}
+    analyses_counts: dict[int, int] = {}
+    tailored_counts: dict[int, int] = {}
 
     if user_ids:
         ah_rows = (
@@ -375,17 +379,14 @@ def update_user_credits(
     payload: AdminUserCreditsUpdateRequest,
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Set or add credits to a user's account."""
     u = db.query(User).filter(User.id == user_id).first()
     if not u:
         raise NotFoundError(f"User with ID {user_id} not found.")
 
     old_credits = u.credits
-    if payload.mode == "add":
-        new_credits = max(0, u.credits + payload.amount)
-    else:
-        new_credits = max(0, payload.amount)
+    new_credits = max(0, u.credits + payload.amount) if payload.mode == "add" else max(0, payload.amount)
 
     u.credits = new_credits
     db.commit()
@@ -420,9 +421,9 @@ def update_user_plan(
     payload: AdminUserPlanUpdateRequest,
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Update a user's subscription plan type and status.
-    
+
     Automatically grants Pro or Elite tier credit quota if upgraded from a lower balance.
     """
     u = db.query(User).filter(User.id == user_id).first()
@@ -444,14 +445,11 @@ def update_user_plan(
         tier_quota = default_quota
         cfg_row = db.query(SiteConfig).filter(SiteConfig.key == cfg_key).first()
         if cfg_row:
-            try:
+            with contextlib.suppress(Exception):
                 tier_quota = int(json.loads(cfg_row.value))
-            except Exception:
-                pass
-        
+
         # If user balance is below the tier quota, top them up to the full monthly tier amount
-        if u.credits < tier_quota:
-            u.credits = tier_quota
+        u.credits = max(u.credits, tier_quota)
 
     db.commit()
     db.refresh(u)
@@ -485,7 +483,7 @@ def toggle_user_admin(
     payload: AdminUserAdminToggleRequest,
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Promote or demote a user to/from admin privileges."""
     u = db.query(User).filter(User.id == user_id).first()
     if not u:
@@ -524,7 +522,7 @@ def delete_user(
     user_id: int,
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Permanently delete a user account and purge all associated records."""
     if user_id == admin_user.id:
         raise BadRequestError("You cannot delete your own admin account.")
@@ -581,8 +579,8 @@ def delete_user(
 def get_support_tickets(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
-    status_filter: Optional[str] = Query(None, alias="status"),
-    issue_type: Optional[str] = Query(None),
+    status_filter: str | None = Query(None, alias="status"),
+    issue_type: str | None = Query(None),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
 ) -> AdminSupportListResponse:
@@ -636,7 +634,7 @@ def update_support_status(
     payload: AdminSupportStatusUpdateRequest,
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Update status of an IssueReport (open, investigating, resolved)."""
     ticket = db.query(IssueReport).filter(IssueReport.id == report_id).first()
     if not ticket:
@@ -683,8 +681,8 @@ def get_site_config(
         "VIP_EMAILS": settings.VIP_EMAILS,
     }
 
-    result_configs: Dict[str, Any] = {}
-    last_updated: Dict[str, Dict[str, Any]] = {}
+    result_configs: dict[str, Any] = {}
+    last_updated: dict[str, dict[str, Any]] = {}
 
     for key, default_val in default_map.items():
         if key in db_configs:
@@ -716,13 +714,13 @@ def update_site_config(
     payload: AdminConfigUpdateRequest,
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Update a specific configuration value (e.g. FREE_TIER_CREDITS, VIP_EMAILS)."""
     cfg = db.query(SiteConfig).filter(SiteConfig.key == payload.key).first()
     json_val = json.dumps(payload.value)
 
     old_val = cfg.value if cfg else None
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
 
     if cfg:
         cfg.value = json_val
@@ -807,7 +805,7 @@ def get_billing_dashboard(
 def get_activity_log(
     page: int = Query(1, ge=1),
     limit: int = Query(25, ge=1, le=100),
-    action: Optional[str] = Query(None),
+    action: str | None = Query(None),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
 ) -> AdminActivityLogResponse:

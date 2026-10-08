@@ -634,8 +634,8 @@ export async function downloadExtensionZip(
   const disposition = response.headers.get("Content-Disposition") ?? "";
   const match = disposition.match(/filename="?([^"]+)"?/);
   const defaultFilename = feature
-    ? feature === "indeed"
-      ? "RoleCraft-Indeed-1-Click-Job-Copier.zip"
+    ? feature === "bayt"
+      ? "RoleCraft-Bayt-1-Click-Job-Copier.zip"
       : feature === "naukri"
       ? "RoleCraft-Naukri-1-Click-Job-Copier.zip"
       : feature === "cutshort"

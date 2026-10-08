@@ -37,7 +37,6 @@ preferring nouns longer than four characters that appear more than once.
 """
 
 import re
-from collections import Counter
 
 from app.schemas.job_description import JobDescription
 
@@ -305,7 +304,7 @@ def _extract_title(preamble: list[str], lines: list[str] | None = None) -> str:
         "full job description", "job description", "about the role", "overview",
         "job summary", "description", "about us", "position overview", "role summary",
         "job title", "details", "role details", "careers", "position description", "about the position",
-        "about the job", "role details", "job search faster"
+        "about the job", "job search faster"
     }
 
     noise_regex = re.compile(
@@ -326,11 +325,10 @@ def _extract_title(preamble: list[str], lines: list[str] | None = None) -> str:
             continue
 
         # Multi-line match: "JOB TITLE:\n<Role>" or "ROLE:\n<Role>"
-        if re.match(r"^(?:job\s*title|title|role|position)$", lower):
-            if i + 1 < len(all_lines):
-                val = all_lines[i + 1].strip()
-                if val and val.lower() not in generic_headers and not noise_regex.search(val):
-                    return val
+        if re.match(r"^(?:job\s*title|title|role|position)$", lower) and i + 1 < len(all_lines):
+            val = all_lines[i + 1].strip()
+            if val and val.lower() not in generic_headers and not noise_regex.search(val):
+                return val
 
         # Single-line match: "Job Title : <Role>" or "Job Title: <Role>" or "Role: <Role>"
         m = re.match(r"^(?:job\s*title|title|role|position)\s*[:–-]\s*(.+)$", t, re.IGNORECASE)
@@ -451,11 +449,8 @@ def _extract_experience(text: str) -> str:
         if len(stripped) < 10:
             continue
         match = _EXPERIENCE_PATTERN.search(stripped)
-        if match:
-            # Prefer lines that also contain "year" or "experience" as
-            # stronger signals that this is an experience requirement.
-            if re.search(r"year|experience|level", stripped, re.IGNORECASE):
-                return _BULLET_PREFIX.sub("", stripped[:120]).strip()
+        if match and re.search(r"year|experience|level", stripped, re.IGNORECASE):
+            return _BULLET_PREFIX.sub("", stripped[:120]).strip()
     # Fallback: return the first match anywhere in the text
     match = _EXPERIENCE_PATTERN.search(text)
     if match:
@@ -570,7 +565,7 @@ def _extract_keywords(text: str, buckets: dict[str, list[str]] | None = None) ->
         clean = _BULLET_PREFIX.sub("", line).strip()
         # Clean leading introductory phrases like "Experience with", "Knowledge of", "Ability to"
         clean = re.sub(r"^(experience (with|in)|proficien(t|cy) (in|with)|knowledge of|familiarity with|strong understanding of|ability to|proven track record in|expertise in)\s+", "", clean, flags=re.IGNORECASE).strip()
-        
+
         # Split on commas, semicolons, or " and "
         parts = re.split(r"[,;]|\s+(?:and|&)\s+", clean)
         for p in parts:
@@ -578,13 +573,16 @@ def _extract_keywords(text: str, buckets: dict[str, list[str]] | None = None) ->
             # Filter out full sentences or noise words
             if 2 <= len(p_clean) <= 40 and len(p_clean.split()) <= 4:
                 lower = p_clean.lower()
-                if lower not in _STOP_WORDS and not any(w in lower for w in ["willing", "urgency", "fast", "time", "lead", "process", "platform"]):
-                    if lower not in seen:
-                        seen.add(lower)
-                        # Clean title case
-                        words = p_clean.split()
-                        formatted = " ".join(w if w.isupper() and len(w) <= 4 else w.capitalize() for w in words)
-                        found_skills.append(formatted)
+                if (
+                    lower not in _STOP_WORDS
+                    and not any(w in lower for w in ["willing", "urgency", "fast", "time", "lead", "process", "platform"])
+                    and lower not in seen
+                ):
+                    seen.add(lower)
+                    # Clean title case
+                    words = p_clean.split()
+                    formatted = " ".join(w if w.isupper() and len(w) <= 4 else w.capitalize() for w in words)
+                    found_skills.append(formatted)
 
     # Pass 2: Match domain/soft skills across all industries (Logistics, Customs, Finance, Healthcare, Sales, etc.)
     for pattern, canonical in _SOFT_SKILL_PATTERNS:

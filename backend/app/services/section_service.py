@@ -25,7 +25,6 @@ from pathlib import Path
 from loguru import logger
 
 from app.analyzers.section_detector import DetectedSection, detect_sections
-from app.core.exceptions import NotFoundError
 from app.parsers.docx_parser import ParsedParagraph, parse_docx
 from app.schemas.section import DocumentSectionsResponse, SectionItem, SectionParagraph
 

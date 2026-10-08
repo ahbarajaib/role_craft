@@ -63,7 +63,7 @@ import {
   Award,
   Star,
 } from "lucide-react";
-import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, downloadCoverLetterFile, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory, DailyTargetSummary, updateDailyTarget } from "@/lib/api";
+import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, downloadCoverLetterFile, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory, DailyTargetSummary, updateDailyTarget, batchRewriteSections, autoTailorResume } from "@/lib/api";
 import { DailyGoalCard } from "@/components/daily_goal_card";
 import { useAuth } from "@/components/auth_provider";
 import AuthModal from "@/components/auth_modal";
@@ -747,7 +747,7 @@ function SectionCard({
     if (onBulletExclusionChange) {
       onBulletExclusionChange(section.section_name, new Set());
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [rewrittenText]);
 
   const handleBulletToggle = (lineIdx: number) => {
@@ -3078,7 +3078,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
     setIsAutoTailoring(true);
     try {
-      let result = analysisResult;
+      const result = analysisResult;
       if (!result) {
         console.log("🔍 [RoleCraft Audit] Triggering analyzeResume concurrently in background for non-blocking tailoring");
         analyzeResume(jobDescription, documentId || undefined)
@@ -3193,7 +3193,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         });
       }
 
-      const { batchRewriteSections } = require("@/lib/api");
       console.log("🚀 [RoleCraft Audit] Dispatching 16-worker Batch Parallel Tailor Request with Job Title Header:", batchItems);
       const batchRes = await batchRewriteSections({
         document_id: documentId,
@@ -3382,7 +3381,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           });
         }
 
-        const { batchRewriteSections } = require("@/lib/api");
         const batchRes = await batchRewriteSections({
           document_id: documentId,
           job_description_text: jobDescription,
@@ -3398,7 +3396,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       } else {
         // Complete end-to-end path: analysis + parallel batch tailoring + patch generation in one unified workflow
         const detectedJDTitle = extractJobTitleFromJD(jobDescription);
-        const { autoTailorResume } = require("@/lib/api");
         const result = await autoTailorResume({
           document_id: documentId,
           job_description_text: jobDescription,
@@ -3446,7 +3443,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       // Async structured tailor (builder)
       (async () => {
         try {
-          const { tailorResume } = require("@/lib/structured_resume_api");
           const tailoredRes = await tailorResume({
             job_description: jobDescription,
             job_title: effectiveRole,
@@ -4419,7 +4415,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
         },
       });
     }
-  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [token]);  
 
   // ── Mobile / Tablet tab state (Setup / Results) ─────────────────────────
   const [mobileTab, setMobileTab] = useState<"setup" | "results">("setup");
@@ -4682,7 +4678,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               <span className="flex flex-col items-start gap-0.5">
                                 <span className="flex items-center gap-2"><Zap className="h-4 w-4 text-teal-600" /> Browser Extensions</span>
                                 <span className="text-[10px] font-semibold text-teal-600 pl-6">
-                                  {user?.plan_type === "elite" ? "LinkedIn, Indeed & Naukri" : "LinkedIn Job Copier"}
+                                  {user?.plan_type === "elite" ? "LinkedIn, Bayt & Naukri" : "LinkedIn Job Copier"}
                                 </span>
                               </span>
                               <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs shrink-0">{isProOrElite ? "Download" : "Pro"}</span>
@@ -4777,7 +4773,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                           <span className="flex flex-col items-start gap-0.5">
                             <span className="flex items-center gap-2"><Zap className="h-3.5 w-3.5 text-teal-600" /> Browser Extensions</span>
                             <span className="text-[10px] font-semibold text-teal-500 pl-5">
-                              {user?.plan_type === "elite" ? "LinkedIn, Indeed & Naukri" : "LinkedIn Job Copier"}
+                              {user?.plan_type === "elite" ? "LinkedIn, Bayt & Naukri" : "LinkedIn Job Copier"}
                             </span>
                           </span>
                           <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs shrink-0">{isProOrElite ? "Download" : "Pro"}</span>
@@ -5480,7 +5476,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </li>
                     <li className="flex items-center gap-2 text-teal-950 font-bold bg-teal-50/90 -mx-2 px-2 py-1.5 rounded-lg border border-teal-200/80 shadow-2xs">
                       <Sparkles className="h-4 w-4 text-teal-600 shrink-0" />
-                      <span>✦ LinkedIn, Indeed &amp; Naukri Copier Extensions</span>
+                      <span>✦ LinkedIn, Bayt &amp; Naukri Copier Extensions</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />

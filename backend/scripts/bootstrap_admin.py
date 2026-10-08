@@ -7,21 +7,22 @@ Usage:
     python scripts/bootstrap_admin.py [optional_email]
 """
 
-import sys
-import os
 import json
+import os
+import sys
 
 # Add parent directory to sys.path so app can be imported
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.core.database import init_db, SessionLocal
-from app.models import User, SiteConfig
 from app.core.config import get_settings
+from app.core.database import SessionLocal, init_db
+from app.models import SiteConfig, User
+
 
 def bootstrap_admin(target_email: str = "ahbarajaib@gmail.com"):
-    print(f"🚀 Initializing database tables and migrations...")
+    print("🚀 Initializing database tables and migrations...")
     init_db()
-    
+
     settings = get_settings()
     db = SessionLocal()
     try:

@@ -8,30 +8,28 @@ and running a unified recruiter-centric review on the full document.
 from loguru import logger
 
 from app.constants.resume_keywords import (
-    UNIVERSAL_ROLE_TITLES,
-    PRESERVE_VERBATIM_SECTIONS,
     EXPERIENCE_SECTION_KEYWORDS,
+    PRESERVE_VERBATIM_SECTIONS,
+    UNIVERSAL_ROLE_TITLES,
 )
 from app.schemas.analysis import Priority
 from app.schemas.comparison import ComparisonResult, SectionComparison
 from app.schemas.resume_analysis import (
+    ImprovementItem,
     OverallSummary,
     ResumeAnalysisResult,
     ReviewedSection,
     StrengthItem,
-    ImprovementItem,
 )
-from app.schemas.review import ReviewStatus, SectionReviewItem
+from app.schemas.review import ReviewStatus
 from app.schemas.section import SectionItem
 from app.schemas.structured_resume import StructuredResume
+from app.services.analysis_cache import global_analysis_cache
 from app.services.comparison_service import ComparisonService
 from app.services.job_description_service import JobDescriptionService
 from app.services.review_service import ReviewService
 from app.services.section_service import SectionService
 from app.services.structured_resume_text_service import serialize_to_sections
-
-
-from app.services.analysis_cache import global_analysis_cache
 
 
 class ResumeAnalysisWorkflow:
@@ -132,7 +130,7 @@ class ResumeAnalysisWorkflow:
 
         # Step 4 – Unified Recruiter Review
         logger.info("Running unified recruiter-centric resume review")
-        
+
         # Filter sections to only analyze major content sections, excluding
         # Education, header, contact details, and preserve-verbatim sections.
         sections_to_analyze = []
@@ -158,10 +156,7 @@ class ResumeAnalysisWorkflow:
 
             # Skip inline contact/technology labels
             if (
-                title_lower.startswith("technologies:")
-                or title_lower.startswith("tech:")
-                or title_lower.startswith("tech stack:")
-                or title_lower.startswith("+")
+                title_lower.startswith(("technologies:", "tech:", "tech stack:", "+"))
                 or "email:" in title_lower
                 or "phone:" in title_lower
                 or "linkedin.com" in title_lower
@@ -222,7 +217,7 @@ class ResumeAnalysisWorkflow:
 
         processed_section_ids = set()
 
-        def _get_section_evidence(sec: DetectedSection) -> list[str]:
+        def _get_section_evidence(sec: SectionItem) -> list[str]:
             lines = [p.text.strip() for p in sec.paragraphs if p.text and p.text.strip()]
             if lines:
                 return lines
@@ -293,45 +288,44 @@ class ResumeAnalysisWorkflow:
 
         # Map experience review to ALL experience role entries (universal role detection)
         for s in sections_to_analyze:
-            if _is_experience_sub_section(s):
-                if s.title not in processed_section_ids:
-                    processed_section_ids.add(s.title)
-                    section_comparison = _find_comparison(s, comparison_by_name)
-                    
-                    if exp_review:
-                        reviewed_sections.append(
-                            ReviewedSection(
-                                section_name=s.title,
-                                review_status=_sanitize_status(s.title, exp_review.review_status),
-                                rewrite_worthwhile=exp_review.rewrite_worthwhile,
-                                priority=exp_review.priority,
-                                reason=exp_review.reason,
-                                recommendations=exp_review.recommendations,
-                                evidence_used=_get_section_evidence(s),
-                                missing_keywords=_get_missing_keywords(s, section_comparison),
-                                strengths=exp_review.strengths,
-                                coverage_percentage=section_comparison.coverage_percentage,
-                                recruiter_impact="",
-                                ats_impact="",
-                            )
+            if _is_experience_sub_section(s) and s.title not in processed_section_ids:
+                processed_section_ids.add(s.title)
+                section_comparison = _find_comparison(s, comparison_by_name)
+
+                if exp_review:
+                    reviewed_sections.append(
+                        ReviewedSection(
+                            section_name=s.title,
+                            review_status=_sanitize_status(s.title, exp_review.review_status),
+                            rewrite_worthwhile=exp_review.rewrite_worthwhile,
+                            priority=exp_review.priority,
+                            reason=exp_review.reason,
+                            recommendations=exp_review.recommendations,
+                            evidence_used=_get_section_evidence(s),
+                            missing_keywords=_get_missing_keywords(s, section_comparison),
+                            strengths=exp_review.strengths,
+                            coverage_percentage=section_comparison.coverage_percentage,
+                            recruiter_impact="",
+                            ats_impact="",
                         )
-                    else:
-                        reviewed_sections.append(
-                            ReviewedSection(
-                                section_name=s.title,
-                                review_status=ReviewStatus.IMPROVE,
-                                rewrite_worthwhile=True,
-                                priority=Priority.HIGH,
-                                reason="Tailor role achievements and technical metrics using Google XYZ formula.",
-                                recommendations=["Re-structure bullet points using Google XYZ metric formula while preserving original technical evidence."],
-                                evidence_used=_get_section_evidence(s),
-                                missing_keywords=_get_missing_keywords(s, section_comparison),
-                                strengths=["Chronological employment history preserved."],
-                                coverage_percentage=section_comparison.coverage_percentage,
-                                recruiter_impact="",
-                                ats_impact="",
-                            )
+                    )
+                else:
+                    reviewed_sections.append(
+                        ReviewedSection(
+                            section_name=s.title,
+                            review_status=ReviewStatus.IMPROVE,
+                            rewrite_worthwhile=True,
+                            priority=Priority.HIGH,
+                            reason="Tailor role achievements and technical metrics using Google XYZ formula.",
+                            recommendations=["Re-structure bullet points using Google XYZ metric formula while preserving original technical evidence."],
+                            evidence_used=_get_section_evidence(s),
+                            missing_keywords=_get_missing_keywords(s, section_comparison),
+                            strengths=["Chronological employment history preserved."],
+                            coverage_percentage=section_comparison.coverage_percentage,
+                            recruiter_impact="",
+                            ats_impact="",
                         )
+                    )
 
         # Now fill in default reviews for any other un-analyzed sections to ensure they are editable
         for s in sections_to_analyze:

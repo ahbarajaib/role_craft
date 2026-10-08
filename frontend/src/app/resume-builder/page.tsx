@@ -77,16 +77,7 @@ export default function ResumeBuilderPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
-  // Load existing structured resume on mount
-  useEffect(() => {
-    if (token) {
-      loadResume();
-    } else if (!authLoading) {
-      setIsLoadingResume(false);
-    }
-  }, [token, authLoading]);
-
-  const loadResume = async () => {
+  const loadResume = useCallback(async () => {
     setIsLoadingResume(true);
     try {
       const data = await fetchStructuredResume();
@@ -101,7 +92,16 @@ export default function ResumeBuilderPage() {
     } finally {
       setIsLoadingResume(false);
     }
-  };
+  }, []);
+
+  // Load existing structured resume on mount
+  useEffect(() => {
+    if (token) {
+      loadResume();
+    } else if (!authLoading) {
+      setIsLoadingResume(false);
+    }
+  }, [token, authLoading, loadResume]);
 
   const handleFileUpload = async (file: File) => {
     if (!token) {

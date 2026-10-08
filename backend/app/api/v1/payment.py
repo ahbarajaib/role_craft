@@ -1,23 +1,24 @@
-from datetime import datetime, timedelta
-import time
-from typing import Optional
-from fastapi import APIRouter, Depends, Request, Header
-from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.core.config import get_settings
-from app.models import User
-from app.dependencies.auth import get_current_user
-from app.core.exceptions import BadRequestError, UnauthorizedError
-from pydantic import BaseModel
-import razorpay
 import json
+import time
+from datetime import datetime, timedelta
+
+import razorpay
+from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.core.config import get_settings
+from app.core.database import get_db
+from app.core.exceptions import BadRequestError, UnauthorizedError
+from app.dependencies.auth import get_current_user
+from app.models import User
 
 settings = get_settings()
 router = APIRouter(prefix="/payment", tags=["Billing & Payments"])
 
 class SubscriptionRequest(BaseModel):
     plan_type: str # "pro" or "elite"
-    billing_type: Optional[str] = "one_time" # "one_time" (30-day pass) or "recurring" (monthly subscription)
+    billing_type: str | None = "one_time" # "one_time" (30-day pass) or "recurring" (monthly subscription)
 
 @router.post("/subscribe")
 def create_subscription(
@@ -69,7 +70,7 @@ def create_subscription(
                 "is_sandbox": False
             }
         except Exception as e:
-            raise BadRequestError(f"Razorpay Order Error: {str(e)}")
+            raise BadRequestError(f"Razorpay Order Error: {e!s}")
 
     # Handle Recurring Monthly Subscription (Auto-debit mandate)
     if not settings.RAZORPAY_KEY_ID:
@@ -89,14 +90,14 @@ def create_subscription(
     try:
         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
         plan_id = settings.RAZORPAY_PLAN_PRO_ID if plan_clean == "pro" else settings.RAZORPAY_PLAN_ELITE_ID
-        
+
         subscription_payload = {
             "plan_id": plan_id,
             "total_count": 12, # recurring monthly for 1 year
             "quantity": 1,
             "customer_notify": 1
         }
-        
+
         subscription = client.subscription.create(data=subscription_payload)
         user.razorpay_subscription_id = subscription["id"]
         db.commit()
@@ -111,7 +112,7 @@ def create_subscription(
             "is_sandbox": False
         }
     except Exception as e:
-        raise BadRequestError(f"Razorpay Subscription API Error: {str(e)}")
+        raise BadRequestError(f"Razorpay Subscription API Error: {e!s}")
 
 @router.post("/webhook")
 async def razorpay_webhook(
@@ -121,10 +122,10 @@ async def razorpay_webhook(
     """Receive recurring billing and membership lifecycle event hooks from Razorpay."""
     raw_body = await request.body()
     body_str = raw_body.decode("utf-8")
-    
+
     # Extract signature
     signature = request.headers.get("X-Razorpay-Signature")
-    
+
     # Verify Webhook signature if keys are populated
     if settings.RAZORPAY_WEBHOOK_SECRET and settings.RAZORPAY_KEY_ID:
         try:
@@ -202,11 +203,11 @@ def simulate_payment_success(
 
 class VerifySubscriptionRequest(BaseModel):
     razorpay_payment_id: str
-    razorpay_subscription_id: Optional[str] = None
-    razorpay_order_id: Optional[str] = None
+    razorpay_subscription_id: str | None = None
+    razorpay_order_id: str | None = None
     razorpay_signature: str
     plan_type: str = "pro"
-    billing_type: Optional[str] = "one_time"
+    billing_type: str | None = "one_time"
 
 
 @router.post("/verify")
@@ -231,7 +232,7 @@ def verify_subscription(
                     "razorpay_signature": req.razorpay_signature,
                 })
             except Exception as e:
-                raise BadRequestError(f"Payment signature verification failed: {str(e)}")
+                raise BadRequestError(f"Payment signature verification failed: {e!s}")
 
         user.plan_type = plan_clean
         user.subscription_status = "active"
@@ -249,7 +250,7 @@ def verify_subscription(
                     "razorpay_signature": req.razorpay_signature,
                 })
             except Exception as e:
-                raise BadRequestError(f"Subscription signature verification failed: {str(e)}")
+                raise BadRequestError(f"Subscription signature verification failed: {e!s}")
 
         user.plan_type = plan_clean
         user.subscription_status = "active"
@@ -264,8 +265,7 @@ def verify_subscription(
 
     # Auto-grant full tier monthly credits (top up if below quota)
     tier_credits = settings.ELITE_CREDITS if plan_clean == "elite" else settings.PRO_CREDITS
-    if user.credits < tier_credits:
-        user.credits = tier_credits
+    user.credits = max(user.credits, tier_credits)
 
     db.commit()
     db.refresh(user)

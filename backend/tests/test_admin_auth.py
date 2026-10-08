@@ -1,14 +1,15 @@
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from fastapi.testclient import TestClient
-from main import app
+
 from app.core.config import get_settings
-from app.core.security import create_access_token
 from app.core.database import SessionLocal, init_db
+from app.core.security import create_access_token
 from app.models import User
+from main import app
 
 client = TestClient(app)
 settings = get_settings()

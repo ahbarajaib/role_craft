@@ -1,19 +1,17 @@
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 
 /**
  * Returns true when the viewport width is below the given breakpoint (default 768px).
  * Safe for SSR — returns false on the server.
  */
 export function useIsMobile(breakpoint = 768): boolean {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, [breakpoint]);
-
-  return isMobile;
+  return useSyncExternalStore(
+    (callback) => {
+      const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+      mq.addEventListener("change", callback);
+      return () => mq.removeEventListener("change", callback);
+    },
+    () => window.matchMedia(`(max-width: ${breakpoint - 1}px)`).matches,
+    () => false
+  );
 }

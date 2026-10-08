@@ -9,15 +9,16 @@ Primary Engine:
   use `soffice --headless` for native binary conversion.
 """
 
-import os
+import contextlib
 import re
 import shutil
 import subprocess
 from pathlib import Path
+
 import docx
 from loguru import logger
 
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import BadRequestError, NotFoundError
 
 
 def _escape_xml(text: str) -> str:
@@ -75,17 +76,23 @@ class PDFService:
         except Exception as exc:
             logger.error("PDF conversion failed", error=str(exc), path=str(docx_path))
             raise BadRequestError(
-                f"PDF generation failed for this document: {str(exc)}. Please download the DOCX version or contact support."
+                f"PDF generation failed for this document: {exc!s}. Please download the DOCX version or contact support."
             )
 
     def _render_pdf_reportlab(self, docx_path: Path, pdf_path: Path) -> Path:
         """Pure-python fallback to convert DOCX paragraphs into a PDF using ReportLab with high-fidelity formatting."""
-        from reportlab.lib.pagesizes import letter
-        from reportlab.lib import colors
-        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-        from reportlab.lib.units import inch
         from docx.oxml.ns import qn
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.units import inch
+        from reportlab.platypus import (
+            Paragraph,
+            SimpleDocTemplate,
+            Spacer,
+            Table,
+            TableStyle,
+        )
 
         doc = docx.Document(docx_path)
 
@@ -140,10 +147,8 @@ class PDFService:
             ]:
                 fpath = fonts_dir / fname
                 if fpath.exists():
-                    try:
+                    with contextlib.suppress(Exception):
                         pdfmetrics.registerFont(TTFont(reg_name, str(fpath)))
-                    except Exception:
-                        pass
 
             # Detect document primary font family
             for p in doc.paragraphs:
@@ -308,8 +313,6 @@ class PDFService:
         story = []
 
         try:
-            total_paras = len(doc.paragraphs)
-
             for idx, p in enumerate(doc.paragraphs):
                 raw_text = p.text.strip()
                 if not raw_text:
@@ -454,11 +457,11 @@ class PDFService:
 
     def _render_cover_letter_pdf_reportlab(self, doc: docx.Document, pdf_path: Path) -> Path:
         """Render a cover letter DOCX into a high-fidelity, beautifully styled PDF matching executive DOCX formatting."""
-        from reportlab.lib.pagesizes import letter
         from reportlab.lib import colors
-        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
         from reportlab.lib.units import inch
+        from reportlab.platypus import Paragraph, SimpleDocTemplate
 
         pdf_doc = SimpleDocTemplate(
             str(pdf_path),

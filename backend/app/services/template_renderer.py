@@ -8,14 +8,14 @@ Supports 3 ATS-friendly templates:
 """
 
 from pathlib import Path
-from typing import Optional
-from loguru import logger
+
 import docx
-from docx.shared import Inches, Pt, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_ALIGN_VERTICAL, WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from docx.shared import Inches, Pt, RGBColor
+from loguru import logger
 
 from app.schemas.structured_resume import StructuredResume
 
@@ -52,8 +52,8 @@ class ATSTemplateRenderer:
         self,
         resume: StructuredResume,
         output_path: Path,
-        template_name: Optional[str] = None,
-        profile_photo_abs_path: Optional[Path] = None,
+        template_name: str | None = None,
+        profile_photo_abs_path: Path | None = None,
     ) -> Path:
         """Render DOCX file based on selected template."""
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -86,7 +86,7 @@ class ATSTemplateRenderer:
         accepted_rewrites: list[dict],
         output_path: Path,
         template_name: str = "clean_classic",
-        profile_photo_abs_path: Optional[Path] = None,
+        profile_photo_abs_path: Path | None = None,
     ) -> Path:
         """Render resume with accepted AI rewrites merged in-memory.
 
@@ -286,7 +286,7 @@ class ATSTemplateRenderer:
         self,
         doc: docx.Document,
         resume: StructuredResume,
-        profile_photo_abs_path: Optional[Path],
+        profile_photo_abs_path: Path | None,
     ) -> None:
         font_name = "Aptos"
         blue_accent = RGBColor(37, 99, 235)  # #2563eb

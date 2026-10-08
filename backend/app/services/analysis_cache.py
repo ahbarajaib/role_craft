@@ -6,7 +6,7 @@ to deliver instant (~5ms) re-analysis results.
 
 import hashlib
 import time
-from typing import Optional
+
 from loguru import logger
 
 from app.schemas.resume_analysis import ResumeAnalysisResult
@@ -22,10 +22,10 @@ class AnalysisCache:
 
     def compute_key(self, resume_text: str, job_description_text: str) -> str:
         """Generate deterministic MD5 hash key from resume content and target JD."""
-        raw = f"{resume_text.strip()}|{job_description_text.strip()}".encode("utf-8")
+        raw = f"{resume_text.strip()}|{job_description_text.strip()}".encode()
         return hashlib.md5(raw).hexdigest()
 
-    def get(self, cache_key: str) -> Optional[ResumeAnalysisResult]:
+    def get(self, cache_key: str) -> ResumeAnalysisResult | None:
         """Retrieve cached analysis result if valid and not expired."""
         if cache_key not in self._cache:
             return None

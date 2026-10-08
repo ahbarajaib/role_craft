@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     OPENAI_TIMEOUT_SECONDS: float = 120.0
 
     # ── Authentication ────────────────────────────────────────────────────────
-    JWT_SECRET: str = "supersecretrolecraftkey"
+    JWT_SECRET: str = "supersecretrolecraftkey_secure_32bytes_min"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRY_MINUTES: int = 10080  # 7 days (7 * 24 * 60 minutes)
     GOOGLE_CLIENT_ID: str = ""

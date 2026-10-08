@@ -111,7 +111,7 @@ export default function GuidePage() {
               </div>
               <h3 className="text-lg font-black text-slate-900 mb-2">Browser Extensions</h3>
               <p className="text-sm text-slate-600 font-medium max-w-sm relative z-10">
-                Install our Chrome extensions to <strong>1-Click import</strong> job descriptions straight from LinkedIn, Indeed, or Naukri without messy copy-pasting.
+                Install our Chrome extensions to <strong>1-Click import</strong> job descriptions straight from LinkedIn, Bayt, or Naukri without messy copy-pasting.
               </p>
             </div>
 

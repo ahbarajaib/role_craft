@@ -26,7 +26,6 @@ from pathlib import Path
 from fastapi import UploadFile
 from loguru import logger
 
-from app.core.config import Settings
 from app.core.exceptions import BadRequestError
 from app.schemas.document import DocumentUploadResponse
 

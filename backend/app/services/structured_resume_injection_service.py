@@ -7,15 +7,13 @@ bullets, tables) while replacing text content section by section.
 
 from io import BytesIO
 from pathlib import Path
-from typing import Optional
 
 import docx
 from docx.oxml.ns import qn
-from lxml import etree
 from loguru import logger
+from lxml import etree
 
 from app.schemas.structured_resume import StructuredResume
-
 
 SECTION_HEADER_KEYWORDS = {
     "summary": ["summary", "profile", "objective", "about", "introduction", "professional summary"],
@@ -27,7 +25,7 @@ SECTION_HEADER_KEYWORDS = {
 }
 
 
-def _detect_section_type(text: str) -> Optional[str]:
+def _detect_section_type(text: str) -> str | None:
     t = text.strip().lower()
     if not t or len(t) > 60:
         return None
@@ -49,9 +47,7 @@ def _is_section_header(para) -> bool:
         return True
     if text.isupper() and len(text) > 3:
         return True
-    if _detect_section_type(text) is not None:
-        return True
-    return False
+    return _detect_section_type(text) is not None
 
 
 def _set_run_text(run, text: str) -> None:
@@ -195,8 +191,7 @@ class StructuredResumeInjectionService:
                 sec_type = _detect_section_type(para.text)
                 if sec_type:
                     section_headers.append((idx, sec_type))
-                    if idx < first_header_idx:
-                        first_header_idx = idx
+                    first_header_idx = min(first_header_idx, idx)
 
         logger.info("Injection: detected headers", headers=[(i, t) for i, t in section_headers])
 

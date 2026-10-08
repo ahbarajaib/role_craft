@@ -7,7 +7,9 @@ without duplication.
 """
 
 from fastapi import Request
-from app.core.config import Settings, get_settings as _get_settings
+
+from app.core.config import Settings
+from app.core.config import get_settings as _get_settings
 
 
 def get_settings() -> Settings:

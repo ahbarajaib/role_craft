@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "RoleCraft — Bayt 1-Click Job Copier",
+  "version": "1.0.0",
+  "description": "Copy complete job details from any Bayt job posting in 1 click for RoleCraft ATS optimization. Elite feature.",
+  "permissions": [
+    "clipboardWrite",
+    "activeTab"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.bayt.com/*",
+        "https://bayt.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

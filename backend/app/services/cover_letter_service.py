@@ -4,18 +4,20 @@ Generates AI cover letters tailored to a job description, builds styled DOCX/PDF
 documents, and manages updates to generated cover letters.
 """
 
-import datetime
-import re
 import uuid
 from pathlib import Path
+
 import docx
-from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Inches, Pt, RGBColor
 from loguru import logger
 
-from app.ai.cover_letter_prompts import COVER_LETTER_SYSTEM_PROMPT, build_cover_letter_input
+from app.ai.cover_letter_prompts import (
+    COVER_LETTER_SYSTEM_PROMPT,
+    build_cover_letter_input,
+)
 from app.ai.provider import OpenAIProvider
-from app.core.exceptions import BadRequestError, NotFoundError
+from app.core.exceptions import NotFoundError
 from app.schemas.cover_letter import CoverLetterRequest, CoverLetterResponse
 from app.services.section_service import SectionService
 from app.utils.path_resolver import resolve_document_path
@@ -45,7 +47,6 @@ class CoverLetterService:
 
         # Extract Candidate Name (First paragraph of document or user provided)
         candidate_name = request.candidate_name
-        contact_info = ""
         if not candidate_name or candidate_name.strip().lower() in ("candidate", ""):
             doc = docx.Document(docx_path)
             for p in doc.paragraphs:

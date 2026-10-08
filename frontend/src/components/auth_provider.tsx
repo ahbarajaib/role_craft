@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { identifyUser, clearUserTracking } from "@/lib/telemetry";
 
@@ -61,30 +61,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setShowAuthModal(true);
   };
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem("rc_token");
-    if (savedToken) {
-      setToken(savedToken);
-      fetchMe(savedToken);
-    } else {
-      setIsLoading(false);
-    }
+  const logout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem("rc_token");
+    sessionStorage.removeItem("rc_workspace_state");
+    clearUserTracking();
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      identifyUser({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        plan_type: user.plan_type,
-        credits: user.credits,
-        provider: user.provider,
-      });
-    }
-  }, [user]);
-
-  const fetchMe = async (authToken: string) => {
+  const fetchMe = useCallback(async (authToken: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
         headers: {
@@ -106,7 +91,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [logout]);
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("rc_token");
+    if (savedToken) {
+      setToken(savedToken);
+      fetchMe(savedToken);
+    } else {
+      setIsLoading(false);
+    }
+  }, [fetchMe]);
+
+  useEffect(() => {
+    if (user) {
+      identifyUser({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        plan_type: user.plan_type,
+        credits: user.credits,
+        provider: user.provider,
+      });
+    }
+  }, [user]);
 
   const login = async (email: string, password: string) => {
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
@@ -162,14 +170,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(data.user);
     localStorage.setItem("rc_token", data.access_token);
     setShowAuthModal(false);
-  };
-
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem("rc_token");
-    sessionStorage.removeItem("rc_workspace_state");
-    clearUserTracking();
   };
 
   const refreshMe = async () => {

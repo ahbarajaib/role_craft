@@ -9,22 +9,22 @@ import json
 import shutil
 from io import BytesIO
 from pathlib import Path
-from typing import Optional, List
-from fastapi import APIRouter, Depends, File, Form, UploadFile, Query
+
+from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.ai.provider import OpenAIProvider
+from app.api.v1.auth import get_current_user
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.exceptions import BadRequestError, NotFoundError
-from app.models import User, StructuredResumeModel, TailoredResumeModel
+from app.models import StructuredResumeModel, TailoredResumeModel, User
 from app.schemas.structured_resume import StructuredResume
+from app.services.pdf_service import PDFService
 from app.services.resume_parser_service import ResumeParserService
 from app.services.template_renderer import ATSTemplateRenderer
-from app.services.pdf_service import PDFService
-from app.ai.provider import OpenAIProvider
-from app.api.v1.auth import get_current_user
 
 router = APIRouter(prefix="/structured-resume", tags=["Structured Resume Builder"])
 settings = get_settings()
@@ -66,7 +66,7 @@ async def parse_and_save_resume(
         f.write(content)
 
     # Permanently store the original DOCX before it's deleted (used for content injection export)
-    original_docx_path: Optional[str] = None
+    original_docx_path: str | None = None
     if ext == ".docx":
         originals_dir = Path(settings.UPLOAD_DIR) / "originals"
         originals_dir.mkdir(parents=True, exist_ok=True)
@@ -106,7 +106,7 @@ async def parse_and_save_resume(
     return structured_resume
 
 
-@router.get("", response_model=Optional[StructuredResume])
+@router.get("", response_model=StructuredResume | None)
 def get_structured_resume(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -123,7 +123,7 @@ def get_structured_resume(
             res.profile_photo_url = f"/api/v1/structured-resume/photo/{current_user.id}"
         return res
     except Exception as exc:
-        raise BadRequestError(f"Corrupted resume data in database: {str(exc)}")
+        raise BadRequestError(f"Corrupted resume data in database: {exc!s}")
 
 
 def _clean_low_confidence_fields(resume: StructuredResume) -> StructuredResume:
@@ -334,7 +334,7 @@ def generate_resume_pdf(
 # ---------------------------------------------------------------------------
 
 class ExportOriginalRequest(BaseModel):
-    tailored_resume_id: Optional[int] = None  # None = export master StructuredResume
+    tailored_resume_id: int | None = None  # None = export master StructuredResume
 
 
 @router.post("/export-original")
@@ -378,7 +378,9 @@ def export_original_design(
     # and inject it into the original DOCX via the existing patch_service approach.
     # We do this by converting StructuredResume → section text strings, then
     # calling a lightweight injection that replaces text in the original doc.
-    from app.services.structured_resume_injection_service import StructuredResumeInjectionService
+    from app.services.structured_resume_injection_service import (
+        StructuredResumeInjectionService,
+    )
     injection_service = StructuredResumeInjectionService(upload_dir=Path(settings.UPLOAD_DIR))
 
     try:
@@ -388,7 +390,7 @@ def export_original_design(
         )
     except Exception as exc:
         raise BadRequestError(
-            f"Content injection failed for this resume layout: {str(exc)}. "
+            f"Content injection failed for this resume layout: {exc!s}. "
             "Please use one of the ATS templates instead."
         )
 
@@ -408,13 +410,13 @@ def export_original_design(
 
 class TailoredResumeSummary(BaseModel):
     id: int
-    job_title: Optional[str] = None
-    job_company: Optional[str] = None
-    job_id: Optional[str] = None
+    job_title: str | None = None
+    job_company: str | None = None
+    job_id: str | None = None
     created_at: str
 
 
-@router.get("/tailored", response_model=List[TailoredResumeSummary])
+@router.get("/tailored", response_model=list[TailoredResumeSummary])
 def list_tailored_resumes(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),

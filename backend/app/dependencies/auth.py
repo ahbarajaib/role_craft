@@ -1,10 +1,12 @@
-from datetime import datetime
+from datetime import UTC, datetime
+
 from fastapi import Depends, Query
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
+
 from app.core.database import get_db
-from app.core.security import decode_access_token
 from app.core.exceptions import UnauthorizedError
+from app.core.security import decode_access_token
 from app.models import User
 
 security_scheme = HTTPBearer(auto_error=False)
@@ -18,19 +20,23 @@ def get_current_user(
     raw_token = credentials.credentials if credentials else token
     if not raw_token:
         raise UnauthorizedError("Authorization header is missing or invalid.")
-    
+
     payload = decode_access_token(raw_token)
     if not payload or "sub" not in payload:
         raise UnauthorizedError("Session has expired or token is invalid.")
-    
+
     email = payload["sub"]
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise UnauthorizedError("User profile not found.")
 
     # Auto-expire one-off passes if period has elapsed
-    if getattr(user, "plan_expires_at", None) and not user.razorpay_subscription_id and user.subscription_status == "active":
-        if datetime.utcnow() > user.plan_expires_at:
+    expires_at = getattr(user, "plan_expires_at", None)
+    if expires_at and not user.razorpay_subscription_id and user.subscription_status == "active":
+        now_dt = datetime.now(UTC)
+        if expires_at.tzinfo is None:
+            now_dt = now_dt.replace(tzinfo=None)
+        if now_dt > expires_at:
             user.subscription_status = "expired"
             user.plan_type = "free"
             db.commit()
@@ -47,10 +53,10 @@ def get_optional_current_user(
     raw_token = credentials.credentials if credentials else token
     if not raw_token:
         return None
-    
+
     payload = decode_access_token(raw_token)
     if not payload or "sub" not in payload:
         return None
-    
+
     email = payload["sub"]
     return db.query(User).filter(User.email == email).first()

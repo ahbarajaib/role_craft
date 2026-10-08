@@ -1,6 +1,8 @@
 from datetime import datetime
-from typing import Optional, Literal, Any, List, Dict
-from pydantic import BaseModel, Field
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 # --- Auth ---
 class AdminPinVerifyRequest(BaseModel):
@@ -36,34 +38,33 @@ class AdminUsageStat(BaseModel):
 class AdminUserItem(BaseModel):
     id: int
     email: str
-    name: Optional[str] = None
+    name: str | None = None
     provider: str
     is_admin: bool
     credits: int
     plan_type: str
     subscription_status: str
-    razorpay_subscription_id: Optional[str] = None
-    phone_number: Optional[str] = None
+    razorpay_subscription_id: str | None = None
+    phone_number: str | None = None
     created_at: datetime
     analysis_count: int = 0
     tailored_count: int = 0
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AdminUserListResponse(BaseModel):
-    items: List[AdminUserItem]
+    items: list[AdminUserItem]
     total: int
     page: int
     limit: int
     total_pages: int
 
 class AdminUserDetail(AdminUserItem):
-    address: Optional[str] = None
-    linkedin_url: Optional[str] = None
-    base_resume_filename: Optional[str] = None
-    base_cover_letter_filename: Optional[str] = None
-    missing_skills_tracker: Optional[Dict[str, int]] = None
+    address: str | None = None
+    linkedin_url: str | None = None
+    base_resume_filename: str | None = None
+    base_cover_letter_filename: str | None = None
+    missing_skills_tracker: dict[str, int] | None = None
 
 class AdminUserCreditsUpdateRequest(BaseModel):
     amount: int
@@ -79,20 +80,19 @@ class AdminUserAdminToggleRequest(BaseModel):
 # --- Support ---
 class AdminSupportTicketItem(BaseModel):
     id: int
-    user_id: Optional[int] = None
-    user_email: Optional[str] = None
+    user_id: int | None = None
+    user_email: str | None = None
     issue_type: str
-    subject: Optional[str] = None
+    subject: str | None = None
     description: str
-    context_data: Optional[str] = None
+    context_data: str | None = None
     status: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AdminSupportListResponse(BaseModel):
-    items: List[AdminSupportTicketItem]
+    items: list[AdminSupportTicketItem]
     total: int
     page: int
     limit: int
@@ -103,8 +103,8 @@ class AdminSupportStatusUpdateRequest(BaseModel):
 
 # --- Config ---
 class AdminConfigResponse(BaseModel):
-    configs: Dict[str, Any]
-    last_updated: Dict[str, Dict[str, Any]]
+    configs: dict[str, Any]
+    last_updated: dict[str, dict[str, Any]]
 
 class AdminConfigUpdateRequest(BaseModel):
     key: str
@@ -114,32 +114,31 @@ class AdminConfigUpdateRequest(BaseModel):
 class AdminSubscriptionItem(BaseModel):
     user_id: int
     email: str
-    name: Optional[str] = None
+    name: str | None = None
     plan_type: str
     subscription_status: str
-    razorpay_subscription_id: Optional[str] = None
+    razorpay_subscription_id: str | None = None
     created_at: datetime
 
 class AdminBillingResponse(BaseModel):
     estimated_mrr_inr: float
     pro_subscribers_count: int
     elite_subscribers_count: int
-    active_subscriptions: List[AdminSubscriptionItem]
+    active_subscriptions: list[AdminSubscriptionItem]
 
 # --- Audit Logs ---
 class AdminActivityLogItem(BaseModel):
     id: int
     admin_email: str
     action: str
-    target_user_id: Optional[int] = None
-    payload_json: Optional[str] = None
+    target_user_id: int | None = None
+    payload_json: str | None = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AdminActivityLogResponse(BaseModel):
-    items: List[AdminActivityLogItem]
+    items: list[AdminActivityLogItem]
     total: int
     page: int
     limit: int

@@ -1,8 +1,9 @@
+import os
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from app.models import Base
 
-import os
+from app.models import Base
 
 DB_FILE = os.getenv("DATABASE_FILE", "rolecraft.db")
 DATABASE_URL = f"sqlite:///{DB_FILE}"

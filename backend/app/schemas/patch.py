@@ -4,7 +4,7 @@ Defines Pydantic models for request validation and response formatting
 for the DOCX patch and download endpoints.
 """
 
-from typing import Optional
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -29,14 +29,14 @@ class ApplyRewriteItem(BaseModel):
 class ApplyRewriteRequest(BaseModel):
     """Request body for applying accepted section rewrites to a resume."""
 
-    document_id: Optional[str] = Field(
+    document_id: str | None = Field(
         default=None,
         description="UUID of the original uploaded resume document. If omitted, an ATS template is generated from the structured JSON master resume."
     )
     accepted_rewrites: list[ApplyRewriteItem] = Field(
         description="List of user-accepted section rewrites."
     )
-    preferred_template: Optional[str] = Field(
+    preferred_template: str | None = Field(
         default="clean_classic",
         description="ATS template to use for JSON-mode generation: 'clean_classic' | 'modern_professional' | 'executive_profile'"
     )

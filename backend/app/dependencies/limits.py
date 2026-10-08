@@ -1,10 +1,10 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.core.exceptions import InsufficientCreditsError, UnauthorizedError
-from app.dependencies.auth import get_optional_current_user, get_current_user
-from app.models import User
+
 from app.core.config import get_settings
+from app.core.exceptions import InsufficientCreditsError, UnauthorizedError
+from app.dependencies.auth import get_current_user, get_optional_current_user
+from app.models import User
 
 _settings = get_settings()
 

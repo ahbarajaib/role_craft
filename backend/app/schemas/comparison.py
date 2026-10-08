@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field
 from app.schemas.job_description import JobDescription
 from app.schemas.section import SectionItem
 
-
 # ── Request ───────────────────────────────────────────────────────────────────
 
 

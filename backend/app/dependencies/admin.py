@@ -1,23 +1,23 @@
 import secrets
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 from fastapi import Depends, Header, HTTPException, Query, status
-from sqlalchemy.orm import Session
 from loguru import logger
+from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.config import get_settings
-from app.core.exceptions import UnauthorizedError, ForbiddenError
+from app.core.exceptions import ForbiddenError, UnauthorizedError
 from app.dependencies.auth import get_current_user
 from app.models import User
 
 # In-memory admin session storage
 # Token -> {"user_id": int, "email": str, "expires_at": datetime}
-ADMIN_SESSIONS: Dict[str, Dict[str, Any]] = {}
+ADMIN_SESSIONS: dict[str, dict[str, Any]] = {}
 
 # Rate limiting for PIN attempts
 # Key (email or IP) -> {"count": int, "locked_until": Optional[datetime]}
-PIN_RATE_LIMITS: Dict[str, Dict[str, Any]] = {}
+PIN_RATE_LIMITS: dict[str, dict[str, Any]] = {}
 
 MAX_PIN_ATTEMPTS = 5
 LOCKOUT_MINUTES = 15
@@ -30,9 +30,10 @@ def check_pin_rate_limit(client_id: str) -> None:
     if not record:
         return
 
+    now = datetime.now(UTC)
     locked_until = record.get("locked_until")
-    if locked_until and datetime.utcnow() < locked_until:
-        remaining_secs = int((locked_until - datetime.utcnow()).total_seconds())
+    if locked_until and now < locked_until:
+        remaining_secs = int((locked_until - now).total_seconds())
         remaining_mins = max(1, remaining_secs // 60)
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -40,7 +41,7 @@ def check_pin_rate_limit(client_id: str) -> None:
         )
 
     # If lockout expired, reset
-    if locked_until and datetime.utcnow() >= locked_until:
+    if locked_until and now >= locked_until:
         PIN_RATE_LIMITS.pop(client_id, None)
 
 
@@ -49,7 +50,7 @@ def record_pin_failure(client_id: str) -> None:
     record = PIN_RATE_LIMITS.setdefault(client_id, {"count": 0, "locked_until": None})
     record["count"] += 1
     if record["count"] >= MAX_PIN_ATTEMPTS:
-        record["locked_until"] = datetime.utcnow() + timedelta(minutes=LOCKOUT_MINUTES)
+        record["locked_until"] = datetime.now(UTC) + timedelta(minutes=LOCKOUT_MINUTES)
         logger.warning(f"🚨 Admin PIN lockout triggered for {client_id} until {record['locked_until']}")
 
 
@@ -61,7 +62,7 @@ def reset_pin_attempts(client_id: str) -> None:
 def create_admin_session(user: User) -> str:
     """Issue a new random admin session token with 7 days TTL."""
     # Clean up any expired sessions
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     expired_keys = [k for k, v in ADMIN_SESSIONS.items() if v["expires_at"] < now]
     for k in expired_keys:
         ADMIN_SESSIONS.pop(k, None)
@@ -81,13 +82,13 @@ def invalidate_admin_session(token: str) -> None:
 
 
 def get_admin_user(
-    x_admin_token: Optional[str] = Header(None, alias="X-Admin-Token"),
-    admin_token_query: Optional[str] = Query(None, alias="admin_token"),
+    x_admin_token: str | None = Header(None, alias="X-Admin-Token"),
+    admin_token_query: str | None = Query(None, alias="admin_token"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> User:
     """Enforce two-layer authorization:
-    
+
     1. User must be authenticated and have user.is_admin == True.
     2. Request must provide a valid, unexpired session token in X-Admin-Token header or ?admin_token query.
     """
@@ -105,7 +106,7 @@ def get_admin_user(
     if not session_info:
         raise UnauthorizedError("Admin session is invalid or expired. Please re-authenticate.")
 
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     if session_info["expires_at"] < now:
         ADMIN_SESSIONS.pop(effective_token, None)
         raise UnauthorizedError("Admin session has expired. Please enter your Admin Secret PIN.")

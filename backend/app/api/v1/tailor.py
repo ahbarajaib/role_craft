@@ -10,7 +10,6 @@ DELETE /api/v1/tailor/{tailored_id}
 """
 
 import json
-from typing import Optional
 
 from fastapi import APIRouter, Depends
 from loguru import logger
@@ -22,14 +21,12 @@ from app.api.v1.auth import get_current_user
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.exceptions import BadRequestError, NotFoundError
-from app.models import User, StructuredResumeModel, TailoredResumeModel
+from app.models import StructuredResumeModel, TailoredResumeModel, User
+from app.parsers.job_description_parser import parse_job_description
 from app.schemas.structured_resume import StructuredResume
-from app.services.tailor_orchestration_service import TailorOrchestrationService
 from app.services.evidence_service import EvidenceService
 from app.services.requirement_matcher import RequirementMatcher
-from app.parsers.job_description_parser import parse_job_description
-
-from app.dependencies.limits import verify_auth_only
+from app.services.tailor_orchestration_service import TailorOrchestrationService
 
 router = APIRouter(prefix="/tailor", tags=["AI Resume Tailor"])
 settings = get_settings()
@@ -46,8 +43,8 @@ def get_ai_provider() -> OpenAIProvider:
 class TailorRequest(BaseModel):
     job_description: str
     job_title: str
-    job_company: Optional[str] = None
-    job_id: Optional[str] = None
+    job_company: str | None = None
+    job_id: str | None = None
 
 
 class TailorResponse(BaseModel):

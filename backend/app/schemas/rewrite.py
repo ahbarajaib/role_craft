@@ -4,13 +4,13 @@ Defines Pydantic models for request validation and structured response format
 for the individual section rewrite endpoint.
 """
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
 
-class RewriteChangeType(str, Enum):
+class RewriteChangeType(StrEnum):
     """Classification of a modification made by the AI."""
 
     KEYWORD = "keyword"

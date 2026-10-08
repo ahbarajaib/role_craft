@@ -22,17 +22,19 @@ from typing import Any
 import docx
 import docx.text.paragraph
 from docx.oxml.ns import qn
-from lxml import etree
 from loguru import logger
+from lxml import etree
 
-from app.core.exceptions import NotFoundError
-from app.services.section_service import SectionService
-from app.schemas.patch import ApplyRewriteRequest, ApplyRewriteResponse
 from app.constants.resume_keywords import (
-    UNIVERSAL_ROLE_TITLES,
     EXPERIENCE_SECTION_KEYWORDS,
+    UNIVERSAL_ROLE_TITLES,
 )
-
+from app.schemas.patch import (
+    ApplyRewriteItem,
+    ApplyRewriteRequest,
+    ApplyRewriteResponse,
+)
+from app.services.section_service import SectionService
 
 # ---------------------------------------------------------------------------
 # Low-level XML helpers
@@ -183,7 +185,7 @@ def _set_paragraph_text_preserve_fmt(paragraph, new_text: str, default_font: str
                 r.font.name = target_font
         return
 
-    # Check if paragraph contains a category label prefix (e.g. "Backend & Systems: ...") 
+    # Check if paragraph contains a category label prefix (e.g. "Backend & Systems: ...")
     colon_idx = clean_text.find(":")
     if colon_idx > 0 and colon_idx < 50:
         label = clean_text[: colon_idx + 1]
@@ -241,7 +243,7 @@ def _set_paragraph_text_preserve_fmt(paragraph, new_text: str, default_font: str
 
 def _clone_paragraph_xml(
     template_para, doc_body, default_font: str | None = None
-) -> "docx.text.paragraph.Paragraph":
+) -> docx.text.paragraph.Paragraph:
     """Deep-copy a paragraph's XML element preserving ALL formatting and font."""
     cloned_p = copy.deepcopy(template_para._p)
     for t_elem in cloned_p.findall(".//" + qn("w:t")):
@@ -281,7 +283,7 @@ ACTION_VERBS = {
     "executed", "maintained", "supervised", "pioneered", "overhauled", "championed", "established",
     "launched", "migrated", "scaled", "refactored", "deployed", "directed", "authored", "expanded",
     "accelerated", "streamlined", "transformed", "generated", "produced", "introduced", "handled",
-    "constructed", "authored", "devised", "established", "structured", "revamped", "maximized"
+    "constructed", "devised", "structured", "revamped", "maximized"
 }
 
 
@@ -379,15 +381,7 @@ def _is_metadata_line(text: str, para=None) -> bool:
     # Rule 2: unlabelled short non-sentence lines
     has_bullet_prefix = any(t.startswith(s) for s in ["•", "-", "*", "–", "—", "▪", "▸"])
     has_action_verb = first_word in ACTION_VERBS
-    if (
-        len(t) < 70
-        and not t.endswith(".")
-        and not has_bullet_prefix
-        and not has_action_verb
-    ):
-        return True
-
-    return False
+    return bool(len(t) < 70 and not t.endswith(".") and not has_bullet_prefix and not has_action_verb)
 
 
 def _is_overview_paragraph(para) -> bool:
@@ -403,10 +397,8 @@ def _is_overview_paragraph(para) -> bool:
     t = para.text.strip()
     if not t:
         return False
-    if _is_metadata_line(t, para):
-        return False
     # Must look like a prose sentence (has a verb / ends with period or is long)
-    return True
+    return not _is_metadata_line(t, para)
 
 
 class PatchService:
@@ -420,11 +412,11 @@ class PatchService:
 
     def apply_rewrites(
         self,
-        request: Optional[ApplyRewriteRequest] = None,
+        request: ApplyRewriteRequest | None = None,
         *,
-        document_id: Optional[str] = None,
-        accepted_rewrites: Optional[list[ApplyRewriteItem]] = None,
-        preferred_template: Optional[str] = None,
+        document_id: str | None = None,
+        accepted_rewrites: list[ApplyRewriteItem] | None = None,
+        preferred_template: str | None = None,
     ) -> ApplyRewriteResponse:
         """Apply accepted rewrites to the original document and save the result."""
         if request is None:
@@ -594,7 +586,6 @@ class PatchService:
                 # Find all sub-sections that follow the experience heading section
                 exp_sec_idx = sections.index(target_sec)
                 sub_body_para_indexes: list[int] = []
-                experience_keywords = ["experience", "employment", "history", "work", "job", "career", "positions"]
                 non_experience_normalized = ["summary", "skills", "education", "projects", "certifications", "awards", "publications", "languages", "interests", "references", "header"]
                 for sub_sec in sections[exp_sec_idx + 1:]:
                     # Stop if we hit a clearly different top-level section

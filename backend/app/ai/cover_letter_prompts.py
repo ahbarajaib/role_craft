@@ -37,16 +37,16 @@ def build_cover_letter_input(
 ) -> str:
     """Build user prompt for cover letter generation."""
     parts = [
-        f"=== CANDIDATE NAME ===",
+        "=== CANDIDATE NAME ===",
         candidate_name or "Candidate",
         "",
-        f"=== TARGET ROLE ===",
+        "=== TARGET ROLE ===",
         target_role or "Target Role",
         "",
-        f"=== TARGET JOB DESCRIPTION ===",
+        "=== TARGET JOB DESCRIPTION ===",
         job_description_text,
         "",
-        f"=== CANDIDATE SUMMARY & EXPERIENCE (APPLIED RESUME) ===",
+        "=== CANDIDATE SUMMARY & EXPERIENCE (APPLIED RESUME) ===",
         summary_text or "Software Engineer with full-stack and AI engineering background.",
     ]
 

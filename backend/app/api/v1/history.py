@@ -4,22 +4,24 @@ Allows users to retrieve past resume tailoring sessions, reload previous analyse
 the workspace, track daily progress toward application targets, and update their daily goal.
 """
 
+import contextlib
 import json
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func
 
 from app.core.database import get_db
 from app.dependencies.limits import get_current_user
-from app.models import User, AnalysisHistory
+from app.models import AnalysisHistory, User
 from app.schemas.history import (
     AnalysisHistoryItem,
     DailyTargetSummary,
-    HistorySummaryStats,
-    HistoryResponse,
     HistoryDetailResponse,
+    HistoryResponse,
+    HistorySummaryStats,
     UpdateDailyTargetRequest,
 )
 
@@ -146,10 +148,8 @@ def get_history_detail(
 
     analysis_data = {}
     if record.analysis_result_json:
-        try:
+        with contextlib.suppress(Exception):
             analysis_data = json.loads(record.analysis_result_json)
-        except Exception:
-            pass
 
     item = AnalysisHistoryItem(
         id=record.id,

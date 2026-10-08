@@ -252,15 +252,67 @@
     return /^(jobs in|recommended jobs|similar jobs|popular searches|search results|browse jobs|naukri|all jobs|trending jobs)/i.test(txt);
   }
 
+  // ---- 3b. Title & Location Guards ----
+
+  function isInvalidJobTitle(text) {
+    if (!text || typeof text !== "string") return true;
+    const s = text.trim();
+    if (s.length < 3 || s.length > 250) return true;
+    const lower = s.toLowerCase();
+
+    // Workplace modes are NEVER titles
+    if (/^(hybrid|remote|on-site|onsite|work from home|wfh|in-office|in office|telecommute)$/i.test(lower)) return true;
+
+    // Employment types are NEVER titles
+    if (/^(full-time|part-time|contract|temporary|internship|volunteer|permanent|freelance)$/i.test(lower)) return true;
+
+    // Seniority levels are NEVER titles
+    if (/^(entry level|associate|mid-senior level|mid senior level|director|executive|internship)$/i.test(lower)) return true;
+
+    // Common action, navigation or UI noise
+    if (/^(apply|easy apply|save|saved|share|report|about company|company info|send me jobs like this)$/i.test(lower)) return true;
+
+    if (isGenericHeading(s)) return true;
+
+    return false;
+  }
+
+  function isInvalidLocation(text, currentTitle) {
+    if (!text || typeof text !== "string") return true;
+    const s = text.trim();
+    if (s.length < 2 || s.length > 120) return true;
+    const lower = s.toLowerCase();
+
+    // Location CANNOT be or contain the job title
+    if (currentTitle && currentTitle.length > 3) {
+      const titleLower = currentTitle.toLowerCase().trim();
+      if (lower === titleLower || lower.includes(titleLower) || titleLower.includes(lower)) {
+        return true;
+      }
+    }
+
+    // Location CANNOT be a job title or tech stack description
+    if (/\b(developer|engineer|manager|architect|lead|analyst|designer|specialist|consultant|programmer|scientist|intern|executive|director|technician|officer|associate|python|react|fastapi|java|javascript|golang|c\+\+|node\.js|angular|vue|aws|azure|devops|full stack|frontend|backend)\b/i.test(lower)) {
+      return true;
+    }
+
+    // Workplace modes alone are not locations
+    if (/^(hybrid|remote|on-site|onsite|wfh|in-office)$/i.test(lower)) return true;
+
+    return false;
+  }
+
   function extractJobTitle() {
     const jsonLd = getJsonLdJobData();
     if (jsonLd && jsonLd.title && typeof jsonLd.title === 'string') {
-      return jsonLd.title.trim();
+      const txt = jsonLd.title.trim();
+      if (!isInvalidJobTitle(txt)) return txt;
     }
 
     const titleEl = findTitleElement();
     if (titleEl) {
-      return (titleEl.textContent || '').trim();
+      const txt = (titleEl.textContent || '').trim();
+      if (!isInvalidJobTitle(txt)) return txt;
     }
 
     return 'Job Details';
@@ -337,15 +389,24 @@
     return '';
   }
 
-  function extractLocation() {
+  function extractLocation(currentTitle) {
     const jsonLd = getJsonLdJobData();
     if (jsonLd && jsonLd.jobLocation) {
-      if (typeof jsonLd.jobLocation === 'string') return jsonLd.jobLocation.trim();
+      if (typeof jsonLd.jobLocation === 'string') {
+        const txt = jsonLd.jobLocation.trim();
+        if (!isInvalidLocation(txt, currentTitle)) return txt;
+      }
       const addr = jsonLd.jobLocation.address;
       if (addr) {
-        if (typeof addr === 'string') return addr.trim();
+        if (typeof addr === 'string') {
+          const txt = addr.trim();
+          if (!isInvalidLocation(txt, currentTitle)) return txt;
+        }
         const parts = [addr.addressLocality, addr.addressRegion, addr.addressCountry].filter(Boolean);
-        if (parts.length > 0) return parts.join(', ');
+        if (parts.length > 0) {
+          const txt = parts.join(', ');
+          if (!isInvalidLocation(txt, currentTitle)) return txt;
+        }
       }
     }
 
@@ -366,7 +427,7 @@
         const el = panel.querySelector(sel);
         if (el) {
           const txt = (el.textContent || '').trim();
-          if (txt.length > 1 && txt.length < 100) return txt;
+          if (txt.length > 1 && !isInvalidLocation(txt, currentTitle)) return txt;
         }
       } catch (e) {}
     }
@@ -815,13 +876,29 @@
     setButtonState('extracting');
 
     try {
-      const title = extractJobTitle();
+      let title = extractJobTitle();
       const company = extractCompany();
-      const rawLocation = extractLocation();
+      let rawLocation = extractLocation(title);
       const rawJobType = extractJobType(rawLocation);
       const locAndType = cleanLocationAndExtractJobType(rawLocation, rawJobType);
       const url = extractURL();
       const description = extractDescription();
+
+      // SANITY VALIDATION & CROSS-CORRECTION
+      if (isInvalidJobTitle(title)) {
+        warn(`Extracted title "${title}" is invalid. Running fallback...`);
+        if (locAndType.location && !isInvalidJobTitle(locAndType.location) && /\b(developer|engineer|manager|architect|lead|analyst|designer|specialist|consultant|programmer|scientist|officer|associate|director)\b/i.test(locAndType.location)) {
+          title = locAndType.location;
+          locAndType.location = extractLocation(title) || "";
+        }
+      }
+
+      if (locAndType.location && /\b(developer|engineer|manager|architect|lead|analyst|designer|specialist|consultant|programmer|scientist|python|react|fastapi)\b/i.test(locAndType.location)) {
+        if (!title || isInvalidJobTitle(title)) {
+          title = locAndType.location;
+        }
+        locAndType.location = extractLocation(title) || "";
+      }
 
       const formatted = formatForClipboard({
         title,
