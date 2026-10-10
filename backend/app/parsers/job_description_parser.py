@@ -245,6 +245,9 @@ def _split_into_buckets(lines: list[str]) -> dict[str, list[str]]:
     for line in lines:
         if not line:
             continue
+        # Drop standalone scraper/AI noise lines without switching section state
+        if _NOISE_TITLE_REGEX.search(line):
+            continue
         matched = _match_section_header(line)
         if matched:
             current = matched
@@ -294,50 +297,99 @@ def _clean_list(lines: list[str]) -> list[str]:
 
 # ── Metadata extractors ───────────────────────────────────────────────────────
 
+_GENERIC_TITLE_HEADERS: frozenset[str] = frozenset({
+    "full job description", "job description", "about the role", "overview",
+    "job summary", "description", "about us", "position overview", "role summary",
+    "job title", "details", "role details", "careers", "position description", "about the position",
+    "about the job", "job search faster", "target role", "unknown title", "job details",
+    "responsibilities", "requirements", "qualifications", "benefits", "what you'll do", "what you will do",
+    "company", "location", "job type", "employment type", "workplace type", "salary", "compensation",
+    "key responsibilities", "skills", "experience", "what we offer", "who we are", "about"
+})
+
+_NOISE_TITLE_REGEX: re.Pattern[str] = re.compile(
+    r"(company logo for|logo for|^logo\b|\breposted\b|over \d+ people|promoted by|responses managed|"
+    r"cancel anytime|reactivate premium|messagingyou are on|navigating to|followers|members who share|"
+    r"show match details|people you can reach out to|meet the hiring team|job search faster|about the company|"
+    r"software development|employees|"
+    r"use ai to|assess how you fit|assess your fit|see how you fit|see how you compare|see how you match|"
+    r"evaluate your fit|evaluate how you fit|how you match|am i a good fit|are you a good fit|ai assessment|"
+    r"fit assessment|job match|match insights|your profile and resume match|get ai insights|tailor your resume|"
+    r"benefits found in job post)",
+    re.IGNORECASE
+)
+
+
+def _is_invalid_title(text: str) -> bool:
+    if not text:
+        return True
+    s = text.strip()
+    if len(s) < 3 or len(s) > 120:
+        return True
+    lower = s.lower().rstrip(":").strip()
+    if lower in _GENERIC_TITLE_HEADERS:
+        return True
+    if _NOISE_TITLE_REGEX.search(lower):
+        return True
+    if re.match(r"^(?:company|location|job\s*type|employment\s*type|workplace\s*type|job\s*description|description|about\s*the\s*role|about\s*the\s*job|about\s*us)$", lower):
+        return True
+    if re.match(r"^(?:hybrid|remote|on-site|onsite|work from home|wfh|in-office)$", lower):
+        return True
+    if re.match(r"^(?:full-time|part-time|contract|temporary|internship|volunteer|permanent|freelance)$", lower):
+        return True
+    return bool(s.startswith(("•", "-", "*", "–", "—")))
+
 
 def _extract_title(preamble: list[str], lines: list[str] | None = None) -> str:
     """Return the most likely job title from the preamble or full lines.
 
-    Skips generic header phrases and scraper noise (e.g. 'Company logo for...', 'Over 100 people applied').
+    Skips generic header phrases and scraper noise (e.g. 'Company logo for...', 'Over 100 people applied',
+    'Use AI to assess how you fit').
     """
-    generic_headers = {
-        "full job description", "job description", "about the role", "overview",
-        "job summary", "description", "about us", "position overview", "role summary",
-        "job title", "details", "role details", "careers", "position description", "about the position",
-        "about the job", "job search faster"
-    }
-
-    noise_regex = re.compile(
-        r"(company logo for|logo for|^logo\b|\breposted\b|over \d+ people|promoted by|responses managed|"
-        r"cancel anytime|reactivate premium|messagingyou are on|navigating to|followers|members who share|"
-        r"show match details|people you can reach out to|meet the hiring team|job search faster|about the company|"
-        r"software development|employees)",
-        re.IGNORECASE
-    )
-
     all_lines = preamble + (lines or [])
 
     # 1. Look for explicit label "Job Title: <Role>" or "Role: <Role>" (single-line or multi-line)
     for i, line in enumerate(all_lines[:25]):
         t = line.strip()
         lower = t.lower().rstrip(":").strip()
-        if not t or noise_regex.search(lower):
+        if not t or _is_invalid_title(t):
+            # Check if this line is an explicit label prefix like "JOB TITLE:"
+            if re.match(r"^(?:job\s*title|title|role|position)$", lower) and i + 1 < len(all_lines):
+                val = all_lines[i + 1].strip()
+                if not _is_invalid_title(val):
+                    return val
             continue
-
-        # Multi-line match: "JOB TITLE:\n<Role>" or "ROLE:\n<Role>"
-        if re.match(r"^(?:job\s*title|title|role|position)$", lower) and i + 1 < len(all_lines):
-            val = all_lines[i + 1].strip()
-            if val and val.lower() not in generic_headers and not noise_regex.search(val):
-                return val
 
         # Single-line match: "Job Title : <Role>" or "Job Title: <Role>" or "Role: <Role>"
         m = re.match(r"^(?:job\s*title|title|role|position)\s*[:–-]\s*(.+)$", t, re.IGNORECASE)
         if m:
             val = m.group(1).strip()
-            if val and val.lower() not in generic_headers and not noise_regex.search(val):
+            if not _is_invalid_title(val):
                 return val
 
-    # 2. Prioritize finding a short line (<= 80 chars) that contains a recognised role keyword
+    # 2. Look for sentence patterns commonly introducing the role in the body / preamble:
+    # e.g. "We’re looking for a Senior Frontend Developer to build..."
+    # "We are seeking a Lead Backend Engineer to join..."
+    role_pattern = re.compile(
+        r"(?:(?:we\s*['’]?\s*re|we\s+are|we)?\s*(?:looking\s+for|seeking|hiring)\s+(?:an?|our)?\s+|"
+        r"as\s+(?:an?|our)\s+|"
+        r"the\s+role\s+of\s+(?:an?|our)\s+|"
+        r"the\s+position\s+of\s+(?:an?|our)\s+)"
+        r"([A-Z][A-Za-z0-9 /–-]{2,60}?(?:Developer|Engineer|Architect|Manager|Lead|Designer|Specialist|Analyst|Consultant|Scientist|Director|Administrator|Programmer|Officer))"
+        r"(?:[\s,.]|\bto\b|\bwho\b|\bwith\b|\bin\b|$)",
+        re.IGNORECASE
+    )
+    for line in all_lines[:30]:
+        t = line.strip()
+        if not t:
+            continue
+        m = role_pattern.search(t)
+        if m:
+            cand = m.group(1).strip()
+            if not _is_invalid_title(cand):
+                return cand
+
+    # 3. Prioritize finding a short line (<= 80 chars) that contains a recognised role keyword
     role_titles = [
         "developer", "engineer", "architect", "manager", "lead", "designer",
         "consultant", "analyst", "specialist", "administrator", "executive",
@@ -345,19 +397,18 @@ def _extract_title(preamble: list[str], lines: list[str] | None = None) -> str:
         "director", "head", "vp", "associate", "intern", "product"
     ]
 
-    for line in all_lines[:15]:
+    for line in all_lines[:25]:
         t = line.strip()
-        lower = t.lower().rstrip(":").strip()
-        if not t or lower in generic_headers or lower.startswith("http") or noise_regex.search(lower):
+        if not t or _is_invalid_title(t):
             continue
+        lower = t.lower()
         if len(t) <= 80 and any(r in lower for r in role_titles):
             return t
 
-    # 3. Fallback: check preamble lines, skipping generic headers and noise
+    # 4. Fallback: check preamble lines, skipping generic headers and noise
     for line in preamble:
         t = line.strip()
-        lower = t.lower().rstrip(":").strip()
-        if not t or lower in generic_headers or lower.startswith("http") or noise_regex.search(lower):
+        if not t or _is_invalid_title(t):
             continue
         if len(t) <= 60:
             return t
@@ -379,10 +430,12 @@ def _extract_company(preamble: list[str], text: str) -> str:
             return cand
 
     company_explicit = re.search(
-        r"company\s*[:–-]\s*(.+)", text, re.IGNORECASE
+        r"^\s*company\s*[:–-]?\s*\n*([^\n\r]+)", text, re.IGNORECASE | re.MULTILINE
     )
     if company_explicit:
-        return company_explicit.group(1).strip()
+        cand = company_explicit.group(1).strip()
+        if cand and cand.lower() not in {"overview", "details", "info", "name"}:
+            return cand
 
     # Only look for the "<Title> at <Company>" pattern in the preamble
     # (first 3 non-empty lines) to avoid body-text false positives.
@@ -399,25 +452,30 @@ def _extract_company(preamble: list[str], text: str) -> str:
 
 def _extract_location(preamble: list[str], text: str) -> str:
     """Return location or remote status from the text."""
-    # Explicit label
+    # Explicit label (single line or multiline)
     location_label = re.search(
-        r"location\s*[:–-]\s*(.+)", text, re.IGNORECASE
+        r"^\s*location\s*[:–-]?\s*\n*([^\n\r]+)", text, re.IGNORECASE | re.MULTILINE
     )
     if location_label:
-        return location_label.group(1).strip()
+        cand = location_label.group(1).strip()
+        if cand:
+            return cand
 
-    # Remote variants
+    # "City, State" or "City, Country" pattern in preamble or top lines
+    candidate_lines = preamble or [l.strip() for l in text.splitlines() if l.strip()][:15]
+    for line in candidate_lines:
+        if re.search(r"[A-Z][a-z]+,\s+[A-Z]", line):
+            # Clean off LinkedIn timestamp/applicant noise like " · Reposted 2 weeks ago" or trailing mode
+            cleaned = re.sub(r"\s*·\s*(?:Reposted|Over|\d+|Hybrid|Remote|On-site).*$", "", line, flags=re.IGNORECASE).strip()
+            return cleaned
+
+    # Remote variants fallback
     if re.search(r"\bfully[- ]remote\b", text, re.IGNORECASE):
         return "Remote"
     if re.search(r"\bremote\b", text, re.IGNORECASE):
         return "Remote"
     if re.search(r"\bhybrid\b", text, re.IGNORECASE):
         return "Hybrid"
-
-    # "City, State" or "City, Country" pattern in preamble
-    for line in preamble:
-        if re.search(r"[A-Z][a-z]+,\s+[A-Z]", line):
-            return line
 
     return ""
 

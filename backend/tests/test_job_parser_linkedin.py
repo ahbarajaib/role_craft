@@ -95,3 +95,98 @@ Build and integrate AI/LLM-powered features and products.
     assert jd.employment_type == "Hybrid"
     assert len(jd.responsibilities) == 2
 
+
+def test_parse_linkedin_ai_fit_banner_skips_and_extracts_real_role():
+    user_paste = """JOB TITLE:
+Use AI to assess how you fit
+
+COMPANY:
+ScaleDevX
+
+LOCATION:
+Mumbai
+
+JOB TYPE:
+Hybrid
+
+JOB DESCRIPTION:
+About The Role
+
+We’re looking for a Senior Frontend Developer to build high-quality, scalable web applications. You’ll work closely with design and backend teams to craft intuitive, performance-driven user experiences used at scale.
+
+What You’ll Do
+
+• Build responsive, accessible UIs using React & TypeScript
+• Collaborate with designers for pixel-perfect implementations
+• Architect and maintain scalable frontend systems
+• Optimize applications for speed and performance
+• Implement automated testing and quality checks
+• Review code and mentor junior developers
+• Drive frontend best practices and standards
+
+Required Skills
+
+• 5+ years of frontend development experience
+• Strong expertise in React, TypeScript & ES6+
+• State management (Redux, Zustand, etc.)
+• CSS frameworks (Tailwind, Styled Components)
+• REST APIs & GraphQL integration
+• Modern build tools (Vite, Webpack, Rollup)
+• Testing frameworks (Jest, RTL, Cypress)
+• Cross-browser & responsive design expertise
+
+Preferred Skills
+
+• Next.js or similar React frameworks
+• Design systems & component libraries
+• CI/CD pipeline experience
+• Basic backend knowledge (Node.js / Python)
+• Advanced performance optimization
+• Accessibility standards (WCAG)
+
+What We Offer
+
+• Competitive salary & equity
+• Remote-first & flexible work culture
+• Health insurance for family
+• Learning & development budget
+• Modern tech stack & tools
+• Work on high-impact products
+• Annual team retreats & events
+
+Ready to Join Us?
+
+If you love crafting world-class frontend experiences and want to lead from the front, we’d love to hear from you.
+
+Benefits found in job post
+
+Medical insurance
+"""
+    jd = parse_job_description(user_paste)
+    assert jd.title == "Senior Frontend Developer"
+    assert jd.company == "ScaleDevX"
+    assert jd.location == "Mumbai"
+    assert jd.employment_type == "Hybrid"
+    assert "React" in jd.technologies
+    assert "TypeScript" in jd.technologies
+    assert len(jd.responsibilities) >= 5
+    assert len(jd.required_skills) >= 5
+
+
+def test_parse_linkedin_raw_paste_with_ai_fit_heading():
+    raw_text = """Company logo for ScaleDevX
+ScaleDevX
+Use AI to assess how you fit
+Senior Frontend Developer
+Mumbai, Maharashtra, India · Hybrid
+About the job
+We are seeking a Senior Frontend Developer to lead UI engineering.
+Key Responsibilities
+- Architect scalable frontend systems with React and TypeScript
+"""
+    jd = parse_job_description(raw_text)
+    assert jd.title == "Senior Frontend Developer"
+    assert jd.company == "ScaleDevX"
+    assert jd.location == "Mumbai, Maharashtra, India · Hybrid" or "Mumbai" in jd.location
+
+

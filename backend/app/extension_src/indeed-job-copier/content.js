@@ -103,7 +103,10 @@
   }
 
   function isGenericHeading(txt) {
-    return /^(job details|benefits|qualifications|about the job|pay|job type|here's how|full job description|popular searches|recent searches|find jobs|jobs in .*)$/i.test(txt);
+    if (!txt || typeof txt !== 'string') return true;
+    const lower = txt.trim().toLowerCase();
+    if (/^(use ai to|assess how you fit|assess your fit|see how you fit|see how you compare|evaluate your fit|evaluate how you fit|how you match|am i a good fit|are you a good fit|ai assessment|fit assessment|job match|match insights|show match details|get ai insights|tailor your resume)/i.test(lower)) return true;
+    return /^(job details|benefits|qualifications|about the job|pay|job type|here's how|full job description|popular searches|recent searches|find jobs|jobs in .*)$/i.test(lower);
   }
 
   /**

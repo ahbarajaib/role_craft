@@ -2267,6 +2267,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   }, [pathname, initialTab]);
 
   const [jobDescription, setJobDescription] = useState("");
+  const lastAnalyzedJdRef = useRef<string>("");
 
   const [documentId, setDocumentId] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<ResumeAnalysisResult | null>(null);
@@ -2582,6 +2583,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   ) => {
     setAnalysisResult(analysisResultData);
     setJobDescription(jobDescriptionText);
+    lastAnalyzedJdRef.current = jobDescriptionText.trim();
     setDocumentId(docId);
     // Create synthetic file object for workspace header display
     const synthetic = new File([], filenameStr, {
@@ -3047,17 +3049,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       return;
     }
     if (!documentId || sectionsToImprove.length === 0) return;
-    setIsImprovingAll(true);
-    try {
-      await Promise.all(
-        sectionsToImprove.map((s) => triggerInlineRewrite(s.section_name, s.recommendations))
-      );
-      setSuccessNotification("All recommended sections tailored successfully!");
-    } catch (err: any) {
-      console.error("❌ [RoleCraft Audit] Improve All failed:", err);
-    } finally {
-      setIsImprovingAll(false);
-    }
+    await handleAutoTailor();
   };
 
   const handleAutoTailor = async () => {
@@ -3078,13 +3070,99 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
     setIsAutoTailoring(true);
     try {
-      const result = analysisResult;
-      if (!result) {
-        console.log("🔍 [RoleCraft Audit] Triggering analyzeResume concurrently in background for non-blocking tailoring");
-        analyzeResume(jobDescription, documentId || undefined)
-          .then((res) => setAnalysisResult(res))
-          .catch((err) => console.error("Background analysis error:", err));
+      const isNewJd = !lastAnalyzedJdRef.current || jobDescription.trim() !== lastAnalyzedJdRef.current || !analysisResult;
+      const detectedJDTitle = extractJobTitleFromJD(jobDescription);
+
+      if (isNewJd) {
+        console.log("⚡ [RoleCraft Audit] New or unanalyzed JD detected. Running unified auto-tailoring pipeline...");
+        const targetRoleParam = customTargetRole.trim() || detectedJDTitle || undefined;
+        const autoRes = await autoTailorResume({
+          document_id: documentId,
+          job_description_text: jobDescription,
+          target_role: targetRoleParam,
+          section_toggles: tailoringSectionToggles,
+        }, abortController.signal);
+
+        setAnalysisResult(autoRes.analysis);
+        lastAnalyzedJdRef.current = jobDescription.trim();
+
+        const finalAppliedTitle = autoRes.rewrites?.["header"] || autoRes.target_role || detectedJDTitle;
+        if (finalAppliedTitle) {
+          setCustomTargetRole(finalAppliedTitle);
+        }
+
+        if (autoRes.rewrites && Object.keys(autoRes.rewrites).length > 0) {
+          setRewrittenSections(autoRes.rewrites);
+        }
+        if (autoRes.download_id) setDownloadId(autoRes.download_id);
+        if (autoRes.download_url) setDownloadUrl(autoRes.download_url);
+        setIsPatchingApplied(true);
+
+        if (autoRes.analysis) {
+          const initialExpanded: Record<string, boolean> = {};
+          (autoRes.analysis.sections || []).forEach((sec: any) => {
+            if (sec.review_status === "improve" || (autoRes.rewrites && autoRes.rewrites[sec.section_name])) {
+              initialExpanded[sec.section_name] = true;
+            }
+          });
+          setExpandedSections(initialExpanded);
+        }
+
+        setSuccessNotification(`⚡ 1-Click Auto-Tailored in ~2s: Resume Ready! (${finalAppliedTitle || "Tailored"})`);
+        trackEvent("tailor_completed", {
+          tailored_sections_count: Object.keys(autoRes.rewrites || {}).length,
+        });
+
+        if (refreshMe) refreshMe().catch(() => {});
+        fetchDailyGoal().catch(() => {});
+
+        setInlineLoadingSections({});
+        setIsAutoTailoring(false);
+        autoTailorAbortControllerRef.current = null;
+
+        // Async structured tailor (builder preview)
+        (async () => {
+          try {
+            const tailoredRes = await tailorResume({
+              job_description: jobDescription,
+              job_title: finalAppliedTitle,
+            });
+            setTailorResult(tailoredRes);
+          } catch (te) {
+            console.warn("[RoleCraft] Structured tailor warning:", te);
+          }
+        })();
+
+        // Auto-generate Tailored Cover Letter asynchronously in background
+        setIsGeneratingCoverLetter(true);
+        (async () => {
+          try {
+            const clRes = await generateCoverLetter({
+              document_id: documentId,
+              job_description_text: jobDescription,
+              target_role: finalAppliedTitle,
+              contact_info: undefined,
+              rewritten_sections: autoRes.rewrites || {},
+              confirmed_matched_skills: [],
+            });
+            setCoverLetterText(clRes.cover_letter_text);
+            setCoverLetterDownloadId(clRes.download_id);
+            if (clRes.target_role) {
+              setCustomTargetRole(clRes.target_role);
+            }
+            setIsEditingCoverLetter(false);
+            trackEvent("cover_letter_generated");
+          } catch (clErr) {
+            console.error("❌ [RoleCraft Audit] Auto Cover Letter Generation Failed:", clErr);
+          } finally {
+            setIsGeneratingCoverLetter(false);
+          }
+        })();
+
+        return;
       }
+
+      const result = analysisResult;
 
       // Determine sections to tailor: from analysisResult if ready, or directly from masterResume
       let baseSections: any[] = [];
@@ -3143,7 +3221,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       const newRewrites: Record<string, string> = {};
 
       // 1. Apply Target Job Title to Header (if enabled)
-      const detectedJDTitle = extractJobTitleFromJD(jobDescription);
       const targetHeaderTitle =
         customTargetRole.trim() ||
         detectedJDTitle ||
@@ -3220,7 +3297,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           tailored_sections_count: Object.keys(newRewrites).length,
         });
 
-        if (refreshMe) refreshMe();
+        if (refreshMe) refreshMe().catch(() => {});
+        fetchDailyGoal().catch(() => {});
       }
 
       // Clear inline loading state on all section cards and close modal
@@ -3333,8 +3411,16 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       let downloadUrlResult: string | undefined = undefined;
       let effectiveRole = customTargetRole || analysisResult?.overall_summary?.job_title || "Target Position";
 
-      if (data && data.sections && data.sections.length > 0) {
-        // Fast path: resume already has analysis in state, so we execute 16-worker parallel batch tailoring directly!
+      const isCurrentJdAnalyzed = Boolean(
+        data &&
+        data.sections &&
+        data.sections.length > 0 &&
+        lastAnalyzedJdRef.current &&
+        jobDescription.trim() === lastAnalyzedJdRef.current
+      );
+
+      if (isCurrentJdAnalyzed && data) {
+        // Fast path: resume already has analysis in state for this JD, so we execute 16-worker parallel batch tailoring directly!
         const baseSections = data.sections;
         const sectionsToTailor = baseSections.filter((s: any) => {
           const norm = (s.section_name || "").toLowerCase();
@@ -3405,6 +3491,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
 
         data = result.analysis;
         setAnalysisResult(data);
+        lastAnalyzedJdRef.current = jobDescription.trim();
         newRewrites = result.rewrites || {};
         downloadIdResult = result.download_id;
         downloadUrlResult = result.download_url;
@@ -4061,6 +4148,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
       setIsKeywordsWoven(false);
       const detectedOnAnalysis = extractJobTitleFromJD(jobDescription);
       setCustomTargetRole(detectedOnAnalysis || data.overall_summary?.job_title || "");
+      lastAnalyzedJdRef.current = jobDescription.trim();
 
       // Refresh credits balance and daily goal in header
       refreshMe().catch(() => { });
@@ -4228,6 +4316,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
     setAnalysisResult(null);
     setError(null);
     setJobDescription("");
+    lastAnalyzedJdRef.current = "";
     setRewrittenSections({});
     setPreviousRewrittenSections({});
     setDownloadId(null);
@@ -8369,32 +8458,31 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
               </>
             )}
 
-            {/* Apply / Re-Apply Button */}
-            <button
-              onClick={handleApplyRewrites}
-              disabled={applyMutation.isPending}
-              className={`px-3.5 py-1.5 ${isPatchingApplied
-                ? "bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold"
-                : "bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white border border-white/20 shadow-md shadow-emerald-500/20 text-xs font-black hover:scale-105 active:scale-95"
-                } disabled:opacity-50 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer`}
-            >
-              {applyMutation.isPending ? (
-                <>
-                  <div className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Applying...</span>
-                </>
-              ) : isPatchingApplied ? (
-                <>
-                  <RefreshCw className="h-3 w-3 text-teal-400" />
-                  <span>Re-Apply</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-3 w-3 text-amber-200 animate-pulse" />
-                  <span>Apply to Resume</span>
-                </>
-              )}
-            </button>
+            {/* Apply Status / Apply Button */}
+            {isPatchingApplied ? (
+              <div className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-black flex items-center gap-1.5 select-none shadow-xs">
+                <Check className="h-3.5 w-3.5 text-emerald-400 stroke-[3]" />
+                <span>Auto-Applied</span>
+              </div>
+            ) : (
+              <button
+                onClick={handleApplyRewrites}
+                disabled={applyMutation.isPending}
+                className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white border border-white/20 shadow-md shadow-emerald-500/20 text-xs font-black hover:scale-105 active:scale-95 disabled:opacity-50 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                {applyMutation.isPending ? (
+                  <>
+                    <div className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Applying...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3 w-3 text-amber-200 animate-pulse" />
+                    <span>Apply to Resume</span>
+                  </>
+                )}
+              </button>
+            )}
 
             {/* Dismiss Button */}
             <button

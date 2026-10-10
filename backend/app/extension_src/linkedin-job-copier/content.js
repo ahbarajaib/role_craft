@@ -47,6 +47,26 @@
     /^people also viewed$/i,
     /^similar jobs$/i,
     /^am i a good fit.*$/i,
+    /^are you a good fit.*$/i,
+    /^use ai to.*$/i,
+    /^assess (how you|your) fit.*$/i,
+    /^see how you (fit|compare|match|rank).*$/i,
+    /^evaluate (your|how you) fit.*$/i,
+    /^how you (match|fit).*$/i,
+    /^ai assessment.*$/i,
+    /^fit assessment.*$/i,
+    /^job match.*$/i,
+    /^match insights.*$/i,
+    /^show match details.*$/i,
+    /^your profile and resume match.*$/i,
+    /^get (ai )?insights.*$/i,
+    /^tailor your resume.*$/i,
+    /^beta\s*•?\s*is this information helpful\??$/i,
+    /^is this information helpful\??$/i,
+    /^people you can reach out to.*$/i,
+    /^meet the hiring team.*$/i,
+    /^skills match.*$/i,
+    /^qualification(s)? match.*$/i,
     /^set alert.*$/i,
     /^follow$/i,
     /^message$/i,
@@ -179,13 +199,39 @@
     return null;
   }
 
-  // ---- 3b. Job Title Validation ----
+  // ---- 3b. Job Title Validation & AI Filter ----
+
+  function isInsideAiContainer(el) {
+    if (!el) return false;
+    const aiContainer = el.closest(
+      '[class*="ai-" i], [class*="fit-" i], [class*="match-" i], [class*="assessment" i], [aria-label*="fit" i], [aria-label*="ai" i], [aria-label*="match" i]'
+    );
+    if (aiContainer) {
+      const txt = (aiContainer.textContent || '').toLowerCase();
+      if (/use ai|assess.*fit|how you (fit|match)|match details|fit assessment/i.test(txt)) {
+        return true;
+      }
+    }
+    let curr = el.parentElement;
+    for (let i = 0; i < 5 && curr; i++) {
+      const t = (curr.textContent || '').toLowerCase();
+      if (t.includes('use ai to assess') || t.includes('assess how you fit') || t.includes('see how you fit')) {
+        return true;
+      }
+      curr = curr.parentElement;
+    }
+    return false;
+  }
 
   function isInvalidJobTitle(text) {
     if (!text || typeof text !== "string") return true;
     const s = text.trim();
     if (s.length < 3 || s.length > 250) return true;
     const lower = s.toLowerCase();
+
+    // AI assessment banners, widgets, and prompts
+    if (/^(use ai to|assess how you fit|assess your fit|see how you fit|see how you compare|see how you match|see how you rank|evaluate your fit|evaluate how you fit|how you match|how you fit|am i a good fit|are you a good fit|ai assessment|fit assessment|job match|match insights|show match details|get ai insights|get tailored insights|tailor your resume|profile match|resume match|skills match|qualification(s)? match)/i.test(lower)) return true;
+    if (/\b(use ai to assess|assess how you fit|assess your fit|see how you fit|see how you compare|evaluate your fit|how you match|how you fit|am i a good fit|are you a good fit|show match details|match insights)\b/i.test(lower)) return true;
 
     // Workplace modes are NEVER titles
     if (/^(hybrid|remote|on-site|onsite|work from home|wfh|in-office|in office|telecommute)$/i.test(lower)) return true;
@@ -197,7 +243,7 @@
     if (/^(entry level|associate|mid-senior level|mid senior level|director|executive|internship)$/i.test(lower)) return true;
 
     // Common LinkedIn status, action, and badge labels
-    if (/^(promoted|reposted|actively recruiting|responses within \d+ hours?|view verification|matches your job preferences|easy apply|apply|save|saved|share|report|about the company|about the job|company overview)$/i.test(lower)) return true;
+    if (/^(promoted|reposted|actively recruiting|responses within \d+ hours?|view verification|matches your job preferences|easy apply|apply|save|saved|share|report|about the company|about the job|company overview|about the role|job details|meet the hiring team|people you can reach out to|why join|why work here)$/i.test(lower)) return true;
 
     // Applicant counts or timestamps
     if (/^(\d+\s+applicants?|over\s+\d+\s+applicants?|be among the first\s+\d+\s+applicants?|\d+\s+(minute|hour|day|week|month|year)s?\s+ago)$/i.test(lower)) return true;
@@ -210,30 +256,54 @@
     return false;
   }
 
+  function extractTitleFromDocTitle() {
+    if (!document || !document.title) return null;
+    let t = document.title.replace(/^\(\d+\)\s*/, '').trim();
+    const hiringMatch = t.match(/hiring\s+(.+?)\s+in\s+/i);
+    if (hiringMatch && !isInvalidJobTitle(hiringMatch[1])) {
+      return hiringMatch[1].trim();
+    }
+    const cleanDoc = t.replace(/\s*\|\s*LinkedIn.*$/i, '').trim();
+    const parts = cleanDoc.split(/\s+[|\-–—]\s+|\s+at\s+/i);
+    for (const part of parts) {
+      const cand = part.trim();
+      if (cand.length > 3 && !/^(LinkedIn|Jobs)$/i.test(cand) && !isInvalidJobTitle(cand)) {
+        return cand;
+      }
+    }
+    return null;
+  }
+
   // ---- 4. Title Extraction ----
 
   function extractTitle(panel) {
     if (!panel) return null;
 
     const strategies = [
-      // Strategy 1: Explicit h1 title selectors on LinkedIn (Most direct and authoritative)
+      // Strategy 1: Explicit job title selectors on LinkedIn (Targeted and authoritative)
       () => {
-        const h1Selectors = [
-          'h1.t-24',
-          'h1[class*="job-title" i]',
+        const titleSelectors = [
           '.job-details-jobs-unified-top-card__job-title h1',
-          '.jobs-unified-top-card__job-title h1',
+          '.job-details-jobs-unified-top-card__job-title h2',
+          '.job-details-jobs-unified-top-card__job-title a',
           '.job-details-jobs-unified-top-card__job-title',
+          '.jobs-unified-top-card__job-title h1',
+          '.jobs-unified-top-card__job-title h2',
+          '.jobs-unified-top-card__job-title a',
           '.jobs-unified-top-card__job-title',
-          '.jobs-search__job-details--container h1',
+          'h1[class*="job-title" i]',
+          'h2[class*="job-title" i]',
+          '[data-job-title]',
           'h1.topcard__title',
-          'h1',
+          '.jobs-search__job-details--container h1',
+          '.jobs-search__job-details--container h2',
         ];
-        for (const sel of h1Selectors) {
-          const h1 = panel.querySelector(sel);
-          if (h1) {
-            const link = h1.querySelector('a');
-            const text = (link ? link.textContent : h1.textContent).trim();
+        for (const sel of titleSelectors) {
+          const els = panel.querySelectorAll(sel);
+          for (const el of els) {
+            if (isInsideAiContainer(el)) continue;
+            const link = el.querySelector('a');
+            const text = (link ? link.textContent : el.textContent).trim();
             if (!isInvalidJobTitle(text)) {
               return text;
             }
@@ -242,27 +312,29 @@
         return null;
       },
 
-      // Strategy 2: Targeted job-title class or data attribute
+      // Strategy 2: Link that points to a job view URL in the top header card
       () => {
-        const titleEls = panel.querySelectorAll('[data-job-title], [class*="job-title" i], .topcard__title');
-        for (const el of titleEls) {
-          const text = el.textContent.trim();
-          if (!isInvalidJobTitle(text)) {
-            return text;
+        const links = panel.querySelectorAll('a[href*="/jobs/view/"]');
+        for (const link of links) {
+          if (isInsideAiContainer(link)) continue;
+          const text = link.textContent.trim();
+          if (!isInvalidJobTitle(text) && text.length > 3) {
+            if (link.closest('h1, h2, [class*="top-card" i], [class*="header" i], [class*="title" i]')) {
+              return text;
+            }
           }
         }
         return null;
       },
 
-      // Strategy 3: Link that points to a job view URL in the top header card
+      // Strategy 3: Targeted job-title class or data attribute across panel
       () => {
-        const links = panel.querySelectorAll('a[href*="/jobs/view/"]');
-        for (const link of links) {
-          const text = link.textContent.trim();
-          if (!isInvalidJobTitle(text) && text.length > 3) {
-            if (link.closest('h1, h2, [class*="top-card" i], [class*="header" i]')) {
-              return text;
-            }
+        const titleEls = panel.querySelectorAll('[data-job-title], [class*="job-title" i], .topcard__title');
+        for (const el of titleEls) {
+          if (isInsideAiContainer(el)) continue;
+          const text = el.textContent.trim();
+          if (!isInvalidJobTitle(text)) {
+            return text;
           }
         }
         return null;
@@ -272,34 +344,62 @@
       () => {
         const jobId = extractJobIdFromURL();
         if (!jobId) return null;
-        const link = document.querySelector(`a[href*="/jobs/view/${jobId}"]`);
-        if (link) {
+        const links = document.querySelectorAll(`a[href*="/jobs/view/${jobId}"]`);
+        for (const link of links) {
+          if (isInsideAiContainer(link)) continue;
           const text = link.textContent.trim();
           if (!isInvalidJobTitle(text)) return text;
         }
         return null;
       },
 
-      // Strategy 5: Global h1 on document
+      // Strategy 5: Global top-card heading
       () => {
-        const docH1 = document.querySelector('.jobs-unified-top-card h1, .job-details-jobs-unified-top-card h1, h1.t-24, h1');
-        if (docH1) {
-          const text = docH1.textContent.trim();
+        const docSelectors = [
+          '.jobs-unified-top-card h1',
+          '.job-details-jobs-unified-top-card h1',
+          '.jobs-unified-top-card h2',
+          '.job-details-jobs-unified-top-card h2',
+        ];
+        for (const sel of docSelectors) {
+          const els = document.querySelectorAll(sel);
+          for (const el of els) {
+            if (isInsideAiContainer(el)) continue;
+            const text = el.textContent.trim();
+            if (!isInvalidJobTitle(text)) return text;
+          }
+        }
+        return null;
+      },
+
+      // Strategy 6: Generic h1 fallback in panel
+      () => {
+        const h1s = panel.querySelectorAll('h1.t-24, h1');
+        for (const h1 of h1s) {
+          if (isInsideAiContainer(h1)) continue;
+          const link = h1.querySelector('a');
+          const text = (link ? link.textContent : h1.textContent).trim();
           if (!isInvalidJobTitle(text)) return text;
         }
         return null;
       },
 
-      // Strategy 6: h2, h3 inside the top card
+      // Strategy 7: h2, h3 inside the top card
       () => {
         const headings = panel.querySelectorAll('h2, h3');
         for (const h of headings) {
+          if (isInsideAiContainer(h)) continue;
           const text = h.textContent.trim();
           if (!isInvalidJobTitle(text) && text.length > 5) {
             return text;
           }
         }
         return null;
+      },
+
+      // Strategy 8: document.title fallback
+      () => {
+        return extractTitleFromDocTitle();
       },
     ];
 
@@ -1151,17 +1251,24 @@
       const locAndType = cleanLocationAndExtractJobType(rawLocation, rawJobType);
 
       // SANITY VALIDATION & CROSS-CORRECTION:
-      // If title was erroneously extracted as a workplace type ("Hybrid", "Remote", "On-site")
-      if (isInvalidJobTitle(rawTitle)) {
+      if (!rawTitle || isInvalidJobTitle(rawTitle)) {
         warn(`Extracted title "${rawTitle}" is invalid. Running fallback title extraction...`);
         if (rawLocation && !isInvalidJobTitle(rawLocation) && /\b(developer|engineer|manager|architect|lead|analyst|designer|specialist|consultant|programmer|scientist|officer|associate|director)\b/i.test(rawLocation)) {
           rawTitle = rawLocation;
           rawLocation = "";
           locAndType.location = extractLocation(panel, rawTitle) || "";
         } else {
-          const anyH1 = panel.querySelector("h1") || document.querySelector("h1");
-          if (anyH1 && !isInvalidJobTitle(anyH1.textContent.trim())) {
-            rawTitle = anyH1.textContent.trim();
+          rawTitle = extractTitleFromDocTitle();
+          if (!rawTitle || isInvalidJobTitle(rawTitle)) {
+            const headings = panel.querySelectorAll("h1, h2, h3, a[href*='/jobs/view/']");
+            for (const h of headings) {
+              if (isInsideAiContainer(h)) continue;
+              const cand = (h.querySelector('a') ? h.querySelector('a').textContent : h.textContent).trim();
+              if (cand && !isInvalidJobTitle(cand)) {
+                rawTitle = cand;
+                break;
+              }
+            }
           }
         }
       }

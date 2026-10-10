@@ -186,6 +186,10 @@
     // Seniority levels are NEVER titles
     if (/^(entry level|associate|mid-senior level|mid senior level|director|executive|internship)$/i.test(lower)) return true;
 
+    // AI assessment banners, widgets, and prompts
+    if (/^(use ai to|assess how you fit|assess your fit|see how you fit|see how you compare|evaluate your fit|evaluate how you fit|how you match|am i a good fit|are you a good fit|ai assessment|fit assessment|job match|match insights|show match details|get ai insights|tailor your resume)/i.test(lower)) return true;
+    if (/\b(use ai to assess|assess how you fit|see how you fit|evaluate your fit|how you match|am i a good fit)\b/i.test(lower)) return true;
+
     // Common action, navigation or UI noise
     if (/^(back to the job results|easy apply|apply|save|saved|share|report|about the company|about the job|company overview|read more|show more)$/i.test(lower)) return true;
 

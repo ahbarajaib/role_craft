@@ -277,6 +277,163 @@ def rewrite_section(
     return res
 
 
+def _update_structured_resume_from_rewrites(
+    resume: _StructuredResume,
+    accepted_rewrites: list[dict],
+) -> _StructuredResume:
+    """Merge accepted rewrite text into a copy of the structured resume for ATS template rendering."""
+    import copy
+
+    merged = copy.deepcopy(resume)
+    for rw in accepted_rewrites:
+        section_title = (rw.get("section") or "").strip().lower()
+        rewritten_text = (rw.get("rewritten_text") or "").strip()
+        if not section_title or not rewritten_text:
+            continue
+        for sec in merged.sections:
+            if (
+                sec.section_title.lower() == section_title
+                or sec.section_type.lower() == section_title
+            ):
+                if sec.section_type == "summary":
+                    sec.content["text"] = rewritten_text
+                elif sec.section_type == "skills":
+                    lines = [line.strip() for line in rewritten_text.split("\n") if line.strip()]
+                    categories = []
+                    for line in lines:
+                        if ":" in line:
+                            cat_name, skills_str = line.split(":", 1)
+                            skills = [s.strip() for s in skills_str.split(",") if s.strip()]
+                            categories.append({"category_name": cat_name.strip(), "skills": skills})
+                        else:
+                            categories.append({"category_name": "Skills", "skills": [line]})
+                    sec.content["categories"] = categories
+                elif sec.section_type == "experience":
+                    sec.content["_rewritten_text_override"] = rewritten_text
+                else:
+                    lines = [line.strip() for line in rewritten_text.split("\n") if line.strip()]
+                    sec.content["entries"] = lines
+                break
+    return merged
+
+
+def _generate_patched_resume(
+    doc_id: str | None,
+    accepted_items: list[ApplyRewriteItem],
+    user: User,
+    db: Session,
+    settings: Settings,
+    patch_service: PatchService,
+    preferred_template: str | None = None,
+) -> tuple[str | None, str | None]:
+    """Smart dual-mode patch generator for DOCX and Structured ATS templates.
+
+    1. If user has a structured resume and raw DOCX is missing -> renders ATS template DOCX.
+    2. Otherwise -> patches the raw uploaded DOCX via patch_service.
+    3. If raw DOCX patch fails and structured resume exists -> falls back to ATS template render.
+    Returns (download_id, download_url).
+    """
+    import json as _json
+    import uuid
+    from pathlib import Path
+
+    from app.schemas.structured_resume import StructuredResume as _StructuredResume
+    from app.services.template_renderer import ATSTemplateRenderer
+
+    if not accepted_items:
+        return None, None
+
+    upload_dir = Path(settings.UPLOAD_DIR)
+    generated_dir = upload_dir / "generated"
+    generated_dir.mkdir(parents=True, exist_ok=True)
+    download_id = str(uuid.uuid4())
+    out_path = generated_dir / f"{download_id}.docx"
+
+    # Check if user has a structured resume in DB
+    structured_record = (
+        db.query(StructuredResumeModel)
+        .filter(StructuredResumeModel.user_id == user.id)
+        .first()
+    )
+
+    # Check if original raw DOCX still exists on disk
+    base_docx = upload_dir / "base" / f"{user.id}.docx"
+    has_raw_docx = base_docx.exists()
+    candidate_id = doc_id or f"base/{user.id}"
+
+    if doc_id:
+        candidate_path = upload_dir / f"{doc_id}.docx"
+        if candidate_path.exists():
+            has_raw_docx = True
+            base_docx = candidate_path
+        elif (upload_dir / "base" / f"{doc_id.split('/', 1)[-1]}.docx").exists():
+            base_docx = upload_dir / "base" / f"{doc_id.split('/', 1)[-1]}.docx"
+            has_raw_docx = True
+
+    # --- ATS Template path: structured JSON + rewrites merged in-memory ---
+    if structured_record and (not has_raw_docx or doc_id is None):
+        try:
+            data = _json.loads(structured_record.resume_json)
+            resume = _StructuredResume.model_validate(data)
+            template_name = preferred_template or structured_record.preferred_template or "clean_classic"
+            photo_path_str = structured_record.profile_photo_path
+            photo_path = Path(photo_path_str) if photo_path_str and Path(photo_path_str).exists() else None
+            rewrites_as_dicts = [{"section": rw.section, "rewritten_text": rw.rewritten_text} for rw in accepted_items]
+
+            try:
+                resume = _update_structured_resume_from_rewrites(resume, rewrites_as_dicts)
+                structured_record.resume_json = resume.model_dump_json()
+                structured_record.version += 1
+                db.commit()
+            except Exception as e_up:
+                logger.warning(f"Failed to update structured record json from rewrites: {e_up}")
+
+            renderer = ATSTemplateRenderer()
+            renderer.render_with_rewrites(
+                resume=resume,
+                accepted_rewrites=rewrites_as_dicts,
+                output_path=out_path,
+                template_name=template_name,
+                profile_photo_abs_path=photo_path,
+            )
+            return download_id, f"/api/v1/resume/download/{download_id}"
+        except Exception as exc:
+            logger.error(f"ATS template render failed, attempting raw patch: {exc}")
+
+    # --- Raw DOCX patch path ---
+    try:
+        patch_res = patch_service.apply_rewrites(
+            ApplyRewriteRequest(
+                document_id=candidate_id,
+                accepted_rewrites=accepted_items,
+            )
+        )
+        return patch_res.download_id, patch_res.download_url
+    except Exception as patch_err:
+        logger.warning(f"Raw DOCX patch failed, checking ATS template fallback: {patch_err}")
+        if structured_record:
+            try:
+                data = _json.loads(structured_record.resume_json)
+                resume = _StructuredResume.model_validate(data)
+                template_name = preferred_template or structured_record.preferred_template or "clean_classic"
+                photo_path_str = structured_record.profile_photo_path
+                photo_path = Path(photo_path_str) if photo_path_str and Path(photo_path_str).exists() else None
+                rewrites_as_dicts = [{"section": rw.section, "rewritten_text": rw.rewritten_text} for rw in accepted_items]
+                renderer = ATSTemplateRenderer()
+                renderer.render_with_rewrites(
+                    resume=resume,
+                    accepted_rewrites=rewrites_as_dicts,
+                    output_path=out_path,
+                    template_name=template_name,
+                    profile_photo_abs_path=photo_path,
+                )
+                return download_id, f"/api/v1/resume/download/{download_id}"
+            except Exception as exc2:
+                logger.error(f"ATS template fallback also failed: {exc2}")
+
+    return None, None
+
+
 @router.post(
     "/batch-rewrite",
     response_model=BatchRewriteResponse,
@@ -289,6 +446,7 @@ def batch_rewrite_sections(
     patch_service: Annotated[PatchService, Depends(get_patch_service)],
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
 ) -> BatchRewriteResponse:
     """Batch parallel section tailoring endpoint. Executes rewrites concurrently across worker threads.
 
@@ -308,26 +466,75 @@ def batch_rewrite_sections(
     download_id = None
     download_url = None
     if rewrites_map:
-        try:
-            seen_keys = set()
-            accepted_items = []
-            for sec_name, text in rewrites_map.items():
-                norm_k = sec_name.lower().strip()
-                if norm_k not in seen_keys and text and text.strip():
-                    seen_keys.add(norm_k)
-                    accepted_items.append(ApplyRewriteItem(section=sec_name, rewritten_text=text))
+        seen_keys = set()
+        accepted_items = []
+        for sec_name, text in rewrites_map.items():
+            norm_k = sec_name.lower().strip()
+            if norm_k not in seen_keys and text and text.strip():
+                seen_keys.add(norm_k)
+                accepted_items.append(ApplyRewriteItem(section=sec_name, rewritten_text=text))
 
-            patch_res = patch_service.apply_rewrites(
-                ApplyRewriteRequest(
-                    document_id=doc_id,
-                    accepted_rewrites=accepted_items,
-                )
+        download_id, download_url = _generate_patched_resume(
+            doc_id=doc_id,
+            accepted_items=accepted_items,
+            user=user,
+            db=db,
+            settings=settings,
+            patch_service=patch_service,
+        )
+        if download_id:
+            logger.info(
+                f"⚡ [RoleCraft Audit] Batch auto-tailor generated patched file: download_id={download_id}"
             )
-            download_id = patch_res.download_id
-            download_url = patch_res.download_url
-            logger.info(f"⚡ [RoleCraft Audit] Batch auto-tailor generated patched file: download_id={download_id}, sections_updated={patch_res.sections_updated}")
-        except Exception as patch_err:
-            logger.error(f"Batch patch error: {patch_err}")
+
+    # Link download_id to existing AnalysisHistory or create new entry so tailoring count increments
+    try:
+        from sqlalchemy import select
+
+        stmt = (
+            select(AnalysisHistory)
+            .where(
+                AnalysisHistory.user_id == user.id,
+                AnalysisHistory.job_description_text == body.job_description_text,
+            )
+            .order_by(AnalysisHistory.created_at.desc())
+        )
+        hist = db.scalars(stmt).first()
+        if hist:
+            if download_id:
+                hist.download_id = download_id
+                db.add(hist)
+                db.commit()
+        else:
+            filename = getattr(user, "base_resume_filename", "Resume.docx") or "Resume.docx"
+            target_role = None
+            if body.user_instructions:
+                target_role = body.user_instructions.strip()
+            if not target_role:
+                for sec in body.sections:
+                    if sec.section_name == "header" and sec.user_instructions:
+                        target_role = sec.user_instructions.strip()
+                        break
+            if not target_role:
+                target_role = rewrites_map.get("header") or "Target Position"
+
+            hist = AnalysisHistory(
+                user_id=user.id,
+                document_id=doc_id,
+                filename=filename,
+                target_role=target_role,
+                target_company=None,
+                overall_score=85,
+                sections_need_improvement=0,
+                total_sections=len(body.sections),
+                download_id=download_id,
+                analysis_result_json=None,
+                job_description_text=body.job_description_text,
+            )
+            db.add(hist)
+            db.commit()
+    except Exception as hist_err:
+        logger.warning(f"Could not link or record AnalysisHistory in batch_rewrite: {hist_err}")
 
     return BatchRewriteResponse(
         rewrites=rewrites_map,
@@ -491,28 +698,32 @@ def auto_tailor_resume(
         )
 
         if rewrites_map:
-            try:
-                seen_keys = set()
-                accepted_items = []
-                for sec_name, text in rewrites_map.items():
-                    norm_k = sec_name.lower().strip()
-                    if norm_k not in seen_keys and text and text.strip():
-                        seen_keys.add(norm_k)
-                        accepted_items.append(ApplyRewriteItem(section=sec_name, rewritten_text=text))
+            seen_keys = set()
+            accepted_items = []
+            for sec_name, text in rewrites_map.items():
+                norm_k = sec_name.lower().strip()
+                if norm_k not in seen_keys and text and text.strip():
+                    seen_keys.add(norm_k)
+                    accepted_items.append(ApplyRewriteItem(section=sec_name, rewritten_text=text))
 
-                patch_res = patch_service.apply_rewrites(
-                    ApplyRewriteRequest(
-                        document_id=doc_id,
-                        accepted_rewrites=accepted_items,
-                    )
-                )
-                download_id = patch_res.download_id
-                download_url = patch_res.download_url
+            download_id, download_url = _generate_patched_resume(
+                doc_id=doc_id,
+                accepted_items=accepted_items,
+                user=user,
+                db=db,
+                settings=settings,
+                patch_service=patch_service,
+            )
+            if download_id:
                 logger.info(
-                    f"⚡ [RoleCraft Audit] Auto-tailor generated patched file: download_id={download_id}, sections_updated={patch_res.sections_updated}"
+                    f"⚡ [RoleCraft Audit] Auto-tailor generated patched file: download_id={download_id}"
                 )
-            except Exception as patch_err:
-                logger.error(f"Auto-tailor patch error: {patch_err}")
+                try:
+                    history_entry.download_id = download_id
+                    db.add(history_entry)
+                    db.commit()
+                except Exception as e_hist:
+                    logger.warning(f"Failed to update download_id in history_entry: {e_hist}")
 
     return AutoTailorResponse(
         analysis=analysis_result,
@@ -522,46 +733,6 @@ def auto_tailor_resume(
         target_role=target_header_title or (getattr(analysis_result.overall_summary, "job_title", None) if analysis_result.overall_summary else None),
         sections_tailored=len(rewrites_map),
     )
-
-
-
-def _update_structured_resume_from_rewrites(
-    resume: _StructuredResume,
-    accepted_rewrites: list[dict],
-) -> _StructuredResume:
-    """Merge accepted rewrite text into a copy of the structured resume for ATS template rendering."""
-    import copy
-    merged = copy.deepcopy(resume)
-    for rw in accepted_rewrites:
-        section_title = (rw.get("section") or "").strip().lower()
-        rewritten_text = (rw.get("rewritten_text") or "").strip()
-        if not section_title or not rewritten_text:
-            continue
-        for sec in merged.sections:
-            if (
-                sec.section_title.lower() == section_title
-                or sec.section_type.lower() == section_title
-            ):
-                if sec.section_type == "summary":
-                    sec.content["text"] = rewritten_text
-                elif sec.section_type == "skills":
-                    lines = [line.strip() for line in rewritten_text.split("\n") if line.strip()]
-                    categories = []
-                    for line in lines:
-                        if ":" in line:
-                            cat_name, skills_str = line.split(":", 1)
-                            skills = [s.strip() for s in skills_str.split(",") if s.strip()]
-                            categories.append({"category_name": cat_name.strip(), "skills": skills})
-                        else:
-                            categories.append({"category_name": "Skills", "skills": [line]})
-                    sec.content["categories"] = categories
-                elif sec.section_type == "experience":
-                    sec.content["_rewritten_text_override"] = rewritten_text
-                else:
-                    lines = [line.strip() for line in rewritten_text.split("\n") if line.strip()]
-                    sec.content["entries"] = lines
-                break
-    return merged
 
 
 @router.post(
@@ -579,113 +750,50 @@ def apply_rewrites(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(get_current_user)],
 ) -> ApplyRewriteResponse:
-    """Apply accepted rewrites and return a download link.
-
-    Smart dual-mode:
-    - If the user's source is DOCX (raw file on disk) AND they don't request
-      a specific ATS template → patch the original DOCX (preserves formatting).
-    - Otherwise (PDF source, or ATS template requested, or file gone) → render
-      a fresh ATS template DOCX with rewrites merged in-memory (master JSON unchanged).
-    """
+    """Apply accepted rewrites and return a download link."""
     background_tasks.add_task(
         cleanup_old_files,
         upload_dir=Path(settings.UPLOAD_DIR),
         max_age_hours=settings.GENERATED_CLEANUP_HOURS,
     )
 
-    import json as _json
-    import uuid
+    download_id, download_url = _generate_patched_resume(
+        doc_id=body.document_id,
+        accepted_items=body.accepted_rewrites,
+        user=user,
+        db=db,
+        settings=settings,
+        patch_service=service,
+        preferred_template=body.preferred_template,
+    )
 
-    from app.schemas.structured_resume import StructuredResume as _StructuredResume
-    from app.services.template_renderer import ATSTemplateRenderer
-
-    upload_dir = Path(settings.UPLOAD_DIR)
-    generated_dir = upload_dir / "generated"
-    generated_dir.mkdir(parents=True, exist_ok=True)
-    download_id = str(uuid.uuid4())
-    out_path = generated_dir / f"{download_id}.docx"
-
-    # Check if user has a structured resume in DB
-    structured_record = db.query(StructuredResumeModel).filter(
-        StructuredResumeModel.user_id == user.id
-    ).first()
-
-    # Check if original raw DOCX still exists on disk
-    base_docx = upload_dir / "base" / f"{user.id}.docx"
-    has_raw_docx = base_docx.exists()
-
-    # Use the document_id from request if provided and file exists
-    if body.document_id:
-        candidate_path = upload_dir / f"{body.document_id}.docx"
-        if candidate_path.exists():
-            has_raw_docx = True
-            base_docx = candidate_path
-        elif (upload_dir / "base" / f"{body.document_id.split('/', 1)[-1]}.docx").exists():
-            base_docx = upload_dir / "base" / f"{body.document_id.split('/', 1)[-1]}.docx"
-            has_raw_docx = True
-
-    # --- ATS Template path: structured JSON + rewrites merged in-memory ---
-    if structured_record and (not has_raw_docx or body.document_id is None):
-        try:
-            data = _json.loads(structured_record.resume_json)
-            resume = _StructuredResume.model_validate(data)
-
-            template_name = body.preferred_template or structured_record.preferred_template or "clean_classic"
-            photo_path_str = structured_record.profile_photo_path
-            photo_path = Path(photo_path_str) if photo_path_str and Path(photo_path_str).exists() else None
-
-            rewrites_as_dicts = [{"section": rw.section, "rewritten_text": rw.rewritten_text} for rw in body.accepted_rewrites]
-
-            # Update DB structured resume JSON
-            try:
-                resume = _update_structured_resume_from_rewrites(resume, rewrites_as_dicts)
-                structured_record.resume_json = resume.model_dump_json()
-                structured_record.version += 1
-                db.commit()
-            except Exception as e_up:
-                logger.warning("Failed to update structured record json from rewrites", error=str(e_up))
-
-            renderer = ATSTemplateRenderer()
-            renderer.render_with_rewrites(
-                resume=resume,
-                accepted_rewrites=rewrites_as_dicts,
-                output_path=out_path,
-                template_name=template_name,
-                profile_photo_abs_path=photo_path,
-            )
-
-            res = ApplyRewriteResponse(
-                download_id=download_id,
-                sections_updated=len(body.accepted_rewrites),
-                download_url=f"/api/v1/resume/download/{download_id}",
-            )
-        except Exception as exc:
-            logger.error("ATS template render failed, falling back to patch", error=str(exc))
-            # Fall through to DOCX patch
-            res = service.apply_rewrites(body)
-            download_id = res.download_id
-    else:
-        # --- Legacy DOCX patch path: preserves original formatting ---
+    if not download_id:
         res = service.apply_rewrites(body)
         download_id = res.download_id
+        download_url = res.download_url
 
     # Link download_id to the latest matching history record
     try:
         from sqlalchemy import select
+
         stmt = (
             select(AnalysisHistory)
             .where(AnalysisHistory.user_id == user.id)
             .order_by(AnalysisHistory.created_at.desc())
         )
         hist = db.scalars(stmt).first()
-        if hist:
+        if hist and download_id:
             hist.download_id = download_id
             db.add(hist)
             db.commit()
     except Exception as hist_err:
         logger.warning(f"Could not link download_id to AnalysisHistory: {hist_err}")
 
-    return res
+    return ApplyRewriteResponse(
+        download_id=download_id or "",
+        sections_updated=len(body.accepted_rewrites),
+        download_url=download_url or f"/api/v1/resume/download/{download_id}",
+    )
 
 
 # ── Cover Letter Endpoints ───────────────────────────────────────────────────
