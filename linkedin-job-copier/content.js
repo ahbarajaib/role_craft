@@ -103,7 +103,7 @@
    * by finding semantic anchors (job title link, "About the job" text,
    * Apply button) and then walking up to their common container.
    */
-  function getJobDetailPanel() {
+  function getJobDetailPanel(silent = false) {
     // Strategy 1: Find the scrollable container in the right pane
     // that holds the job details. Look for a container that has both
     // a job title link AND an "About the job" section.
@@ -116,7 +116,7 @@
       let ancestor = jobTitleLink.parentElement;
       for (let i = 0; i < 15 && ancestor; i++) {
         if (ancestor.contains(aboutTheJobEl)) {
-          log('Panel found via title+about-the-job common ancestor');
+          if (!silent) log('Panel found via title+about-the-job common ancestor');
           return ancestor;
         }
         ancestor = ancestor.parentElement;
@@ -131,7 +131,7 @@
       let ancestor = applyButton.parentElement;
       for (let i = 0; i < 15 && ancestor; i++) {
         if (ancestor.contains(jobTitleLink)) {
-          log('Panel found via apply-button+title common ancestor');
+          if (!silent) log('Panel found via apply-button+title common ancestor');
           return ancestor;
         }
         ancestor = ancestor.parentElement;
@@ -151,7 +151,7 @@
         const isLarge = parent.scrollHeight > 500;
 
         if (isScrollable && isLarge) {
-          log('Panel found via scrollable ancestor of title link');
+          if (!silent) log('Panel found via scrollable ancestor of title link');
           return parent;
         }
         parent = parent.parentElement;
@@ -171,7 +171,7 @@
       try {
         const el = document.querySelector(sel);
         if (el) {
-          log('Panel found via legacy selector:', sel);
+          if (!silent) log('Panel found via legacy selector:', sel);
           return el;
         }
       } catch (e) { /* skip */ }
@@ -190,12 +190,12 @@
         parent = parent.parentElement;
       }
       if (best) {
-        log('Panel found via title link ancestor heuristic');
+        if (!silent) log('Panel found via title link ancestor heuristic');
         return best;
       }
     }
 
-    warn('Could not locate job detail panel');
+    if (!silent) warn('Could not locate job detail panel');
     return null;
   }
 
@@ -1349,7 +1349,7 @@
       }
 
       if (isJobPage()) {
-        const panel = getJobDetailPanel();
+        const panel = getJobDetailPanel(true);
         const btn = document.getElementById(BUTTON_ID);
         if (panel) {
           if (!btn || !panel.contains(btn)) {

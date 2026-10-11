@@ -37,6 +37,7 @@ RoleCraft/
 │   ├── roadmap.md
 │   ├── PROJECT_STATE.md
 │   ├── AI_RULES.md
+│   ├── AI_APPLICATION_ENGINEERING_GUIDE.md
 │   └── agent.md
 │
 ├── backend/            Python API (FastAPI + Uvicorn)
