@@ -1254,7 +1254,7 @@
       return;
     }
 
-    const panel = getJobDetailPanel();
+    const panel = getJobDetailPanel(true);
     if (!panel) {
       removeButton();
       return;
