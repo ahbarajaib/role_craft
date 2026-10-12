@@ -256,6 +256,46 @@
     return false;
   }
 
+  function cleanCompanyName(raw) {
+    if (!raw || typeof raw !== 'string') return '';
+    let name = raw.trim();
+    // Remove leading/trailing bullets, pipes, or punctuation
+    name = name.replace(/^[·•,\-\s|:]+|[·•,\-\s|:]+$/g, '').trim();
+    // Remove "· 1st", "· 2nd", "· 3rd" (LinkedIn connection degree tags)
+    name = name.replace(/\s*[·•]\s*(?:1st|2nd|3rd|\d+\+?)\s*$/i, '').trim();
+    // Remove " (Verified)" or "(Actively recruiting)"
+    name = name.replace(/\s*\((?:verified|actively recruiting)\)\s*$/i, '').trim();
+    return name;
+  }
+
+  function isInvalidCompanyName(text) {
+    if (!text || typeof text !== "string") return true;
+    const s = cleanCompanyName(text);
+    if (s.length < 2 || s.length > 120) return true;
+    const lower = s.toLowerCase();
+
+    // Workplace modes are NEVER company names
+    if (/^(hybrid|remote|on-site|onsite|work from home|wfh|in-office|in office|telecommute)$/i.test(lower)) return true;
+
+    // Employment types
+    if (/^(full-time|part-time|contract|temporary|internship|volunteer|permanent|freelance)$/i.test(lower)) return true;
+
+    // Seniority levels
+    if (/^(entry level|associate|mid-senior level|mid senior level|director|executive|internship)$/i.test(lower)) return true;
+
+    // Common LinkedIn buttons, badges & actions
+    if (/^(easy apply|apply|save|saved|share|report|follow|following|connect|message|verified|view verification|matches your job preferences)$/i.test(lower)) return true;
+    if (/^(promoted|reposted|actively recruiting|responses within \d+ hours?)$/i.test(lower)) return true;
+    if (/^(about the company|about the job|company overview|about the role|job details|meet the hiring team|people you can reach out to|why join|why work here)$/i.test(lower)) return true;
+    if (/^(\d+\s+applicants?|over\s+\d+\s+applicants?|be among the first\s+\d+\s+applicants?|\d+\s+(minute|hour|day|week|month|year)s?\s+ago)$/i.test(lower)) return true;
+    if (/^(benefits found in job post|medical insurance|dental insurance|vision insurance|401\(k\)|benefits)$/i.test(lower)) return true;
+    if (/^(linkedin|jobs|home|notifications|messaging|my network)$/i.test(lower)) return true;
+
+    if (isUIText(s)) return true;
+
+    return false;
+  }
+
   function extractTitleFromDocTitle() {
     if (!document || !document.title) return null;
     let t = document.title.replace(/^\(\d+\)\s*/, '').trim();
@@ -420,61 +460,197 @@
   // ---- 5. Company Extraction ----
 
   function extractCompany(panel) {
-    if (!panel) return null;
+    const scope = panel || document;
 
     const strategies = [
-      // Strategy 1: Link to company page (most reliable on modern LinkedIn)
+      // Strategy 1: Link to company, school, or showcase in panel/scope
       () => {
-        const links = panel.querySelectorAll('a[href*="/company/"]');
+        const links = scope.querySelectorAll('a[href*="/company/"], a[href*="/school/"], a[href*="/showcase/"]');
         for (const link of links) {
+          if (isInsideAiContainer(link)) continue;
           const text = link.textContent.trim();
-          if (text.length > 1 && text.length < 100 && !isUIText(text)) {
-            return text;
+          if (!isInvalidCompanyName(text)) {
+            return cleanCompanyName(text);
           }
         }
         return null;
       },
 
-      // Strategy 2: Element with aria-label mentioning company
+      // Strategy 2: Dedicated LinkedIn company selectors / tracking attributes
       () => {
-        const els = panel.querySelectorAll('[aria-label*="company"]');
-        for (const el of els) {
-          const text = el.textContent.trim();
-          if (text.length > 1 && text.length < 100 && !isUIText(text)) {
-            return text;
+        const compSelectors = [
+          '.job-details-jobs-unified-top-card__company-name',
+          '.jobs-unified-top-card__company-name',
+          '[data-tracking-control-name*="company_name"]',
+          '[data-tracking-control-name*="topcard-org-name"]',
+          '[data-tracking-control-name*="topcard_org_name"]',
+          '.topcard__org-name-link',
+          '.topcard__flavor--link',
+          '.top-card-layout__first-subline .topcard__flavor--link',
+          '.top-card-layout__first-subline .topcard__flavor:not(.topcard__flavor--bullet)',
+          '[class*="company-name" i]',
+        ];
+        for (const sel of compSelectors) {
+          const els = (panel || document).querySelectorAll(sel);
+          for (const el of els) {
+            if (isInsideAiContainer(el)) continue;
+            const text = el.textContent.trim();
+            if (!isInvalidCompanyName(text)) {
+              return cleanCompanyName(text);
+            }
           }
         }
         return null;
       },
 
-      // Strategy 3: Text near the job title that looks like a company name
-      // On LinkedIn, the company name typically appears right after the title
-      // and before the location. Find the title, then look at the next
-      // text elements.
+      // Strategy 3: Primary description / subtitle grouping container in top card
+      // In LinkedIn, top card layout has: [Company] · [Location] · [Time/Applicants]
       () => {
-        const titleLink = panel.querySelector('a[href*="/jobs/view/"]');
+        const primaryDescContainers = (panel || document).querySelectorAll(
+          '.job-details-jobs-unified-top-card__primary-description-container, .jobs-unified-top-card__subtitle-primary-grouping, .top-card-layout__first-subline, [class*="primary-description" i]'
+        );
+        for (const cont of primaryDescContainers) {
+          const items = cont.querySelectorAll('a, span, div');
+          for (const item of items) {
+            if (isInsideAiContainer(item)) continue;
+            const text = item.textContent.trim();
+            if (!isInvalidCompanyName(text) && !looksLikeLocation(text)) {
+              return cleanCompanyName(text);
+            }
+          }
+          const parts = cont.textContent.split(/[·•|]/);
+          if (parts.length > 0) {
+            const first = parts[0].trim();
+            if (!isInvalidCompanyName(first) && !looksLikeLocation(first)) {
+              return cleanCompanyName(first);
+            }
+          }
+        }
+        return null;
+      },
+
+      // Strategy 4: JSON-LD Schema (application/ld+json JobPosting hiringOrganization)
+      () => {
+        const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+        for (const s of scripts) {
+          try {
+            const data = JSON.parse(s.textContent || '{}');
+            if (data['@type'] === 'JobPosting' && data.hiringOrganization) {
+              const org = data.hiringOrganization;
+              const name = typeof org === 'string' ? org : (org.name || '');
+              if (!isInvalidCompanyName(name)) {
+                return cleanCompanyName(name);
+              }
+            }
+          } catch (e) { /* skip parse error */ }
+        }
+        return null;
+      },
+
+      // Strategy 5: Document title and OpenGraph / Twitter meta tags
+      // e.g. "Getege Edtech hiring Full Stack Technology Developer in Greater Lucknow Area | LinkedIn"
+      () => {
+        const titleCandidates = [];
+        if (document && document.title) titleCandidates.push(document.title);
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle && ogTitle.getAttribute('content')) titleCandidates.push(ogTitle.getAttribute('content'));
+        const twTitle = document.querySelector('meta[name="twitter:title"]');
+        if (twTitle && twTitle.getAttribute('content')) titleCandidates.push(twTitle.getAttribute('content'));
+
+        for (const t of titleCandidates) {
+          let clean = t.replace(/^\(\d+\)\s*/, '').replace(/\s*\|\s*LinkedIn.*$/i, '').trim();
+          // Pattern: "<Company> hiring <Title>..." or "<Company> is hiring <Title>..."
+          const hiringMatch = clean.match(/^(.+?)\s+(?:is\s+)?hiring\s+/i);
+          if (hiringMatch && !isInvalidCompanyName(hiringMatch[1])) {
+            return cleanCompanyName(hiringMatch[1]);
+          }
+          // Pattern: "<Title> at <Company> in <Location>" or "<Title> at <Company>"
+          const atMatch = clean.match(/\bat\s+([^|–—\-]+?)(?:\s+in\s+.*|\s*[|–—\-]|$)/i);
+          if (atMatch && !isInvalidCompanyName(atMatch[1])) {
+            return cleanCompanyName(atMatch[1]);
+          }
+        }
+        return null;
+      },
+
+      // Strategy 6: Canonical link or current URL slug
+      // e.g. ".../jobs/view/full-stack-technology-developer-at-getege-edtech-4477268991"
+      () => {
+        const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href') || window.location.href;
+        if (canonical) {
+          const match = canonical.match(/-at-([a-z0-9\-]+?)-\d{5,}/i);
+          if (match && match[1]) {
+            const rawSlug = match[1].replace(/-/g, ' ').trim();
+            const titleCased = rawSlug.replace(/\b\w/g, (c) => c.toUpperCase());
+            if (!isInvalidCompanyName(titleCased)) {
+              return cleanCompanyName(titleCased);
+            }
+          }
+        }
+        return null;
+      },
+
+      // Strategy 7: Sub-nav or Apply modal contextual text
+      // e.g. "Join to apply for the Full Stack Technology Developer role at Getege Edtech"
+      () => {
+        const bodyHtml = document.body ? document.body.innerHTML : '';
+        const roleAtMatch = bodyHtml.match(/role at\s+<strong[^>]*>([^<]+)<\/strong>/i);
+        if (roleAtMatch && !isInvalidCompanyName(roleAtMatch[1])) {
+          return cleanCompanyName(roleAtMatch[1]);
+        }
+        const bodyText = (panel || document.body).innerText || '';
+        const textMatch = bodyText.match(/role at\s+([A-Za-z0-9\s&.,'-]+?)(?:\s*\.|\s*[\n\r]|$)/i);
+        if (textMatch && !isInvalidCompanyName(textMatch[1])) {
+          return cleanCompanyName(textMatch[1]);
+        }
+        return null;
+      },
+
+      // Strategy 8: Company logo / sub-nav image alt attribute
+      // e.g. <img class="sub-nav-cta__image" alt="Getege Edtech">
+      () => {
+        const imgSelectors = [
+          'img.sub-nav-cta__image[alt]',
+          '.job-details-jobs-unified-top-card__company-logo img[alt]',
+          '.jobs-unified-top-card__company-logo img[alt]',
+          'img.artdeco-entity-image[alt]',
+          '[class*="company-logo"] img[alt]',
+        ];
+        for (const sel of imgSelectors) {
+          const imgs = (panel || document).querySelectorAll(sel);
+          for (const img of imgs) {
+            const alt = (img.getAttribute('alt') || '').trim();
+            if (!isInvalidCompanyName(alt) && !/^(logo|image|picture|avatar|profile|company logo|company image)$/i.test(alt)) {
+              return cleanCompanyName(alt);
+            }
+          }
+        }
+        return null;
+      },
+
+      // Strategy 9: Text near the job title that looks like a company name
+      () => {
+        const titleLink = scope.querySelector('a[href*="/jobs/view/"]');
         if (!titleLink) return null;
 
-        // Walk up to the title's container, then look for the next sibling
-        // or child elements
         let container = titleLink.parentElement;
         for (let i = 0; i < 5 && container; i++) {
-          const companyLink = container.querySelector('a[href*="/company/"]');
+          const companyLink = container.querySelector('a[href*="/company/"], a[href*="/school/"], a[href*="/showcase/"]');
           if (companyLink) {
             const text = companyLink.textContent.trim();
-            if (text.length > 1) return text;
+            if (!isInvalidCompanyName(text)) return cleanCompanyName(text);
           }
           container = container.parentElement;
         }
         return null;
       },
 
-      // Strategy 4: Global fallback
+      // Strategy 10: Global link fallback anywhere on page
       () => {
-        const link = document.querySelector('a[href*="/company/"]');
-        if (link) {
+        const link = document.querySelector('a[href*="/company/"], a[href*="/school/"], a[href*="/showcase/"], [aria-label*="company" i]');
+        if (link && !isInsideAiContainer(link)) {
           const text = link.textContent.trim();
-          if (text.length > 1 && !isUIText(text)) return text;
+          if (!isInvalidCompanyName(text)) return cleanCompanyName(text);
         }
         return null;
       },
@@ -954,7 +1130,8 @@
     }
 
     if (!details.company || details.company.trim().length < 2) {
-      errors.push('Company name is empty or too short');
+      warn('Company name not found — proceeding without company tag');
+      details.company = '';
     }
 
     if (!details.description || details.description.trim().length < 50) {
@@ -986,8 +1163,8 @@
 
     output += `JOB TITLE:\n${details.title || 'Unknown Title'}\n\n`;
 
-    if (details.company) {
-      output += `COMPANY:\n${details.company}\n\n`;
+    if (details.company && details.company.trim()) {
+      output += `COMPANY:\n${details.company.trim()}\n\n`;
     }
 
     if (details.location) {
