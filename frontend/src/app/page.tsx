@@ -62,6 +62,7 @@ import {
   GraduationCap,
   Award,
   Star,
+  Columns,
 } from "lucide-react";
 import { uploadResume, analyzeResume, rewriteSection, applyRewrites, generateCoverLetter, updateCoverLetter, downloadCoverLetterFile, calculateProfileCompletion, API_BASE_URL, ResumeAnalysisResult, ReviewedSection, StrengthItem, ImprovementItem, fetchAnalysisHistory, DailyTargetSummary, updateDailyTarget, batchRewriteSections, autoTailorResume } from "@/lib/api";
 import { DailyGoalCard } from "@/components/daily_goal_card";
@@ -341,16 +342,16 @@ function RenderSegregatedContent({
 
   const isEmerald = variant === "emerald";
   const borderStyle = isEmerald
-    ? "border-emerald-200/80 dark:border-emerald-900/50 hover:border-emerald-300 dark:hover:border-emerald-700"
-    : "border-rose-200/80 dark:border-rose-900/50 hover:border-rose-300 dark:hover:border-rose-700";
+    ? "border-teal-200/80 dark:border-teal-900/50 hover:border-teal-300 dark:hover:border-teal-700"
+    : "border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700";
   const iconStyle = isEmerald
-    ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400"
-    : "bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400";
+    ? "bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400"
+    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
   const badgeStyle = isEmerald
-    ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/50 border-emerald-200/60 dark:border-emerald-800/40"
-    : "text-rose-700 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/50 border-rose-200/60 dark:border-rose-800/40";
-  const bulletDotStyle = isEmerald ? "text-emerald-500 font-bold" : "text-rose-500 font-bold";
-  const dividerStyle = isEmerald ? "border-emerald-100 dark:border-emerald-900/40" : "border-rose-100 dark:border-rose-900/40";
+    ? "text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/50 border-teal-200/60 dark:border-teal-800/40"
+    : "text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-700";
+  const bulletDotStyle = isEmerald ? "text-teal-500 font-bold" : "text-slate-400 font-bold";
+  const dividerStyle = isEmerald ? "border-teal-100 dark:border-teal-900/40" : "border-slate-100 dark:border-slate-800/60";
 
   // Try retrieving structured entries directly from masterResume if available
   if (masterResume && sectionName) {
@@ -714,6 +715,7 @@ interface SectionCardProps {
   masterResume?: StructuredResume | null;
   isTailoringEnabled?: boolean;
   onToggleTailoring?: (name: string) => void;
+  diffViewMode?: "tailored" | "split";
 }
 
 function SectionCard({
@@ -733,6 +735,7 @@ function SectionCard({
   masterResume = null,
   isTailoringEnabled = true,
   onToggleTailoring,
+  diffViewMode = "tailored",
 }: SectionCardProps) {
   // Check if this card represents a professional summary/profile section
   const isSummary = isSummarySection(section.section_name);
@@ -765,17 +768,17 @@ function SectionCard({
     });
   };
 
-  // Status-based styles with elegant left accent border
+  // Modern clean status-based card styles
   const statusStyles = {
-    improve: "border-amber-200/90 hover:border-amber-300 bg-amber-50/15 shadow-2xs border-l-4 border-l-amber-400",
-    keep: "border-teal-200/80 hover:border-teal-300 bg-teal-50/10 shadow-2xs border-l-4 border-l-teal-500",
-    reduce_emphasis: "border-slate-200 bg-slate-50/50 opacity-80 border-l-4 border-l-slate-300"
+    improve: "border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 shadow-xs",
+    keep: "border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 shadow-xs",
+    reduce_emphasis: "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 opacity-80"
   };
 
   const badgeStyles = {
-    improve: "bg-amber-50 text-amber-900 border-amber-200 font-extrabold",
-    keep: "bg-[#E6F7F4] text-teal-900 border-[#99F6E4] font-extrabold",
-    reduce_emphasis: "bg-slate-100 text-slate-700 border-slate-200 font-bold"
+    improve: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 font-semibold",
+    keep: "bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border-teal-200 dark:border-teal-800 font-semibold",
+    reduce_emphasis: "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 font-medium"
   };
 
   const priorityStyles = {
@@ -794,7 +797,8 @@ function SectionCard({
   return (
     <div
       key={`${section.section_name}-${idx}`}
-      className={`rounded-2xl border transition-all duration-300 bg-white shadow-2xs ${statusStyles[section.review_status]}`}
+      id={`section-card-${section.section_name.toLowerCase().replace(/[^a-z0-9]/g, "-")}`}
+      className={`rounded-2xl border transition-all duration-200 bg-white dark:bg-slate-900 shadow-xs hover:shadow-sm ${statusStyles[section.review_status]}`}
     >
       {/* Clickable Header for Collapsing */}
       <div
@@ -803,8 +807,15 @@ function SectionCard({
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span
-            className={`px-2 py-0.5 text-[10px] font-black rounded-md border uppercase tracking-wider shrink-0 ${badgeStyles[section.review_status]}`}
+            className={`px-2 py-0.5 text-[10px] font-bold rounded-md border uppercase tracking-wider shrink-0 flex items-center gap-1.5 ${badgeStyles[section.review_status]}`}
           >
+            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+              section.review_status === "improve"
+                ? "bg-amber-500"
+                : section.review_status === "keep"
+                  ? "bg-teal-500"
+                  : "bg-slate-400"
+            }`} />
             {section.review_status === "improve"
               ? "Needs Review"
               : section.review_status === "keep"
@@ -1036,35 +1047,21 @@ function SectionCard({
                 </div>
               )}
 
-              {/* Side-by-side Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Left Column: Original Resume Text */}
-                <div className="bg-rose-50/60 dark:bg-rose-950/30 p-4 rounded-xl border border-rose-200/80 dark:border-rose-900/50 space-y-3 flex flex-col">
-                  <div className="flex items-center justify-between border-b border-rose-200 dark:border-rose-900/50 pb-2">
-                    <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-rose-500 inline-block" />
-                      Original Resume Text (Before)
+              {/* Content Display: Full-width Tailored or Side-by-Side Split */}
+              {diffViewMode === "tailored" ? (
+                <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-teal-500 inline-block" />
+                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
+                        Tailored Content for Target Role
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                      High-impact XYZ metrics &amp; ATS keywords applied
                     </span>
                   </div>
-                  <div className="pt-1 space-y-2 flex-1">
-                    <RenderSegregatedContent
-                      lines={section.evidence_used && section.evidence_used.length > 0 ? section.evidence_used : [section.section_name]}
-                      masterResume={masterResume}
-                      sectionName={section.section_name}
-                      variant="rose"
-                    />
-                  </div>
-                </div>
-
-                {/* Right Column: AI Tailored Rewritten Text */}
-                <div className="bg-emerald-50/60 dark:bg-emerald-950/30 p-4 rounded-xl border border-emerald-200/80 dark:border-emerald-900/50 space-y-3 flex flex-col">
-                  <div className="flex items-center justify-between border-b border-emerald-200 dark:border-emerald-900/50 pb-2">
-                    <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                      AI Tailored & Rewritten Text (After)
-                    </span>
-                  </div>
-                  <div className="pt-1 space-y-2 flex-1">
+                  <div className="pt-1 space-y-2">
                     <RenderSegregatedContent
                       lines={rewrittenText.split("\n")}
                       masterResume={masterResume}
@@ -1073,7 +1070,45 @@ function SectionCard({
                     />
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Left Column: Original Resume Text */}
+                  <div className="bg-slate-50/80 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col">
+                    <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-2">
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-slate-400 inline-block" />
+                        Original Resume Text (Before)
+                      </span>
+                    </div>
+                    <div className="pt-1 space-y-2 flex-1">
+                      <RenderSegregatedContent
+                        lines={section.evidence_used && section.evidence_used.length > 0 ? section.evidence_used : [section.section_name]}
+                        masterResume={masterResume}
+                        sectionName={section.section_name}
+                        variant="rose"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right Column: AI Tailored Rewritten Text */}
+                  <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-teal-200/90 dark:border-teal-800/60 shadow-2xs space-y-3 flex flex-col">
+                    <div className="flex items-center justify-between border-b border-teal-100 dark:border-teal-900/40 pb-2">
+                      <span className="text-[10px] font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-teal-500 inline-block animate-pulse" />
+                        AI Tailored &amp; Rewritten Text (After)
+                      </span>
+                    </div>
+                    <div className="pt-1 space-y-2 flex-1">
+                      <RenderSegregatedContent
+                        lines={rewrittenText.split("\n")}
+                        masterResume={masterResume}
+                        sectionName={section.section_name}
+                        variant="emerald"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -2282,6 +2317,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [subscriptionInitialPlan, setSubscriptionInitialPlan] = useState<"pro" | "elite">("pro");
   const [isExtensionModalOpen, setIsExtensionModalOpen] = useState(false);
   const [isExtensionPreviewModalOpen, setIsExtensionPreviewModalOpen] = useState(false);
+  const [isReconfiguring, setIsReconfiguring] = useState(false);
+  const [diffViewMode, setDiffViewMode] = useState<"tailored" | "split">("tailored");
 
   // ── Onboarding / Empty State Tracking ──
   const isResumeUploaded = !!file;
@@ -4560,12 +4597,12 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   }, []);
 
   return (
-    <div className="relative min-h-screen text-slate-900 bg-grid p-3 sm:p-6 lg:p-12 overflow-x-hidden">
-      {/* Decorative Glow Orbs — drifting AI ambient background */}
-      <div className="glow-effect bg-teal-500 w-[600px] h-[600px] -top-48 -left-48 orb-drift-1" style={{ opacity: 0.14 }} />
-      <div className="glow-effect bg-violet-400 w-[440px] h-[440px] top-[38%] -right-24 orb-drift-2" style={{ opacity: 0.10 }} />
-      <div className="glow-effect bg-blue-400 w-[360px] h-[360px] top-[22%] right-[28%] orb-drift-3" style={{ opacity: 0.07 }} />
-      <div className="glow-effect bg-[#FF6B4A] w-[300px] h-[300px] top-[70%] left-[20%] orb-drift-1" style={{ opacity: 0.06 }} />
+    <div className="relative min-h-screen text-slate-900 dark:text-slate-100 bg-[#F8FAFC] dark:bg-[#0B0F19] p-3 sm:p-6 lg:p-12 overflow-x-hidden">
+      {/* Decorative Glow Orbs — subtle executive ambient background */}
+      <div className="glow-effect bg-teal-500 w-[600px] h-[600px] -top-48 -left-48 orb-drift-1" style={{ opacity: 0.05 }} />
+      <div className="glow-effect bg-violet-400 w-[440px] h-[440px] top-[38%] -right-24 orb-drift-2" style={{ opacity: 0.04 }} />
+      <div className="glow-effect bg-blue-400 w-[360px] h-[360px] top-[22%] right-[28%] orb-drift-3" style={{ opacity: 0.03 }} />
+      <div className="glow-effect bg-[#FF6B4A] w-[300px] h-[300px] top-[70%] left-[20%] orb-drift-1" style={{ opacity: 0.03 }} />
 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <header className={`sticky top-0 z-30 max-w-full mx-auto flex items-center justify-between gap-2 mb-6 sm:mb-12 pb-4 border-b transition-all duration-300 px-3 sm:px-6 lg:px-12 -mx-3 sm:-mx-6 lg:-mx-12 ${navScrolled ? "bg-white/85 backdrop-blur-xl border-slate-200/90 shadow-sm shadow-teal-500/5" : "border-slate-200/80 bg-transparent"}`}>
@@ -5710,13 +5747,198 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Form Panel */}
+            {/* Left Form / Executive Rail Panel */}
             <div className={`lg:col-span-4 space-y-6 animate-fade-in-up ${mobileTab !== "setup" ? "hidden lg:block" : "block"}`} style={{ animationDelay: "0.1s" }}>
-              <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
-                <h2 className="text-lg font-bold text-slate-800 border-b border-teal-100 pb-3 flex items-center gap-2">
-                  <Layers className="h-5 w-5 text-teal-500" />
-                  Configure Analysis
-                </h2>
+              {analysisResult && !isReconfiguring ? (
+                <div className="sticky top-24 self-start space-y-4">
+                  {/* Card 1: Active Target Position Card */}
+                  <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1 min-w-0">
+                        <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <Target className="h-3.5 w-3.5" />
+                          Target Position
+                        </span>
+                        <h3 className="font-extrabold text-slate-900 dark:text-white text-base truncate" title={customTargetRole || analysisResult.overall_summary?.job_title || "Target Role"}>
+                          {customTargetRole || analysisResult.overall_summary?.job_title || "Target Role"}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate flex items-center gap-1">
+                          <Briefcase className="h-3 w-3" />
+                          <span>Role Alignment &amp; ATS Audit</span>
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsReconfiguring(true)}
+                        className="px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-teal-700 bg-slate-100 dark:bg-slate-800 hover:bg-teal-50 rounded-lg border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shrink-0"
+                        title="Change Job Description or Uploaded Resume"
+                      >
+                        Edit / New JD
+                      </button>
+                    </div>
+
+                    {/* Compact Live ATS Fit Gauge */}
+                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          ATS Fit Score
+                        </span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-2xl font-black text-slate-900 dark:text-white">
+                            {currentScore}%
+                          </span>
+                          {initialScore > 0 && currentScore > initialScore && (
+                            <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded-full border border-emerald-300">
+                              +{currentScore - initialScore}%
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right space-y-0.5">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          Tailored Status
+                        </span>
+                        <p className="text-xs font-bold text-teal-700 dark:text-teal-300">
+                          {sectionsStillNeedingImprovement === 0 ? "✓ 100% Optimized" : `${improvedCount} Optimized`}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Section Navigator (Table of Contents) */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          Jump to Section
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {(analysisResult.sections || []).length} sections
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const el = document.getElementById("ats-matrix-card");
+                            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }}
+                          className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-teal-50/60 dark:hover:bg-slate-800 hover:text-teal-700 flex items-center justify-between transition-colors cursor-pointer group"
+                        >
+                          <span className="flex items-center gap-2 truncate">
+                            <span className="h-1.5 w-1.5 rounded-full bg-teal-500 shrink-0" />
+                            <span className="truncate">ATS Keyword Matrix</span>
+                          </span>
+                          <span className="text-[10px] text-slate-400 group-hover:text-teal-600 shrink-0">
+                            Skills
+                          </span>
+                        </button>
+
+                        {(analysisResult.sections || []).map((sec, i) => {
+                          const hasRewrites = !!rewrittenSections[sec.section_name] || !!rewrittenSections[sec.section_name.toLowerCase()];
+                          const isEnabled = tailoringSectionToggles[sec.section_name] !== undefined
+                            ? tailoringSectionToggles[sec.section_name]
+                            : true;
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => {
+                                const id = `section-card-${sec.section_name.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
+                                const el = document.getElementById(id);
+                                if (el) {
+                                  el.scrollIntoView({ behavior: "smooth", block: "start" });
+                                  if (!expandedSections[sec.section_name]) {
+                                    toggleSection(sec.section_name);
+                                  }
+                                }
+                              }}
+                              className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-teal-50/60 dark:hover:bg-slate-800 hover:text-teal-700 flex items-center justify-between transition-colors cursor-pointer group"
+                            >
+                              <span className="flex items-center gap-2 truncate">
+                                <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                                  hasRewrites ? "bg-emerald-500" : isEnabled ? "bg-amber-400" : "bg-slate-300"
+                                }`} />
+                                <span className="truncate">{sec.section_name}</span>
+                              </span>
+                              <span className="text-[10px] text-slate-400 group-hover:text-teal-600 shrink-0">
+                                {hasRewrites ? "✓ Tailored" : isEnabled ? "⚡ Active" : "Locked"}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Primary DOCX Export CTA */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                      {downloadUrl || downloadId ? (
+                        <a
+                          href={downloadUrl ? `${API_BASE_URL}${downloadUrl}` : `${API_BASE_URL}/api/v1/resume/download/${downloadId}`}
+                          download
+                          onClick={() => setSuccessNotification("Downloading tailored DOCX...")}
+                          className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>Download Tailored DOCX</span>
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleApplyRewrites}
+                          disabled={applyMutation.isPending}
+                          className="w-full py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold text-xs shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+                        >
+                          {applyMutation.isPending ? (
+                            <>
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                              <span>Building DOCX...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Download className="h-3.5 w-3.5" />
+                              <span>Generate &amp; Download DOCX</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const el = document.getElementById("cover-letter-panel");
+                          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }}
+                        className="w-full py-1 text-center text-[11px] font-semibold text-slate-500 hover:text-teal-600 dark:text-slate-400 transition-colors cursor-pointer"
+                      >
+                        Matching Cover Letter &rarr;
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
+                  {analysisResult && (
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-teal-50 dark:bg-slate-800 border border-teal-200/80 dark:border-teal-700/60 mb-2">
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                          Reconfiguring Inputs
+                        </span>
+                        <span className="text-[10px] text-slate-500">
+                          Adjust resume or paste a new JD
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsReconfiguring(false)}
+                        className="px-2.5 py-1 text-xs font-bold text-teal-800 hover:text-teal-900 bg-white hover:bg-teal-50 border border-teal-300 rounded-lg shadow-2xs transition-all cursor-pointer"
+                      >
+                        &larr; Return
+                      </button>
+                    </div>
+                  )}
+                  <h2 className="text-lg font-bold text-slate-800 border-b border-teal-100 pb-3 flex items-center gap-2">
+                    <Layers className="h-5 w-5 text-teal-500" />
+                    Configure Analysis
+                  </h2>
 
                 {/* Resume Upload Box */}
                 <div className={`space-y-2 p-4 rounded-xl transition-all ${onboardingStep === 1 ? 'bg-teal-50/50 border border-teal-200 ring-2 ring-teal-500/20 shadow-md' : ''}`}>
@@ -6164,7 +6386,8 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   </button>
                 </div>
               </form>
-            </div>
+            )}
+          </div>
 
             {/* Right Results Panel */}
             <div className={`lg:col-span-8 space-y-6 animate-fade-in-up ${mobileTab !== "results" ? "hidden lg:block" : "block"}`} style={{ animationDelay: "0.2s" }}>
@@ -6785,7 +7008,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     const showMissing = keywordFilterTab === 'all' || keywordFilterTab === 'missing';
 
                     return (
-                      <div className={`glass-panel rounded-3xl p-6 sm:p-7 border border-slate-200/90 bg-white shadow-xl shadow-teal-500/5 space-y-6 ${mobileResultsTab === "keywords" ? "block" : "hidden lg:block"}`}>
+                      <div id="ats-matrix-card" className={`glass-panel rounded-3xl p-6 sm:p-7 border border-slate-200/90 bg-white shadow-xl shadow-teal-500/5 space-y-6 ${mobileResultsTab === "keywords" ? "block" : "hidden lg:block"}`}>
                         {/* Header */}
                         <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 pb-5">
                           <div className="flex items-center gap-3.5">
@@ -6941,12 +7164,11 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                 </span>
                                 <span className="text-[11px] text-slate-400">Verified in resume &bull; click to remove</span>
                               </div>
-                              <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap gap-2">
                                 {filteredMatched.map((skillName, idx) => {
                                   const skillLower = skillName.toLowerCase();
                                   const isWoven = wovenMatchedLower.has(skillLower);
                                   const isOriginal = originalMatched.has(skillLower);
-                                  const cat = getSkillCategory(skillName);
 
                                   return (
                                     <button
@@ -6968,15 +7190,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                         }
                                         removeSkillFromRewrites(skillName);
                                       }}
-                                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-50/80 hover:bg-rose-50 text-emerald-900 hover:text-rose-700 border border-emerald-200/90 hover:border-rose-300 transition-all duration-150 cursor-pointer group shadow-2xs"
+                                      className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700 hover:border-rose-300 hover:text-rose-700 hover:bg-rose-50/40 transition-all cursor-pointer group shadow-2xs"
                                       title={isWoven ? `Click to move '${skillName}' back to ${isOriginal ? "supported" : "missing"} keywords` : `Click to remove '${skillName}' from matched skills`}
                                     >
-                                      <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
-                                        {cat.label}
-                                      </span>
+                                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
                                       <span>{skillName}</span>
-                                      <Check className="h-3 w-3 text-emerald-600 group-hover:hidden" />
-                                      <X className="h-3 w-3 text-rose-600 hidden group-hover:block" />
+                                      <Check className="h-3 w-3 text-emerald-600 opacity-60 group-hover:hidden shrink-0 ml-0.5" />
+                                      <X className="h-3 w-3 text-rose-500 hidden group-hover:inline-block shrink-0 ml-0.5" />
                                     </button>
                                   );
                                 })}
@@ -6990,30 +7210,27 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-extrabold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
                                   <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                                  Supported in Project & Experience Evidence ({filteredEvidence.length})
+                                  Supported in Project & Evidence ({filteredEvidence.length})
                                 </span>
                                 <span className="text-[11px] text-slate-400">Click to weave into Technical Skills</span>
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {filteredEvidence.map((kw, idx) => {
-                                  const cat = getSkillCategory(kw);
                                   return (
                                     <button
                                       key={idx}
                                       type="button"
                                       onClick={() => handleQuickWeaveKeyword(kw)}
                                       disabled={weavingSingleKeyword === kw}
-                                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100/80 text-amber-900 border border-amber-200 transition-all duration-150 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 group"
+                                      className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-amber-200/80 dark:border-amber-900/40 hover:border-amber-400 hover:bg-amber-50/40 transition-all cursor-pointer group shadow-2xs"
                                       title={`Click to weave '${kw}' into Technical Skills section`}
                                     >
-                                      <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
-                                        {cat.label}
-                                      </span>
+                                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
                                       <span>{kw}</span>
                                       {weavingSingleKeyword === kw ? (
                                         <div className="h-3 w-3 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin shrink-0" />
                                       ) : (
-                                        <Plus className="h-3 w-3 text-amber-600 group-hover:scale-125 transition-transform" />
+                                        <Plus className="h-3 w-3 text-amber-600 opacity-60 group-hover:opacity-100 shrink-0 ml-0.5" />
                                       )}
                                     </button>
                                   );
@@ -7034,24 +7251,21 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {filteredMissing.map((kw, idx) => {
-                                  const cat = getSkillCategory(kw);
                                   return (
                                     <button
                                       key={idx}
                                       type="button"
                                       onClick={() => handleQuickWeaveKeyword(kw)}
                                       disabled={weavingSingleKeyword === kw}
-                                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100/80 text-rose-900 border border-rose-200 transition-all duration-150 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 group"
+                                      className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-teal-400 hover:text-teal-700 hover:bg-teal-50/40 transition-all cursor-pointer group shadow-2xs"
                                       title={`Click to weave '${kw}' into Technical Skills section`}
                                     >
-                                      <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cat.badgeColor}`}>
-                                        {cat.label}
-                                      </span>
+                                      <span className="h-1.5 w-1.5 rounded-full bg-rose-400 shrink-0" />
                                       <span>{kw}</span>
                                       {weavingSingleKeyword === kw ? (
-                                        <div className="h-3 w-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin shrink-0" />
+                                        <div className="h-3 w-3 border-2 border-teal-600/30 border-t-teal-600 rounded-full animate-spin shrink-0" />
                                       ) : (
-                                        <Plus className="h-3 w-3 text-rose-600 group-hover:scale-125 transition-transform" />
+                                        <Plus className="h-3 w-3 text-slate-400 group-hover:text-teal-600 shrink-0 ml-0.5" />
                                       )}
                                     </button>
                                   );
@@ -7092,37 +7306,69 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                         <>
                           {/* AI Section Tailoring Master Controls Bar */}
                           {analysisResult?.sections && analysisResult.sections.length > 0 && (
-                            <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-teal-50/80 via-emerald-50/40 to-slate-50 border border-teal-200/80 text-slate-800 shadow-2xs space-y-2.5">
-                              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-teal-200/60 pb-2">
+                            <div className="p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-800 shadow-xs space-y-3">
+                              <div className="flex items-center justify-between flex-wrap gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-2.5">
                                 <div className="flex items-center gap-2">
                                   <SlidersHorizontal className="h-4 w-4 text-teal-600 shrink-0" />
-                                  <span className="text-xs font-black tracking-tight text-slate-800 uppercase">
-                                    AI Section Controls (Toggle for Auto-Tailor)
+                                  <span className="text-xs font-bold tracking-tight text-slate-900 dark:text-slate-100 uppercase">
+                                    AI Section Controls
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const allOn: Record<string, boolean> = {};
-                                      (analysisResult.sections || []).forEach((s) => { allOn[s.section_name] = true; });
-                                      setTailoringSectionToggles(allOn);
-                                    }}
-                                    className="text-[10px] font-extrabold text-teal-800 hover:text-teal-900 bg-white hover:bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-md transition-all cursor-pointer shadow-2xs"
-                                  >
-                                    Enable All
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const allOff: Record<string, boolean> = {};
-                                      (analysisResult.sections || []).forEach((s) => { allOff[s.section_name] = false; });
-                                      setTailoringSectionToggles(allOff);
-                                    }}
-                                    className="text-[10px] font-extrabold text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md transition-all cursor-pointer shadow-2xs"
-                                  >
-                                    Disable All
-                                  </button>
+                                <div className="flex items-center gap-2.5 flex-wrap">
+                                  {/* View Mode Segmented Switcher */}
+                                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                                    <button
+                                      type="button"
+                                      onClick={() => setDiffViewMode("tailored")}
+                                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                                        diffViewMode === "tailored"
+                                          ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
+                                          : "text-slate-500 dark:text-slate-400 hover:text-slate-800"
+                                      }`}
+                                    >
+                                      <Sparkles className="h-3 w-3 text-teal-500" />
+                                      <span>Tailored View</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setDiffViewMode("split")}
+                                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                                        diffViewMode === "split"
+                                          ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
+                                          : "text-slate-500 dark:text-slate-400 hover:text-slate-800"
+                                      }`}
+                                    >
+                                      <Columns className="h-3 w-3 text-slate-500" />
+                                      <span>Side-by-Side</span>
+                                    </button>
+                                  </div>
+
+                                  <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-700 hidden sm:block" />
+
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const allOn: Record<string, boolean> = {};
+                                        (analysisResult.sections || []).forEach((s) => { allOn[s.section_name] = true; });
+                                        setTailoringSectionToggles(allOn);
+                                      }}
+                                      className="text-[10px] font-extrabold text-teal-800 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-1 rounded-lg transition-all cursor-pointer shadow-2xs"
+                                    >
+                                      Enable All
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const allOff: Record<string, boolean> = {};
+                                        (analysisResult.sections || []).forEach((s) => { allOff[s.section_name] = false; });
+                                        setTailoringSectionToggles(allOff);
+                                      }}
+                                      className="text-[10px] font-extrabold text-slate-600 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2 py-1 rounded-lg transition-all cursor-pointer shadow-2xs"
+                                    >
+                                      Disable All
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
 
@@ -7210,6 +7456,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                         : !(section.section_name.toLowerCase().includes("education") || section.section_name.toLowerCase().includes("certification"))
                                     }
                                     onToggleTailoring={handleToggleSectionTailoring}
+                                    diffViewMode={diffViewMode}
                                   />
                                 ))}
                               </div>
@@ -7246,6 +7493,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                         : !(section.section_name.toLowerCase().includes("education") || section.section_name.toLowerCase().includes("certification"))
                                     }
                                     onToggleTailoring={handleToggleSectionTailoring}
+                                    diffViewMode={diffViewMode}
                                   />
                                 ))}
                               </div>
@@ -7276,6 +7524,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                                     onBulletExclusionChange={handleBulletExclusionChange}
                                     isPatchingApplied={isPatchingApplied}
                                     masterResume={masterResume}
+                                    diffViewMode={diffViewMode}
                                   />
                                 ))}
                               </div>
@@ -7378,7 +7627,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                     </div>
 
                     {/* Secondary: Tailored Cover Letter Card */}
-                    <div className="glass-panel rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 space-y-4 shadow-xl">
+                    <div id="cover-letter-panel" className="glass-panel rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 space-y-4 shadow-xl">
                       <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
                         <div className="flex items-center gap-2.5">
                           <div className="h-9 w-9 rounded-xl bg-teal-500/10 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400 flex items-center justify-center border border-teal-500/20 shrink-0">
