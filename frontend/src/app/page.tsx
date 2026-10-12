@@ -2317,7 +2317,6 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
   const [subscriptionInitialPlan, setSubscriptionInitialPlan] = useState<"pro" | "elite">("pro");
   const [isExtensionModalOpen, setIsExtensionModalOpen] = useState(false);
   const [isExtensionPreviewModalOpen, setIsExtensionPreviewModalOpen] = useState(false);
-  const [isReconfiguring, setIsReconfiguring] = useState(false);
   const [diffViewMode, setDiffViewMode] = useState<"tailored" | "split">("tailored");
 
   // ── Onboarding / Empty State Tracking ──
@@ -5747,198 +5746,13 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Form / Executive Rail Panel */}
-            <div className={`lg:col-span-4 space-y-6 animate-fade-in-up ${mobileTab !== "setup" ? "hidden lg:block" : "block"}`} style={{ animationDelay: "0.1s" }}>
-              {analysisResult && !isReconfiguring ? (
-                <div className="sticky top-24 self-start space-y-4">
-                  {/* Card 1: Active Target Position Card */}
-                  <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-1 min-w-0">
-                        <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <Target className="h-3.5 w-3.5" />
-                          Target Position
-                        </span>
-                        <h3 className="font-extrabold text-slate-900 dark:text-white text-base truncate" title={customTargetRole || analysisResult.overall_summary?.job_title || "Target Role"}>
-                          {customTargetRole || analysisResult.overall_summary?.job_title || "Target Role"}
-                        </h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate flex items-center gap-1">
-                          <Briefcase className="h-3 w-3" />
-                          <span>Role Alignment &amp; ATS Audit</span>
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setIsReconfiguring(true)}
-                        className="px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-teal-700 bg-slate-100 dark:bg-slate-800 hover:bg-teal-50 rounded-lg border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shrink-0"
-                        title="Change Job Description or Uploaded Resume"
-                      >
-                        Edit / New JD
-                      </button>
-                    </div>
-
-                    {/* Compact Live ATS Fit Gauge */}
-                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                          ATS Fit Score
-                        </span>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-2xl font-black text-slate-900 dark:text-white">
-                            {currentScore}%
-                          </span>
-                          {initialScore > 0 && currentScore > initialScore && (
-                            <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded-full border border-emerald-300">
-                              +{currentScore - initialScore}%
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right space-y-0.5">
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                          Tailored Status
-                        </span>
-                        <p className="text-xs font-bold text-teal-700 dark:text-teal-300">
-                          {sectionsStillNeedingImprovement === 0 ? "✓ 100% Optimized" : `${improvedCount} Optimized`}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Section Navigator (Table of Contents) */}
-                    <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          Jump to Section
-                        </span>
-                        <span className="text-[10px] text-slate-400">
-                          {(analysisResult.sections || []).length} sections
-                        </span>
-                      </div>
-                      <div className="space-y-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const el = document.getElementById("ats-matrix-card");
-                            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                          }}
-                          className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-teal-50/60 dark:hover:bg-slate-800 hover:text-teal-700 flex items-center justify-between transition-colors cursor-pointer group"
-                        >
-                          <span className="flex items-center gap-2 truncate">
-                            <span className="h-1.5 w-1.5 rounded-full bg-teal-500 shrink-0" />
-                            <span className="truncate">ATS Keyword Matrix</span>
-                          </span>
-                          <span className="text-[10px] text-slate-400 group-hover:text-teal-600 shrink-0">
-                            Skills
-                          </span>
-                        </button>
-
-                        {(analysisResult.sections || []).map((sec, i) => {
-                          const hasRewrites = !!rewrittenSections[sec.section_name] || !!rewrittenSections[sec.section_name.toLowerCase()];
-                          const isEnabled = tailoringSectionToggles[sec.section_name] !== undefined
-                            ? tailoringSectionToggles[sec.section_name]
-                            : true;
-                          return (
-                            <button
-                              key={i}
-                              type="button"
-                              onClick={() => {
-                                const id = `section-card-${sec.section_name.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
-                                const el = document.getElementById(id);
-                                if (el) {
-                                  el.scrollIntoView({ behavior: "smooth", block: "start" });
-                                  if (!expandedSections[sec.section_name]) {
-                                    toggleSection(sec.section_name);
-                                  }
-                                }
-                              }}
-                              className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-teal-50/60 dark:hover:bg-slate-800 hover:text-teal-700 flex items-center justify-between transition-colors cursor-pointer group"
-                            >
-                              <span className="flex items-center gap-2 truncate">
-                                <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
-                                  hasRewrites ? "bg-emerald-500" : isEnabled ? "bg-amber-400" : "bg-slate-300"
-                                }`} />
-                                <span className="truncate">{sec.section_name}</span>
-                              </span>
-                              <span className="text-[10px] text-slate-400 group-hover:text-teal-600 shrink-0">
-                                {hasRewrites ? "✓ Tailored" : isEnabled ? "⚡ Active" : "Locked"}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Primary DOCX Export CTA */}
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                      {downloadUrl || downloadId ? (
-                        <a
-                          href={downloadUrl ? `${API_BASE_URL}${downloadUrl}` : `${API_BASE_URL}/api/v1/resume/download/${downloadId}`}
-                          download
-                          onClick={() => setSuccessNotification("Downloading tailored DOCX...")}
-                          className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          <span>Download Tailored DOCX</span>
-                        </a>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleApplyRewrites}
-                          disabled={applyMutation.isPending}
-                          className="w-full py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold text-xs shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
-                        >
-                          {applyMutation.isPending ? (
-                            <>
-                              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                              <span>Building DOCX...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Download className="h-3.5 w-3.5" />
-                              <span>Generate &amp; Download DOCX</span>
-                            </>
-                          )}
-                        </button>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const el = document.getElementById("cover-letter-panel");
-                          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                        }}
-                        className="w-full py-1 text-center text-[11px] font-semibold text-slate-500 hover:text-teal-600 dark:text-slate-400 transition-colors cursor-pointer"
-                      >
-                        Matching Cover Letter &rarr;
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
-                  {analysisResult && (
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-teal-50 dark:bg-slate-800 border border-teal-200/80 dark:border-teal-700/60 mb-2">
-                      <div>
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
-                          Reconfiguring Inputs
-                        </span>
-                        <span className="text-[10px] text-slate-500">
-                          Adjust resume or paste a new JD
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setIsReconfiguring(false)}
-                        className="px-2.5 py-1 text-xs font-bold text-teal-800 hover:text-teal-900 bg-white hover:bg-teal-50 border border-teal-300 rounded-lg shadow-2xs transition-all cursor-pointer"
-                      >
-                        &larr; Return
-                      </button>
-                    </div>
-                  )}
-                  <h2 className="text-lg font-bold text-slate-800 border-b border-teal-100 pb-3 flex items-center gap-2">
-                    <Layers className="h-5 w-5 text-teal-500" />
-                    Configure Analysis
-                  </h2>
+            {/* Left Form Panel: ALWAYS AVAILABLE */}
+            <div className={`lg:col-span-4 space-y-6 lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto pr-0.5 animate-fade-in-up ${mobileTab !== "setup" ? "hidden lg:block" : "block"}`} style={{ animationDelay: "0.1s" }}>
+              <form onSubmit={handleAnalyze} className="glass-panel rounded-2xl p-6 space-y-6">
+                <h2 className="text-lg font-bold text-slate-800 border-b border-teal-100 pb-3 flex items-center gap-2">
+                  <Layers className="h-5 w-5 text-teal-500" />
+                  Configure Analysis
+                </h2>
 
                 {/* Resume Upload Box */}
                 <div className={`space-y-2 p-4 rounded-xl transition-all ${onboardingStep === 1 ? 'bg-teal-50/50 border border-teal-200 ring-2 ring-teal-500/20 shadow-md' : ''}`}>
@@ -6386,8 +6200,7 @@ export default function Home({ initialTab }: { initialTab?: "landing" | "workspa
                   </button>
                 </div>
               </form>
-            )}
-          </div>
+            </div>
 
             {/* Right Results Panel */}
             <div className={`lg:col-span-8 space-y-6 animate-fade-in-up ${mobileTab !== "results" ? "hidden lg:block" : "block"}`} style={{ animationDelay: "0.2s" }}>
