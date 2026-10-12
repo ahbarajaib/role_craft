@@ -332,6 +332,27 @@ def detect_sections(paragraphs: list[ParsedParagraph]) -> list[DetectedSection]:
         elif seen_first_known_section:
             is_h = _is_heading(para)
 
+        # If currently inside a container section (Experience, Education, Projects, Certifications),
+        # sub-headings (job titles, degrees, project names, standalone dates) must remain inside the parent container!
+        if current and is_h:
+            curr_norm = (current.normalized_name or "").lower()
+            curr_title_l = current.title.lower()
+            in_container = (
+                curr_norm in ["experience", "education", "projects", "certifications", "skills", "summary"]
+                or any(kw in curr_title_l for kw in ["experience", "employment", "history", "work record", "education", "academic", "project", "certification"])
+            )
+            if in_container:
+                para_norm = _normalize(para.text)
+                if not _is_known_section(para.text):
+                    # If not an explicit match in SECTION_NAME_MAP, require para_norm to be a distinct
+                    # recognized section AND have explicit Word heading style or short uppercase title
+                    if para_norm is None or para_norm == curr_norm:
+                        is_h = False
+                    elif para_norm == "skills" and curr_norm == "projects":
+                        is_h = False
+                    elif not (_has_heading_style(para.style_name) or (para.text == para.text.upper() and len(para.text) <= 35)):
+                        is_h = False
+
         if is_h:
             # Commit the previous section before starting a new one.
             if current is not None:
@@ -387,6 +408,11 @@ def _is_heading(para: ParsedParagraph, raw_para=None) -> bool:
     if any(t.startswith(c) for c in bullet_chars):
         return False
 
+    # Standalone dates or date ranges are NEVER section headings (e.g. "June 2019", "2015 – 2019")
+    import re as _re
+    if _re.match(r"^\s*(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+)?\d{4}(?:\s*[-–—]\s*(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+)?(?:\d{4}|present))?\s*$", t, _re.IGNORECASE):
+        return False
+
     # Lines starting with an action verb with >3 words are achievement bullet sentences, not headings
     from app.services.patch_service import ACTION_VERBS
     words = t.split()
@@ -433,8 +459,6 @@ def _is_heading(para: ParsedParagraph, raw_para=None) -> bool:
         return True
 
     # Signal 5: Job entry / position sub-heading (contains role title keyword or date pattern)
-    import re as _re
-
     from app.constants.resume_keywords import UNIVERSAL_ROLE_TITLES
     t_lower = t.lower()
     has_role = any(_re.search(r"\b" + _re.escape(r) + r"\b", t_lower) for r in UNIVERSAL_ROLE_TITLES)
@@ -463,20 +487,24 @@ def _normalize(text: str) -> str | None:
     if norm in SECTION_NAME_MAP:
         return SECTION_NAME_MAP[norm]
 
-    # Intelligent fallback keyword matching for unlisted title variants
-    if any(k in norm for k in ["skill", "competenc", "software", "proficiency", "tool", "expertise"]):
+    import re as _re
+    # Avoid false positives like "toolkit" -> "tool" -> "skills"
+    # Project indicator words (app, platform, system, project, e-commerce) reject skills categorization
+    is_project_like = bool(_re.search(r"\b(apps?|platform|system|website|e-commerce|tool-kit|toolkit|project|portfolio)\b", norm, _re.IGNORECASE))
+
+    if not is_project_like and _re.search(r"\b(skills?|competenc\w*|software|proficienc\w*|tools?|tech\s*stack|expertise)\b", norm, _re.IGNORECASE):
         return "skills"
-    if any(k in norm for k in ["experience", "employment", "work history", "career history", "roles"]):
+    if _re.search(r"\b(experience|employment|work\s+history|career\s+history|roles)\b", norm, _re.IGNORECASE):
         return "experience"
-    if any(k in norm for k in ["summary", "profile", "about", "objective", "bio", "overview"]):
+    if _re.search(r"\b(summary|profile|about\s+me|objective|overview)\b", norm, _re.IGNORECASE):
         return "summary"
-    if any(k in norm for k in ["education", "academic", "degree", "qualification"]):
+    if _re.search(r"\b(education|academic|degrees?|qualifications?)\b", norm, _re.IGNORECASE):
         return "education"
-    if any(k in norm for k in ["project", "portfolio"]):
+    if _re.search(r"\b(projects?|portfolio)\b", norm, _re.IGNORECASE):
         return "projects"
-    if any(k in norm for k in ["certificat", "license", "course"]):
+    if _re.search(r"\b(certificat\w*|licenses?|courses?)\b", norm, _re.IGNORECASE):
         return "certifications"
-    if any(k in norm for k in ["additional", "other info", "personal info"]):
+    if _re.search(r"\b(additional|other\s+info|personal\s+info)\b", norm, _re.IGNORECASE):
         return "additional"
 
     return None

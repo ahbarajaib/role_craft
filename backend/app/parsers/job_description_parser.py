@@ -73,6 +73,13 @@ _SECTION_PATTERNS: list[tuple[str, str]] = [
     # Technologies (merged into technologies list)
     (r"tech(nologies|nical) stack", "technologies"),
     (r"tools? (and|&) technologies", "technologies"),
+    (r"experience working with databases", "technologies"),
+    (r"solid understanding of", "required_skills"),
+    (r"experience with", "required_skills"),
+    (r"genai,\s*tooling", "preferred_skills"),
+    (r"professional attributes", "preferred_skills"),
+    (r"growth expectations", "_ignore"),
+    (r"this job was posted by", "_ignore"),
     # Benefits, perks, company info, and web page noise – collect but ignore
     (r"about (us|the (company|role|team|goodspace))", "_ignore"),
     (r"benefits?$", "_ignore"),
@@ -230,6 +237,17 @@ def parse_job_description(text: str) -> JobDescription:
 
 def _split_lines(text: str) -> list[str]:
     """Normalise line endings and return non-blank lines."""
+    # Split section headers glued to previous sentence punctuation or bullets
+    glued_headers = (
+        r"Requirements\b|Qualifications\b|Responsibilities\b|"
+        r"Experience Working With Databases|Solid Understanding Of|"
+        r"Experience With\b|GenAI,\s*Tooling\b|Nice-to-Have\b|"
+        r"Growth Expectations\b|Professional Attributes\b|Key Skills\b|"
+        r"What You[’']ll Do|Must-Have|Preferred Skills|"
+        r"About\s+(?:Us|The\s+(?:Role|Position|Company)|Virallens)\b|"
+        r"This job was posted by|[📍🏢💼🧑‍💻💰]"
+    )
+    text = re.sub(rf"([.!?\)])\s*({glued_headers})", r"\1\n\2", text, flags=re.IGNORECASE)
     return [line.strip() for line in text.splitlines()]
 
 
@@ -452,22 +470,32 @@ def _extract_company(preamble: list[str], text: str) -> str:
 
 def _extract_location(preamble: list[str], text: str) -> str:
     """Return location or remote status from the text."""
-    # Explicit label (single line or multiline)
+    # Explicit label (single line or multiline, with optional bullet/emoji prefix)
     location_label = re.search(
-        r"^\s*location\s*[:–-]?\s*\n*([^\n\r]+)", text, re.IGNORECASE | re.MULTILINE
+        r"^\s*(?:[•\-–*·▪▸►✓✔📍🗺️\s]+)?(?:job\s+)?location\s*[:–-]\s*([^\n\r]+)",
+        text,
+        re.IGNORECASE | re.MULTILINE,
     )
     if location_label:
-        cand = location_label.group(1).strip()
-        if cand:
+        cand = location_label.group(1).strip().rstrip(".,")
+        cand = re.sub(r"^[📍🗺️\s]+", "", cand).strip()
+        if cand and len(cand) <= 80:
             return cand
 
     # "City, State" or "City, Country" pattern in preamble or top lines
     candidate_lines = preamble or [l.strip() for l in text.splitlines() if l.strip()][:15]
+    _narrative_words = re.compile(
+        r"\b(mission|investors?|backed|building|we['’]?re|we\s+are|team|help|clients?|"
+        r"experience|software|role|company|looking|seeking|hire|hiring)\b",
+        re.IGNORECASE,
+    )
     for line in candidate_lines:
-        if re.search(r"[A-Z][a-z]+,\s+[A-Z]", line):
-            # Clean off LinkedIn timestamp/applicant noise like " · Reposted 2 weeks ago" or trailing mode
-            cleaned = re.sub(r"\s*·\s*(?:Reposted|Over|\d+|Hybrid|Remote|On-site).*$", "", line, flags=re.IGNORECASE).strip()
-            return cleaned
+        line_clean = re.sub(r"^[📍🗺️\s]+", "", line).strip()
+        line_clean = re.sub(r"^(?:job\s+)?location\s*[:–-]\s*", "", line_clean, flags=re.IGNORECASE).strip()
+        if len(line_clean) <= 60 and not _narrative_words.search(line_clean):
+            if re.search(r"[A-Z][a-z]+,\s+[A-Z]", line_clean):
+                cleaned = re.sub(r"\s*·\s*(?:Reposted|Over|\d+|Hybrid|Remote|On-site).*$", "", line_clean, flags=re.IGNORECASE).strip()
+                return cleaned
 
     # Remote variants fallback
     if re.search(r"\bfully[- ]remote\b", text, re.IGNORECASE):
@@ -482,9 +510,14 @@ def _extract_location(preamble: list[str], text: str) -> str:
 
 def _extract_employment_type(text: str) -> str:
     """Return the employment type if stated."""
-    type_match = re.search(r"^\s*job\s+type\s*[:–-]\s*\n*([^\n]+)", text, re.IGNORECASE | re.MULTILINE)
+    type_match = re.search(
+        r"^\s*(?:[•\-–*·▪▸►✓✔💼🏢\s]+)?(?:job\s+type|employment\s+type|work\s+mode)\s*[:–-]\s*\n*([^\n]+)",
+        text,
+        re.IGNORECASE | re.MULTILINE,
+    )
     if type_match:
         val = type_match.group(1).strip()
+        val = re.sub(r"^[\s•\-–—*·▪▸►✓✔💼🏢]+", "", val).strip()
         if val:
             return val
 
@@ -501,6 +534,18 @@ def _extract_experience(text: str) -> str:
     explicit level words, to avoid matching the job title line which may
     start with "Senior" but is not an experience statement.
     """
+    # Check explicit label first (e.g. "Experience: 3-5 Years")
+    exp_label = re.search(
+        r"^\s*(?:[•\-–*·▪▸►✓✔🧑‍💻\s]+)?experience\s*[:–-]\s*([^\n\r]+)",
+        text,
+        re.IGNORECASE | re.MULTILINE,
+    )
+    if exp_label:
+        val = exp_label.group(1).strip()
+        val = re.sub(r"^[\s•\-–—*·▪▸►✓✔🧑‍💻]+", "", val).strip()
+        if val and len(val) <= 100:
+            return val
+
     for line in text.splitlines():
         stripped = line.strip()
         # Skip very short lines and lines without a digit or level indicator
@@ -508,14 +553,19 @@ def _extract_experience(text: str) -> str:
             continue
         match = _EXPERIENCE_PATTERN.search(stripped)
         if match and re.search(r"year|experience|level", stripped, re.IGNORECASE):
-            return _BULLET_PREFIX.sub("", stripped[:120]).strip()
+            clean = re.sub(r"^[\s•\-–—*·▪▸►✓✔🧑‍💻]+", "", stripped[:120]).strip()
+            clean = re.sub(r"^(?:experience\s*[:–-])\s*", "", clean, flags=re.IGNORECASE).strip()
+            return clean
+
     # Fallback: return the first match anywhere in the text
     match = _EXPERIENCE_PATTERN.search(text)
     if match:
         start = max(0, match.start() - 10)
         end = min(len(text), match.end() + 40)
         lines = text[start:end].strip().splitlines()
-        return lines[0].strip() if lines else ""
+        if lines:
+            clean = re.sub(r"^[\s•\-–—*·▪▸►✓✔🧑‍💻]+", "", lines[0]).strip()
+            return clean
     return ""
 
 

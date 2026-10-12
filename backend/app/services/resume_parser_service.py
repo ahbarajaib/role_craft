@@ -46,18 +46,18 @@ class ResumeParserService:
             raise BadRequestError("Unsupported file type. Only .docx and .pdf files are supported.")
 
     def _extract_docx_text(self, file_path: Path) -> str:
-        """Extract text from DOCX paragraphs and tables preserving structural lines and hyperlink URLs."""
+        """Extract text from DOCX preserving structural body order, XML bullets, and hyperlink URLs."""
         try:
-            doc = docx.Document(file_path)
-            lines: list[str] = []
+            from app.parsers.docx_parser import parse_docx
+            parsed_paras = parse_docx(file_path)
 
+            doc = docx.Document(file_path)
+            hyperlinks_map: dict[str, list[str]] = {}
             for p in doc.paragraphs:
                 txt = p.text.strip()
                 if not txt:
                     continue
-
-                # Extract embedded hyperlink URLs in this paragraph
-                urls: list[str] = []
+                urls = []
                 try:
                     for child in p._element.xpath('.//*[local-name()="hyperlink"]'):
                         r_id = child.attrib.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id')
@@ -67,23 +67,29 @@ class ResumeParserService:
                                 urls.append(target)
                 except Exception:
                     pass
+                if urls:
+                    hyperlinks_map[txt] = urls
 
+            lines: list[str] = []
+            bullet_chars = ("•", "-", "*", "–", "—", "▪", "▸", "·", "►", "✓", "✔", "→")
+            for p in parsed_paras:
+                txt = p.text.strip()
+                if not txt:
+                    continue
+
+                urls = hyperlinks_map.get(txt, [])
                 line_content = txt
                 if urls:
                     line_content += f" ({', '.join(urls)})"
 
-                has_bold = any(run.bold for run in p.runs if run.text.strip())
-                if has_bold and len(txt) < 80:
+                # Prefix bullet character if paragraph is bullet/list item and doesn't have one
+                if p.is_bullet and not any(txt.startswith(c) for c in bullet_chars):
+                    line_content = f"• {line_content}"
+
+                if p.is_bold and len(txt) < 80 and not p.is_bullet:
                     lines.append(f"[BOLD] {line_content}")
                 else:
                     lines.append(line_content)
-
-            # Also extract tables
-            for table in doc.tables:
-                for row in table.rows:
-                    row_txt = " | ".join(cell.text.strip() for cell in row.cells if cell.text.strip())
-                    if row_txt:
-                        lines.append(row_txt)
 
             return "\n".join(lines)
         except Exception as exc:
@@ -271,23 +277,46 @@ class ResumeParserService:
                                     "location": "",
                                     "start_date": "",
                                     "end_date": "Present",
-                                    "bullets": [bullet_text]
+                                    "bullets": [bullet_text],
                                 }
                                 entries.append(current_entry)
                         else:
                             date_match = re.search(r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|19\d\d|20\d\d)\b.*?\b(Present|19\d\d|20\d\d)\b", clean_line, re.IGNORECASE)
                             if date_match or (current_entry is None) or len(current_entry["bullets"]) > 0:
+                                start_d = ""
+                                end_d = "Present"
+                                job_title = clean_line
+                                if date_match:
+                                    date_str = date_match.group(0)
+                                    parts = clean_line.split(date_str)
+                                    job_title = parts[0].strip().rstrip("\t-–| ")
+                                    d_parts = re.split(r"[-–—to]+", date_str, flags=re.IGNORECASE)
+                                    if len(d_parts) >= 2:
+                                        start_d = d_parts[0].strip()
+                                        end_d = d_parts[1].strip()
+                                    else:
+                                        start_d = date_str
+
                                 current_entry = {
-                                    "job_title": clean_line,
+                                    "job_title": job_title or clean_line,
                                     "company": "",
                                     "location": "",
-                                    "start_date": "",
-                                    "end_date": "Present",
-                                    "bullets": []
+                                    "start_date": start_d,
+                                    "end_date": end_d,
+                                    "bullets": [],
                                 }
                                 entries.append(current_entry)
                             elif current_entry and not current_entry["company"]:
-                                current_entry["company"] = clean_line
+                                comp_line = clean_line
+                                if "," in comp_line:
+                                    parts = comp_line.split(",", 1)
+                                    current_entry["company"] = parts[0].strip()
+                                    current_entry["location"] = parts[1].strip().rstrip(".")
+                                else:
+                                    current_entry["company"] = comp_line
+                            else:
+                                if current_entry:
+                                    current_entry["bullets"].append(clean_line)
 
                     content_dict = {"entries": entries}
 
@@ -297,13 +326,80 @@ class ResumeParserService:
                     cur_p = None
                     for line in lines:
                         clean_line = re.sub(r"^\[BOLD\]\s*", "", line).strip()
-                        if clean_line.startswith(("•", "-", "*", "▪", "▸")):
+                        is_bullet = clean_line.startswith(("•", "-", "*", "▪", "▸"))
+                        is_tech_line = bool(re.match(r"^(?:technologies|tech\s*stack|tools|stack)\s*:\s*", clean_line, re.IGNORECASE))
+
+                        if is_tech_line and cur_p:
+                            tech_str = re.sub(r"^(?:technologies|tech\s*stack|tools|stack)\s*:\s*", "", clean_line, flags=re.IGNORECASE).strip()
+                            cur_p["technologies"] = [t.strip() for t in re.split(r"[,|;]\s*", tech_str) if t.strip()]
+                        elif is_bullet:
                             b_text = re.sub(r"^[•\-\*▪▸]\s*", "", clean_line).strip()
                             if cur_p:
                                 cur_p["bullets"].append(b_text)
+                            else:
+                                cur_p = {"name": "Project", "url": "", "technologies": [], "bullets": [b_text]}
+                                entries.append(cur_p)
                         else:
-                            cur_p = {"name": clean_line, "url": "", "technologies": [], "bullets": []}
-                            entries.append(cur_p)
+                            if cur_p is None or len(cur_p["bullets"]) > 0 or cur_p["technologies"]:
+                                cur_p = {"name": clean_line, "url": "", "technologies": [], "bullets": []}
+                                entries.append(cur_p)
+                            else:
+                                cur_p["bullets"].append(clean_line)
+                    content_dict = {"entries": entries}
+
+                elif sec_type == "education":
+                    entries = []
+                    lines = [l.strip() for l in sec_text.split("\n") if l.strip()]
+                    cur_edu = None
+                    for line in lines:
+                        clean_line = re.sub(r"^\[BOLD\]\s*", "", line).strip()
+                        date_match = re.search(r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|19\d\d|20\d\d)\b.*", clean_line, re.IGNORECASE)
+                        is_degree = bool(re.search(r"\b(master|bachelor|b\.tech|m\.tech|bca|mca|b\.s|b\.e|m\.s|ph\.d|diploma|associate|degree)\b", clean_line, re.IGNORECASE))
+
+                        if is_degree:
+                            cur_edu = {
+                                "degree": clean_line.rstrip(","),
+                                "institution": "",
+                                "location": "",
+                                "graduation_date": "",
+                                "gpa": "",
+                                "details": [],
+                            }
+                            entries.append(cur_edu)
+                        elif date_match and cur_edu and not cur_edu["graduation_date"]:
+                            cur_edu["graduation_date"] = date_match.group(0).strip()
+                        elif cur_edu and not cur_edu["institution"]:
+                            if "," in clean_line:
+                                pts = clean_line.split(",", 1)
+                                cur_edu["institution"] = pts[0].strip()
+                                cur_edu["location"] = pts[1].strip().rstrip(".")
+                            else:
+                                cur_edu["institution"] = clean_line
+                        elif cur_edu:
+                            cur_edu["details"].append(clean_line)
+                        else:
+                            cur_edu = {
+                                "degree": clean_line,
+                                "institution": "",
+                                "location": "",
+                                "graduation_date": "",
+                                "gpa": "",
+                                "details": [],
+                            }
+                            entries.append(cur_edu)
+                    content_dict = {"entries": entries}
+
+                elif sec_type == "certifications":
+                    entries = []
+                    lines = [l.strip() for l in sec_text.split("\n") if l.strip()]
+                    for line in lines:
+                        clean_line = re.sub(r"^\[BOLD\]\s*", "", line).strip()
+                        entries.append({
+                            "name": clean_line,
+                            "issuer": "",
+                            "date": "",
+                            "credential_id": "",
+                        })
                     content_dict = {"entries": entries}
 
                 else:

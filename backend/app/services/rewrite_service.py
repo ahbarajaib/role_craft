@@ -307,7 +307,7 @@ class RewriteService:
             or re.search(r"\b(19|20)\d{2}\b", sec_lower_check) is not None
             or "present" in sec_lower_check
         )
-        if is_exp_sec and not original_text.strip():
+        if is_exp_sec and (not original_text.strip() or _normalize_title(original_text) == _normalize_title(target_sec.title)):
             exp_sec_idx = sections.index(target_sec)
             non_experience_normalized = [
                 "summary", "skills", "education", "projects", "certifications",

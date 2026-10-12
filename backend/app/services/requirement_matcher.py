@@ -185,7 +185,14 @@ class RequirementMatcher:
             if overall_status == EvidenceStatus.NOT_SUPPORTED:
                 not_supported_reqs.append(req.text)
                 for term in req.key_terms:
-                    if term not in forbidden:
+                    # Invariant: Never forbid a skill that candidate actually has evidence for!
+                    term_norm = _normalise(term)
+                    is_safe = (
+                        term in safe_skills
+                        or term_norm in [_normalise(s) for s in safe_skills]
+                        or evidence.is_supported(term)
+                    )
+                    if not is_safe and term not in forbidden:
                         forbidden.append(term)
             elif overall_status == EvidenceStatus.PARTIALLY_SUPPORTED:
                 partial_reqs.append(req.text)
@@ -216,10 +223,14 @@ class RequirementMatcher:
 
     def _extract_key_terms(self, text: str) -> list[str]:
         """Extract individual technology/skill tokens from a requirement phrase."""
+        from app.services.evidence_service import _find_techs_in_text
         parts = re.split(r"[,;/]|\s+and\s+|\s+or\s+|\s+&\s+", text, flags=re.IGNORECASE)
         terms = []
         for p in parts:
             clean = p.strip().rstrip(".")
-            if 1 < len(clean) <= 50:
+            found_techs = _find_techs_in_text(clean)
+            if found_techs:
+                terms.extend(found_techs)
+            elif 1 < len(clean) <= 50:
                 terms.append(clean)
-        return terms if terms else [text.strip()]
+        return list(dict.fromkeys(terms)) if terms else [text.strip()]
