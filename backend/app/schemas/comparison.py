@@ -92,3 +92,15 @@ class ComparisonResult(BaseModel):
             "covered by the resume. Rounded to one decimal place."
         )
     )
+    experience_gap_warning: str | None = Field(
+        default=None,
+        description="Alert warning if candidate tenure is below JD requirement.",
+    )
+    candidate_years: int | None = Field(
+        default=None,
+        description="Candidate's detected years of experience.",
+    )
+    required_years: int | None = Field(
+        default=None,
+        description="JD's required years of experience.",
+    )

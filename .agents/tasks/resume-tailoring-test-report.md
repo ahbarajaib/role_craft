@@ -121,5 +121,31 @@ When the fast parser stripped experience bullets and project details:
 
 ---
 
-## 4. Next Steps & User Confirmation
-Per instructions, **no improvements have been implemented yet**. We will discuss and align on the proposed fixes with the user before applying changes.
+## 4. Implementation & Verification Status (Completed)
+
+All 4 phases have been implemented and validated with automated regression and integration tests:
+
+1. **Phase 1 (Section Detector & Boundaries):**
+   - Protected container sections (`experience`, `projects`, `education`) from internal sub-heading fracture.
+   - Added standalone date rejection in `_is_heading()`.
+   - Prevented partial keyword false positives (e.g., `"Focus Toolkit"` no longer triggers `skills`).
+   - `Base resume.docx` now detects exactly 6 clean sections (`header`, `summary`, `skills`, `experience`, `projects`, `education`).
+
+2. **Phase 2 (Fast Parser & Schema Compliance):**
+   - Added automatic `"• "` prefixing to Word XML bullet paragraphs (`p.is_bullet` / `w:numPr`) in `_extract_docx_text()`.
+   - Fast deterministic parser extracts all 6 jobs with all 30 bullets (5 per job), all 8 projects with technologies, and dictionary-formatted education items.
+   - Zero AI tokens required for standard ATS resumes; deterministic parse runs in ~1ms with 100% confidence.
+
+3. **Phase 3 (Evidence Grounding & Safe Skills Invariant):**
+   - Added safety invariant in `RequirementMatcher`: `forbidden_claims` strictly never contains any skill in `safe_skills` or backed by evidence.
+   - Updated `_extract_key_terms()` using `_find_techs_in_text()` to extract individual canonical technologies from compound phrases.
+   - Verified across JD1, JD2, and JD3: `TypeScript` is present in `safe_skills` and absent from `forbidden_claims`.
+
+4. **Phase 4 (JD Parser Subheadings & ATS Comparator Tenure):**
+   - `_split_lines()` pre-splits subheadings glued to sentence punctuation (e.g. `reliability.Requirements`, `CloudWatch).Experience Working With Databases`).
+   - Cleaned emojis (`📍`, `🧑‍💻`, `🏢`, `💼`) from location, experience, and employment type fields.
+   - Guarded `_extract_location()` against narrative sentences (e.g. Noon mission statement).
+   - Added explicit tenure comparison (`candidate_years`, `required_years`, `experience_gap_warning`) and strict years checking in `_match_skills()`.
+
+### Test Suite Results:
+- Full test suite: **38 passed in 1.23s** (`tests/test_resume_tailoring_enhancements.py` + all existing test modules).

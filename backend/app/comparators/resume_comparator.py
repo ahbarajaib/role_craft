@@ -97,9 +97,17 @@ def compare_resume(
         job_description.technologies, full_resume_text
     )
 
-    # Overall required skill coverage.
+    # Overall required skill coverage and tenure gap evaluation.
+    cand_years = _extract_candidate_years(sections, full_resume_text)
+    req_years = _extract_required_years(job_description)
+    gap_warning: str | None = None
+    if cand_years is not None and req_years is not None and cand_years < req_years:
+        gap_warning = (
+            f"Role requires {req_years}+ years of experience, but resume indicates {cand_years}+ years."
+        )
+
     skill_matches, skill_gaps = _match_skills(
-        job_description.required_skills, full_resume_text
+        job_description.required_skills, full_resume_text, candidate_years=cand_years
     )
 
     # Weighted overall coverage:
@@ -124,6 +132,9 @@ def compare_resume(
         keyword_matches=sorted(keyword_matches),
         keyword_gaps=sorted(keyword_gaps),
         overall_coverage_percentage=overall_coverage,
+        experience_gap_warning=gap_warning,
+        candidate_years=cand_years,
+        required_years=req_years,
     )
 
 
@@ -191,6 +202,7 @@ def _match_terms(
 def _match_skills(
     skills: list[str],
     haystack: str,
+    candidate_years: int | None = None,
 ) -> tuple[list[str], list[str]]:
     """Match required skill phrases against the resume text.
 
@@ -198,6 +210,10 @@ def _match_skills(
     considered matched when at least ``_SKILL_MATCH_THRESHOLD`` of its
     content words appear in the normalised resume text.  This tolerates
     minor paraphrasing without requiring exact phrase matching.
+
+    If a skill phrase explicitly specifies a required tenure (e.g. "10+ years")
+    and candidate_years is known to be below that threshold, the skill is
+    strictly treated as missing.
     """
     normalised_haystack = _normalise(haystack)
     seen: set[str] = set()
@@ -209,6 +225,14 @@ def _match_skills(
         if key in seen or not key:
             continue
         seen.add(key)
+
+        # Check explicit tenure threshold on this skill requirement
+        m_years = re.search(r"(\d+)(?:\s*[-–]\s*(\d+))?\+?\s*years?", skill, re.IGNORECASE)
+        if m_years:
+            req_skill_years = int(m_years.group(1))
+            if candidate_years is not None and candidate_years < req_skill_years:
+                missing.append(skill)
+                continue
 
         content_words = _content_words(skill)
         if not content_words:
@@ -226,6 +250,45 @@ def _match_skills(
             missing.append(skill)
 
     return matched, missing
+
+
+def _extract_candidate_years(sections: list[SectionItem], full_text: str) -> int | None:
+    """Detect candidate's total years of experience from summary or full resume."""
+    summary_sections = [s for s in sections if s.normalized_name == "summary"]
+    if summary_sections:
+        summary_text = _section_to_text(summary_sections[0])
+        m = re.search(r"(\d+)\+?\s*years?(?:\s+of)?(?:\s+[a-z]+)*\s+experience", summary_text, re.IGNORECASE)
+        if m:
+            return int(m.group(1))
+        m2 = re.search(r"(\d+)\+?\s*years?", summary_text, re.IGNORECASE)
+        if m2:
+            return int(m2.group(1))
+
+    m3 = re.search(
+        r"(\d+)\+?\s*years?(?:\s+of)?(?:\s+professional|\s+software|\s+engineering|\s+industry)?\s+experience",
+        full_text,
+        re.IGNORECASE,
+    )
+    if m3:
+        return int(m3.group(1))
+
+    return None
+
+
+def _extract_required_years(jd: JobDescription) -> int | None:
+    """Detect required years of experience from JD experience field or required skills."""
+    pattern = re.compile(r"(\d+)(?:\s*[-–]\s*(\d+))?\+?\s*years?", re.IGNORECASE)
+    if jd.experience_required:
+        m = pattern.search(jd.experience_required)
+        if m:
+            return int(m.group(1))
+
+    for skill in jd.required_skills:
+        m = pattern.search(skill)
+        if m:
+            return int(m.group(1))
+
+    return None
 
 
 # ── Text helpers ──────────────────────────────────────────────────────────────

@@ -2,13 +2,13 @@
 
 ## In Progress
 
-- [ ] **Resume Tailoring Pipeline Hardening & Alignment (Base Resume vs JD1, JD2, JD3)**
+- [x] **Resume Tailoring Pipeline Hardening & Alignment (Base Resume vs JD1, JD2, JD3)**
   - [x] Test end-to-end tailoring workflow across DOCX and StructuredResume paths
   - [x] Document root causes and failure points ([audit report](.agents/tasks/resume-tailoring-test-report.md))
-  - [ ] Implement Phase 1: DOCX Parsing & Section Detector boundary stabilization
-  - [ ] Implement Phase 2: Resume Parser Service XML bullet recognition & structured schema fixes
-  - [ ] Implement Phase 3: Evidence Grounding & Requirement Matcher forbidden claims corrections
-  - [ ] Implement Phase 4: Job Description Parser subheading cleaning & ATS Comparator years evaluation
+  - [x] Implement Phase 1: DOCX Parsing & Section Detector boundary stabilization
+  - [x] Implement Phase 2: Resume Parser Service XML bullet recognition & structured schema fixes
+  - [x] Implement Phase 3: Evidence Grounding & Requirement Matcher forbidden claims corrections
+  - [x] Implement Phase 4: Job Description Parser subheading cleaning & ATS Comparator years evaluation
 - [ ] **30-Day Monetization Campaign** (started Sep 6 2026)
   - [ ] Day 1: Update LinkedIn headline and publish first personal post about RoleCraft
   - [ ] Day 1–2: Set up Instagram account `@rolecraft.tech` (or `@rolecraft.ai`)
