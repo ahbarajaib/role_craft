@@ -346,6 +346,27 @@ After every LLM rewrite, `sanitize_unsupported_skills_from_text()` performs a wo
 
 ---
 
+## Anti-AI Leadership & Technical Project Manager Positioning (Milestone 24)
+
+RoleCraft eliminates robotic AI resume clichés ("results-driven", "proven ability", "demonstrates expertise", "cross-functional to deliver", "drive digital transformation") while offering authentic, grounded executive positioning for senior developers transitioning into leadership and technical delivery roles.
+
+### Summary Positioning Presets
+
+| Preset | Role Target | Strategic Focus & Truth Guardrail |
+| :--- | :--- | :--- |
+| **Step Up to Team Lead** (`team_lead_transition`) | Team Lead / Lead Developer | Bridges senior engineering foundation into technical ownership: system architecture, code reviews, developer mentorship, and reliable sprint delivery. Opening customized honestly for Team Lead. |
+| **Hands-on Tech Lead** (`hands_on_tech_lead`) | Tech Lead | Dual-track excellence: deep hands-on coding craftsmanship paired with technical direction, system architecture, and engineering standards. |
+| **Technical Project Manager** (`tech_project_manager`) | Technical Project Manager / TPM | Leverages engineering depth for Agile delivery, backlog grooming, sprint execution, task estimation, risk management, and stakeholder communication. |
+| **Senior IC (Specialist)** (`senior_ic`) | Senior IC | Deep technical craftsmanship, resilient architecture design, and complex implementation without management emphasis. |
+| **Target Job Match** (`default`) | Target JD Role | Truthful alignment matching the target job description requirements without fabricating unearned titles. |
+
+### The Leadership & Project Manager Exception:
+- **Allowed Opening Customization**: When candidates target **Team Lead**, **Tech Lead**, or **Technical Project Manager** roles, the professional summary opening is customized directly for that leadership or delivery role (e.g. *"Technical Project Manager with 7+ years of software engineering and agile delivery experience..."* or *"Team Lead / Senior Software Engineer with 7+ years of experience..."*).
+- **Strict Verbatim Years of Experience Lock**: Verified years of experience are preserved verbatim (e.g. `7+ years`). The system strictly forbids changing 7 to 10 or copying JD experience requirements.
+- **Evidence-Bound Tech Stack**: Unverified cloud technologies or AI specializations (e.g. Microsoft AI Services, Azure) absent from the candidate's background are never fabricated.
+
+---
+
 ## Tech Stack
 
 See [`docs/tech-stack.md`](docs/tech-stack.md) for the full technology list.

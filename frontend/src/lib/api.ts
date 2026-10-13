@@ -138,7 +138,7 @@ export interface RewriteSectionRequest {
   recommendations: string[];
   user_instructions?: string;
   metric_inputs?: Record<string, string>;
-  positioning_mode?: string;     // 'team_lead_transition' | 'hands_on_tech_lead' | 'senior_ic' | 'default'
+  positioning_mode?: string;     // 'team_lead_transition' | 'hands_on_tech_lead' | 'tech_project_manager' | 'senior_ic' | 'default'
 }
 
 export async function rewriteSection(

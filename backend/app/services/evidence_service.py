@@ -16,8 +16,10 @@ from app.schemas.evidence import (
 )
 from app.schemas.structured_resume import StructuredResume
 
-# Build lowercase → canonical lookup once at import time
-_TECH_LOWER: dict[str, str] = {t.lower(): t for t in _KNOWN_TECHNOLOGIES}
+# Build lowercase → canonical lookup once at import time (longest phrases first)
+_TECH_LOWER: dict[str, str] = {
+    t.lower(): t for t in sorted(_KNOWN_TECHNOLOGIES, key=len, reverse=True)
+}
 
 _YEARS_RE = re.compile(
     r"(\d+\+?\s*years?)",
@@ -51,6 +53,9 @@ class EvidenceService:
         items: list[EvidenceItem] = []
         candidate_name = resume.contact_info.full_name if resume.contact_info else None
         years_of_experience: str | None = None
+        candidate_primary_title: str | None = None
+        experience_years_found: list[int] = []
+        has_present_in_dates = False
 
         for section in resume.sections:
             if not section.visible:
@@ -90,6 +95,15 @@ class EvidenceService:
             elif sec_type == "experience":
                 entries = content.get("entries") or []
                 for entry in entries:
+                    if not candidate_primary_title and entry.get("job_title"):
+                        candidate_primary_title = str(entry.get("job_title")).strip()
+                    s_date = str(entry.get("start_date") or "")
+                    e_date = str(entry.get("end_date") or "")
+                    if "present" in (e_date + s_date).lower():
+                        has_present_in_dates = True
+                    for y in re.findall(r"\b(19\d\d|20\d\d)\b", s_date + " " + e_date):
+                        experience_years_found.append(int(y))
+
                     bullets = entry.get("bullets") or []
                     role = entry.get("job_title", "")
                     company = entry.get("company", "")
@@ -207,9 +221,17 @@ class EvidenceService:
             if i.evidence_level == EvidenceLevel.LEVEL_3_ADJACENT
         ]
 
+        if not years_of_experience and experience_years_found:
+            min_y = min(experience_years_found)
+            max_y = 2026 if has_present_in_dates else max(experience_years_found)
+            span = max_y - min_y
+            if span >= 1:
+                years_of_experience = f"{span}+ years"
+
         return CandidateEvidenceSet(
             candidate_name=candidate_name,
             years_of_experience=years_of_experience,
+            candidate_primary_title=candidate_primary_title,
             supported_technologies=list(dict.fromkeys(supported)),
             adjacent_technologies=list(dict.fromkeys(adjacent)),
             unsupported_claims=[],   # populated by RequirementMatcher

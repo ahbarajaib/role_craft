@@ -14,16 +14,23 @@ from loguru import logger
 from app.ai.provider import OpenAIProvider
 from app.schemas.evidence import TailoringPlan
 from app.schemas.structured_resume import StructuredResume
+from app.services.rewrite_service import (
+    enforce_truthful_role_identity,
+    enforce_verified_years_of_experience,
+    sanitize_anti_ai_summary,
+    sanitize_unsupported_skills_from_text,
+)
 
 TAILOR_SUMMARY_SYSTEM = (
     "You are an executive resume strategist. Rewrite the professional summary to align with the target job title and job description. "
     "EVIDENCE CONSTRAINTS: (1) Only reference technologies and skills that appear in the candidate's original resume text provided below. "
-    "(2) Do NOT introduce any technology, tool, or skill from the JD that is absent from the candidate's resume. "
-    "(3) Preserve the candidate's years of experience VERBATIM — never adjust the number upward or downward to match the JD requirement. "
+    "(2) Do NOT introduce any technology, tool, or skill from the JD that is absent from the candidate's resume (e.g. do not claim Microsoft AI Services or Azure if absent). "
+    "(3) Preserve the candidate's years of experience VERBATIM — never adjust the number upward or downward to match the JD requirement (e.g. 7 years must NEVER be changed to 10 years). "
     "(4) NEVER fabricate fake companies, degrees, or metrics. "
+    "(5) LEADERSHIP & PROJECT MANAGER EXCEPTION: If the target role is Team Lead, Tech Lead, or Project Manager / Technical Project Manager, you may customize the summary opening to frame candidate's background into that role (e.g., 'Technical Project Manager with [Verified Years] of software engineering and delivery experience...' or 'Team Lead / Senior Software Engineer with [Verified Years] of experience...'). For other transitions (e.g., Lead AI Engineer), position truthfully: '[Actual Title] with [Verified Years] of experience..., positioning for [Target Role] roles.' "
+    "(6) ZERO TOLERANCE FOR ROBOTIC AI CLICHÉS: Strictly avoid 'results-driven', 'passionate', 'proven ability', 'proven track record', "
+    "'demonstrates expertise', 'drive digital transformation', 'cross-functional to deliver', 'align with business objectives', 'operational efficiency'. "
     "Use ONLY technologies and skills already present in the candidate's verified evidence (see VERIFIED CANDIDATE SKILLS in prompt). "
-    "NEVER add technologies simply because the JD requires them. Use the candidate's exact years-of-experience value from the resume — "
-    "do NOT increase it to match JD requirements. If FORBIDDEN TERMS are listed in the prompt, never use them as candidate qualifications. "
     "Output ONLY the polished summary paragraph (3-4 sentences max) — no headers or preamble."
 )
 
@@ -86,8 +93,15 @@ class TailorOrchestrationService:
         forbidden_block = ""
         safe_skills_block = ""
         years_block = ""
+        candidate_title = None
+        verified_years = None
+        forbidden_techs: set[str] = set()
+
         if tailoring_plan:
+            candidate_title = getattr(tailoring_plan, "candidate_primary_title", None)
+            verified_years = tailoring_plan.years_of_experience
             if tailoring_plan.forbidden_claims:
+                forbidden_techs = set(tailoring_plan.forbidden_claims)
                 forbidden_block = (
                     "\n=== FORBIDDEN: DO NOT CLAIM CANDIDATE HAS THESE (absent from resume) ===\n"
                     + ", ".join(tailoring_plan.forbidden_claims)
@@ -99,7 +113,7 @@ class TailorOrchestrationService:
                 )
             if tailoring_plan.years_of_experience:
                 years_block = (
-                    f"\n=== CANDIDATE YEARS OF EXPERIENCE (use verbatim) ===\n"
+                    f"\n=== CANDIDATE YEARS OF EXPERIENCE (use verbatim — NEVER inflate) ===\n"
                     f"{tailoring_plan.years_of_experience}"
                 )
 
@@ -117,6 +131,9 @@ class TailorOrchestrationService:
                         forbidden_block=forbidden_block,
                         safe_block=safe_skills_block,
                         years_block=years_block,
+                        candidate_primary_title=candidate_title,
+                        verified_years=verified_years,
+                        forbidden_techs=forbidden_techs,
                     )
                     if rewritten and rewritten.strip() != original_text.strip():
                         diff[f"sections[{i}].summary"] = {
@@ -196,17 +213,63 @@ class TailorOrchestrationService:
 
     def _rewrite_summary(
         self, original: str, jd: str, job_title: str,
-        forbidden_block: str = "", safe_block: str = "", years_block: str = ""
+        forbidden_block: str = "", safe_block: str = "", years_block: str = "",
+        candidate_primary_title: str | None = None,
+        verified_years: str | None = None,
+        forbidden_techs: set[str] | None = None,
     ) -> str:
-        user_prompt = (
-            f"Target Role: {job_title}\n\n"
-            f"Job Description:\n{jd[:3000]}\n\n"
-            f"Original Summary:\n{original}\n\n"
-            + safe_block + years_block + forbidden_block +
-            "\n\nRewrite the summary:"
-        )
+        prompt_parts = [
+            f"Target Applied Role: {job_title}",
+            f"Job Description:\n{jd[:3000]}",
+            f"Original Summary:\n{original}",
+        ]
+        if candidate_primary_title:
+            is_lead_pm = any(
+                kw in (job_title or "").lower()
+                for kw in [
+                    "team lead",
+                    "tech lead",
+                    "technical lead",
+                    "lead developer",
+                    "lead engineer",
+                    "project manager",
+                    "technical project manager",
+                    "engineering manager",
+                    "delivery lead",
+                    "scrum master",
+                    "product manager",
+                ]
+            )
+            if is_lead_pm:
+                truth_directive = (
+                    f"Candidate Background Role: {candidate_primary_title}\n"
+                    f"POSITIONING EXCEPTION (Leadership/PM): You may open directly as '{job_title} with {verified_years or 'verified'} experience...' or '{job_title} / {candidate_primary_title} with {verified_years or 'verified'} experience...', framing their engineering depth into leadership and agile delivery. "
+                    f"STRICT TRUTH: NEVER inflate verified years of experience (preserve {verified_years or 'actual years'} verbatim)."
+                )
+            else:
+                truth_directive = (
+                    f"Candidate Background Role: {candidate_primary_title}\n"
+                    f"TRUTHFULNESS: Do NOT claim candidate is already a '{job_title}'. Position them as: '{candidate_primary_title} with {verified_years or 'verified'} experience..., positioning for {job_title} roles.'"
+                )
+            prompt_parts.append(truth_directive)
+        if safe_block:
+            prompt_parts.append(safe_block)
+        if years_block:
+            prompt_parts.append(years_block)
+        if forbidden_block:
+            prompt_parts.append(forbidden_block)
+        prompt_parts.append("Rewrite the summary (3-4 sentences max, grounded in verified facts):")
+
+        user_prompt = "\n\n".join(prompt_parts)
         try:
-            return self._ai.generate_text(TAILOR_SUMMARY_SYSTEM, user_prompt).strip()
+            raw = self._ai.generate_text(TAILOR_SUMMARY_SYSTEM, user_prompt).strip()
+            if forbidden_techs:
+                raw, _ = sanitize_unsupported_skills_from_text(raw, forbidden_techs)
+            if verified_years:
+                raw = enforce_verified_years_of_experience(raw, verified_years)
+            if candidate_primary_title and job_title:
+                raw = enforce_truthful_role_identity(raw, candidate_primary_title, job_title, verified_years)
+            return sanitize_anti_ai_summary(raw).strip()
         except Exception as e:
             logger.warning("Summary rewrite failed", error=str(e))
             return original

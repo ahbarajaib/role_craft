@@ -23,6 +23,12 @@ from app.services.rewrite_service import (
     SKILLS_REWRITE_SYSTEM_PROMPT,
     SUMMARY_REWRITE_SYSTEM_PROMPT,
     build_summary_positioning_instructions,
+    enforce_truthful_role_identity,
+    enforce_verified_years_of_experience,
+    extract_candidate_primary_title_from_evidence,
+    extract_candidate_years_from_evidence,
+    extract_target_role_title,
+    get_unsupported_jd_technologies,
     sanitize_anti_ai_summary,
     sanitize_unsupported_skills_from_text,
 )
@@ -385,10 +391,15 @@ def test_summary_prompt_preserves_years_of_experience():
 def test_build_summary_positioning_instructions_presets():
     # Team Lead Transition
     tl_instr = build_summary_positioning_instructions("team_lead_transition", "Focus on React and Node")
-    assert "STEPPING UP / TRANSITIONING TO TEAM LEAD" in tl_instr
-    assert "architecture, code reviews, mentoring, and technical ownership" in tl_instr
+    assert "ROLE POSITIONING: TEAM LEAD" in tl_instr
     assert "Focus on React and Node" in tl_instr
-    assert "Never claim a formal Team Lead job title" in tl_instr
+    assert "OPENING CUSTOMIZATION EXCEPTION" in tl_instr
+
+    # Technical Project Manager
+    tpm_instr = build_summary_positioning_instructions("tech_project_manager", "Emphasize Agile sprints")
+    assert "ROLE POSITIONING: TECHNICAL PROJECT MANAGER" in tpm_instr
+    assert "Agile/Scrum execution" in tpm_instr
+    assert "Emphasize Agile sprints" in tpm_instr
 
     # Hands-on Tech Lead
     lead_instr = build_summary_positioning_instructions("hands_on_tech_lead")
@@ -419,3 +430,145 @@ def test_sanitize_anti_ai_summary_cleans_banned_cliches():
     assert "passionate" not in lower_cleaned
     assert "dynamic professional" not in lower_cleaned
     assert "synergies" not in lower_cleaned
+
+
+def test_sanitize_anti_ai_summary_cleans_user_screenshot_cliches():
+    """Verify that all clichés from the user's report are stripped cleanly."""
+    cliche_sample = (
+        "Demonstrates expertise in developing scalable applications. "
+        "Proven ability to collaborate with cross-functional to deliver robust AI applications "
+        "that align with business objectives and drive digital transformation."
+    )
+    cleaned = sanitize_anti_ai_summary(cliche_sample)
+    lower = cleaned.lower()
+    assert "demonstrates expertise" not in lower
+    assert "proven ability" not in lower
+    assert "cross-functional" not in lower
+    assert "digital transformation" not in lower
+    assert "align with business objectives" not in lower
+
+
+def test_enforce_verified_years_prevents_inflation():
+    """Verify that if candidate has 7+ years, hallucinated 10 years is corrected."""
+    hallucinated = "Lead AI Engineer with 10 years of experience in designing and deploying AI solutions."
+    corrected = enforce_verified_years_of_experience(hallucinated, "7+ years")
+    assert "10 years" not in corrected
+    assert "7+ years of experience" in corrected
+
+
+def test_enforce_verified_years_preserves_correct_years():
+    """Verify that if text already uses verified years, it is unchanged."""
+    accurate = "Senior Full Stack Developer with 7+ years of experience building web platforms."
+    result = enforce_verified_years_of_experience(accurate, "7+ years")
+    assert result == accurate
+
+
+def test_enforce_truthful_role_identity_bridges_false_target_title():
+    """Verify that a summary falsely declaring the target title is transformed to an authentic transition."""
+    false_summary = "Lead AI Engineer with 7+ years of experience in designing and deploying AI solutions, specializing in scalable applications."
+    corrected = enforce_truthful_role_identity(
+        text=false_summary,
+        candidate_title="Senior Full Stack Developer",
+        target_role="Lead AI Engineer",
+        verified_years="7+ years",
+    )
+    # Must NOT claim candidate is currently a Lead AI Engineer
+    assert not corrected.startswith("Lead AI Engineer")
+    # Must start with candidate's actual title
+    assert corrected.startswith("Senior Full Stack Developer with 7+ years of experience")
+    # Must position for the target role
+    assert "positioning for Lead AI Engineer roles" in corrected
+
+
+def test_enforce_truthful_role_identity_preserves_matched_title():
+    """Verify that if candidate already holds the target title, it is untouched."""
+    legit_summary = "Senior Full Stack Developer with 7+ years of experience in web architecture."
+    result = enforce_truthful_role_identity(
+        text=legit_summary,
+        candidate_title="Senior Full Stack Developer",
+        target_role="Senior Full Stack Developer",
+        verified_years="7+ years",
+    )
+    assert result == legit_summary
+
+
+def test_enforce_truthful_role_identity_allows_team_lead_customization():
+    """Verify that targeting Team Lead allows customized leadership opening."""
+    lead_summary = "Team Lead with 7+ years of software engineering and agile delivery experience."
+    result = enforce_truthful_role_identity(
+        text=lead_summary,
+        candidate_title="Senior Full Stack Developer",
+        target_role="Team Lead",
+        verified_years="7+ years",
+        positioning_mode="team_lead_transition",
+    )
+    # Must preserve the customized leadership title
+    assert result == lead_summary
+
+
+def test_enforce_truthful_role_identity_allows_tpm_customization():
+    """Verify that targeting Technical Project Manager allows customized TPM opening."""
+    tpm_summary = "Technical Project Manager with 7+ years of software engineering and delivery experience."
+    result = enforce_truthful_role_identity(
+        text=tpm_summary,
+        candidate_title="Full Stack Developer",
+        target_role="Technical Project Manager",
+        verified_years="7+ years",
+        positioning_mode="tech_project_manager",
+    )
+    # Must preserve the customized TPM title
+    assert result == tpm_summary
+
+
+def test_leadership_summary_locks_verified_years_strictly():
+    """Verify that even for leadership/TPM roles, 7 years is NEVER inflated to 10."""
+    hallucinated_summary = "Technical Project Manager with 10 years of experience in agile software delivery."
+    # Step 1: verify years enforcement restores 7+ years
+    corrected_years = enforce_verified_years_of_experience(hallucinated_summary, "7+ years")
+    assert "7+ years" in corrected_years
+    assert "10 years" not in corrected_years
+    # Step 2: verify leadership identity is preserved
+    final_summary = enforce_truthful_role_identity(
+        text=corrected_years,
+        candidate_title="Full Stack Developer",
+        target_role="Technical Project Manager",
+        verified_years="7+ years",
+        positioning_mode="tech_project_manager",
+    )
+    assert "Technical Project Manager with 7+ years of experience" in final_summary
+    assert "10" not in final_summary
+
+
+def test_extract_candidate_years_from_evidence_explicit():
+    evidence = "Candidate has 7 years of full-stack development experience and React Native background."
+    years = extract_candidate_years_from_evidence(evidence)
+    assert years in ("7+ years", "7 years")
+
+
+def test_extract_candidate_years_from_evidence_date_range():
+    evidence = "WordPress Developer 2018 - Present\nBuilt scalable sites and custom plugins."
+    years = extract_candidate_years_from_evidence(evidence)
+    assert years is not None
+    assert "+" in years or "years" in years
+
+
+def test_extract_candidate_primary_title_from_evidence():
+    evidence = "[Wordpress Developer Feb 2025 - Present]\n[React Native Developer Aug 2024 - Feb 2025]\nCore skills: React, Node, Python"
+    title = extract_candidate_primary_title_from_evidence(evidence)
+    assert "Wordpress Developer" in title or "Developer" in title
+
+
+def test_extract_target_role_title():
+    jd = "Job Title: Lead AI Engineer\nLocation: Remote\nWe are looking for a lead engineer..."
+    role = extract_target_role_title(jd)
+    assert role == "Lead AI Engineer"
+
+
+def test_get_unsupported_jd_technologies_detects_microsoft_ai_services():
+    jd = "Seeking a Lead AI Engineer with expertise in Microsoft AI Services, Azure OpenAI, and Python."
+    resume_evidence = "Senior Full Stack Developer with experience in React, Node, Python, and PostgreSQL."
+    unsupported = get_unsupported_jd_technologies(resume_evidence, jd)
+    # Microsoft AI Services and Azure OpenAI must be recognized as unsupported
+    assert any("microsoft ai" in t.lower() for t in unsupported)
+    assert any("azure openai" in t.lower() or "azure" in t.lower() for t in unsupported)
+

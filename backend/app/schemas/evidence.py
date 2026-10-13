@@ -139,6 +139,10 @@ class CandidateEvidenceSet(BaseModel):
             "(e.g. '7+ years'). NEVER inflate this value."
         ),
     )
+    candidate_primary_title: str | None = Field(
+        None,
+        description="Verified primary or most recent role title from candidate's resume.",
+    )
 
     # Categorised fast-lookup sets (derived from items)
     supported_technologies: list[str] = Field(
@@ -286,6 +290,10 @@ class TailoringPlan(BaseModel):
             "Verbatim years-of-experience from source resume. "
             "Generated text must use this value exactly."
         ),
+    )
+    candidate_primary_title: str | None = Field(
+        None,
+        description="Verified primary or most recent role title from candidate's resume.",
     )
 
 

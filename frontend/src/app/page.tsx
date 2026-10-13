@@ -652,8 +652,8 @@ export const SUMMARY_POSITIONING_PRESETS: SummaryPositioningPreset[] = [
     badge: "🚀 Team Lead Transition",
     shortLabel: "Team Lead",
     icon: "🚀",
-    desc: "Position senior engineering depth for lead ownership: architecture, code reviews, mentoring, and sprint delivery without claiming false past titles.",
-    instruction: "Position the candidate as a senior developer transitioning to Team Lead; emphasize architecture, code reviews, developer mentorship, and reliable delivery without claiming a formal Team Lead title."
+    desc: "Position senior engineering depth for lead ownership: architecture, code reviews, mentoring, and sprint delivery.",
+    instruction: "Position candidate for Team Lead: customize opening as Team Lead / Lead Developer with verified software engineering background; emphasize architecture, code reviews, developer mentorship, and sprint delivery while locking verified years of experience verbatim."
   },
   {
     id: "hands_on_tech_lead",
@@ -662,7 +662,16 @@ export const SUMMARY_POSITIONING_PRESETS: SummaryPositioningPreset[] = [
     shortLabel: "Tech Lead",
     icon: "👑",
     desc: "Dual-track credibility: deep coding craftsmanship paired with technical direction, system architecture, and engineering standards.",
-    instruction: "Position as a Hands-on Tech Lead with dual-track excellence in core coding, system architecture, standards, and technical direction."
+    instruction: "Position as a Hands-on Tech Lead with dual-track excellence in core coding, system architecture, standards, and technical direction, grounded strictly in candidate's verified background and actual years of experience."
+  },
+  {
+    id: "tech_project_manager",
+    label: "Technical Project Manager",
+    badge: "📊 Technical Project Manager",
+    shortLabel: "Project Manager",
+    icon: "📊",
+    desc: "Position technical engineering depth for Agile delivery, roadmap planning, sprint execution, and stakeholder communication.",
+    instruction: "Position candidate as a Technical Project Manager: customize opening as Technical Project Manager with verified software engineering and delivery background; emphasize Agile/Scrum execution, roadmap alignment, task estimation, risk management, and stakeholder communication while locking verified years of experience verbatim."
   },
   {
     id: "senior_ic",
@@ -671,7 +680,7 @@ export const SUMMARY_POSITIONING_PRESETS: SummaryPositioningPreset[] = [
     shortLabel: "Senior IC",
     icon: "💻",
     desc: "Pure deep technical execution, resilient architecture, and specialized engineering problem solving.",
-    instruction: "Position as a deep technical Senior Individual Contributor; emphasize technical mastery, resilient architecture design, and complex implementation."
+    instruction: "Position as a deep technical Senior Individual Contributor; emphasize technical mastery, resilient architecture design, and complex implementation, preserving verified years of experience and factual stack without inflation."
   },
   {
     id: "default",
@@ -680,7 +689,7 @@ export const SUMMARY_POSITIONING_PRESETS: SummaryPositioningPreset[] = [
     shortLabel: "Job Match",
     icon: "🎯",
     desc: "Direct alignment matching the target job description title and core technical requirements.",
-    instruction: "Align professional summary directly with the target job title and core technical requirements."
+    instruction: "Align professional summary truthfully with the target role; preserve verified years of experience and actual background without fabricating unearned titles or missing technologies."
   }
 ];
 
@@ -1134,7 +1143,7 @@ function SectionCard({
               </p>
 
               {/* Preset Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 pt-1">
                 {SUMMARY_POSITIONING_PRESETS.map((preset) => {
                   const isSelected = selectedPositioning === preset.id;
                   return (

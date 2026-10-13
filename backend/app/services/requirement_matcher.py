@@ -219,6 +219,7 @@ class RequirementMatcher:
             forbidden_claims=forbidden,
             safe_skills=safe_skills,
             years_of_experience=evidence.years_of_experience,
+            candidate_primary_title=evidence.candidate_primary_title,
         )
 
     def _extract_key_terms(self, text: str) -> list[str]:

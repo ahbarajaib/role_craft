@@ -69,7 +69,7 @@ class RewriteSectionRequest(BaseModel):
     )
     positioning_mode: str | None = Field(
         default=None,
-        description="Optional role positioning mode for professional summary: 'team_lead_transition' | 'hands_on_tech_lead' | 'senior_ic' | 'default'."
+        description="Optional role positioning mode for professional summary: 'team_lead_transition' | 'hands_on_tech_lead' | 'tech_project_manager' | 'senior_ic' | 'default'."
     )
 
     @field_validator("section_name")

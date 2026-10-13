@@ -119,7 +119,11 @@ _KNOWN_TECHNOLOGIES: list[str] = [
     "Git", "Linux", "Bash",
     # AI/ML
     "PyTorch", "TensorFlow", "Scikit-learn", "Pandas", "NumPy", "LangChain",
-    "OpenAI", "Anthropic", "Hugging Face",
+    "OpenAI", "Anthropic", "Hugging Face", "Microsoft AI Services", "Azure AI",
+    "Azure OpenAI", "Azure Cognitive Services", "Amazon Bedrock", "AWS Bedrock",
+    "SageMaker", "AWS SageMaker", "Vertex AI", "Google Cloud Vertex AI",
+    "Databricks", "Snowflake", "LlamaIndex", "Ollama", "vLLM", "DeepSpeed",
+    "Pinecone", "ChromaDB", "Milvus", "Weaviate", "Qdrant", "OpenSearch",
     # Messaging & queues
     "Kafka", "RabbitMQ", "Celery", "SQS",
     # APIs & protocols

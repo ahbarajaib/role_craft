@@ -47,6 +47,18 @@ def get_unsupported_jd_technologies(
         if re.search(pattern, jd_lower, re.IGNORECASE) and not re.search(pattern, evidence_lower, re.IGNORECASE):
             unsupported.add(tech)
 
+    # Dynamic multi-word cloud, platform, and vendor AI phrases (e.g. "Microsoft AI Services", "Azure AI Services")
+    cloud_ai_patterns = [
+        r"\b(?:Microsoft|Azure|AWS|Amazon|Google(?:\s+Cloud)?|GCP|Oracle|IBM)\s+[A-Za-z0-9]+\s+(?:Services?|Platform|Suite|Solutions?)\b",
+        r"\b(?:Microsoft|Azure|AWS|Google)\s+AI(?:\s+Services?)?\b",
+        r"\b[A-Za-z0-9]+\s+AI\s+(?:Services?|Platform|Solutions?)\b",
+    ]
+    for cap_pat in cloud_ai_patterns:
+        for match in re.finditer(cap_pat, job_description_text, re.IGNORECASE):
+            matched_phrase = match.group(0).strip()
+            if not re.search(r"\b" + re.escape(matched_phrase.lower()) + r"\b", evidence_lower):
+                unsupported.add(matched_phrase)
+
     return unsupported
 
 
@@ -91,6 +103,7 @@ def sanitize_unsupported_skills_from_text(
                     ]
                     line_clean = f"{cat}: {', '.join(filtered_skills)}"
                 else:
+                    line_clean = re.sub(rf"\b(?:specializing\s+in|specializes\s+in|focused\s+on|with\s+expertise\s+in)\s+{pattern}\b", "", line_clean, flags=re.IGNORECASE)
                     line_clean = re.sub(rf"\b(and|or|,)\s+{pattern}\b", "", line_clean, flags=re.IGNORECASE)
                     line_clean = re.sub(rf"\b{pattern}\s+(and|or|,)\b", "", line_clean, flags=re.IGNORECASE)
                     line_clean = re.sub(pattern, "", line_clean, flags=re.IGNORECASE)
@@ -133,31 +146,51 @@ You are rewriting the PROFESSIONAL SUMMARY / PROFILE section of a resume to alig
 
 CRITICAL PROFESSIONAL SUMMARY RULES:
 1. **Compelling 1-Paragraph Executive Summary**: Write a powerful 2-4 sentence professional summary tailored specifically to the target job title and core domain background (around 50-85 words).
-2. **Target Role Alignment**: Frame the candidate's skills and major achievements directly around the target role.
+2. **Target Role Alignment & Factual Identity**: Frame the candidate's verified skills and major achievements directly around the target role.
+   - ABSOLUTE TRUTHFULNESS: Never state that the candidate currently holds an unearned technical domain title (e.g. do NOT invent 'Lead AI Engineer' if the candidate has no AI background).
+   - LEADERSHIP & PROJECT MANAGER EXCEPTION: If the target role is 'Team Lead', 'Tech Lead', or 'Project Manager' / 'Technical Project Manager' (or corresponding positioning preset is selected):
+     The professional summary MAY be customized to position the candidate directly in that leadership or delivery role:
+     e.g., 'Technical Project Manager with [Verified Years] of software engineering and delivery experience...', or 'Team Lead / Senior Software Engineer with [Verified Years] of experience...', or '[Candidate Title] with [Verified Years] of experience, stepping up into Technical Lead / Project Manager roles...'.
+   - FOR OTHER CAREER TRANSITIONS: Write an authentic, grounded transition:
+     "[Candidate's Actual Title] with [Verified Years] of experience in [verified stack], positioning for [Target Role] roles. [Sentence 2: concrete systems & architectures built]. [Sentence 3: demonstrated technical ownership across system architecture, engineering standards, code reviews, and delivery]."
+   - UNCONDITIONAL TRUTH GUARDRAIL (NO EXPERIENCE INFLATION): You must NEVER inflate or alter verified years of experience (e.g. 7 years must NEVER be changed to 10 years to match the job description requirement). The candidate's verified years of experience must be preserved VERBATIM.
 3. **No Fluff or Invented Claims**: Keep all years of experience, core technical stack, and factual background grounded strictly in the candidate's actual resume evidence.
-4. **Anti-AI Authentic Engineering Voice (Strictly Forbidden Clichés)**: Strictly avoid cliché AI resume buzzwords. Do NOT use words such as: "results-driven", "passionate", "proven track record", "seasoned", "spearheaded", "leveraged", "dynamic professional", "adept at", "testament to", "orchestrating", "synergistic", "transformative impact". Write with direct, confident, human clarity that hiring managers respect.
+4. **Anti-AI Authentic Engineering Voice (Strictly Forbidden Clichés)**: Strictly avoid cliché AI resume buzzwords. Do NOT use words such as: "results-driven", "passionate", "proven track record", "proven ability", "demonstrates expertise", "demonstrated expertise", "seasoned", "spearheaded", "leveraged", "dynamic professional", "adept at", "testament to", "orchestrating excellence", "synergistic", "transformative impact", "cross-functional to deliver", "drive digital transformation", "driving digital transformation", "align with business objectives", "operational efficiency". Write with direct, confident, human clarity that hiring managers respect.
 5. **Output Bounds**: Output ONLY the polished summary paragraph text. Do not include preambles or section title headers.
-6. **Resume-Only Technologies & Skills**: Only reference technologies and skills that explicitly appear in the candidate's resume. Do NOT introduce any technology, framework, tool, or skill from the Job Description that is absent from the candidate's text.
-7. **Preserve Years of Experience Verbatim**: Use the candidate's stated years of experience exactly as written in their original summary (e.g. '7+ years'). NEVER adjust or inflate years of experience to match the job description's requirement.
+6. **Resume-Only Technologies & Skills**: Only reference technologies and skills that explicitly appear in the candidate's resume. Do NOT introduce any technology, framework, tool, cloud service, or skill from the Job Description that is absent from the candidate's text (e.g. do NOT claim 'Microsoft AI Services' or 'Azure' if absent).
+7. **Preserve Years of Experience Verbatim**: Use the candidate's stated years of experience exactly as written in their original summary or evidence (e.g. '7+ years'). NEVER adjust or inflate years of experience to match the job description's requirement.
 8. **Third-Person Professional Stance**: Write in standard professional third-person perspective (omitting pronouns like 'I' or 'he/she', e.g., 'Senior Full Stack Developer with 7+ years of experience... Brings technical ownership...').
 """
 
 BANNED_AI_SUMMARY_PHRASES = [
     r"\bresults-driven\b",
-    r"\bproven track record\b",
-    r"\bseasoned professional\b",
+    r"\boutcome-oriented\b",
+    r"\bgoal-oriented\b",
+    r"\bproven\s+(?:ability|track\s+record|history|expertise)\b(?:\s+to)?",
+    r"\bdemonstrat(?:es|ed|ing)\s+expertise(?:\s+in)?\b",
+    r"\bdemonstrated\s+history\s+of\s+success\b",
+    r"\bseasoned(?:\s+professional)?\b",
     r"\bseasoned\b",
-    r"\bdynamic professional\b",
+    r"\bdynamic(?:\s+professional)?\b",
     r"\bdynamic\b",
-    r"\bpassionate (engineer|developer|professional|architect)\b",
+    r"\bpassionate(?:\s+(?:engineer|developer|professional|architect))?\b",
     r"\bpassionate\b",
-    r"\bspearhead(ed|ing|s)?\b",
-    r"\badept at\b",
-    r"\bsynerg(y|ies|istic|ize|ized|izing)\b",
-    r"\borchestrating excellence\b",
-    r"\btestament to\b",
-    r"\bdriving digital transformation\b",
-    r"\bleveraged\b",
+    r"\bdedicated\s+professional\b",
+    r"\bspearhead(?:ed|ing|s)?\b",
+    r"\badept\s+at\b",
+    r"\bsynerg(?:y|ies|istic|ize|ized|izing)\b",
+    r"\borchestrat(?:ing|ed|es)?\s+excellence\b",
+    r"\btestament\s+to\b",
+    r"\b(?:drive|driving|drives|driven)\s+digital\s+transformation\b",
+    r"\bdigital\s+transformation\b",
+    r"\balign(?:s|ing)?\s+with\s+business\s+objectives\b",
+    r"\benhancing\s+operational\s+efficiency\b",
+    r"\boperational\s+efficiency\b",
+    r"\bcollaborate\s+with\s+cross-functional\b",
+    r"\bcross-functional\s+(?:to\s+deliver|paradigms|collaboration)\b",
+    r"\bcross-functional\b",
+    r"\btransformative\s+impact\b",
+    r"\bleverag(?:ed|ing|es)\b",
 ]
 
 
@@ -169,9 +202,288 @@ def sanitize_anti_ai_summary(text: str) -> str:
     # Clean up broken articles/prepositions like "with a of" or "a and"
     cleaned = re.sub(r"\bwith\s+a\s+of\b", "with", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\ba\s+and\b", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bto\s+deliver\s+robust\b", "delivering robust", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bto\s+collaborate\s+to\b", "collaborating to", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\s+([,\.])", r"\1", cleaned)
+    cleaned = re.sub(r",\s*,", ",", cleaned)
+    cleaned = re.sub(r"\.\s*\.", ".", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
     return cleaned
+
+
+def extract_candidate_years_from_evidence(all_evidence_text: str) -> str | None:
+    """Extract candidate's verified years of experience from resume evidence text.
+
+    Looks for explicit phrases first (e.g. '7 years of full-stack development experience',
+    '7+ years', '7 years'), and falls back to computing the span from experience date ranges.
+    """
+    if not all_evidence_text:
+        return None
+
+    pat = re.compile(
+        r"\b(\d+\+?)\s*(?:years?|yrs)(?:\s+(?:of\s+)?[\w\s-]{1,30})?\s+experience\b",
+        re.IGNORECASE,
+    )
+    m = pat.search(all_evidence_text)
+    if m:
+        num = m.group(1).strip()
+        return f"{num}+ years" if not num.endswith("+") else f"{num} years"
+
+    pat2 = re.compile(r"\b(\d+\+?\s*(?:years?|yrs))\b", re.IGNORECASE)
+    m2 = pat2.search(all_evidence_text)
+    if m2:
+        return m2.group(1).strip()
+
+    # Fallback: calculate from experience date ranges
+    year_matches = [int(y) for y in re.findall(r"\b(19\d\d|20\d\d)\b", all_evidence_text)]
+    if year_matches:
+        min_year = min(year_matches)
+        has_present = bool(re.search(r"\b(present|current|now)\b", all_evidence_text, re.IGNORECASE))
+        max_year = 2026 if has_present else max(year_matches)
+        span = max_year - min_year
+        if span >= 1:
+            return f"{span}+ years"
+
+    return None
+
+
+def extract_candidate_primary_title_from_evidence(
+    all_evidence_text: str,
+    default: str = "Software Developer",
+) -> str:
+    """Extract candidate's real current or primary job title from evidence text."""
+    if not all_evidence_text:
+        return default
+
+    # Check section headers like "[Wordpress Developer Feb 2025 - Present]"
+    header_roles = re.findall(
+        r"\[([^\]:\n]*(?:Developer|Engineer|Architect|Lead|Manager|Specialist|Consultant|Programmer|Administrator)[^\]:\n]*)\]",
+        all_evidence_text,
+        re.IGNORECASE,
+    )
+    if header_roles:
+        cleaned_role = re.sub(
+            r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|present|current|\d{4})\b.*",
+            "",
+            header_roles[0],
+            flags=re.IGNORECASE,
+        ).strip().strip("-|–—,")
+        if len(cleaned_role) >= 3:
+            return cleaned_role
+
+    m_open = re.match(
+        r"^\s*([A-Z][a-zA-Z\s/-]{2,35}?)\s+(?:with\s+\d+|having\s+\d+|specializ)",
+        all_evidence_text,
+    )
+    if m_open:
+        return m_open.group(1).strip()
+
+    common_titles = [
+        "Senior Full Stack Developer",
+        "Full Stack Developer",
+        "Senior Software Engineer",
+        "Software Engineer",
+        "Senior Frontend Developer",
+        "Frontend Developer",
+        "Senior Backend Developer",
+        "Backend Developer",
+        "React Native Developer",
+        "WordPress Developer",
+        "Mobile App Developer",
+        "AI Engineer",
+        "Data Engineer",
+    ]
+    for ct in common_titles:
+        if re.search(r"\b" + re.escape(ct) + r"\b", all_evidence_text, re.IGNORECASE):
+            return ct
+
+    return default
+
+
+def extract_target_role_title(job_description_text: str) -> str:
+    """Extract target job title from the job description text."""
+    if not job_description_text:
+        return "Target Position"
+
+    m = re.search(r"(?:Job\s+Title|Title|Position|Role)\s*:\s*([^\n\r]+)", job_description_text, re.IGNORECASE)
+    if m:
+        clean = m.group(1).strip().strip("*#-_")
+        if 3 <= len(clean) <= 60:
+            return clean
+
+    lines = [l.strip().strip("*#-_") for l in job_description_text.split("\n") if l.strip()]
+    for line in lines[:5]:
+        if any(kw in line.lower() for kw in ["engineer", "developer", "lead", "architect", "manager", "specialist", "scientist"]):
+            if len(line) <= 60 and not line.lower().startswith(("about", "we are", "seeking", "looking")):
+                return line
+
+    return "Target Position"
+
+
+def enforce_verified_years_of_experience(text: str, verified_years: str | None) -> str:
+    """Ensure the rewritten summary preserves candidate's verified years of experience verbatim.
+
+    If candidate has '7+ years' (or '7 years'), but LLM hallucinated '10 years' or '10+ years'
+    to copy the job description, this function detects and replaces the false number.
+    """
+    if not text or not verified_years:
+        return text
+
+    m_ver = re.search(r"(\d+)", verified_years)
+    if not m_ver:
+        return text
+    ver_num = int(m_ver.group(1))
+
+    def _replace_years(match):
+        found_num = int(match.group(1))
+        if found_num != ver_num:
+            return f"{verified_years} of experience"
+        return match.group(0)
+
+    cleaned = re.sub(
+        r"\b(\d+)\+?\s*(?:years?|yrs)(?:\s+of\s+experience)?\b",
+        _replace_years,
+        text,
+        count=1,
+        flags=re.IGNORECASE,
+    )
+    return cleaned
+
+
+def is_leadership_or_pm_target(
+    target_role: str | None,
+    positioning_mode: str | None = None,
+) -> bool:
+    """Check if the target role or positioning mode qualifies for leadership/PM summary customization."""
+    pos = (positioning_mode or "").lower().strip()
+    if pos in (
+        "team_lead",
+        "team_lead_transition",
+        "lead",
+        "tech_lead",
+        "hands_on_tech_lead",
+        "tech_project_manager",
+        "technical_project_manager",
+        "project_manager",
+        "tpm",
+        "pm",
+    ):
+        return True
+
+    if not target_role:
+        return False
+
+    t_norm = target_role.lower().strip()
+    leadership_keywords = [
+        "team lead",
+        "tech lead",
+        "technical lead",
+        "lead developer",
+        "lead software engineer",
+        "lead engineer",
+        "lead architect",
+        "project manager",
+        "technical project manager",
+        "program manager",
+        "engineering manager",
+        "delivery lead",
+        "scrum master",
+        "product manager",
+    ]
+    return any(kw in t_norm for kw in leadership_keywords)
+
+
+def enforce_truthful_role_identity(
+    text: str,
+    candidate_title: str | None,
+    target_role: str | None,
+    verified_years: str | None,
+    positioning_mode: str | None = None,
+) -> str:
+    """Ensure candidate is not falsely claimed to currently hold a target title they have never held.
+
+    EXCEPTION FOR TEAM LEAD & PROJECT MANAGER:
+    If candidate is targeting a Team Lead, Tech Lead, or Project Manager / Technical Project Manager role
+    (e.g., target_role contains 'Team Lead' or 'Project Manager', or positioning_mode is set to leadership),
+    we allow customized leadership/PM openings (e.g. 'Technical Project Manager with 7+ years...',
+    'Team Lead with 7+ years...'), while strictly locking verified years of experience verbatim
+    (e.g., 7 is never inflated to 10).
+
+    For non-leadership/unrelated targets (e.g. target is 'Cloud Solutions Architect' or 'Lead AI Engineer'
+    when candidate has no AI background), an ungrounded opening like 'Lead AI Engineer with 7+ years...'
+    is transformed into an honest bridge:
+    'Full Stack Developer with 7+ years of experience..., positioning for Lead AI Engineer roles.'
+    """
+    if not text or not candidate_title or not target_role:
+        return text
+
+    c_norm = candidate_title.lower().strip()
+    t_norm = target_role.lower().strip()
+
+    if c_norm == t_norm or t_norm in ["target position", "target role"]:
+        return text
+
+    # Check if target role qualifies for the leadership/PM customization exception
+    if is_leadership_or_pm_target(target_role, positioning_mode):
+        # We allow leadership/PM title customization in the opening!
+        # E.g. "Technical Project Manager with 7+ years...", "Team Lead / Senior Developer with 7+ years..."
+        # But if the title claims a totally unverified technical specialty (like AI) without candidate background,
+        # fall through to truthful bridge.
+        if "ai" in t_norm and "ai" not in c_norm:
+            pass  # Fall through to truthful bridge because candidate has no AI background
+        else:
+            return text
+
+    pat = rf"^(?:(?:As\s+a|As\s+an|A|An)\s+)?{re.escape(target_role)}\s+with\s+(\d+\+?\s*(?:years?|yrs)(?:\s+of\s+experience)?)"
+    m = re.match(pat, text, flags=re.IGNORECASE)
+    if m:
+        years_phrase = m.group(1)
+        rest = text[m.end():].lstrip()
+        if rest.startswith("in "):
+            if "positioning for" not in rest.lower():
+                parts = rest.split(".", 1)
+                first_sent = parts[0].strip()
+                remaining = ("." + parts[1]) if len(parts) > 1 else "."
+                new_first_sent = f"{candidate_title} with {years_phrase} {first_sent}, positioning for {target_role} roles{remaining}"
+                return new_first_sent
+        return f"{candidate_title} with {years_phrase}, positioning for {target_role} roles. {rest}"
+
+    return text
+
+
+def _build_evidence_from_batch_items(sections: list, current_sec_name: str) -> str:
+    """Build structured plain text evidence from all sibling sections in a batch rewrite request."""
+    ev_parts = []
+    for item in sections:
+        s_name = getattr(item, "section_name", "")
+        if s_name.lower().strip() == current_sec_name.lower().strip():
+            continue
+        content = getattr(item, "section_content", None)
+        if not content:
+            continue
+        if isinstance(content, dict):
+            if "entries" in content:
+                for e in content.get("entries", []):
+                    if isinstance(e, dict):
+                        role = e.get("job_title") or e.get("name") or ""
+                        comp = e.get("company", "")
+                        dates = f"{e.get('start_date', '')} - {e.get('end_date', 'Present')}".strip(" -")
+                        header = f"[{s_name}: {role}" + (f" @ {comp}" if comp else "") + (f" ({dates})" if dates else "") + "]"
+                        bullets = e.get("bullets") or []
+                        ev_parts.append(header + "\n" + "\n".join(f"• {b}" for b in bullets))
+                    elif isinstance(e, str) and e.strip():
+                        ev_parts.append(f"[{s_name}]\n{e}")
+            elif "categories" in content:
+                for c in content.get("categories", []):
+                    cname = c.get("category_name", "Skills")
+                    s_list = c.get("skills", [])
+                    if s_list:
+                        ev_parts.append(f"[{s_name}: {cname}]\n" + ", ".join(s_list))
+            elif "text" in content and content["text"].strip():
+                ev_parts.append(f"[{s_name}]\n{content['text']}")
+        elif isinstance(content, str) and content.strip():
+            ev_parts.append(f"[{s_name}]\n{content}")
+    return "\n\n".join(ev_parts)
 
 
 def build_summary_positioning_instructions(
@@ -182,7 +494,9 @@ def build_summary_positioning_instructions(
     pos_mode = (positioning_mode or "").lower().strip()
     if not pos_mode and user_instructions:
         u_lower = user_instructions.lower()
-        if any(k in u_lower for k in ["team lead", "lead developer", "stepping up", "leadership", "lead role"]):
+        if any(k in u_lower for k in ["project manager", "technical project manager", "tpm", "pm role", "scrum master"]):
+            pos_mode = "tech_project_manager"
+        elif any(k in u_lower for k in ["team lead", "lead developer", "stepping up", "leadership", "lead role"]):
             pos_mode = "team_lead_transition"
         elif any(k in u_lower for k in ["tech lead", "hands-on lead", "hands on lead"]):
             pos_mode = "hands_on_tech_lead"
@@ -192,28 +506,41 @@ def build_summary_positioning_instructions(
     preset_guidance = None
     if pos_mode in ("team_lead", "team_lead_transition", "lead"):
         preset_guidance = (
-            "=== ROLE POSITIONING: STEPPING UP / TRANSITIONING TO TEAM LEAD ===\n"
-            "The candidate is positioning for a Team Lead / Lead Software Developer role in their domain.\n"
+            "=== ROLE POSITIONING: TEAM LEAD ===\n"
+            "The candidate is positioning for a Team Lead / Software Engineering Lead role in their domain.\n"
             "1. Ground the summary in their verified senior engineering foundation from evidence.\n"
-            "2. Highlight demonstrated readiness for technical ownership: architecture, code reviews, mentoring, and technical ownership, with reliable sprint delivery.\n"
-            "3. TRUTHFUL & AUTHENTIC POSITIONING: Never claim a formal Team Lead job title if absent from the resume. Instead, honestly bridge their real senior engineering depth to lead responsibilities (e.g., 'Senior Full Stack Developer positioning for Lead Full Stack roles; driving technical architecture, code reviews, developer mentorship, and reliable sprint delivery.')."
+            "2. Highlight demonstrated readiness for technical ownership: architecture, code reviews, developer mentorship, and reliable sprint delivery.\n"
+            "3. OPENING CUSTOMIZATION EXCEPTION: You may customize the summary opening for Team Lead (e.g., 'Team Lead / Senior Software Engineer with [Verified Years] of experience...' or 'Engineering Team Lead with [Verified Years] of full-stack development experience...').\n"
+            "4. STRICT FACTUAL LOCK: NEVER inflate verified years of experience (e.g. 7 years must NEVER be changed to 10 years). Preserve verified years verbatim. Never claim unsupported technologies."
         )
     elif pos_mode in ("hands_on_tech_lead", "tech_lead"):
         preset_guidance = (
             "=== ROLE POSITIONING: HANDS-ON TECHNICAL LEAD ===\n"
             "The candidate is positioning as a Hands-on Tech Lead.\n"
-            "Emphasize the dual-track credibility: deep hands-on coding and technical craftsmanship paired with technical direction, system architecture, engineering standards, and team delivery execution."
+            "1. Emphasize the dual-track credibility: deep hands-on coding and technical craftsmanship paired with technical direction, system architecture, engineering standards, and team delivery execution.\n"
+            "2. OPENING CUSTOMIZATION EXCEPTION: Frame opening as a Hands-on Technical Lead (e.g. 'Hands-on Technical Lead with [Verified Years] of software engineering experience...').\n"
+            "3. STRICT FACTUAL LOCK: Preserve verified years of experience verbatim; never claim unsupported technologies."
+        )
+    elif pos_mode in ("tech_project_manager", "technical_project_manager", "project_manager", "tpm", "pm"):
+        preset_guidance = (
+            "=== ROLE POSITIONING: TECHNICAL PROJECT MANAGER (TPM) ===\n"
+            "The candidate is positioning as a Technical Project Manager / Engineering Project Lead.\n"
+            "1. Frame verified software engineering depth as a major delivery advantage: sprint planning, Agile/Scrum execution, roadmap alignment, task estimation, risk mitigation, and clear stakeholder communication.\n"
+            "2. OPENING CUSTOMIZATION EXCEPTION: You may customize the summary opening for Technical Project Manager (e.g., 'Technical Project Manager with [Verified Years] of software engineering and delivery experience...', or 'Technical Project Manager & Engineering Lead with [Verified Years] of experience...').\n"
+            "3. STRICT FACTUAL LOCK: NEVER inflate or alter verified years of experience (e.g. 7 years must NEVER be changed to 10 years). Preserve verified years verbatim. Only use technologies present in candidate evidence."
         )
     elif pos_mode in ("senior_ic", "individual_contributor"):
         preset_guidance = (
             "=== ROLE POSITIONING: SENIOR INDIVIDUAL CONTRIBUTOR ===\n"
             "The candidate is positioning as a senior technical specialist.\n"
-            "Emphasize deep technical mastery, resilient architecture design, and core software engineering craftsmanship without team management or people leadership emphasis."
+            "1. Emphasize deep technical mastery, resilient architecture design, and core software engineering craftsmanship without team management or people leadership emphasis.\n"
+            "2. TRUTHFUL POSITIONING: Preserve verified years of experience and factual stack without inflation."
         )
     elif pos_mode in ("default", "target_match"):
         preset_guidance = (
             "=== ROLE POSITIONING: TARGET JOB POSITIONING ===\n"
-            "Align professional focus directly with the target job title and domain requirements."
+            "Align professional focus directly with the target job title and domain requirements.\n"
+            "TRUTHFUL POSITIONING: Do NOT falsely claim the candidate already holds the target role title if absent from their resume. Bridge their verified background to the target role honestly."
         )
 
     parts = []
@@ -870,7 +1197,28 @@ class RewriteService:
         if user_instructions:
             input_parts.append(f"=== CANDIDATE INSTRUCTIONS FOR REFINEMENT ===\n{user_instructions.strip()}")
 
+        verified_years = None
+        candidate_primary_title = None
+        target_role = None
+
         if is_summary_section:
+            verified_years = extract_candidate_years_from_evidence(all_evidence_text)
+            candidate_primary_title = extract_candidate_primary_title_from_evidence(all_evidence_text)
+            target_role = extract_target_role_title(job_description_text)
+
+            factual_anchor = (
+                "=== MANDATORY FACTUAL INTEGRITY & TRUTHFULNESS DIRECTIVES ===\n"
+                f"- Verified Candidate Years of Experience: {verified_years or 'Preserve exactly from evidence'}\n"
+                f"- Candidate Background / Primary Title: {candidate_primary_title or 'Ground in resume evidence'}\n"
+                f"- Target Applied Role: {target_role}\n\n"
+                "STRICT ANTI-FABRICATION CONSTRAINTS:\n"
+                "1. ROLE POSITIONING DIRECTIVE: If applying for a Team Lead, Tech Lead, or Project Manager / Technical Project Manager role, you may customize the summary opening (e.g., 'Technical Project Manager with [Verified Years] of software engineering and delivery experience...', or 'Team Lead / Senior Software Engineer with [Verified Years] of experience...'). For other transitions (e.g., 'Lead AI Engineer' when candidate is a 'Full Stack Developer'), do NOT claim the unearned technical domain title as current identity; write an authentic transition ('Full Stack Developer with 7+ years of experience..., positioning for Lead AI Engineer roles...').\n"
+                f"2. NEVER INFLATE YEARS OF EXPERIENCE. The candidate has {verified_years or 'their verified years'}. Do NOT copy the JD's requirement (e.g., if JD asks for 10 years, claiming 10 years is an explicit lie and disqualifies the candidate). Preserve verified years verbatim.\n"
+                "3. ZERO TOLERANCE FOR UNVERIFIED TECHNOLOGIES. Never claim candidate specializes in or has experience with JD technologies (e.g. Microsoft AI Services, Azure) unless they appear in EVIDENCE CONTEXT.\n"
+                "4. ZERO TOLERANCE FOR ROBOTIC AI CLICHÉS. Strictly avoid: 'results-driven', 'passionate', 'proven ability', 'proven track record', 'demonstrates expertise', 'drive digital transformation', 'cross-functional to deliver', 'align with business objectives', 'enhancing operational efficiency'."
+            )
+            input_parts.append(factual_anchor)
+
             pos_inst = build_summary_positioning_instructions(positioning_mode, user_instructions)
             if pos_inst:
                 input_parts.append(pos_inst)
@@ -892,6 +1240,16 @@ class RewriteService:
 
         rewritten_text, _ = sanitize_unsupported_skills_from_text(result.rewritten_text, effective_unsupported_techs)
         if is_summary_section:
+            if verified_years:
+                rewritten_text = enforce_verified_years_of_experience(rewritten_text, verified_years)
+            if candidate_primary_title and target_role:
+                rewritten_text = enforce_truthful_role_identity(
+                    rewritten_text,
+                    candidate_primary_title,
+                    target_role,
+                    verified_years,
+                    positioning_mode,
+                )
             rewritten_text = sanitize_anti_ai_summary(rewritten_text)
         result.rewritten_text = rewritten_text
         result.original_text = original_text
@@ -947,11 +1305,12 @@ class RewriteService:
                     return sec_name, title_text or "Target Position"
 
                 if sec_content is not None and sec_type is not None:
+                    batch_ev_text = _build_evidence_from_batch_items(sections, sec_name)
                     res = self.rewrite_from_json(
                         section_name=sec_name,
                         section_type=sec_type,
                         section_content=sec_content,
-                        evidence_text="",
+                        evidence_text=batch_ev_text,
                         job_description_text=job_description_text,
                         recommendations=recs,
                         user_instructions=user_instructions,
