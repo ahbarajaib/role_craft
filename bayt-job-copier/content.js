@@ -240,14 +240,15 @@
       'h1',
     ];
     for (const sel of titleSelectors) {
-      const el = card.querySelector(sel);
-      if (el) {
+      const els = card.querySelectorAll(sel);
+      for (const el of els) {
         const txt = (el.textContent || '').trim();
         if (!isInvalidJobTitle(txt)) {
           title = txt;
           break;
         }
       }
+      if (title) break;
     }
     if ((!title || isInvalidJobTitle(title)) && jsonLd.title) {
       const txt = jsonLd.title.trim();
@@ -395,7 +396,8 @@
   function formatForClipboard(details) {
     let output = '';
 
-    output += `JOB TITLE:\n${details.title || 'Unknown Title'}\n\n`;
+    const safeTitle = (!details.title || isInvalidJobTitle(details.title)) ? 'Job Opportunity' : details.title.trim();
+    output += `JOB TITLE:\n${safeTitle}\n\n`;
 
     if (details.company) {
       output += `COMPANY:\n${details.company}\n\n`;
@@ -409,7 +411,7 @@
       output += `JOB TYPE:\n${details.jobType}\n\n`;
     }
 
-    output += `JOB DESCRIPTION:\n${details.description || details.title || ''}`;
+    output += `JOB DESCRIPTION:\n${details.description || safeTitle || ''}`;
 
     return output.trim();
   }

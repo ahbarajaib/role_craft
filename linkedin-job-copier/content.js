@@ -203,20 +203,33 @@
 
   function isInsideAiContainer(el) {
     if (!el) return false;
+
+    // 1. Check if the element itself contains AI assessment / fit prompt text
+    const selfText = (el.textContent || '').trim().toLowerCase();
+    if (/^(use ai to|assess how you fit|assess your fit|see how you fit|see how you compare|see how you match|see how you rank|evaluate your fit|evaluate how you fit|how you match|how you fit|am i a good fit|are you a good fit|ai assessment|fit assessment|job match|match insights|show match details|get ai insights|tailor your resume)/i.test(selfText)) {
+      return true;
+    }
+
+    // 2. Check if element is inside an explicit AI container/card by selector
+    // NOTE: Keep text length check to prevent huge containers (like the whole page) from triggering
     const aiContainer = el.closest(
-      '[class*="ai-" i], [class*="fit-" i], [class*="match-" i], [class*="assessment" i], [aria-label*="fit" i], [aria-label*="ai" i], [aria-label*="match" i]'
+      '[class*="ai-" i], [class*="fit-" i], [class*="match-" i], [class*="assessment" i], [class*="premium-applicant-insights" i], [data-view-name*="premium" i], [data-view-name*="ai" i], [aria-label*="fit" i], [aria-label*="ai" i], [aria-label*="match" i]'
     );
     if (aiContainer) {
-      const txt = (aiContainer.textContent || '').toLowerCase();
-      if (/use ai|assess.*fit|how you (fit|match)|match details|fit assessment/i.test(txt)) {
+      const containerText = (aiContainer.textContent || '').trim().toLowerCase();
+      if (aiContainer.textContent.length < 1500 && /use ai|assess.*fit|how you (fit|match)|match details|fit assessment/i.test(containerText)) {
         return true;
       }
     }
+
+    // 3. Check immediate interactive parent (up to 2 levels only) IF that container is a button or banner
     let curr = el.parentElement;
-    for (let i = 0; i < 5 && curr; i++) {
-      const t = (curr.textContent || '').toLowerCase();
-      if (t.includes('use ai to assess') || t.includes('assess how you fit') || t.includes('see how you fit')) {
-        return true;
+    for (let i = 0; i < 2 && curr; i++) {
+      if (curr.matches && (curr.matches('button') || curr.matches('[role="button"]') || curr.matches('a') || curr.matches('[class*="banner" i]'))) {
+        const t = (curr.textContent || '').trim().toLowerCase();
+        if (/use ai to|assess how you fit|assess your fit|see how you fit|see how you compare|evaluate your fit|how you match|am i a good fit|are you a good fit/i.test(t)) {
+          return true;
+        }
       }
       curr = curr.parentElement;
     }
@@ -231,7 +244,7 @@
 
     // AI assessment banners, widgets, and prompts
     if (/^(use ai to|assess how you fit|assess your fit|see how you fit|see how you compare|see how you match|see how you rank|evaluate your fit|evaluate how you fit|how you match|how you fit|am i a good fit|are you a good fit|ai assessment|fit assessment|job match|match insights|show match details|get ai insights|get tailored insights|tailor your resume|profile match|resume match|skills match|qualification(s)? match)/i.test(lower)) return true;
-    if (/\b(use ai to assess|assess how you fit|assess your fit|see how you fit|see how you compare|evaluate your fit|how you match|how you fit|am i a good fit|are you a good fit|show match details|match insights)\b/i.test(lower)) return true;
+    if (/\b(use ai to assess|assess how you fit|assess your fit|see how you fit|see how you compare|evaluate your fit|how you match|how you fit|am i a good fit|are you a good fit|show match details|match insights|fit assessment|use ai\b)/i.test(lower)) return true;
 
     // Workplace modes are NEVER titles
     if (/^(hybrid|remote|on-site|onsite|work from home|wfh|in-office|in office|telecommute)$/i.test(lower)) return true;
@@ -296,6 +309,57 @@
     return false;
   }
 
+  function getJsonLdJobData() {
+    try {
+      const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+      for (const s of scripts) {
+        const raw = s.textContent || '';
+        if (!raw.includes('JobPosting')) continue;
+        const data = JSON.parse(raw);
+        if (data['@type'] === 'JobPosting') return data;
+        if (Array.isArray(data['@graph'])) {
+          const found = data['@graph'].find((item) => item && item['@type'] === 'JobPosting');
+          if (found) return found;
+        }
+        if (Array.isArray(data)) {
+          const found = data.find((item) => item && item['@type'] === 'JobPosting');
+          if (found) return found;
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  function extractTitleFromMetaTags() {
+    try {
+      const metaEls = [
+        document.querySelector('meta[property="og:title"]'),
+        document.querySelector('meta[name="twitter:title"]'),
+        document.querySelector('meta[name="title"]'),
+      ];
+      for (const meta of metaEls) {
+        if (!meta) continue;
+        const content = (meta.getAttribute('content') || '').trim();
+        if (!content) continue;
+        let clean = content.replace(/^\(\d+\)\s*/, '').replace(/\s*\|\s*LinkedIn.*$/i, '').trim();
+        // Pattern: "<Company> hiring <Title> in <Location>" -> extract <Title>
+        const hiringMatch = clean.match(/hiring\s+(.+?)\s+in\s+/i);
+        if (hiringMatch && !isInvalidJobTitle(hiringMatch[1])) {
+          return hiringMatch[1].trim();
+        }
+        // Pattern: "<Title> at <Company>" or "<Title> - <Company>"
+        const parts = clean.split(/\s+[|\-–—]\s+|\s+at\s+/i);
+        for (const part of parts) {
+          const cand = part.trim();
+          if (cand.length > 2 && !/^(LinkedIn|Jobs)$/i.test(cand) && !isInvalidJobTitle(cand)) {
+            return cand;
+          }
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
   function extractTitleFromDocTitle() {
     if (!document || !document.title) return null;
     let t = document.title.replace(/^\(\d+\)\s*/, '').trim();
@@ -317,12 +381,27 @@
   // ---- 4. Title Extraction ----
 
   function extractTitle(panel) {
-    if (!panel) return null;
-
     const strategies = [
-      // Strategy 1: Explicit job title selectors on LinkedIn (Targeted and authoritative)
+      // Strategy 1: Schema.org JSON-LD (Pristine, 100% immune to dynamic DOM & AI banners)
       () => {
+        const jsonLd = getJsonLdJobData();
+        if (jsonLd && jsonLd.title && typeof jsonLd.title === 'string') {
+          const txt = jsonLd.title.trim();
+          if (!isInvalidJobTitle(txt)) {
+            return txt;
+          }
+        }
+        return null;
+      },
+
+      // Strategy 2: Explicit job title selectors on LinkedIn (Targeted and authoritative)
+      () => {
+        if (!panel) return null;
         const titleSelectors = [
+          'h1.job-details-jobs-unified-top-card__job-title',
+          'h1.jobs-unified-top-card__job-title',
+          'h1.topcard__title',
+          'h1.t-24',
           '.job-details-jobs-unified-top-card__job-title h1',
           '.job-details-jobs-unified-top-card__job-title h2',
           '.job-details-jobs-unified-top-card__job-title a',
@@ -334,7 +413,6 @@
           'h1[class*="job-title" i]',
           'h2[class*="job-title" i]',
           '[data-job-title]',
-          'h1.topcard__title',
           '.jobs-search__job-details--container h1',
           '.jobs-search__job-details--container h2',
         ];
@@ -352,8 +430,9 @@
         return null;
       },
 
-      // Strategy 2: Link that points to a job view URL in the top header card
+      // Strategy 3: Link that points to a job view URL in the top header card
       () => {
+        if (!panel) return null;
         const links = panel.querySelectorAll('a[href*="/jobs/view/"]');
         for (const link of links) {
           if (isInsideAiContainer(link)) continue;
@@ -367,8 +446,9 @@
         return null;
       },
 
-      // Strategy 3: Targeted job-title class or data attribute across panel
+      // Strategy 4: Targeted job-title class or data attribute across panel
       () => {
+        if (!panel) return null;
         const titleEls = panel.querySelectorAll('[data-job-title], [class*="job-title" i], .topcard__title');
         for (const el of titleEls) {
           if (isInsideAiContainer(el)) continue;
@@ -380,7 +460,12 @@
         return null;
       },
 
-      // Strategy 4: The job title link matching current URL job ID
+      // Strategy 5: OpenGraph / Twitter meta tags
+      () => {
+        return extractTitleFromMetaTags();
+      },
+
+      // Strategy 6: The job title link matching current URL job ID
       () => {
         const jobId = extractJobIdFromURL();
         if (!jobId) return null;
@@ -393,28 +478,11 @@
         return null;
       },
 
-      // Strategy 5: Global top-card heading
+      // Strategy 7: Heading h1 inside top card / panel
       () => {
-        const docSelectors = [
-          '.jobs-unified-top-card h1',
-          '.job-details-jobs-unified-top-card h1',
-          '.jobs-unified-top-card h2',
-          '.job-details-jobs-unified-top-card h2',
-        ];
-        for (const sel of docSelectors) {
-          const els = document.querySelectorAll(sel);
-          for (const el of els) {
-            if (isInsideAiContainer(el)) continue;
-            const text = el.textContent.trim();
-            if (!isInvalidJobTitle(text)) return text;
-          }
-        }
-        return null;
-      },
-
-      // Strategy 6: Generic h1 fallback in panel
-      () => {
-        const h1s = panel.querySelectorAll('h1.t-24, h1');
+        const scope = panel || document;
+        const topCard = scope.querySelector('.jobs-unified-top-card, .job-details-jobs-unified-top-card, [class*="top-card" i]') || scope;
+        const h1s = topCard.querySelectorAll('h1');
         for (const h1 of h1s) {
           if (isInsideAiContainer(h1)) continue;
           const link = h1.querySelector('a');
@@ -424,22 +492,36 @@
         return null;
       },
 
-      // Strategy 7: h2, h3 inside the top card
+      // Strategy 8: Heading h2, h3 inside the top card
       () => {
-        const headings = panel.querySelectorAll('h2, h3');
+        const scope = panel || document;
+        const topCard = scope.querySelector('.jobs-unified-top-card, .job-details-jobs-unified-top-card, [class*="top-card" i]') || scope;
+        const headings = topCard.querySelectorAll('h2, h3');
         for (const h of headings) {
           if (isInsideAiContainer(h)) continue;
           const text = h.textContent.trim();
-          if (!isInvalidJobTitle(text) && text.length > 5) {
+          if (!isInvalidJobTitle(text) && text.length > 3) {
             return text;
           }
         }
         return null;
       },
 
-      // Strategy 8: document.title fallback
+      // Strategy 9: document.title fallback
       () => {
         return extractTitleFromDocTitle();
+      },
+
+      // Strategy 10: Global valid h1 across document
+      () => {
+        const allH1s = document.querySelectorAll('h1');
+        for (const h1 of allH1s) {
+          if (isInsideAiContainer(h1)) continue;
+          const link = h1.querySelector('a');
+          const text = (link ? link.textContent : h1.textContent).trim();
+          if (!isInvalidJobTitle(text)) return text;
+        }
+        return null;
       },
     ];
 
@@ -1159,8 +1241,23 @@
 
   function validateJobDetails(details) {
     // Non-blocking: Guarantee all fields have usable values so copying NEVER fails
-    if (!details.title || details.title.trim().length < 2) {
-      details.title = extractTitleFromDocTitle() || document.querySelector('h1')?.textContent?.trim() || 'Job Opportunity';
+    if (!details.title || isInvalidJobTitle(details.title)) {
+      const jsonLd = getJsonLdJobData();
+      let fallback = (jsonLd && jsonLd.title && !isInvalidJobTitle(jsonLd.title)) ? jsonLd.title.trim() : null;
+      if (!fallback) fallback = extractTitleFromDocTitle();
+      if (!fallback) fallback = extractTitleFromMetaTags();
+      if (!fallback) {
+        const allH1s = document.querySelectorAll('h1');
+        for (const h of allH1s) {
+          if (isInsideAiContainer(h)) continue;
+          const t = (h.querySelector('a') ? h.querySelector('a').textContent : h.textContent).trim();
+          if (t && !isInvalidJobTitle(t)) {
+            fallback = t;
+            break;
+          }
+        }
+      }
+      details.title = (fallback && !isInvalidJobTitle(fallback)) ? fallback : 'Job Opportunity';
     }
 
     if (!details.company) {
@@ -1191,7 +1288,8 @@
   function formatForClipboard(details) {
     let output = '';
 
-    output += `JOB TITLE:\n${details.title || 'Unknown Title'}\n\n`;
+    const safeTitle = (!details.title || isInvalidJobTitle(details.title)) ? 'Job Opportunity' : details.title.trim();
+    output += `JOB TITLE:\n${safeTitle}\n\n`;
 
     if (details.company && details.company.trim()) {
       output += `COMPANY:\n${details.company.trim()}\n\n`;
@@ -1205,7 +1303,7 @@
       output += `JOB TYPE:\n${details.jobType}\n\n`;
     }
 
-    output += `JOB DESCRIPTION:\n${details.description || details.title || ''}`;
+    output += `JOB DESCRIPTION:\n${details.description || safeTitle || ''}`;
 
     return output.trim();
   }

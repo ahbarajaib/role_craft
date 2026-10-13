@@ -126,8 +126,8 @@
     ];
 
     for (const sel of specificSelectors) {
-      const el = root.querySelector(sel);
-      if (el) {
+      const els = root.querySelectorAll(sel);
+      for (const el of els) {
         if (el.closest('#mosaic-provider-jobcards, .jobsearch-LeftPane, .job_seen_beacon')) {
           continue;
         }
@@ -292,7 +292,7 @@
 
     if (document.title) {
       const parts = document.title.split(' - ');
-      if (parts.length >= 2 && parts[0].trim().length > 2) {
+      if (parts.length >= 2 && parts[0].trim().length > 2 && !isGenericHeading(parts[0].trim())) {
         return parts[0].trim();
       }
     }
@@ -720,7 +720,8 @@
   function formatForClipboard(details) {
     let output = '';
 
-    output += `JOB TITLE:\n${details.title || 'Unknown Title'}\n\n`;
+    const safeTitle = (!details.title || isGenericHeading(details.title)) ? 'Job Opportunity' : details.title.trim();
+    output += `JOB TITLE:\n${safeTitle}\n\n`;
 
     if (details.company) {
       output += `COMPANY:\n${details.company}\n\n`;
@@ -734,7 +735,7 @@
       output += `JOB TYPE:\n${details.jobType}\n\n`;
     }
 
-    output += `JOB DESCRIPTION:\n${details.description || details.title || ''}`;
+    output += `JOB DESCRIPTION:\n${details.description || safeTitle || ''}`;
 
     return output.trim();
   }

@@ -97,7 +97,10 @@
   }
 
   function isGenericHeading(txt) {
-    return /^(jobs|search|explore|find|home|about|pricing|cutshort|candidate|company|employers|login|sign\s*in|sign\s*up)/i.test(txt);
+    if (!txt || typeof txt !== 'string') return true;
+    const lower = txt.trim().toLowerCase();
+    if (/^(use ai to|assess how you fit|assess your fit|see how you fit|see how you compare|evaluate your fit|evaluate how you fit|how you match|am i a good fit|are you a good fit|ai assessment|fit assessment|job match|match insights|show match details|get ai insights|tailor your resume|ai match)/i.test(lower)) return true;
+    return /^(jobs|search|explore|find|home|about|pricing|cutshort|candidate|company|employers|login|sign\s*in|sign\s*up)/i.test(lower);
   }
 
   function hasJobOnPage() {
@@ -258,7 +261,7 @@
     const h1s = root.querySelectorAll('h1');
     for (const h of h1s) {
       const txt = (h.textContent || '').trim();
-      if (txt.length > 2 && txt.length < 200 && !isGenericHeading(txt)) {
+      if (txt.length > 2 && txt.length < 200 && !isGenericHeading(txt) && !isInvalidJobTitle(txt)) {
         return h;
       }
     }
@@ -886,7 +889,8 @@
   function formatForClipboard(details) {
     let output = '';
 
-    output += `JOB TITLE:\n${details.title || 'Unknown Title'}\n\n`;
+    const safeTitle = (!details.title || isInvalidJobTitle(details.title)) ? 'Job Opportunity' : details.title.trim();
+    output += `JOB TITLE:\n${safeTitle}\n\n`;
 
     if (details.company) {
       output += `COMPANY:\n${details.company}\n\n`;
@@ -900,7 +904,7 @@
       output += `JOB TYPE:\n${details.jobType}\n\n`;
     }
 
-    output += `JOB DESCRIPTION:\n${details.description || details.title || ''}`;
+    output += `JOB DESCRIPTION:\n${details.description || safeTitle || ''}`;
 
     return output.trim();
   }

@@ -202,7 +202,7 @@
     const root = scope || findJobPanel() || document;
     if (root && root.matches && root.matches('h1')) {
       const txt = (root.textContent || '').trim();
-      if (txt.length > 2 && txt.length < 250 && !isGenericHeading(txt)) {
+      if (txt.length > 2 && txt.length < 250 && !isGenericHeading(txt) && !isInvalidJobTitle(txt)) {
         return root;
       }
     }
@@ -221,11 +221,13 @@
 
     for (const sel of selectors) {
       try {
-        const el = root.querySelector(sel);
-        if (el && el.isConnected) {
-          const txt = (el.textContent || '').trim();
-          if (txt.length > 2 && txt.length < 250 && !isGenericHeading(txt)) {
-            return el;
+        const els = root.querySelectorAll(sel);
+        for (const el of els) {
+          if (el && el.isConnected) {
+            const txt = (el.textContent || '').trim();
+            if (txt.length > 2 && txt.length < 250 && !isGenericHeading(txt) && !isInvalidJobTitle(txt)) {
+              return el;
+            }
           }
         }
       } catch (e) {}
@@ -234,11 +236,13 @@
     if (root !== document) {
       for (const sel of selectors) {
         try {
-          const el = document.querySelector(sel);
-          if (el && el.isConnected) {
-            const txt = (el.textContent || '').trim();
-            if (txt.length > 2 && txt.length < 250 && !isGenericHeading(txt)) {
-              return el;
+          const els = document.querySelectorAll(sel);
+          for (const el of els) {
+            if (el && el.isConnected) {
+              const txt = (el.textContent || '').trim();
+              if (txt.length > 2 && txt.length < 250 && !isGenericHeading(txt) && !isInvalidJobTitle(txt)) {
+                return el;
+              }
             }
           }
         } catch (e) {}
@@ -249,7 +253,10 @@
   }
 
   function isGenericHeading(txt) {
-    return /^(jobs in|recommended jobs|similar jobs|popular searches|search results|browse jobs|naukri|all jobs|trending jobs)/i.test(txt);
+    if (!txt || typeof txt !== 'string') return true;
+    const lower = txt.trim().toLowerCase();
+    if (/^(use ai to|assess how you fit|assess your fit|see how you fit|see how you compare|evaluate your fit|evaluate how you fit|how you match|am i a good fit|are you a good fit|ai assessment|fit assessment|job match|match insights|show match details|get ai insights|tailor your resume|ai match)/i.test(lower)) return true;
+    return /^(jobs in|recommended jobs|similar jobs|popular searches|search results|browse jobs|naukri|all jobs|trending jobs)/i.test(lower);
   }
 
   // ---- 3b. Title & Location Guards ----
@@ -774,7 +781,8 @@
   function formatForClipboard(details) {
     let output = '';
 
-    output += `JOB TITLE:\n${details.title || 'Unknown Title'}\n\n`;
+    const safeTitle = (!details.title || isInvalidJobTitle(details.title)) ? 'Job Opportunity' : details.title.trim();
+    output += `JOB TITLE:\n${safeTitle}\n\n`;
 
     if (details.company) {
       output += `COMPANY:\n${details.company}\n\n`;
@@ -788,7 +796,7 @@
       output += `JOB TYPE:\n${details.jobType}\n\n`;
     }
 
-    output += `JOB DESCRIPTION:\n${details.description || details.title || ''}`;
+    output += `JOB DESCRIPTION:\n${details.description || safeTitle || ''}`;
 
     return output.trim();
   }
