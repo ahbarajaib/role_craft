@@ -95,7 +95,10 @@ class CoverLetterService:
 
         target_role = self._clean_target_role(target_role)
 
-        # 3. Build Prompt & Call AI Provider
+        # 3. Extract company name from job description
+        company_name = self._extract_company_name(request.job_description_text)
+
+        # 4. Build Prompt & Call AI Provider
         user_prompt = build_cover_letter_input(
             candidate_name=candidate_name,
             target_role=target_role,
@@ -104,14 +107,15 @@ class CoverLetterService:
             evidence_context=evidence_context[:3000],
             confirmed_matched_skills=request.confirmed_matched_skills,
             forbidden_claims=request.forbidden_claims,
+            company_name=company_name,
         )
 
-        logger.info("Generating AI cover letter for document", document_id=request.document_id, candidate=candidate_name)
+        logger.info("Generating AI cover letter for document", document_id=request.document_id, candidate=candidate_name, company=company_name)
 
         cover_letter_raw = self._provider.generate_text(
             system_prompt=COVER_LETTER_SYSTEM_PROMPT,
             user_prompt=user_prompt,
-            temperature=0.4,
+            temperature=0.75,
         )
 
         cover_letter_text = cover_letter_raw.strip()
@@ -197,6 +201,54 @@ class CoverLetterService:
         """
         from app.services.rewrite_service import sanitize_unsupported_skills_from_text
         return sanitize_unsupported_skills_from_text(cover_letter_text, set(forbidden_terms))
+
+    def _extract_company_name(self, job_description_text: str) -> str | None:
+        """Best-effort extraction of company name from job description text.
+
+        Looks for explicit 'Company:' / 'About <Name>' patterns first, then
+        falls back to an 'at <Company>' phrase near the top of the JD.
+        Returns None when no confident match is found.
+        """
+        import re
+
+        if not job_description_text:
+            return None
+
+        lines = [l.strip() for l in job_description_text.splitlines() if l.strip()]
+
+        # Pattern 1: explicit label like "Company: Acme Corp"
+        label_re = re.compile(
+            r"^(?:company|organisation|organization|employer|hiring company)\s*[:\-\u2013]\s*(.+)$",
+            re.IGNORECASE,
+        )
+        for line in lines[:30]:
+            m = label_re.match(line)
+            if m:
+                name = m.group(1).strip()
+                if 2 <= len(name) <= 60:
+                    return name
+
+        # Pattern 2: "About Acme Corp" header (but not "About Us" / "About the Role")
+        about_re = re.compile(r"^about\s+(.+)$", re.IGNORECASE)
+        for line in lines[:30]:
+            m = about_re.match(line)
+            if m:
+                name = m.group(1).strip()
+                if 2 <= len(name) <= 60 and name.lower() not in (
+                    "us", "the role", "the team", "the company", "this role"
+                ):
+                    return name
+
+        # Pattern 3: "at <Company>" in an early sentence
+        at_re = re.compile(r"\bat\s+([A-Z][A-Za-z0-9&\-\. ]{1,40}?)(?:\s*[,\.!\?]|$)")
+        for line in lines[:10]:
+            m = at_re.search(line)
+            if m:
+                name = m.group(1).strip()
+                if 2 <= len(name) <= 50:
+                    return name
+
+        return None
 
     def _clean_target_role(self, raw_role: str) -> str:
         """Clean target role string removing junk like 'Company logo for,' or markdown."""

@@ -5,24 +5,31 @@ using OpenAI.
 """
 
 COVER_LETTER_SYSTEM_PROMPT = """\
-You are an expert career coach and master cover letter writer.
-Your task is to write a highly personal, authentic, engaging, and compelling 2-paragraph cover letter for a candidate applying to a specific role.
+You are writing a short, human cover letter for a tech/startup job application.
 
-CRITICAL COVER LETTER RULES:
-1. **Structure (EXACTLY 2 Body Paragraphs)**:
-   - **Paragraph 1 (Personal Hook & Fit with Company Mission)**: Open with a warm, personal hook expressing genuine enthusiasm for the company's work and mission. Concisely introduce your background, relevant years of experience, and key strengths that make you a natural fit for this target role.
-   - **Paragraph 2 (Concrete Evidence & Direct Value/Usefulness to the Company)**: Highlight 2-3 specific accomplishments or key projects from your applied resume background. Explicitly articulate **how your background and technical skills will be directly useful to their team** (e.g., how you will help them accelerate product delivery, solve engineering challenges, or scale their systems). Seamlessly transition into a warm, confident closing inviting a conversation/interview, thanking the hiring team.
-2. **Personal, Authentic & Engaging Tone**:
-   - Write in a warm, personable, and enthusiastic voice that feels genuinely human and tailored.
-   - Avoid mechanical template openings (e.g. "I am writing to formally apply..."). Instead, share an authentic personal connection to the work.
-3. **Strict Grounding on Applied Resume & Confirmed Matched Skills ONLY**:
-   - Base all technical claims, tools, and experience ONLY on the candidate's active applied resume sections and explicitly provided "CONFIRMED MATCHED SKILLS".
-   - DO NOT invent missing skills, unconfirmed gaps, or technologies not present in the candidate's confirmed list/applied text.
-   - If a === FORBIDDEN CLAIMS === block is provided in the user prompt, you MUST NOT mention any term listed there as a skill or technology the candidate possesses. These terms are absent from the candidate's resume.
-   - NEVER claim experience with AWS, GCP, Azure, or any cloud platform unless it explicitly appears in the candidate's verified evidence section.
-   - Use the candidate's exact years-of-experience value. Do not increase it.
-4. **No Placeholders**: Do NOT include bracketed placeholders like [Company Name] or [Hiring Manager]. Use generic professional addresses ("Dear Hiring Team,") if no contact name is provided.
-5. **Output Bounds**: Output ONLY the cover letter content (Salutation, EXACTLY 2 body paragraphs, Closing, and Candidate Signature line). Do not include conversational preambles, notes, or explanations.
+GOAL: Write like a real person replying to a recruiter's LinkedIn message who reached out first — confident, direct, specific, no corporate-speak. The output should feel like it was written by a sharp engineer in 10 minutes, not polished by a career coach.
+
+STRUCTURE (follow exactly):
+- Salutation: "Dear Hiring Team," (or use a name if one is provided)
+- ONE paragraph (4–6 sentences): Briefly introduce who you are and your background, mention 1–2 specific things from your experience that are directly relevant to this role, and name the company naturally (not as a compliment, just as context). Be specific — name actual projects, tools, or outcomes from the resume evidence.
+- ONE closing sentence: A direct, low-pressure invite to chat. Something like "Happy to jump on a call if this looks like a fit." — not a formal request.
+- Sign-off: "Best," then the candidate's name on the next line.
+
+TONE RULES:
+- Short sentences. No rambling.
+- Do NOT use: "passionate", "thrilled", "excited to contribute", "leverage my skills", "I believe I would be a great fit", "I am eager to", "I am writing to apply", "dynamic team", "fast-paced environment", "results-driven", "synergy", "hard-working", or any variation of these phrases.
+- Do NOT open with "I" as the first word.
+- Do NOT write more than 6 sentences in the body paragraph.
+- Avoid adverbs like "highly", "deeply", "truly", "incredibly".
+
+GROUNDING RULES (critical — do not violate):
+- Base all technical claims ONLY on the candidate's provided resume summary and "CONFIRMED MATCHED SKILLS".
+- If a FORBIDDEN CLAIMS block is provided, do NOT attribute any of those skills or technologies to the candidate under any circumstances.
+- Use the candidate's exact years-of-experience figure. Do not round up or inflate it.
+- Do NOT invent projects, tools, or outcomes not present in the resume evidence.
+- NEVER claim cloud platform experience (AWS, GCP, Azure) unless it appears explicitly in the candidate's evidence.
+
+OUTPUT: Return ONLY the cover letter text (salutation, body paragraph, closing sentence, sign-off, name). No notes, no preamble, no explanations.
 """
 
 
@@ -34,6 +41,7 @@ def build_cover_letter_input(
     evidence_context: str = "",
     confirmed_matched_skills: list[str] | None = None,
     forbidden_claims: list[str] | None = None,
+    company_name: str | None = None,
 ) -> str:
     """Build user prompt for cover letter generation."""
     parts = [
@@ -43,17 +51,28 @@ def build_cover_letter_input(
         "=== TARGET ROLE ===",
         target_role or "Target Role",
         "",
+    ]
+
+    if company_name:
+        parts.extend([
+            "=== COMPANY NAME ===",
+            company_name,
+            "(Use this name naturally once in the paragraph — not as flattery, just as context.)",
+            "",
+        ])
+
+    parts.extend([
         "=== TARGET JOB DESCRIPTION ===",
         job_description_text,
         "",
         "=== CANDIDATE SUMMARY & EXPERIENCE (APPLIED RESUME) ===",
         summary_text or "Software Engineer with full-stack and AI engineering background.",
-    ]
+    ])
 
     if confirmed_matched_skills:
         parts.extend([
             "",
-            "=== CONFIRMED MATCHED SKILLS (STRICTLY USE ONLY THESE SKILLS) ===",
+            "=== CONFIRMED MATCHED SKILLS (USE ONLY THESE — DO NOT ADD OTHERS) ===",
             ", ".join(confirmed_matched_skills),
         ])
 
@@ -61,16 +80,17 @@ def build_cover_letter_input(
         parts.extend([
             "",
             "=== FORBIDDEN CLAIMS (DO NOT ATTRIBUTE THESE TO THE CANDIDATE) ===",
-            "The following terms are NOT supported by the candidate's resume. Do NOT claim the candidate has these skills or technologies:",
+            "The following are NOT on the candidate's resume. Do not claim them:",
             ", ".join(forbidden_claims),
         ])
 
     if evidence_context:
         parts.extend([
             "",
-            "=== APPLIED RESUME SECTION EVIDENCE ===",
+            "=== RESUME EVIDENCE (use specific details from here) ===",
             evidence_context,
         ])
 
     return "\n".join(parts)
+
 
