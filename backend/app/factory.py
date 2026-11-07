@@ -68,7 +68,9 @@ def create_app() -> FastAPI:
     settings = get_settings()
     setup_logging(settings)
 
-    if settings.SENTRY_DSN:
+    import os
+
+    if settings.SENTRY_DSN and not os.getenv("PYTEST_CURRENT_TEST") and settings.ENVIRONMENT != "test":
         try:
             import sentry_sdk
             from sentry_sdk.integrations.fastapi import FastApiIntegration

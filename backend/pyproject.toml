@@ -28,6 +28,7 @@ dependencies = [
     "playwright>=1.61.0",
     "pymupdf>=1.28.2",
     "sentry-sdk[fastapi]>=2.0.0",
+    "alembic>=1.20.1",
 ]
 
 [tool.ruff]

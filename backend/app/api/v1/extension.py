@@ -1,11 +1,11 @@
 import io
-import logging
 import os
 import zipfile
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
+from loguru import logger
 
 from app.core.extension_config import (
     EXTENSION_FEATURE_DIRS,
@@ -19,7 +19,6 @@ from app.models import User
 
 router = APIRouter(prefix="/extension", tags=["extension"])
 
-logger = logging.getLogger(__name__)
 
 
 # ── Extension root resolution ─────────────────────────────────────────────────

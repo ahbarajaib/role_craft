@@ -313,9 +313,12 @@ def extract_target_role_title(job_description_text: str) -> str:
 
     lines = [l.strip().strip("*#-_") for l in job_description_text.split("\n") if l.strip()]
     for line in lines[:5]:
-        if any(kw in line.lower() for kw in ["engineer", "developer", "lead", "architect", "manager", "specialist", "scientist"]):
-            if len(line) <= 60 and not line.lower().startswith(("about", "we are", "seeking", "looking")):
-                return line
+        if (
+            any(kw in line.lower() for kw in ["engineer", "developer", "lead", "architect", "manager", "specialist", "scientist"])
+            and len(line) <= 60
+            and not line.lower().startswith(("about", "we are", "seeking", "looking"))
+        ):
+            return line
 
     return "Target Position"
 
@@ -439,13 +442,12 @@ def enforce_truthful_role_identity(
     if m:
         years_phrase = m.group(1)
         rest = text[m.end():].lstrip()
-        if rest.startswith("in "):
-            if "positioning for" not in rest.lower():
-                parts = rest.split(".", 1)
-                first_sent = parts[0].strip()
-                remaining = ("." + parts[1]) if len(parts) > 1 else "."
-                new_first_sent = f"{candidate_title} with {years_phrase} {first_sent}, positioning for {target_role} roles{remaining}"
-                return new_first_sent
+        if rest.startswith("in ") and "positioning for" not in rest.lower():
+            parts = rest.split(".", 1)
+            first_sent = parts[0].strip()
+            remaining = ("." + parts[1]) if len(parts) > 1 else "."
+            new_first_sent = f"{candidate_title} with {years_phrase} {first_sent}, positioning for {target_role} roles{remaining}"
+            return new_first_sent
         return f"{candidate_title} with {years_phrase}, positioning for {target_role} roles. {rest}"
 
     return text

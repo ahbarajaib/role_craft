@@ -29,6 +29,7 @@ AI Layer (app/ai/)        Parsers & Comparators (app/parsers/, app/comparators/)
    - Contains prompt templates and OpenAI API interaction.
    - Always requests Pydantic-structured outputs (`client.responses.parse(text_format=...)`).
    - Never hallucinate experience, dates, or skills.
+   - Master resume immutability: AI tailoring creates isolated tailored resume records and never mutates the candidate's master StructuredResume.
 4. **Parsers & Comparators (`app/parsers/`, `app/comparators/`)**:
    - Pure deterministic string parsing and matching. Zero network, database, or LLM dependencies.
 5. **Constants Layer (`app/constants/resume_keywords.py`)**:
@@ -42,8 +43,10 @@ AI Layer (app/ai/)        Parsers & Comparators (app/parsers/, app/comparators/)
 - **Type Hints**: Mandatory on all function signatures, parameters, and return types.
 - **Data Validation**: Use Pydantic v2 schemas (`app/schemas/`) with strict typing.
 - **Database & Models**:
-  - SQLAlchemy 2.0 style (`Mapped[T]`, `mapped_column`).
-  - Add schema migrations to `init_db()` in `app/core/database.py` for SQLite column additions (`PRAGMA table_info`).
+  - SQLAlchemy 2.0 style (`Mapped[T]`, `mapped_column`, `relationship`).
+  - Enforce foreign keys with cascading deletes (`ForeignKey("users.id", ondelete="CASCADE")`).
+  - Use native SQLAlchemy `JSON` types for structured payloads.
+  - All database migrations are managed via **Alembic** (`uv run alembic upgrade head`). Never run raw manual `ALTER TABLE` commands.
 - **Error Handling**:
   - Never swallow exceptions silently.
   - Raise domain exceptions inheriting from `AppError` (`app/core/exceptions.py`), such as `BadRequestError`, `NotFoundError`, or `UnauthorizedError`.
@@ -60,9 +63,16 @@ AI Layer (app/ai/)        Parsers & Comparators (app/parsers/, app/comparators/)
 ## 3. Frontend & UI Standards
 
 - **Framework**: Next.js 15 (App Router) with React 19 and TypeScript.
+- **Routing & Page Structure**:
+  - Landing page (`frontend/src/app/page.tsx`) serves pure marketing/showcase content.
+  - Product dashboard (`frontend/src/app/workspace/page.tsx`) serves the interactive workspace application.
+- **State Management**:
+  - Global/workspace state is managed with **Zustand** (`frontend/src/store/workspace-store.ts`).
+  - Do not create monolithic 1,000+ line components with dozens of useState hooks; break down into focused subcomponents.
 - **Styling**: Tailwind CSS. Avoid ad-hoc inline styles. Use existing design tokens and color scales.
 - **Icons**: Use `lucide-react` icons exclusively for visual consistency.
 - **API Communication**:
+  - Centralized API client (`frontend/src/lib/api-client.ts`) with request/response interceptors.
   - Consumer features call helpers in `frontend/src/lib/api.ts`.
   - Admin features call helpers in `frontend/src/lib/admin-api.ts`.
   - Tokens and preferences use `localStorage`.

@@ -90,12 +90,17 @@ class RateLimitError(AppError):
 
 def _error_response(request: Request, status_code: int, detail: str) -> JSONResponse:
     """Return a consistently structured JSON error body with CORS headers."""
+    from app.core.config import get_settings
+
+    settings = get_settings()
     origin = request.headers.get("origin") if request else None
     headers: dict[str, str] = {}
-    if origin:
+
+    allowed = set(settings.ALLOWED_ORIGINS) if isinstance(settings.ALLOWED_ORIGINS, list) else set()
+    if origin and (origin in allowed or origin.endswith(".rolecraft.tech")):
         headers["Access-Control-Allow-Origin"] = origin
         headers["Access-Control-Allow-Credentials"] = "true"
-    else:
+    elif not origin:
         headers["Access-Control-Allow-Origin"] = "*"
 
     return JSONResponse(

@@ -1,14 +1,13 @@
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from app.parsers.job_description_parser import parse_job_description
-from app.parsers.docx_parser import parse_docx
-from app.analyzers.section_detector import detect_sections
+import pytest
+
 from app.comparators.resume_comparator import compare_resume
-from app.services.resume_parser_service import ResumeParserService
-from app.schemas.section import SectionItem, SectionParagraph
+from app.parsers.job_description_parser import parse_job_description
 from app.schemas.job_description import JobDescription
+from app.schemas.section import SectionItem, SectionParagraph
+from app.services.resume_parser_service import ResumeParserService
 
 
 def test_glued_subheadings_and_emojis_in_jd_parser():

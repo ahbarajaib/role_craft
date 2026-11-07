@@ -110,11 +110,7 @@ def tailor_resume(
         tailoring_plan=tailoring_plan,
     )
 
-    # Update master resume JSON record in DB with tailored content
-    record.resume_json = tailored_resume.model_dump_json()
-    record.version += 1
-
-    # Persist the tailored resume history record
+    # Persist the tailored resume history record (master StructuredResume remains untouched)
     tailored_model = TailoredResumeModel(
         user_id=current_user.id,
         job_id=request.job_id,

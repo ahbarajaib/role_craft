@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "0.1.0"
 
     # ── Runtime environment ─────────────────────────────────────────────────
-    ENVIRONMENT: Literal["development", "staging", "production"] = "development"
+    ENVIRONMENT: Literal["development", "staging", "production", "test"] = "development"
     DEBUG: bool = False
 
     # ── Logging ─────────────────────────────────────────────────────────────
@@ -59,6 +59,16 @@ class Settings(BaseSettings):
     # ── Server (used only when running via `python main.py`) ─────────────────
     HOST: str = "0.0.0.0"
     PORT: int = 8000
+
+    # ── Database ─────────────────────────────────────────────────────────────
+    DATABASE_FILE: str = "rolecraft.db"
+    DATABASE_URL: str = ""
+
+    @property
+    def resolved_database_url(self) -> str:
+        if self.DATABASE_URL:
+            return self.DATABASE_URL
+        return f"sqlite:///{self.DATABASE_FILE}"
 
     # ── File uploads ─────────────────────────────────────────────────────────
     # Directory where uploaded files are stored temporarily.
@@ -102,7 +112,7 @@ class Settings(BaseSettings):
     PRO_CREDITS: int = 200
     ELITE_CREDITS: int = 400
     VIP_EMAILS: list[str] = Field(
-        default=["ahbarajaib@gmail.com", "absarajaib@gmail.com"]
+        default_factory=list
     )
 
     # ── Support & Email Notifications ─────────────────────────────────────────
@@ -112,7 +122,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = "noreply@rolecraft.tech"
     SMTP_USE_TLS: bool = True
-    SUPPORT_NOTIFICATION_EMAIL: str = "ahbarajaib@gmail.com"
+    SUPPORT_NOTIFICATION_EMAIL: str = "support@rolecraft.tech"
 
     # ── Admin Dashboard ───────────────────────────────────────────────────────
     ADMIN_SECRET: str = ""

@@ -496,10 +496,13 @@ def _extract_location(preamble: list[str], text: str) -> str:
     for line in candidate_lines:
         line_clean = re.sub(r"^[📍🗺️\s]+", "", line).strip()
         line_clean = re.sub(r"^(?:job\s+)?location\s*[:–-]\s*", "", line_clean, flags=re.IGNORECASE).strip()
-        if len(line_clean) <= 60 and not _narrative_words.search(line_clean):
-            if re.search(r"[A-Z][a-z]+,\s+[A-Z]", line_clean):
-                cleaned = re.sub(r"\s*·\s*(?:Reposted|Over|\d+|Hybrid|Remote|On-site).*$", "", line_clean, flags=re.IGNORECASE).strip()
-                return cleaned
+        if (
+            len(line_clean) <= 60
+            and not _narrative_words.search(line_clean)
+            and re.search(r"[A-Z][a-z]+,\s+[A-Z]", line_clean)
+        ):
+            cleaned = re.sub(r"\s*·\s*(?:Reposted|Over|\d+|Hybrid|Remote|On-site).*$", "", line_clean, flags=re.IGNORECASE).strip()
+            return cleaned
 
     # Remote variants fallback
     if re.search(r"\bfully[- ]remote\b", text, re.IGNORECASE):

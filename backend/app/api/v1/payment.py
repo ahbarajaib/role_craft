@@ -258,7 +258,9 @@ def verify_subscription(
         user.plan_expires_at = None
 
     else:
-        # Fallback simulation
+        if settings.ENVIRONMENT == "production":
+            raise BadRequestError("Missing razorpay_order_id or razorpay_subscription_id for payment verification.")
+        # Fallback simulation only in sandbox/development mode
         user.plan_type = plan_clean
         user.subscription_status = "active"
         user.plan_expires_at = datetime.utcnow() + timedelta(days=30)

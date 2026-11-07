@@ -1,7 +1,7 @@
 "use client";
 
-import Home from "../page";
+import { WorkspaceView } from "@/components/workspace/workspace-view";
 
 export default function WorkspacePage() {
-  return <Home initialTab="workspace" />;
+  return <WorkspaceView initialTab="workspace" />;
 }

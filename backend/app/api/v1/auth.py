@@ -136,17 +136,8 @@ def google_login(req: GoogleLoginRequest, db: Session = Depends(get_db)):
             if not email:
                 return AuthResponse(error_message="Google ID Token has no associated email.")
         except Exception as e:
-            logger.warning(f"Google ID token verify_oauth2_token exception: {e}")
-            try:
-                import jwt
-                unverified = jwt.decode(req.credential, options={"verify_signature": False})
-                email = unverified.get("email")
-                google_id = unverified.get("sub")
-                google_name = unverified.get("name")
-            except Exception:
-                email = None
-            if not email:
-                return AuthResponse(error_message=f"Google authentication failed: {e!s}")
+            logger.warning(f"Google ID token verify_oauth2_token failed: {e}")
+            return AuthResponse(error_message=f"Google authentication failed: {e!s}")
 
     email_clean = email.strip().lower()
     user = db.query(User).filter(User.email == email_clean).first()

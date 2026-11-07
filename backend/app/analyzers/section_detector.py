@@ -343,15 +343,16 @@ def detect_sections(paragraphs: list[ParsedParagraph]) -> list[DetectedSection]:
             )
             if in_container:
                 para_norm = _normalize(para.text)
-                if not _is_known_section(para.text):
-                    # If not an explicit match in SECTION_NAME_MAP, require para_norm to be a distinct
-                    # recognized section AND have explicit Word heading style or short uppercase title
-                    if para_norm is None or para_norm == curr_norm:
-                        is_h = False
-                    elif para_norm == "skills" and curr_norm == "projects":
-                        is_h = False
-                    elif not (_has_heading_style(para.style_name) or (para.text == para.text.upper() and len(para.text) <= 35)):
-                        is_h = False
+                if not _is_known_section(para.text) and (
+                    para_norm is None
+                    or para_norm == curr_norm
+                    or (para_norm == "skills" and curr_norm == "projects")
+                    or not (
+                        _has_heading_style(para.style_name)
+                        or (para.text == para.text.upper() and len(para.text) <= 35)
+                    )
+                ):
+                    is_h = False
 
         if is_h:
             # Commit the previous section before starting a new one.
