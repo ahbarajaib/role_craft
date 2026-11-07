@@ -278,11 +278,8 @@ To prevent redundant API expenditure and provide instant user feedback:
 ### 3.7 Pre-LLM Data Ingestion & TLS Impersonation
 
 * **Core File:** [`backend/app/services/job_url_service.py`](file:///Users/ahbarajaib/Documents/Projects/role_craft/backend/app/services/job_url_service.py)
-* **Extensions:** [`linkedin-job-copier/`](file:///Users/ahbarajaib/Documents/Projects/role_craft/linkedin-job-copier), [`indeed-job-copier/`](file:///Users/ahbarajaib/Documents/Projects/role_craft/indeed-job-copier)
 
-High-quality LLM prompts require clean source data. RoleCraft implements a dual ingestion engine:
-1. **Backend URL Parser:** Uses `curl_cffi` with **Chrome 120 TLS fingerprint impersonation** to bypass anti-bot mechanisms (Cloudflare, Akamai) on job boards.
-2. **Browser Extension:** Client-side DOM extractor capturing LinkedIn/Indeed postings directly from authenticated browser sessions, extracting title, company, and raw text without scraping blocks.
+High-quality LLM prompts require clean source data. RoleCraft implements a dedicated backend URL ingestion engine using `curl_cffi` with **Chrome 120 TLS fingerprint impersonation** to bypass anti-bot mechanisms (Cloudflare, Akamai) on job boards, reliably extracting title, company, and raw text.
 
 ---
 

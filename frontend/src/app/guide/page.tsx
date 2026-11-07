@@ -9,8 +9,7 @@ import {
   Zap, 
   Lock, 
   Edit3, 
-  ShieldCheck, 
-  Globe 
+  ShieldCheck 
 } from "lucide-react";
 
 export default function GuidePage() {
@@ -101,17 +100,17 @@ export default function GuidePage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             
-            {/* Bento 1: Extension (Spans 2 columns) */}
-            <div className="lg:col-span-2 p-6 rounded-3xl bg-slate-50/80 hover:bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all group overflow-hidden relative">
+            {/* Bento 1: Evidence Grounding (Spans 2 columns) */}
+            <div className="lg:col-span-2 p-6 rounded-3xl bg-slate-50/80 hover:bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-teal-300 transition-all group overflow-hidden relative">
               <div className="absolute right-0 bottom-0 opacity-5 group-hover:opacity-10 transition-opacity transform translate-x-4 translate-y-4">
-                <Globe className="w-32 h-32 text-blue-600" />
+                <Target className="w-32 h-32 text-teal-600" />
               </div>
-              <div className="h-10 w-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center border border-blue-200 mb-4 shadow-sm group-hover:scale-105 transition-transform">
-                <Zap className="h-5 w-5" />
+              <div className="h-10 w-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center border border-teal-200 mb-4 shadow-sm group-hover:scale-105 transition-transform">
+                <Target className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-black text-slate-900 mb-2">Browser Extensions</h3>
+              <h3 className="text-lg font-black text-slate-900 mb-2">Evidence-Grounded Tailoring</h3>
               <p className="text-sm text-slate-600 font-medium max-w-sm relative z-10">
-                Install our Chrome extensions to <strong>1-Click import</strong> job descriptions straight from LinkedIn, Bayt, or Naukri without messy copy-pasting.
+                RoleCraft extracts verified evidence from your background, strictly ensuring no false skills or unearned metrics are hallucinated.
               </p>
             </div>
 

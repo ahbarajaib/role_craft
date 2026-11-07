@@ -705,7 +705,7 @@ export function LandingView() {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                    <span>LinkedIn, Bayt &amp; Naukri Copier Extensions</span>
+                    <span>Dedicated Priority AI Processing &amp; Fast Queue</span>
                   </li>
                 </ul>
               </div>

@@ -64,10 +64,8 @@ export interface WorkspaceState {
 
   // Modals & Panels
   isSubscriptionModalOpen: boolean;
-  subscriptionModalReason: "out_of_credits" | "extension_upsell" | "general";
+  subscriptionModalReason: "out_of_credits" | "general";
   subscriptionInitialPlan: "pro" | "elite";
-  isExtensionModalOpen: boolean;
-  isExtensionPreviewModalOpen: boolean;
   isAutoTailoring: boolean;
   autoTailorStepIndex: number | undefined;
   autoTailorProgress: number | undefined;
@@ -146,10 +144,8 @@ export interface WorkspaceState {
   setMetricPercentage: (val: string) => void;
   setMetricScale: (val: string) => void;
 
-  openUpgradeModal: (reason?: "out_of_credits" | "extension_upsell" | "general", plan?: "pro" | "elite") => void;
+  openUpgradeModal: (reason?: "out_of_credits" | "general", plan?: "pro" | "elite") => void;
   closeUpgradeModal: () => void;
-  setIsExtensionModalOpen: (open: boolean) => void;
-  setIsExtensionPreviewModalOpen: (open: boolean) => void;
 
   setIsAutoTailoring: (tailoring: boolean) => void;
   setAutoTailorStepIndex: (idx: number | undefined) => void;
@@ -240,8 +236,6 @@ const initialWorkspaceState = {
   isSubscriptionModalOpen: false,
   subscriptionModalReason: "general" as const,
   subscriptionInitialPlan: "pro" as const,
-  isExtensionModalOpen: false,
-  isExtensionPreviewModalOpen: false,
   isAutoTailoring: false,
   autoTailorStepIndex: undefined,
   autoTailorProgress: undefined,
@@ -354,8 +348,6 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
       isSubscriptionModalOpen: true,
     }),
   closeUpgradeModal: () => set({ isSubscriptionModalOpen: false }),
-  setIsExtensionModalOpen: (isExtensionModalOpen) => set({ isExtensionModalOpen }),
-  setIsExtensionPreviewModalOpen: (isExtensionPreviewModalOpen) => set({ isExtensionPreviewModalOpen }),
 
   setIsAutoTailoring: (isAutoTailoring) => set({ isAutoTailoring }),
   setAutoTailorStepIndex: (autoTailorStepIndex) => set({ autoTailorStepIndex }),

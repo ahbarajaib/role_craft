@@ -8,21 +8,14 @@ AI-powered resume optimization platform. Upload a DOCX resume, provide a job des
 
 ## Project Status
 
-> **Milestone 21 – Dual Billing Modes (One-Off 30-Day Pass + Subscriptions), Immediate Checkout Verification, User Deletion & Container Extension Distribution (Complete)**
+> **Milestone 21 – Dual Billing Modes (One-Off 30-Day Pass + Subscriptions), Immediate Checkout Verification & User Deletion (Complete)**
 > * **Dual Billing Modes**: Users can now choose between a **One-Time 30-Day Pass** (zero recurring auto-debit, 100% UPI/card compatibility) and an **Auto-Renewing Monthly Subscription** via Razorpay. Automatic pass expiration is gracefully enforced via `plan_expires_at`.
 > * **Immediate Checkout Verification (`POST /api/v1/payment/verify`)**: Checkout activates membership and full tier credits in milliseconds directly on payment completion, without waiting for webhook latencies.
 > * **Admin User Deletion (`POST /api/v1/admin/users/{id}/delete`)**: Admins can permanently delete user accounts with full cascade purge of analyses, master resumes, and tailored resumes, plus self-deletion protection.
 > * **Auto-Grant Credits on Upgrade**: Admin plan upgrades to Pro or Elite automatically top up user credits to the tier quota (200 / 400 credits).
-> * **Container-Bundled Chrome Extension**: Chrome extension files are bundled directly inside `backend/app/extension_src/` for 100% reliable streaming downloads inside Docker containers.
 
 > **Milestone 20 – Admin Dashboard & Platform Control Center (Complete)**
 > A dedicated, undiscoverable administrative portal (`admin.rolecraft.tech` / `/xrc-control/`) with two-layer authentication (JWT + Secret PIN) is now live. Features include real-time financial metrics and estimated MRR, interactive 30-day signup and feature usage analytics, comprehensive user management with credit top-up drawers, user deletion, plan changers, centralized support ticket triage with technical JSON context, dynamic live system configuration editing (`SiteConfig`), and an immutable audit trail (`AdminActivityLog`).
-
-> **Milestone 22 – Indeed Job Title Copier & Extension Feature Gate Architecture (Complete)**
-> RoleCraft now ships a second browser extension — the **Indeed Job Title Copier** (Elite-only) — alongside an extensible per-feature gate system. `backend/app/core/extension_config.py` is the single source of truth: one dict controls which plan unlocks which extension. Adding a new platform (Glassdoor, Naukri…) requires only a dict entry + a new extension folder; no endpoint code changes. `GET /extension/download` now streams a dynamic ZIP containing only the features the user's plan allows (Pro: LinkedIn; Elite: LinkedIn + Indeed). `ExtensionModal` was rewritten with dual download cards showing per-card Unlocked/Locked status.
-
-> **Milestone 19 – LinkedIn Job Copier Chrome Extension, Premium Gated Distribution & Mobile Bottom Nav (Complete)**
-> RoleCraft now ships a branded **LinkedIn Job Copier Chrome Extension** (Manifest V3), distributed securely via the backend API (`GET /api/v1/extension/download`) and gated to **Pro & Elite** subscribers. The `ExtensionModal` component guides users through installation. A new **Mobile Bottom Navigation Bar** (`mobile_bottom_nav.tsx`) replaces the hamburger menu on small screens for improved one-thumb ergonomics. The extension extracts job title, company, location, and full description from any LinkedIn job page in one click, with a multi-strategy DOM fallback system (6/5/4/5 strategies per field) resilient to LinkedIn DOM changes.
 
 ---
 
@@ -65,8 +58,7 @@ RoleCraft/
 │       │       ├── documents.py                POST /upload, POST /set-base, GET /{id}/parse
 │       │       ├── job_descriptions.py         POST /job-descriptions/parse
 │       │       ├── structured_resume.py        GET/PUT/POST /structured-resume/* (Master Resume)
-│       │       ├── resume.py                   POST /resume/analyze, POST /resume/rewrite, POST /resume/apply
-│       │       └── extension.py                GET /extension/status, GET /extension/download (Pro/Elite gated)
+│       │       └── resume.py                   POST /resume/analyze, POST /resume/rewrite, POST /resume/apply
 │       ├── schemas/
 │       │   └── structured_resume.py        StructuredResume Pydantic schemas + converter
 │       └── services/
@@ -81,33 +73,11 @@ RoleCraft/
 │       │   ├── page.tsx                    Main workspace page
 │       │   └── resume-builder/page.tsx     Interactive resume builder
 │       ├── components/
-│       │   ├── extension_modal.tsx         Dual-card Browser Extensions modal (LinkedIn Pro+, Indeed Elite)
 │       │   ├── subscription_modal.tsx      Pricing & plan upgrade modal
-│       │   ├── faq_section.tsx             FAQ section (includes extension entry)
+│       │   ├── faq_section.tsx             FAQ section
 │       │   └── mobile_bottom_nav.tsx       Mobile bottom navigation bar
 │       └── lib/
-│           └── api.ts                      API client helpers (incl. getExtensionStatus, downloadExtensionZip)
-│
-├── linkedin-job-copier/  Chrome Extension (Manifest V3) — Pro & Elite
-│   ├── manifest.json   Extension manifest
-│   ├── content.js      All extraction logic, button injection, SPA detection
-│   ├── styles.css      Button styling with state-based appearances
-│   ├── icons/          Branded icons (16x16, 48x48, 128x128)
-│   └── README.md       Extension documentation
-│
-├── indeed-job-copier/    Chrome Extension (Manifest V3) — Elite only
-│   ├── manifest.json   Extension manifest
-│   ├── content.js      Job details copy button on Indeed viewjob pages
-│   ├── styles.css      Button styling (Indeed blue theme)
-│   ├── icons/          Branded icons (16x16, 32x32, 48x48, 128x128)
-│   └── README.md       Extension documentation
-│
-├── naukri-job-copier/    Chrome Extension (Manifest V3) — Elite only
-│   ├── manifest.json   Extension manifest
-│   ├── content.js      Job details copy button on Naukri job postings
-│   ├── styles.css      Button styling (Naukri navy theme)
-│   ├── icons/          Branded icons (16x16, 32x32, 48x48, 128x128)
-│   └── README.md       Extension documentation
+│           └── api.ts                      API client helpers
 │
 ├── recordings/         Demo video recordings
 │   ├── RoleCraft_Demo_Vertical_9x16.mp4
@@ -183,8 +153,6 @@ The API will be available at **http://localhost:8000**.
 | `POST` | `/api/v1/resume/analyze` | Full resume vs JD gap analysis workflow (JSON-first) |
 | `POST` | `/api/v1/resume/rewrite` | AI review & rewrite single resume section |
 | `POST` | `/api/v1/resume/apply` | Merge approved section rewrites & export ATS document |
-| `GET` | `/api/v1/extension/status` | Returns per-feature flags `{linkedin, indeed}` based on user plan |
-| `GET` | `/api/v1/extension/download` | Streams dynamic ZIP: Pro → LinkedIn; Elite → LinkedIn + Indeed (403 for free) |
 | `POST` | `/api/v1/payment/subscribe` | Create Razorpay checkout session (one-time 30-day pass or recurring monthly) |
 | `POST` | `/api/v1/payment/verify` | Instantly verify checkout signature, activate Pro/Elite & grant credits |
 | `POST` | `/api/v1/payment/webhook` | Razorpay recurring billing hooks (`subscription.charged`, `subscription.cancelled`) |

@@ -90,8 +90,6 @@ import { useAuth } from "@/components/auth_provider";
 import { DailyGoalCard } from "@/components/daily_goal_card";
 import AuthModal from "@/components/auth_modal";
 import SubscriptionModal from "@/components/subscription_modal";
-import ExtensionModal from "@/components/extension_modal";
-import ExtensionPreviewModal from "@/components/extension_preview_modal";
 import HistoryModal from "@/components/history_modal";
 import { ProfileModal } from "@/components/profile_modal";
 import { WordLogoIcon, PdfLogoIcon } from "@/components/file_format_icons";
@@ -247,10 +245,8 @@ export function WorkspaceView({ initialTab }: { initialTab?: "landing" | "worksp
   const [rewrittenSections, setRewrittenSections] = useState<Record<string, string>>({});
   const [previousRewrittenSections, setPreviousRewrittenSections] = useState<Record<string, string>>({});
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-  const [subscriptionModalReason, setSubscriptionModalReason] = useState<"out_of_credits" | "extension_upsell" | "general">("general");
+  const [subscriptionModalReason, setSubscriptionModalReason] = useState<"out_of_credits" | "general">("general");
   const [subscriptionInitialPlan, setSubscriptionInitialPlan] = useState<"pro" | "elite">("pro");
-  const [isExtensionModalOpen, setIsExtensionModalOpen] = useState(false);
-  const [isExtensionPreviewModalOpen, setIsExtensionPreviewModalOpen] = useState(false);
   const [diffViewMode, setDiffViewMode] = useState<"tailored" | "split">("tailored");
 
   // ── Onboarding / Empty State Tracking ──
@@ -277,7 +273,7 @@ export function WorkspaceView({ initialTab }: { initialTab?: "landing" | "worksp
   };
 
   const openUpgradeModal = (
-    reason: "out_of_credits" | "extension_upsell" | "general" = "general",
+    reason: "out_of_credits" | "general" = "general",
     plan: "pro" | "elite" = "pro"
   ) => {
     setSubscriptionModalReason(reason);
@@ -2734,15 +2730,6 @@ export function WorkspaceView({ initialTab }: { initialTab?: "landing" | "worksp
                               <span className="flex items-center gap-2"><User className="h-4 w-4 text-teal-600" /> Profile & Base Docs</span>
                               {user && <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">{calculateProfileCompletion(user).totalPercentage}%</span>}
                             </button>
-                            <button type="button" onClick={() => { setIsProfileMenuOpen(false); if (isProOrElite) { setIsExtensionModalOpen(true); } else { setIsExtensionPreviewModalOpen(true); } }} className="touch-target w-full py-3 px-4 rounded-xl bg-teal-50/70 hover:bg-teal-100/70 text-teal-950 border border-teal-200/80 font-bold text-sm transition-all flex items-center justify-between cursor-pointer">
-                              <span className="flex flex-col items-start gap-0.5">
-                                <span className="flex items-center gap-2"><Zap className="h-4 w-4 text-teal-600" /> Browser Extensions</span>
-                                <span className="text-[10px] font-semibold text-teal-600 pl-6">
-                                  {user?.plan_type === "elite" ? "LinkedIn, Bayt & Naukri" : "LinkedIn Job Copier"}
-                                </span>
-                              </span>
-                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs shrink-0">{isProOrElite ? "Download" : "Pro"}</span>
-                            </button>
                             <button type="button" onClick={() => { setIsProfileMenuOpen(false); openIssueReport("general"); }} className="touch-target w-full py-3 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-sm transition-all flex items-center gap-2 cursor-pointer">
                               <LifeBuoy className="h-4 w-4 text-teal-600" />
                               Report an Issue / Feedback
@@ -2828,15 +2815,6 @@ export function WorkspaceView({ initialTab }: { initialTab?: "landing" | "worksp
                         <button type="button" onClick={() => { setIsProfileMenuOpen(false); if (!token) setShowAuthModal(true); else setIsProfileModalOpen(true); }} className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center justify-between cursor-pointer">
                           <span className="flex items-center gap-2"><User className="h-3.5 w-3.5 text-teal-600" /> Profile & Base Docs</span>
                           {user && <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">{calculateProfileCompletion(user).totalPercentage}%</span>}
-                        </button>
-                        <button type="button" onClick={() => { setIsProfileMenuOpen(false); if (isProOrElite) { setIsExtensionModalOpen(true); } else { setIsExtensionPreviewModalOpen(true); } }} className="w-full py-2.5 px-3 rounded-xl bg-teal-50/80 hover:bg-teal-100/80 text-teal-950 border border-teal-200 font-bold text-xs transition-all flex items-center justify-between cursor-pointer shadow-2xs">
-                          <span className="flex flex-col items-start gap-0.5">
-                            <span className="flex items-center gap-2"><Zap className="h-3.5 w-3.5 text-teal-600" /> Browser Extensions</span>
-                            <span className="text-[10px] font-semibold text-teal-500 pl-5">
-                              {user?.plan_type === "elite" ? "LinkedIn, Bayt & Naukri" : "LinkedIn Job Copier"}
-                            </span>
-                          </span>
-                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white shadow-2xs shrink-0">{isProOrElite ? "Download" : "Pro"}</span>
                         </button>
                         <button type="button" onClick={() => { setIsProfileMenuOpen(false); openIssueReport("general"); }} className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer">
                           <LifeBuoy className="h-3.5 w-3.5 text-teal-600" />
@@ -5315,25 +5293,6 @@ export function WorkspaceView({ initialTab }: { initialTab?: "landing" | "worksp
         initialPlan={subscriptionInitialPlan}
       />
 
-      {/* Popover LinkedIn Chrome Extension Modal */}
-      <ExtensionModal
-        isOpen={isExtensionModalOpen}
-        onClose={() => setIsExtensionModalOpen(false)}
-        onOpenSubscribe={() => {
-          setIsExtensionModalOpen(false);
-          openUpgradeModal("extension_upsell", "pro");
-        }}
-      />
-
-      {/* Popover Chrome Extension Preview & Install Guide Modal */}
-      <ExtensionPreviewModal
-        isOpen={isExtensionPreviewModalOpen}
-        onClose={() => setIsExtensionPreviewModalOpen(false)}
-        onOpenSubscribe={() => {
-          setIsExtensionPreviewModalOpen(false);
-          openUpgradeModal("extension_upsell", "pro");
-        }}
-      />
 
       {/* Live PDF Preview Modal */}
       <PdfPreviewModal

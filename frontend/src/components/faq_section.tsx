@@ -27,8 +27,8 @@ export default function FaqSection() {
       a: `Every new account receives ${FREE_TIER_CREDITS} free credits. Pro users get ${PRO_CREDITS} credits/mo and Elite users get ${ELITE_CREDITS} credits/mo. 1 credit is used for a section rewrite or document patch.`,
     },
     {
-      q: "What is the LinkedIn 1-Click Copier Chrome Extension and who gets access?",
-      a: "Our companion Chrome Extension adds a smart 'Copy Job Details' button directly to LinkedIn job pages. It automatically expands descriptions, strips out ads/UI clutter, and formats clean job requirements ready for RoleCraft. It is included free for all Pro and Elite subscribers and installs in 15 seconds.",
+      q: "What types of resumes and professions does RoleCraft support?",
+      a: "RoleCraft supports standard DOCX resumes across tech, engineering, data, product management, finance, and marketing fields. We preserve your original formatting and visual styling while accurately tailoring content.",
     },
     {
       q: "Can I download my final tailored resume as both DOCX and PDF?",

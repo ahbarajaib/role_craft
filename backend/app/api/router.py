@@ -18,7 +18,6 @@ from app.api.v1 import (
     auth,
     comparison,
     documents,
-    extension,
     guest_analysis,
     health,
     history,
@@ -48,7 +47,6 @@ api_router.include_router(history.router)
 api_router.include_router(structured_resume.router)
 api_router.include_router(tailor.router)
 api_router.include_router(support.router)
-api_router.include_router(extension.router)
 api_router.include_router(admin.router)
 
 

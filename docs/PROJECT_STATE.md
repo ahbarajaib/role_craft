@@ -10,10 +10,9 @@ The application allows users to:
 5. Review resume sections via AI (using GPT-4o-mini) to detect gaps and strengths.
 6. Generate targeted rewrites, approve/reject changes, and patch directly back into the original DOCX while preserving 100% of formatting.
 7. Build and manage Master Resumes with structured schemas, rendering high-fidelity ATS DOCX and PDF templates (`/resume-builder`).
-8. Extract job details in 1 click from LinkedIn (Pro & Elite) and job titles from Indeed (Elite) via modular Chrome Extensions (Manifest V3) with dynamic plan gating.
-9. Dual billing modes: One-Off 30-Day Pass (zero recurring auto-debit) or Monthly Auto-Renewing Subscriptions via Razorpay, with immediate checkout verification (`/api/v1/payment/verify`).
-10. Admin Control Center (`admin.rolecraft.tech` / `/xrc-control/`) with two-layer authentication (JWT + PIN), financial & growth analytics, user management, credit adjustment, account deletion, support ticket triage, and live configuration editing.
-11. Telemetry, Funnel Milestones & Crash Monitoring: Microsoft Clarity session recordings and heatmaps with authenticated user identity linking (`clarity('identify')`), micro-funnel milestone tracking (`resume_uploaded`, `analysis_started`, `tailor_started`, `resume_downloaded`, `cover_letter_downloaded`), and Sentry crash monitoring across Next.js and FastAPI.
+8. Dual billing modes: One-Off 30-Day Pass (zero recurring auto-debit) or Monthly Auto-Renewing Subscriptions via Razorpay, with immediate checkout verification (`/api/v1/payment/verify`).
+9. Admin Control Center (`admin.rolecraft.tech` / `/xrc-control/`) with two-layer authentication (JWT + PIN), financial & growth analytics, user management, credit adjustment, account deletion, support ticket triage, and live configuration editing.
+10. Telemetry, Funnel Milestones & Crash Monitoring: Microsoft Clarity session recordings and heatmaps with authenticated user identity linking (`clarity('identify')`), micro-funnel milestone tracking (`resume_uploaded`, `analysis_started`, `tailor_started`, `resume_downloaded`, `cover_letter_downloaded`), and Sentry crash monitoring across Next.js and FastAPI.
 
 ---
 
@@ -69,7 +68,6 @@ backend/
     ├── factory.py              FastAPI App Builder (middleware, exception handlers)
     ├── core/
     │   ├── config.py           Pydantic Settings & Config validation
-    │   ├── extension_config.py Centralized extension feature gates (Single Source of Truth)
     │   ├── logging.py          Loguru custom setup
     │   └── exceptions.py       Custom AppError framework and FastAPI handlers
     ├── middleware/
@@ -124,8 +122,7 @@ backend/
             ├── analysis.py     POST /analyze (batch AI)
             ├── comparison.py   POST /compare (deterministic)
             ├── review.py       POST /review-section (single AI review)
-            ├── resume.py       POST /resume/analyze (primary unified endpoint)
-            └── extension.py    GET /extension/status, GET /extension/download (Pro/Elite gated)
+            └── resume.py       POST /resume/analyze (primary unified endpoint)
 ```
 
 ---
@@ -223,8 +220,6 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 | `POST` | `/api/v1/resume/rewrite` | `RewriteSectionRequest` | `RewriteSectionResponse` | AI section rewrite with universal role & section routing. |
 | `POST` | `/api/v1/resume/apply` | `ApplyRewriteRequest` | `ApplyRewriteResponse` | Apply accepted rewrites to original DOCX. |
 | `GET` | `/api/v1/resume/download/{download_id}` | None | File Download | Stream the generated patched DOCX. |
-| `GET` | `/api/v1/extension/status` | None | `ExtensionStatusResponse` | Returns per-feature extension access flags (`linkedin`, `indeed`) for the user's plan. |
-| `GET` | `/api/v1/extension/download` | None | File (ZIP) | Streams ZIP with unlocked extensions (Pro: LinkedIn; Elite: LinkedIn + Indeed). Returns 403 for free users. |
 | `POST` | `/api/v1/payment/subscribe` | `SubscribeRequest` | `SubscribeResponse` | Creates checkout session: One-Off 30-Day Pass (Order) or Monthly Auto-Renew (Subscription). |
 | `POST` | `/api/v1/payment/verify` | `VerifyPaymentRequest` | `VerifyPaymentResponse` | Instantly verifies checkout signature, activates plan, and grants tier credits. |
 | `POST` | `/api/v1/payment/webhook` | Webhook JSON | `{"status": "ok"}` | Razorpay recurring lifecycle hooks (`subscription.charged`, `subscription.cancelled`). |
@@ -285,8 +280,7 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
    - **One-Off 30-Day Pass**: Generated via Razorpay standard Orders API (`client.order.create`). Zero auto-debit mandates, 100% UPI/credit card compatibility. Sets `plan_expires_at = utcnow + 30 days`. Gracefully reverts to `free` plan upon expiration.
    - **Monthly Auto-Renew**: Generated via Razorpay Subscriptions API (`client.subscription.create`) with recurring auto-debit on the same day every month.
    - **Instant Checkout Verification (`POST /api/v1/payment/verify`)**: Direct client signature verification enables instant tier activation and credit top-up without waiting for webhook delays.
-10. **Container-Bundled Chrome Extension Distribution**: The LinkedIn Job Copier extension source files are bundled inside `backend/app/extension_src/`, guaranteeing zero-downtime, reliable ZIP generation inside Docker containers without host mount dependencies.
-11. **Admin User Deletion & Cascade Decoupling**: Permanent user deletion purges user records, analyses, master resumes, and tailored resumes, while setting `user_id = NULL` on support tickets to preserve platform audit history without integrity violations.
+10. **Admin User Deletion & Cascade Decoupling**: Permanent user deletion purges user records, analyses, master resumes, and tailored resumes, while setting `user_id = NULL` on support tickets to preserve platform audit history without integrity violations.
 
 ---
 
@@ -346,16 +340,6 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 - [x] **Mobile Bottom Navigation Bar** (`mobile_bottom_nav.tsx`):
   - Sticky bottom nav with Home, Resume Builder, History, and Profile icons for mobile viewports
   - Replaces hamburger menu on small screens for improved one-thumb ergonomics
-- [x] **LinkedIn Job Copier Chrome Extension** (Phase 10a):
-  - `linkedin-job-copier/` directory: Manifest V3 extension with `content.js`, `styles.css`, branded icons, README
-  - One-click copy of LinkedIn job title, company, location, URL, and full description to clipboard
-  - Multi-strategy DOM extraction (6/5/4/5 fallback strategies per field) — resilient to LinkedIn DOM changes
-  - SPA-aware navigation detection (URL polling + History API + MutationObserver)
-  - **Backend gating** (`backend/app/api/v1/extension.py`): JWT-authenticated download endpoint; 403 returned for `free` plan users
-  - **Frontend `ExtensionModal`** (`frontend/src/components/extension_modal.tsx`): Premium download UI with step-by-step Chrome setup guide
-  - Extension promoted in pricing cards (`subscription_modal.tsx`) and FAQ (`faq_section.tsx`)
-  - Profile dropdown and workspace banner trigger the extension modal
-  - `frontend/src/lib/api.ts` updated with `getExtensionStatus()` and `downloadExtensionZip()` helpers
 - [x] **Admin Dashboard & Platform Control Center** (Phase 11):
   - Isolated admin control portal at `admin.rolecraft.tech` (`/xrc-control/`) with Two-Layer Security (`is_admin` JWT + PIN secret token)
   - Real-time financial metrics, estimated MRR, interactive 30-day registration curves, and AI usage breakdown
@@ -368,17 +352,6 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
   - Auto-expiration enforcement via `plan_expires_at` column in SQLite database
   - Admin permanent user deletion with cascade cleanup (`POST /api/v1/admin/users/{id}/delete`)
   - Auto-grant tier credits on admin plan change (Pro: 200, Elite: 400)
-  - In-container bundled Chrome extension files (`backend/app/extension_src/`) for reliable ZIP distribution
-- [x] **Indeed Job Title Copier Chrome Extension & Extension Feature Gates** (Phase 14):
-  - `indeed-job-copier/` directory: Manifest V3 extension with `content.js`, `styles.css`, icons, README
-  - One-click copy of job title on any Indeed job page (viewjob, jobs/view, rc/clk URLs)
-  - `backend/app/core/extension_config.py`: Centralized single-source-of-truth dict that maps feature keys → allowed plans. Edit one file to change any plan gate — no endpoint code changes needed.
-  - `EXTENSION_FEATURE_GATES`: LinkedIn → `[pro, elite]`, Indeed → `[elite]`; trivially extensible (Glassdoor, Naukri, etc.)
-  - Backend `/extension/download` now builds a dynamic ZIP including only the features the user's plan unlocks (Pro: LinkedIn only; Elite: LinkedIn + Indeed)
-  - Backend `/extension/status` now returns `features: {linkedin: bool, indeed: bool}` and `feature_labels` — plan-aware per-feature flags
-  - Frontend `ExtensionModal` rewritten with dual download cards (LinkedIn & Indeed), per-card Unlocked/Locked badge, single shared download action
-  - `frontend/src/lib/api.ts` `ExtensionStatusResponse` extended with `features` and `feature_labels` fields
-  - `docs/extension-feature-gates.md` added: step-by-step guide to add/remove/change any extension feature gate
 
 ## Features Intentionally Postponed
 - **PostgreSQL**: Kept as a future database option for production scale.
@@ -402,16 +375,6 @@ The primary end-to-end flow is orchestrated in `ResumeAnalysisWorkflow.run()` wh
 - [x] Mobile Bottom Navigation Bar (sticky bottom nav replacing hamburger on small viewports)
 - [ ] PostgreSQL integration
 - [ ] Redis + Background jobs (Celery/RQ for long-running AI queries)
-
-### Phase 10 - LinkedIn Job Copier Extension & Premium Distribution (Completed)
-- [x] Chrome Extension (Manifest V3): one-click LinkedIn job detail extractor
-- [x] Multi-strategy DOM fallback system (resilient to LinkedIn DOM changes)
-- [x] SPA navigation detection (URL poll + History API + MutationObserver)
-- [x] Auto-expand "Show more" before extraction
-- [x] Backend gated download endpoint (Pro/Elite only, JWT auth, returns ZIP)
-- [x] `ExtensionModal` frontend component with setup guide
-- [x] Pricing cards and FAQ updated to promote the extension
-- [x] Branded extension icons (16×16, 48×48, 128×128)
 
 ---
 

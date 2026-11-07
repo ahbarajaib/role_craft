@@ -186,16 +186,6 @@ Production
 
 ---
 
-# Chrome Extension
-
-- Manifest V3 (no background service worker)
-- Vanilla JavaScript (single `content.js` IIFE)
-- Multi-strategy DOM extraction (6/5/4/5 fallbacks)
-- SPA navigation detection (URL polling + History API + MutationObserver)
-- Bundled in `backend/app/extension_src/` for secure, in-container ZIP streaming
-
----
-
 # Telemetry, Analytics & Monitoring
 
 - **Microsoft Clarity**: Free unlimited session replays, click & scroll heatmaps, dead click & rage click alerts, and custom funnel events (`trackEvent`)

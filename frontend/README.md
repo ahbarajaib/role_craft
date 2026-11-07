@@ -32,7 +32,7 @@ Next.js 15 (App Router) web application for **RoleCraft** (`rolecraft.tech`), fe
 - **Icons**: Lucide React
 - **Visualizations**: Recharts (admin analytics)
 - **API Clients**:
-  - `src/lib/api.ts` — Consumer API methods (auth, documents, resume analysis, payment checkout, extension download)
+  - `src/lib/api.ts` — Consumer API methods (auth, documents, resume analysis, payment checkout, resume downloads)
   - `src/lib/admin-api.ts` — Admin API methods (PIN verification, stats, user CRUD, config, logs)
 
 ---
